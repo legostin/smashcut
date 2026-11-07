@@ -128,6 +128,10 @@ export interface MediaInfo {
   peaks?: string;
   transcript?: string;
   analysis?: string;
+  codec?: string;
+  /** lightweight H.264 copy for in-browser preview (4K / ProRes / HEVC / 10-bit); export uses the original */
+  proxy?: string;
+  proxyStatus?: 'pending' | 'ready' | 'error';
 }
 
 export interface GalleryItem extends PackageManifest {

@@ -14,7 +14,7 @@ import { listSkills, syncSkills } from './skills.ts';
 import { probeMedia, analyzeMedia, transcribeMedia } from './media.ts';
 import { renderMusic, musicPeaks } from './render/music.ts';
 import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
-import { compositeFrame, sheet, annotate, startExport, getJobs } from './render/compose.ts';
+import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
 import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus } from './agents/runner.ts';
@@ -73,7 +73,7 @@ export function state() {
 function listExports() {
   const dir = cur().p('.studio', 'exports');
   if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir).filter((f) => f.endsWith('.mp4')).map((f) => ({ file: `.studio/exports/${f}`, size: fs.statSync(path.join(dir, f)).size, mtime: fs.statSync(path.join(dir, f)).mtimeMs })).sort((a, b) => b.mtime - a.mtime);
+  return fs.readdirSync(dir).filter((f) => /\.(mp4|mov|webm|gif)$/.test(f)).map((f) => ({ file: `.studio/exports/${f}`, size: fs.statSync(path.join(dir, f)).size, mtime: fs.statSync(path.join(dir, f)).mtimeMs })).sort((a, b) => b.mtime - a.mtime);
 }
 
 function createClipPackage(id: string, name: string, description = '', duration = 4) {
@@ -164,11 +164,13 @@ async function lintClip(clipId: string) {
   const info = store.clipInfo(clipId)!;
   const p = store.project;
   const d = info.duration || 5;
-  const r = await renderClipFrames(clipUrl(clipId, { width: p.width, height: p.height, fps: p.fps, duration: d }), { width: p.width, height: p.height }, [0.05, d * 0.5, d * 0.5, d - 0.05]);
+  // seek forward, jump to the end, back to the start, then return to the middle: a pure function of t gives the same pixels
+  const mid = +(d * 0.47).toFixed(3);
+  const r = await renderClipFrames(clipUrl(clipId, { width: p.width, height: p.height, fps: p.fps, duration: d }), { width: p.width, height: p.height }, [mid, d - 0.05, 0.05, mid]);
   if (r.errors.length) issues.push(...r.errors.map((e) => 'runtime: ' + e));
-  const diff = await pixelDiff(r.frames[1], r.frames[2]);
-  if (diff > 0.002) issues.push(`non-deterministic: the same time rendered twice differs in ${(diff * 100).toFixed(2)}% of pixels`);
-  if (r.frames[0].equals(r.frames[1]) && r.frames[1].equals(r.frames[3])) issues.push('frames at start, middle and end are identical — is anything animating?');
+  const diff = await pixelDiff(r.frames[0], r.frames[3]);
+  if (diff > 0.003) issues.push(`non-deterministic: t=${mid}s rendered before and after seeking around differs in ${(diff * 100).toFixed(2)}% of pixels — state leaks between frames`);
+  if (r.frames[2].equals(r.frames[0]) && r.frames[0].equals(r.frames[1])) issues.push('frames at start, middle and end are identical — is anything animating?');
   return { clipId, ok: issues.length === 0, issues };
 }
 
@@ -256,6 +258,8 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- project & items ----------
   app.get('/api/project', async () => need().project);
+  app.post('/api/undo', async () => { const st = need(); const ok = st.undo(); if (ok) recomputeTiming(); return { ok, ...st.history() }; });
+  app.post('/api/redo', async () => { const st = need(); const ok = st.redo(); if (ok) recomputeTiming(); return { ok, ...st.history() }; });
   app.put<{ Body: Project }>('/api/project', async (req) => need().saveProject(req.body));
   app.patch<{ Body: Partial<Project> }>('/api/project', async (req) => need().update((p) => { Object.assign(p, req.body); }));
   app.post<{ Body: Partial<Item> & { kind: Item['kind']; ref: string } }>('/api/items', async (req) => {
@@ -543,7 +547,8 @@ export async function registerRoutes(app: FastifyInstance) {
   });
 
   // ---------- export ----------
-  app.post<{ Body: { from?: number; to?: number; name?: string } }>('/api/export', async (req) => { need(); return startExport(req.body || {}); });
+  app.post<{ Body: any }>('/api/export', async (req) => { need(); return startExport((req.body || {}) as any); });
+  app.post<{ Params: { id: string } }>('/api/export/:id/cancel', async (req) => ({ ok: cancelExport(req.params.id) }));
   app.get('/api/exports', async () => listExports());
 
   // ---------- settings ----------

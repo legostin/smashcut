@@ -81,7 +81,47 @@ export class ProjectStore {
   private markSelf(file: string) { this.selfWrites.set(file, Date.now()); }
   private isSelf(file: string) { const t = this.selfWrites.get(file); return t != null && Date.now() - t < 800; }
 
+  // ---------- undo / redo (project.json) ----------
+  private undoStack: string[] = [];
+  private redoStack: string[] = [];
+  private lastPush = 0;
+  private pushHistory(prev: Project, coalesce = true) {
+    const snap = JSON.stringify(prev);
+    if (this.undoStack[this.undoStack.length - 1] === snap) return;
+    const now = Date.now();
+    // rapid successive edits (slider drags, typing) collapse into one undo step
+    if (coalesce && now - this.lastPush < 700 && this.undoStack.length) { this.lastPush = now; return; }
+    this.undoStack.push(snap);
+    if (this.undoStack.length > 300) this.undoStack.shift();
+    this.redoStack = [];
+    this.lastPush = now;
+  }
+  history() { return { canUndo: this.undoStack.length > 0, canRedo: this.redoStack.length > 0 }; }
+  undo() {
+    const snap = this.undoStack.pop();
+    if (!snap) return false;
+    this.redoStack.push(JSON.stringify(this.project));
+    this.writeProject(JSON.parse(snap));
+    this.lastPush = 0;
+    return true;
+  }
+  redo() {
+    const snap = this.redoStack.pop();
+    if (!snap) return false;
+    this.undoStack.push(JSON.stringify(this.project));
+    this.writeProject(JSON.parse(snap));
+    this.lastPush = 0;
+    return true;
+  }
+  private writeProject(p: Project) {
+    this.project = normalize(p);
+    this.markSelf(this.p('project.json'));
+    writeJson(this.p('project.json'), this.project);
+    bus.send({ type: 'project', project: this.project });
+  }
+
   saveProject(next: Project, emit = true) {
+    if (this.project && emit) this.pushHistory(this.project);
     this.project = normalize(next);
     this.markSelf(this.p('project.json'));
     writeJson(this.p('project.json'), this.project);
@@ -175,7 +215,7 @@ export class ProjectStore {
       pending = new Set();
       const rels = paths.map((p) => path.relative(this.dir, p).split(path.sep).join('/'));
       if (paths.some((p) => p === this.p('project.json') && !this.isSelf(p))) {
-        try { this.reload(); bus.send({ type: 'project', project: this.project }); } catch (e) { bus.send({ type: 'notice', level: 'error', text: 'project.json invalid: ' + (e as Error).message }); }
+        try { const prev = this.project; this.reload(); if (prev && JSON.stringify(prev) !== JSON.stringify(this.project)) this.pushHistory(prev, false); bus.send({ type: 'project', project: this.project }); } catch (e) { bus.send({ type: 'notice', level: 'error', text: 'project.json invalid: ' + (e as Error).message }); }
       }
       if (paths.some((p) => p === this.p('comments.json') && !this.isSelf(p))) {
         this.comments = readJson<Comment[]>(this.p('comments.json'), this.comments);

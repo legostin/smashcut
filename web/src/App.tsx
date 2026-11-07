@@ -10,8 +10,24 @@ import { ItemPanel } from './components/ItemPanel';
 import { Icon } from './components/Icon';
 import type { Project, Settings, Voice } from '../../shared/types';
 
+function useUndoRedo() {
+  useEffect(() => {
+    const onKey = async (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable) return;
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return;
+      e.preventDefault();
+      const r = await api<{ ok: boolean }>('POST', e.shiftKey ? '/api/redo' : '/api/undo');
+      if (!r.ok) notify('info', e.shiftKey ? 'Нечего повторять' : 'Нечего отменять');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+}
+
 export function App() {
   useFollowAgent();
+  useUndoRedo();
   const project = useStore((s) => s.project);
   const connected = useStore((s) => s.connected);
   const dialog = useStore((s) => s.dialog);
@@ -284,6 +300,13 @@ function VoiceSettings({ s, setS }: { s: Settings; setS: (s: Settings) => void }
   );
 }
 
+const FORMATS = [
+  { id: 'mp4', name: 'MP4 · H.264', hint: 'Соцсети, YouTube, мессенджеры' },
+  { id: 'prores', name: 'ProRes 4444 · MOV', hint: 'Монтаж в Premiere, DaVinci, Final Cut; поддерживает альфу' },
+  { id: 'webm', name: 'WebM · VP9', hint: 'Веб, поддерживает альфу' },
+  { id: 'gif', name: 'GIF', hint: 'Превью и стикеры, до 20 fps, без звука' },
+] as const;
+
 function ExportDialog() {
   const project = useStore((s) => s.project)!;
   const jobs = useStore((s) => s.jobs);
@@ -291,22 +314,46 @@ function ExportDialog() {
   const end = Math.max(1, ...project.items.map((i) => i.start + i.duration));
   const [from, setFrom] = useState(0);
   const [to, setTo] = useState(+end.toFixed(2));
+  const [format, setFormat] = useState<'mp4' | 'prores' | 'webm' | 'gif'>(() => (localStorage.getItem('exp.format') as any) || 'mp4');
+  const [quality, setQuality] = useState<'high' | 'standard' | 'small'>('standard');
+  const [scale, setScale] = useState(1);
+  const [blur, setBlur] = useState(1);
+  const [transparent, setTransparent] = useState(false);
   const job = [...jobs].reverse()[0];
+  const running = job?.status === 'running';
+  const alphaOk = format === 'prores' || format === 'webm';
+  const start = () => { localStorage.setItem('exp.format', format); api('POST', '/api/export', { from, to, format, quality, scale, motionBlur: blur, transparent: alphaOk && transparent }); };
+  const outW = Math.round((project.width * scale) / 2) * 2, outH = Math.round((project.height * scale) / 2) * 2;
   return (
-    <div className="col gap12">
-      <h2>Экспорт MP4</h2>
-      <div className="small muted">H.264 + AAC, {project.width}×{project.height}, {project.fps} fps. Клипы рендерятся покадрово в headless Chromium (кэш по хэшу), затем ffmpeg собирает слои и сводит звук.</div>
-      <div className="grid3">
-        <label className="field"><span>С, s</span><input className="input" type="number" step={0.1} value={from} onChange={(e) => setFrom(Number(e.target.value))} /></label>
-        <label className="field"><span>По, s</span><input className="input" type="number" step={0.1} value={to} onChange={(e) => setTo(Number(e.target.value))} /></label>
-        <label className="field"><span>&nbsp;</span><button className="btn primary" disabled={job?.status === 'running'} onClick={() => api('POST', '/api/export', { from, to })}><Icon name="download" size={14} /> Рендер</button></label>
+    <div className="col gap16">
+      <h2>Экспорт</h2>
+      <div className="fmt-grid">
+        {FORMATS.map((f) => (
+          <button key={f.id} className={'fmt' + (format === f.id ? ' on' : '')} onClick={() => setFormat(f.id)}>
+            <span className="fmt-name">{f.name}</span><span className="fmt-hint">{f.hint}</span>
+          </button>
+        ))}
+      </div>
+      <div className="exp-opts">
+        <label className="field"><span>Фрагмент, с</span><div className="row gap6"><input className="input" type="number" step={0.1} value={from} onChange={(e) => setFrom(Number(e.target.value))} /><span className="muted">—</span><input className="input" type="number" step={0.1} value={to} onChange={(e) => setTo(Number(e.target.value))} /></div></label>
+        <label className="field"><span>Размер · {outW}×{outH}</span><div className="seg">{[0.5, 1, 2].map((v) => <button key={v} className={scale === v ? 'on' : ''} onClick={() => setScale(v)}>{v * 100}%</button>)}</div></label>
+        {format !== 'gif' && format !== 'prores' && <label className="field"><span>Качество</span><div className="seg">{([['small', 'Компактно'], ['standard', 'Стандарт'], ['high', 'Максимум']] as const).map(([k, l]) => <button key={k} className={quality === k ? 'on' : ''} onClick={() => setQuality(k)}>{l}</button>)}</div></label>}
+        <label className="field"><span>Motion blur {blur > 1 ? `· ×${blur} подкадров, затвор 180°` : '· выкл'}</span><div className="seg">{[1, 4, 8].map((v) => <button key={v} className={blur === v ? 'on' : ''} onClick={() => setBlur(v)}>{v === 1 ? 'Выкл' : v === 4 ? 'Мягкий' : 'Кино'}</button>)}</div></label>
+        {alphaOk && <label className="field-line"><span>Прозрачный фон (только графика, для наложения в другом редакторе)</span><input type="checkbox" className="toggle" checked={transparent} onChange={(e) => setTransparent(e.target.checked)} /></label>}
+      </div>
+      <div className="row between">
+        <span className="muted xsmall">{blur > 1 ? `Рендер графики дольше в ${blur} раз. ` : ''}Цвет BT.709 · {project.fps} fps</span>
+        {running
+          ? <button className="btn sm" onClick={() => api('POST', `/api/export/${job.id}/cancel`)}>Отменить</button>
+          : <button className="btn primary" onClick={start}>Экспортировать</button>}
       </div>
       {job && (
-        <div className="card col gap6">
-          <div className="row between small"><span>{job.status === 'done' ? 'Готово' : job.status === 'error' ? 'Ошибка' : job.stage}</span><span>{Math.round(job.progress * 100)}%</span></div>
+        <div className="col gap8">
+          <div className="row between small"><span>{job.status === 'done' ? 'Готово' : job.status === 'error' ? (job.error === 'Отменено' ? 'Отменено' : 'Ошибка') : job.stage}</span><span className="mono">{Math.round(job.progress * 100)}%</span></div>
           <div className="progress"><div style={{ width: `${job.progress * 100}%` }} /></div>
-          {job.error && <pre className="error-box xsmall">{job.error}</pre>}
-          {job.output && <video className="export-preview" src={`/p/${job.output}`} controls />}
+          {job.error && job.error !== 'Отменено' && <pre className="error-box xsmall">{job.error}</pre>}
+          {job.output && /\.(mp4|webm)$/.test(job.output) && <video className="export-preview" src={`/p/${job.output}`} controls />}
+          {job.output && /\.gif$/.test(job.output) && <img className="export-preview" src={`/p/${job.output}`} alt="" />}
         </div>
       )}
       {exportsList.length > 0 && (

@@ -287,8 +287,17 @@
     return currentT;
   }
 
+  // CSS transitions run on wall-clock time — never deterministic when seeking. Disable them globally.
+  function freezeCss() {
+    const st = document.createElement('style');
+    st.id = 'studio-freeze';
+    st.textContent = '*,*::before,*::after{transition:none!important;caret-color:transparent!important;scroll-behavior:auto!important}';
+    document.head.appendChild(st);
+  }
+
   async function boot() {
     tameGsap();
+    freezeCss();
     document.documentElement.style.setProperty('--w', studio.width + 'px');
     document.documentElement.style.setProperty('--h', studio.height + 'px');
     // load every bundled face up-front so setup() can measure text with final metrics

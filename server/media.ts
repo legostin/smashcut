@@ -29,7 +29,7 @@ export function probeMedia(file: string, force = false): Promise<MediaInfo> {
         info.duration = Number(j.format?.duration) || 0;
         const v = (j.streams || []).find((s: any) => s.codec_type === 'video' && s.disposition?.attached_pic !== 1);
         const a = (j.streams || []).find((s: any) => s.codec_type === 'audio');
-        if (v) { info.width = v.width; info.height = v.height; }
+        if (v) { info.width = v.width; info.height = v.height; info.codec = v.codec_name; (info as any).pixFmt = v.pix_fmt; }
         info.hasAudio = !!a;
       }
     }
@@ -56,6 +56,11 @@ export function probeMedia(file: string, force = false): Promise<MediaInfo> {
       } catch (e) { /* no audio */ }
     }
     if (fs.existsSync(store.p('.studio', 'transcripts', file + '.json'))) info.transcript = `.studio/transcripts/${file}.json`;
+    if (type === 'video' && needsProxy(info)) {
+      const rel = `.studio/proxies/${file}.mp4`;
+      if (fs.existsSync(store.p(rel)) && fs.statSync(store.p(rel)).mtimeMs >= stat.mtimeMs) { info.proxy = rel; info.proxyStatus = 'ready'; }
+      else { info.proxyStatus = 'pending'; makeProxy(file, rel); }
+    }
     writeJson(metaFile, info);
     bus.send({ type: 'media', media: info });
     if (info.analysis) recomputeTiming();
@@ -101,4 +106,29 @@ export function transcribeMedia(file: string, language?: string): Promise<Transc
 export async function extractVideoFrame(file: string, t: number, out: string) {
   await runOk('ffmpeg', ['-y', '-v', 'error', '-ss', String(Math.max(0, t)), '-i', cur().p('media', file), '-frames:v', '1', out]);
   return out;
+}
+
+/** browsers choke on 4K / ProRes / HEVC / 10-bit — preview from a light H.264 copy instead */
+function needsProxy(info: MediaInfo & { pixFmt?: string }) {
+  const okCodec = ['h264', 'vp8', 'vp9', 'av1'].includes(info.codec || '');
+  const okPix = ['yuv420p', 'yuvj420p'].includes(info.pixFmt || 'yuv420p');
+  return !okCodec || !okPix || (info.width || 0) * (info.height || 0) > 2560 * 1440;
+}
+
+const proxyJobs = new Set<string>();
+function makeProxy(file: string, rel: string) {
+  if (proxyJobs.has(file)) return;
+  proxyJobs.add(file);
+  const store = cur();
+  const out = store.p(rel);
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  bus.send({ type: 'notice', level: 'info', text: `Готовлю превью-прокси для ${file}…` });
+  run('ffmpeg', ['-y', '-v', 'error', '-i', store.p('media', file), '-vf', "scale='min(1280,iw)':-2:flags=bicubic,format=yuv420p", '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-g', '15', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', out + '.tmp.mp4'])
+    .then(async (r) => {
+      proxyJobs.delete(file);
+      if (r.code !== 0) { bus.send({ type: 'notice', level: 'error', text: `Прокси для ${file} не удалось: ${r.stderr.slice(-300)}` }); return; }
+      fs.renameSync(out + '.tmp.mp4', out);
+      await probeMedia(file, true);
+    })
+    .catch(() => proxyJobs.delete(file));
 }

@@ -59,6 +59,11 @@ function Layer({ item, version, project, hidden, muted, playing }: { item: Item;
   return <VideoLayer item={item} visible={active && !hidden} active={active} muted={muted} playing={playing} />;
 }
 
+function useMediaSrc(file: string) {
+  const proxy = useStore((s) => s.media.find((m) => m.file === file)?.proxy);
+  return proxy ? `/p/${proxy}` : `/p/media/${encodeURIComponent(file)}`;
+}
+
 /**
  * A clip on the timeline. When its files change (e.g. the agent saved an edit) the new version loads in a
  * hidden iframe and replaces the old one only after it has rendered — no blank or white frames.
@@ -124,6 +129,7 @@ function ClipFrame({ v, item, project, visible, onReady }: { v: number; item: It
 
 function VideoLayer({ item, visible, active, muted, playing }: { item: Item; visible: boolean; active: boolean; muted: boolean; playing: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const src = useMediaSrc(item.ref);
   const tr = item.transform || {};
   useEffect(() => {
     const v = ref.current!;
@@ -141,10 +147,10 @@ function VideoLayer({ item, visible, active, muted, playing }: { item: Item; vis
     };
     sync(time.get());
     return time.sub(sync);
-  }, [item.start, item.in, item.duration, playing]);
+  }, [item.start, item.in, item.duration, playing, src]);
   useEffect(() => { if (ref.current) ref.current.volume = Math.min(1, item.volume ?? 1); }, [item.volume]);
   return (
-    <video ref={ref} className="layer" src={`/p/media/${encodeURIComponent(item.ref)}`} muted={muted || !active} preload="auto" playsInline
+    <video ref={ref} className="layer" src={src} muted={muted || !active} preload="auto" playsInline
       style={{ visibility: visible ? 'visible' : 'hidden', objectFit: tr.fit || 'contain', transform: `translate(${tr.x || 0}px,${tr.y || 0}px) scale(${tr.scale ?? 1})`, opacity: item.opacity ?? 1 }} />
   );
 }

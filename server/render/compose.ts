@@ -97,36 +97,71 @@ export async function annotate(png: Buffer, size: { width: number; height: numbe
 const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 
 // ---------------- export ----------------
-const jobs = new Map<string, ExportJob>();
-export function getJobs() { return [...jobs.values()]; }
+export type ExportFormat = 'mp4' | 'prores' | 'webm' | 'gif';
+export interface ExportOptions {
+  from?: number;
+  to?: number;
+  name?: string;
+  format?: ExportFormat;
+  /** output scale (0.5 / 1 / 2) */
+  scale?: number;
+  quality?: 'high' | 'standard' | 'small';
+  /** motion blur: sub-frames per frame (1 = off, 4–8 typical) */
+  motionBlur?: number;
+  /** transparent background (prores/webm only): drops the project background colour */
+  transparent?: boolean;
+}
 
-export function startExport(opts: { from?: number; to?: number; name?: string } = {}): ExportJob {
+const jobs = new Map<string, ExportJob>();
+const aborts = new Map<string, { aborted: boolean; kill?: () => void }>();
+export function getJobs() { return [...jobs.values()]; }
+export function cancelExport(id: string) {
+  const a = aborts.get(id);
+  if (!a) return false;
+  a.aborted = true;
+  a.kill?.();
+  return true;
+}
+
+export function startExport(opts: ExportOptions = {}): ExportJob {
   const store = cur();
   const p = store.project;
   const end = Math.max(0, ...p.items.map((i) => i.start + i.duration));
   const from = Math.max(0, opts.from ?? 0);
   const to = Math.min(opts.to ?? (end || p.duration), end || p.duration);
-  const job: ExportJob = { id: nid(), status: 'running', progress: 0, stage: 'preparing', from, to };
+  const job: ExportJob = { id: nid(), status: 'running', progress: 0, stage: 'подготовка', from, to };
   jobs.set(job.id, job);
+  const signal = { aborted: false } as { aborted: boolean; kill?: () => void };
+  aborts.set(job.id, signal);
   const emit = () => bus.send({ type: 'export', job: { ...job } });
   emit();
   (async () => {
     try {
-      job.output = await exportRange(from, to, opts.name || p.name, (stage, prog) => { job.stage = stage; job.progress = prog; emit(); });
-      job.status = 'done'; job.progress = 1; job.stage = 'done';
+      job.output = await exportRange({ ...opts, from, to, name: opts.name || p.name }, (stage, prog) => { job.stage = stage; job.progress = prog; emit(); }, signal);
+      job.status = 'done'; job.progress = 1; job.stage = 'готово';
     } catch (e) {
-      job.status = 'error'; job.error = (e as Error).message.slice(-2000);
+      job.status = 'error';
+      job.error = signal.aborted ? 'Отменено' : (e as Error).message.slice(-2000);
     }
+    aborts.delete(job.id);
     emit();
   })();
   return job;
 }
 
-export async function exportRange(from: number, to: number, name: string, progress: (stage: string, p: number) => void = () => {}): Promise<string> {
+const QUALITY = { high: 15, standard: 19, small: 26 } as const;
+
+export async function exportRange(o: ExportOptions & { from: number; to: number; name: string }, progress: (stage: string, p: number) => void = () => {}, signal: { aborted: boolean; kill?: () => void } = { aborted: false }): Promise<string> {
   const store = cur();
   const p = store.project;
+  const { from, to } = o;
+  const format: ExportFormat = o.format || 'mp4';
+  const alphaOut = (format === 'prores' || format === 'webm') && !!o.transparent;
+  const N = Math.max(1, Math.min(16, Math.round(o.motionBlur || 1)));
+  const scale = o.scale && o.scale > 0 ? o.scale : 1;
   const D = Math.max(1 / p.fps, to - from);
-  const W = p.width, H = p.height, fps = p.fps;
+  const W = p.width, H = p.height, fps = format === 'gif' ? Math.min(p.fps, 20) : p.fps;
+  const check = () => { if (signal.aborted) throw new Error('cancelled'); };
 
   // clip an item to the export window
   const win = (it: Item) => {
@@ -136,34 +171,37 @@ export async function exportRange(from: number, to: number, name: string, progre
   };
 
   // 1) music
-  progress('rendering music', 0.02);
-  const musicItems = p.items.filter((i) => i.kind === 'music' && win(i));
-  for (const it of musicItems) await renderMusic(it.ref);
+  progress('музыка', 0.02);
+  for (const it of p.items.filter((i) => i.kind === 'music' && win(i))) { check(); await renderMusic(it.ref); }
 
-  // 2) clip sequences
-  const layers = visualLayers(p).filter((i) => win(i));
+  // 2) clip sequences (with sub-frames for motion blur)
+  // transparent export = graphics only (to composite over footage in another editor)
+  const layers = visualLayers(p).filter((i) => win(i) && (!alphaOut || i.kind === 'clip'));
   const clipItems = layers.filter((i) => i.kind === 'clip');
-  const seqs = new Map<string, { dir: string; count: number }>();
-  let doneClips = 0;
-  const totalFrames = clipItems.reduce((a, i) => a + Math.round(i.duration * fps), 0) || 1;
+  const seqs = new Map<string, { dir: string; count: number; subframes: number }>();
+  const totalFrames = clipItems.reduce((a, i) => a + Math.round(i.duration * p.fps) * N, 0) || 1;
   const prog = new Map<string, number>();
   await Promise.all(clipItems.map(async (it) => {
     const r = await renderItemSequence(it, p, (d) => {
       prog.set(it.id, d);
       const sum = [...prog.values()].reduce((a, b) => a + b, 0);
-      progress(`rendering graphics ${sum}/${totalFrames} frames`, 0.05 + 0.6 * (sum / totalFrames));
-    });
+      progress(`графика ${sum}/${totalFrames} кадров${N > 1 ? ` (motion blur ×${N})` : ''}`, 0.04 + 0.62 * (sum / totalFrames));
+    }, { subframes: N, signal });
     seqs.set(it.id, r);
-    doneClips++;
   }));
+  check();
 
   // 3) ffmpeg graph
-  progress('encoding', 0.66);
+  progress('кодирование', 0.66);
   const args: string[] = ['-y', '-v', 'error', '-progress', 'pipe:1', '-nostats'];
   const filters: string[] = [];
   let n = 0;
-  args.push('-f', 'lavfi', '-i', `color=c=${p.background.replace('#', '0x')}:s=${W}x${H}:r=${fps}:d=${D.toFixed(3)}`);
-  let base = '[0:v]';
+  // note: lavfi `color=c=black@0` is NOT transparent — zero the alpha explicitly
+  const bg = alphaOut ? 'black' : p.background.replace('#', '0x');
+  args.push('-f', 'lavfi', '-i', `color=c=${bg}:s=${W}x${H}:r=${p.fps}:d=${D.toFixed(3)}`);
+  let base = alphaOut ? '[0:v]format=rgba,colorchannelmixer=aa=0[base0]' : '[0:v]format=rgba[base0]';
+  filters.push(base);
+  base = '[base0]';
   n++;
   let li = 0;
   for (const it of layers) {
@@ -173,79 +211,100 @@ export async function exportRange(from: number, to: number, name: string, progre
     let chain = '';
     if (it.kind === 'clip') {
       const seq = seqs.get(it.id)!;
-      const startNum = Math.round((w.srcIn - it.in) * fps);
-      args.push('-framerate', String(fps), '-start_number', String(startNum), '-i', path.join(seq.dir, '%06d.png'));
-      chain = `[${idx}:v]format=rgba,trim=duration=${w.dur.toFixed(3)},setpts=PTS-STARTPTS+${w.start.toFixed(3)}/TB`;
+      const S = seq.subframes;
+      const startNum = Math.round((w.srcIn - it.in) * p.fps) * S;
+      args.push('-framerate', String(p.fps * S), '-start_number', String(startNum), '-i', path.join(seq.dir, '%06d.png'));
+      chain = `[${idx}:v]format=rgba`;
+      // accumulate sub-frames in premultiplied space (no dark fringes), keep the last sample of each group
+      if (S > 1) chain += `,premultiply=inplace=1,tmix=frames=${S},select='eq(mod(n\\,${S})\\,${S - 1})',unpremultiply=inplace=1`;
+      chain += `,setpts=PTS-STARTPTS,fps=${p.fps},trim=duration=${w.dur.toFixed(3)},setpts=PTS-STARTPTS+${w.start.toFixed(3)}/TB`;
     } else {
       const f = mediaFile(it);
       const src = store.p('media', f);
       const tr = it.transform || {};
-      if (isImage(f)) args.push('-loop', '1', '-framerate', String(fps), '-t', w.dur.toFixed(3), '-i', src);
+      if (isImage(f)) args.push('-loop', '1', '-framerate', String(p.fps), '-t', w.dur.toFixed(3), '-i', src);
       else args.push('-ss', w.srcIn.toFixed(3), '-t', w.dur.toFixed(3), '-i', src);
       const fit = tr.fit === 'cover' ? 'increase' : 'decrease';
       const s = tr.scale ?? 1;
-      chain = `[${idx}:v]fps=${fps},scale=${W}:${H}:force_original_aspect_ratio=${fit}${s !== 1 ? `,scale=iw*${s}:ih*${s}` : ''},format=rgba,setpts=PTS-STARTPTS+${w.start.toFixed(3)}/TB`;
+      chain = `[${idx}:v]fps=${p.fps},scale=${W}:${H}:force_original_aspect_ratio=${fit}:flags=lanczos${s !== 1 ? `,scale=iw*${s}:ih*${s}:flags=lanczos` : ''},format=rgba,setpts=PTS-STARTPTS+${w.start.toFixed(3)}/TB`;
     }
     if (op < 1) chain += `,colorchannelmixer=aa=${op}`;
     const tr = it.transform || {};
     const x = it.kind === 'clip' ? '0' : `(main_w-overlay_w)/2+${tr.x || 0}`;
     const y = it.kind === 'clip' ? '0' : `(main_h-overlay_h)/2+${tr.y || 0}`;
     filters.push(`${chain}[l${li}]`);
-    filters.push(`${base}[l${li}]overlay=x=${x}:y=${y}:eof_action=pass:enable='between(t,${w.start.toFixed(3)},${(w.start + w.dur).toFixed(3)})'[b${li}]`);
+    filters.push(`${base}[l${li}]overlay=x=${x}:y=${y}:format=rgb:eof_action=pass:enable='between(t,${w.start.toFixed(3)},${(w.start + w.dur).toFixed(3)})'[b${li}]`);
     base = `[b${li}]`;
     li++;
   }
-  filters.push(`${base}format=yuv420p[vout]`);
+  const outW = Math.round((W * scale) / 2) * 2, outH = Math.round((H * scale) / 2) * 2;
+  const scaleF = scale !== 1 ? `scale=${outW}:${outH}:flags=lanczos,` : '';
+  // colour: convert RGB → YUV with BT.709 (HD) and tag it, so every player shows what the preview showed
+  if (format === 'mp4') filters.push(`${base}${scaleF}scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv[vout]`);
+  else if (format === 'prores') filters.push(`${base}${scaleF}scale=out_color_matrix=bt709:out_range=tv,format=${alphaOut ? 'yuva444p10le' : 'yuv422p10le'},setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv[vout]`);
+  else if (format === 'webm') filters.push(`${base}${scaleF}scale=out_color_matrix=bt709:out_range=tv,format=${alphaOut ? 'yuva420p' : 'yuv420p'},setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv[vout]`);
+  else filters.push(`${base}${scaleF}fps=${fps},split[g1][g2];[g1]palettegen=stats_mode=diff:max_colors=256[pal];[g2][pal]paletteuse=dither=sierra2_4a:diff_mode=rectangle[vout]`);
 
   // audio
   const audioIns: string[] = [];
-  const mutedTracks = new Set(p.tracks.filter((t) => t.muted).map((t) => t.id));
-  for (const it of p.items) {
-    if (mutedTracks.has(it.track)) continue;
-    const w = win(it);
-    if (!w) continue;
-    let src: string | null = null;
-    if (it.kind === 'music') {
-      const info = store.musicInfo(it.ref);
-      if (info.rendered) src = store.p(info.rendered);
-    } else if (it.kind === 'media' || it.kind === 'generated') {
-      const f = mediaFile(it);
-      const mi = store.mediaInfo(f);
-      if (mi.type === 'audio' || (mi.type === 'video' && mi.hasAudio)) src = store.p('media', f);
+  if (format !== 'gif') {
+    const mutedTracks = new Set(p.tracks.filter((t) => t.muted).map((t) => t.id));
+    for (const it of p.items) {
+      if (mutedTracks.has(it.track)) continue;
+      const w = win(it);
+      if (!w) continue;
+      let src: string | null = null;
+      if (it.kind === 'music') {
+        const info = store.musicInfo(it.ref);
+        if (info.rendered) src = store.p(info.rendered);
+      } else if (it.kind === 'media' || it.kind === 'generated') {
+        const f = mediaFile(it);
+        const mi = store.mediaInfo(f);
+        if (mi.type === 'audio' || (mi.type === 'video' && mi.hasAudio)) src = store.p('media', f);
+      }
+      if (!src || !fs.existsSync(src)) continue;
+      const idx = n++;
+      args.push('-ss', w.srcIn.toFixed(3), '-t', w.dur.toFixed(3), '-i', src);
+      const ms = Math.round(w.start * 1000);
+      filters.push(`[${idx}:a]aresample=48000,aformat=channel_layouts=stereo,volume=${it.volume ?? 1},adelay=${ms}:all=1[a${audioIns.length}]`);
+      audioIns.push(`[a${audioIns.length}]`);
     }
-    if (!src || !fs.existsSync(src)) continue;
-    const idx = n++;
-    args.push('-ss', w.srcIn.toFixed(3), '-t', w.dur.toFixed(3), '-i', src);
-    const ms = Math.round(w.start * 1000);
-    filters.push(`[${idx}:a]aresample=48000,aformat=channel_layouts=stereo,volume=${it.volume ?? 1},adelay=${ms}:all=1[a${audioIns.length}]`);
-    audioIns.push(`[a${audioIns.length}]`);
-  }
-  if (audioIns.length) filters.push(`${audioIns.join('')}amix=inputs=${audioIns.length}:normalize=0:dropout_transition=0,alimiter=limit=0.97,apad,atrim=0:${D.toFixed(3)}[aout]`);
-  else {
-    args.push('-f', 'lavfi', '-t', D.toFixed(3), '-i', 'anullsrc=r=48000:cl=stereo');
-    filters.push(`[${n++}:a]anull[aout]`);
+    if (audioIns.length) filters.push(`${audioIns.join('')}amix=inputs=${audioIns.length}:normalize=0:dropout_transition=0,alimiter=limit=0.97,apad,atrim=0:${D.toFixed(3)}[aout]`);
+    else {
+      args.push('-f', 'lavfi', '-t', D.toFixed(3), '-i', 'anullsrc=r=48000:cl=stereo');
+      filters.push(`[${n++}:a]anull[aout]`);
+    }
   }
 
   const outDir = store.p('.studio', 'exports');
   fs.mkdirSync(outDir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const out = path.join(outDir, `${slug(name)}-${stamp}.mp4`);
+  const ext = { mp4: 'mp4', prores: 'mov', webm: 'webm', gif: 'gif' }[format];
+  const out = path.join(outDir, `${slug(o.name)}-${stamp}${alphaOut ? '-alpha' : ''}.${ext}`);
   const filterFile = path.join(store.p('.studio'), `filter-${nid()}.txt`);
   fs.writeFileSync(filterFile, filters.join(';\n'));
-  args.push('-/filter_complex', filterFile, '-map', '[vout]', '-map', '[aout]', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-r', String(fps), '-c:a', 'aac', '-b:a', '192k', '-t', D.toFixed(3), '-movflags', '+faststart', out);
+  args.push('-/filter_complex', filterFile, '-map', '[vout]');
+  if (format !== 'gif') args.push('-map', '[aout]');
+  const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
+  if (format === 'mp4') args.push('-c:v', 'libx264', '-preset', o.quality === 'small' ? 'medium' : 'slow', '-crf', String(QUALITY[o.quality || 'standard']), '-profile:v', 'high', ...tags, '-r', String(p.fps), '-c:a', 'aac', '-b:a', '256k', '-movflags', '+faststart');
+  if (format === 'prores') args.push('-c:v', 'prores_ks', '-profile:v', alphaOut ? '4444' : '3', '-vendor', 'apl0', ...(alphaOut ? ['-alpha_bits', '16'] : []), ...tags, '-r', String(p.fps), '-c:a', 'pcm_s16le');
+  if (format === 'webm') args.push('-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(o.quality === 'small' ? 38 : o.quality === 'high' ? 24 : 30), '-row-mt', '1', '-deadline', 'good', '-cpu-used', '2', ...(alphaOut ? ['-auto-alt-ref', '0'] : []), ...tags, '-r', String(p.fps), '-c:a', 'libopus', '-b:a', '192k');
+  if (format === 'gif') args.push('-loop', '0');
+  args.push('-t', D.toFixed(3), out);
 
   await new Promise<void>((resolve, reject) => {
     const proc = spawn('ffmpeg', args);
+    signal.kill = () => proc.kill('SIGKILL');
     let err = '';
     proc.stderr.on('data', (d) => (err += d));
     proc.stdout.on('data', (d) => {
       const m = /out_time_ms=(\d+)/.exec(String(d));
-      if (m) progress('encoding', 0.66 + 0.34 * Math.min(1, Number(m[1]) / 1e6 / D));
+      if (m) progress('кодирование', 0.66 + 0.34 * Math.min(1, Number(m[1]) / 1e6 / D));
     });
     proc.on('error', reject);
-    proc.on('close', (code) => (code === 0 ? resolve() : reject(new Error('ffmpeg failed: ' + err.slice(-3000)))));
+    proc.on('close', (code) => (code === 0 ? resolve() : reject(new Error(signal.aborted ? 'cancelled' : 'ffmpeg failed: ' + err.slice(-3000)))));
   });
   fs.rmSync(filterFile, { force: true });
-  void doneClips;
+  if (signal.aborted) { fs.rmSync(out, { force: true }); throw new Error('cancelled'); }
   return path.relative(store.dir, out).split(path.sep).join('/');
 }
