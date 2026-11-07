@@ -1,3 +1,4 @@
+import { uerr } from '../i18n.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Voice } from '../../shared/types.ts';
@@ -9,9 +10,9 @@ import { slug, sha1, writeJson } from '../util.ts';
 const API = 'https://api.elevenlabs.io/v1';
 export const DEFAULT_MODEL = 'eleven_multilingual_v2';
 export const MODELS = [
-  { id: 'eleven_multilingual_v2', name: 'Multilingual v2 — лучшее качество, RU' },
-  { id: 'eleven_v3', name: 'Eleven v3 — самый выразительный' },
-  { id: 'eleven_flash_v2_5', name: 'Flash v2.5 — быстрый и дешёвый' },
+  { id: 'eleven_multilingual_v2', name: 'Multilingual v2 — best quality, 29 languages' },
+  { id: 'eleven_v3', name: 'Eleven v3 — most expressive' },
+  { id: 'eleven_flash_v2_5', name: 'Flash v2.5 — fast & cheap' },
   { id: 'eleven_turbo_v2_5', name: 'Turbo v2.5' },
 ];
 
@@ -20,7 +21,7 @@ export function apiKey() {
 }
 function need() {
   const k = apiKey();
-  if (!k) throw Object.assign(new Error('Нет ключа ElevenLabs: добавьте его в Настройках (или ELEVENLABS_API_KEY).'), { statusCode: 400 });
+  if (!k) throw uerr('No ElevenLabs key: add it in Settings (or set ELEVENLABS_API_KEY).');
   return k;
 }
 
@@ -66,10 +67,10 @@ export async function tts(o: TtsOptions): Promise<TtsResult> {
   const store = cur();
   const s = getSettings();
   const voiceId = o.voiceId || s.elevenlabsVoiceId;
-  if (!voiceId) throw Object.assign(new Error('Не выбран голос ElevenLabs: выберите его в Настройках.'), { statusCode: 400 });
+  if (!voiceId) throw uerr('No ElevenLabs voice selected: choose one in Settings.');
   const modelId = o.modelId || s.elevenlabsModel || DEFAULT_MODEL;
   const text = o.text.trim();
-  if (!text) throw Object.assign(new Error('Пустой текст для озвучки'), { statusCode: 400 });
+  if (!text) throw uerr('Nothing to voice: the text is empty');
   const voiceSettings = { stability: o.stability ?? 0.45, similarity_boost: o.similarity ?? 0.8, style: o.style ?? 0.15, use_speaker_boost: true, ...(o.speed ? { speed: o.speed } : {}) };
   const key = sha1(JSON.stringify({ text, voiceId, modelId, voiceSettings, p: o.previousText, n: o.nextText }));
   const file = `vo-${slug(o.name || text.slice(0, 32))}-${key.slice(0, 6)}.mp3`;
@@ -84,7 +85,7 @@ export async function tts(o: TtsOptions): Promise<TtsResult> {
   if (o.nextText) body.next_text = o.nextText;
   const res = await call(`/text-to-speech/${encodeURIComponent(voiceId)}/with-timestamps?output_format=mp3_44100_128`, { method: 'POST', body: JSON.stringify(body) });
   const j: any = await res.json();
-  if (!j.audio_base64) throw new Error('ElevenLabs: пустой ответ');
+  if (!j.audio_base64) throw uerr('ElevenLabs returned an empty response');
   fs.mkdirSync(path.dirname(dst), { recursive: true });
   fs.writeFileSync(dst, Buffer.from(j.audio_base64, 'base64'));
   const al = j.alignment || j.normalized_alignment;

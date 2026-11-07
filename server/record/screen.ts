@@ -1,3 +1,4 @@
+import { uerr } from '../i18n.ts';
 import fs from 'node:fs';
 import { cur } from '../project.ts';
 import { run, runOk, slug, writeJson } from '../util.ts';
@@ -32,7 +33,7 @@ export async function listApps(): Promise<string[]> {
 async function screenDevice(): Promise<string> {
   const r = await run('ffmpeg', ['-hide_banner', '-f', 'avfoundation', '-list_devices', 'true', '-i', '']);
   const m = /\[(\d+)\] Capture screen 0/.exec(r.stderr);
-  if (!m) throw new Error('Не найдено устройство захвата экрана (avfoundation «Capture screen 0»).');
+  if (!m) throw uerr('No screen capture device found (avfoundation “Capture screen 0”).');
   return m[1];
 }
 
@@ -41,16 +42,16 @@ async function windowRect(app: string) {
   await osa(`tell application "${esc}" to activate`);
   await new Promise((r) => setTimeout(r, 700));
   const r = await osa(`tell application "System Events" to tell process "${esc}" to get {position, size} of front window`);
-  if (r.code !== 0) throw new Error(`Не удалось получить окно «${app}». Разрешите Accessibility для терминала: Системные настройки → Конфиденциальность → Универсальный доступ. (${r.stderr.trim().slice(0, 200)})`);
+  if (r.code !== 0) throw uerr('Could not get the “{app}” window. Allow Accessibility for your terminal: System Settings → Privacy & Security → Accessibility. ({error})', { app, error: r.stderr.trim().slice(0, 200) });
   const n = r.stdout.trim().split(/,\s*/).map(Number);
-  if (n.length < 4 || n.some((x) => Number.isNaN(x))) throw new Error('окно не найдено: ' + r.stdout);
+  if (n.length < 4 || n.some((x) => Number.isNaN(x))) throw uerr('Window not found: {details}', { details: r.stdout.trim() });
   const d = await osa('tell application "Finder" to get bounds of window of desktop');
   const logicalW = Number(d.stdout.trim().split(/,\s*/)[2]) || 0;
   return { x: n[0], y: n[1], w: n[2], h: n[3], logicalW };
 }
 
 export async function recordScreen(o: ScreenRecordOptions): Promise<{ file: string; duration: number }> {
-  if (process.platform !== 'darwin') throw new Error('Запись приложений пока доступна только на macOS.');
+  if (process.platform !== 'darwin') throw uerr('App recording is available on macOS only for now.');
   const store = cur();
   const p = store.project;
   const seconds = Math.max(1, Math.min(600, o.seconds));
@@ -62,7 +63,7 @@ export async function recordScreen(o: ScreenRecordOptions): Promise<{ file: stri
     // probe the physical capture size to get the Retina scale
     const probe = await run('ffmpeg', ['-hide_banner', '-f', 'avfoundation', '-framerate', '30', '-i', `${dev}:none`, '-frames:v', '1', '-f', 'null', '-']);
     const sz = /, (\d{3,5})x(\d{3,5})/.exec(probe.stderr);
-    if (probe.code !== 0 || !sz) throw new Error('Нет доступа к записи экрана. Разрешите «Запись экрана» для приложения, в котором запущен редактор (Терминал / iTerm): Системные настройки → Конфиденциальность и безопасность → Запись экрана, затем перезапустите редактор.');
+    if (probe.code !== 0 || !sz) throw uerr('No screen recording access. Allow “Screen Recording” for the app that runs the editor (Terminal / iTerm): System Settings → Privacy & Security → Screen Recording, then restart the editor.');
     const k = r.logicalW ? Number(sz[1]) / r.logicalW : 2;
     const pad = (o.padding ?? 0) * k;
     const cx = Math.max(0, Math.round(r.x * k - pad)), cy = Math.max(0, Math.round(r.y * k - pad));
@@ -81,10 +82,10 @@ export async function recordScreen(o: ScreenRecordOptions): Promise<{ file: stri
   }
   try { await rec; } catch (e) {
     const msg = (e as Error).message;
-    if (/Input\/output|not authorized|permission/i.test(msg)) throw new Error('Нет доступа к записи экрана: Системные настройки → Конфиденциальность и безопасность → Запись экрана → включите для Терминала/iTerm и перезапустите редактор.');
+    if (/Input\/output|not authorized|permission/i.test(msg)) throw uerr('No screen recording access: System Settings → Privacy & Security → Screen Recording → enable it for Terminal/iTerm and restart the editor.');
     throw e;
   }
-  if (!fs.existsSync(out)) throw new Error('запись не создана');
+  if (!fs.existsSync(out)) throw uerr('The recording was not created');
   const info = await probeMedia(name, true);
   writeJson(store.p('.studio', 'media', name + '.source.json'), { kind: 'screen', ...o });
   return { file: name, duration: info.duration };

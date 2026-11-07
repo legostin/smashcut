@@ -51,7 +51,7 @@ app.register(async (f) => {
 });
 
 app.setErrorHandler((err: any, _req, reply) => {
-  reply.code(err.statusCode && err.statusCode >= 400 ? err.statusCode : 500).send({ error: err.message });
+  reply.code(err.statusCode && err.statusCode >= 400 ? err.statusCode : 500).send({ error: err.message, key: err.key, params: err.params });
 });
 
 await registerRoutes(app);

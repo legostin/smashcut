@@ -10,7 +10,7 @@ optional rectangle `w,h`, and text. You receive an **annotated snapshot** (numbe
 
 1. `list_comments {status:'open'}` (or use the ones in the task). Read each `snapshot` image.
 2. Map the pin to the element: x 0.1 = 192 px, y 0.8 = 864 px at 1080p. Find which DOM element / layer sits there at that clip-local time (render_clip at that time if unsure).
-3. Interpret intent generously but precisely: "слишком быстро" → slow that specific motion, not the whole clip; "не читается" → contrast/size/hold time; "в ритм" → align to `studio.beat()`.
+3. Interpret intent generously but precisely: "too fast" → slow that specific motion, not the whole clip; "hard to read" → contrast/size/hold time; "on the beat" → align to `studio.beat()`.
 4. Fix in the smallest scope. Don't redesign things that weren't commented on.
 5. Verify: `render_clip {clipId, times:[around each comment time]}` and `render_frame` for composite problems. Compare against the snapshot.
 6. `resolve_comment {id, note}` for each comment — note says concretely what changed ("title entrance 0.4→0.8s, expo.out; plate +12% opacity").

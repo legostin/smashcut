@@ -1,3 +1,4 @@
+import { msg } from './i18n.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { MediaInfo } from '../shared/types.ts';
@@ -122,11 +123,11 @@ function makeProxy(file: string, rel: string) {
   const store = cur();
   const out = store.p(rel);
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  bus.send({ type: 'notice', level: 'info', text: `Готовлю превью-прокси для ${file}…` });
+  bus.send({ type: 'notice', level: 'info', ...msg('Preparing a preview proxy for {file}…', { file }) });
   run('ffmpeg', ['-y', '-v', 'error', '-i', store.p('media', file), '-vf', "scale='min(1280,iw)':-2:flags=bicubic,format=yuv420p", '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-g', '15', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', out + '.tmp.mp4'])
     .then(async (r) => {
       proxyJobs.delete(file);
-      if (r.code !== 0) { bus.send({ type: 'notice', level: 'error', text: `Прокси для ${file} не удалось: ${r.stderr.slice(-300)}` }); return; }
+      if (r.code !== 0) { bus.send({ type: 'notice', level: 'error', ...msg('Proxy for {file} failed: {error}', { file, error: r.stderr.slice(-300) }) }); return; }
       fs.renameSync(out + '.tmp.mp4', out);
       await probeMedia(file, true);
     })

@@ -5,12 +5,12 @@ import { readJson, writeJson, nid, Mutex } from './util.ts';
 
 /** script.json — the brief, the production stage and the scene list (storyboard) of the video. */
 export const STAGES: { id: StageId; label: string }[] = [
-  { id: 'brief', label: 'Бриф' },
-  { id: 'script', label: 'Сценарий' },
-  { id: 'storyboard', label: 'Раскадровка' },
-  { id: 'production', label: 'Производство' },
-  { id: 'review', label: 'Проверка' },
-  { id: 'export', label: 'Экспорт' },
+  { id: 'brief', label: 'Brief' },
+  { id: 'script', label: 'Script' },
+  { id: 'storyboard', label: 'Storyboard' },
+  { id: 'production', label: 'Production' },
+  { id: 'review', label: 'Review' },
+  { id: 'export', label: 'Export' },
 ];
 
 const EMPTY: Script = { brief: '', stage: 'brief', scenes: [] };
@@ -25,7 +25,7 @@ export function getScript(): Script {
 function normalize(s: Partial<Script>): Script {
   const scenes = (s.scenes || []).map((x, i) => ({
     id: x.id || 's' + nid(),
-    title: x.title || `Сцена ${i + 1}`,
+    title: x.title || `Scene ${i + 1}`,
     start: Math.max(0, Number(x.start) || 0),
     duration: Math.max(0.1, Number(x.duration) || 3),
     voiceover: x.voiceover || '',

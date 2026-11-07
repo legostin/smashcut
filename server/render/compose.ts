@@ -1,3 +1,4 @@
+import { msg, fill } from '../i18n.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
@@ -160,7 +161,7 @@ export function startExport(opts: ExportOptions = {}): ExportJob {
   const end = Math.max(0, ...p.items.map((i) => i.start + i.duration));
   const from = Math.max(0, opts.from ?? 0);
   const to = Math.min(opts.to ?? (end || p.duration), end || p.duration);
-  const job: ExportJob = { id: nid(), status: 'running', progress: 0, stage: 'подготовка', from, to };
+  const job: ExportJob = { id: nid(), status: 'running', progress: 0, stage: 'preparing', stageKey: 'preparing', from, to };
   jobs.set(job.id, job);
   const signal = { aborted: false } as { aborted: boolean; kill?: () => void };
   aborts.set(job.id, signal);
@@ -172,11 +173,11 @@ export function startExport(opts: ExportOptions = {}): ExportJob {
   fs.writeFileSync(activeFile, JSON.stringify({ ...opts, from, to }));
   (async () => {
     try {
-      job.output = await exportRange({ ...opts, from, to, name: opts.name || p.name }, (stage, prog) => { job.stage = stage; job.progress = prog; emit(); }, signal);
-      job.status = 'done'; job.progress = 1; job.stage = 'готово';
+      job.output = await exportRange({ ...opts, from, to, name: opts.name || p.name }, (stage, prog, params) => { job.stage = fill(stage, params); job.stageKey = stage; job.stageParams = params; job.progress = prog; emit(); }, signal);
+      job.status = 'done'; job.progress = 1; job.stage = 'done'; job.stageKey = 'done'; job.stageParams = undefined;
     } catch (e) {
       job.status = 'error';
-      job.error = signal.aborted ? 'Отменено' : (e as Error).message.slice(-2000);
+      job.error = signal.aborted ? 'Cancelled' : (e as Error).message.slice(-2000);
     }
     aborts.delete(job.id);
     try { fs.rmSync(activeFile, { force: true }); } catch {}
@@ -191,14 +192,14 @@ export function resumeExport() {
   if (!fs.existsSync(f)) return null;
   try {
     const opts = JSON.parse(fs.readFileSync(f, 'utf8'));
-    bus.send({ type: 'notice', level: 'info', text: 'Продолжаю экспорт, прерванный перезапуском (готовые кадры берутся из кэша)' });
+    bus.send({ type: 'notice', level: 'info', ...msg('Resuming the export interrupted by a restart (finished frames come from the cache)') });
     return startExport(opts);
   } catch { fs.rmSync(f, { force: true }); return null; }
 }
 
 const QUALITY = { high: 15, standard: 19, small: 26 } as const;
 
-export async function exportRange(o: ExportOptions & { from: number; to: number; name: string }, progress: (stage: string, p: number) => void = () => {}, signal: { aborted: boolean; kill?: () => void } = { aborted: false }): Promise<string> {
+export async function exportRange(o: ExportOptions & { from: number; to: number; name: string }, progress: (stage: string, p: number, params?: Record<string, string | number>) => void = () => {}, signal: { aborted: boolean; kill?: () => void } = { aborted: false }): Promise<string> {
   const store = cur();
   const p = store.project;
   const { from, to } = o;
@@ -212,10 +213,10 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
   const check = () => { if (signal.aborted) throw new Error('cancelled'); };
 
   // 1) music + video frames
-  progress('музыка', 0.02);
+  progress('music', 0.02);
   const inWin = (it: Item) => it.start < to && it.start + it.duration > from;
   for (const it of p.items.filter((i) => i.kind === 'music' && inWin(i))) { check(); await renderMusic(it.ref); }
-  progress('видеокадры', 0.04);
+  progress('video frames', 0.04);
   const manifestId = await makeManifest(from, to, { transparent: alphaOut });
   check();
 
@@ -228,7 +229,7 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
   const workers = Math.max(1, getSettings().renderWorkers);
   const chunk = Math.ceil(total / workers);
   let done = 0;
-  const report = () => progress(`кадры ${done}/${total}${N > 1 ? ` (motion blur ×${N})` : ''}`, 0.06 + 0.64 * (done / total));
+  const report = () => progress(N > 1 ? 'frames {done}/{total} (motion blur ×{n})' : 'frames {done}/{total}', 0.06 + 0.64 * (done / total), { done, total, n: N });
   const renderChunk = async (a: number, b: number, attempt = 0): Promise<void> => {
     let s0 = a;
     while (s0 < b && fs.existsSync(path.join(workDir, `${String(s0).padStart(6, '0')}.${ext}`))) { s0++; if (attempt === 0) done++; }
@@ -256,7 +257,7 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
   check();
 
   // 3) encode (+ audio mix with fades)
-  progress('кодирование', 0.72);
+  progress('encoding', 0.72);
   const args: string[] = ['-y', '-v', 'error', '-progress', 'pipe:1', '-nostats'];
   const filters: string[] = [];
   args.push('-framerate', String(fps * N), '-start_number', '0', '-i', path.join(workDir, `%06d.${ext}`));
@@ -319,7 +320,7 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
     proc.stderr.on('data', (d) => (err += d));
     proc.stdout.on('data', (d) => {
       const m = /out_time_ms=(\d+)/.exec(String(d));
-      if (m) progress('кодирование', 0.72 + 0.28 * Math.min(1, Number(m[1]) / 1e6 / D));
+      if (m) progress('encoding', 0.72 + 0.28 * Math.min(1, Number(m[1]) / 1e6 / D));
     });
     proc.on('error', reject);
     proc.on('close', (code) => (code === 0 ? resolve() : reject(new Error(signal.aborted ? 'cancelled' : 'ffmpeg failed: ' + err.slice(-3000)))));

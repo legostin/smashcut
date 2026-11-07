@@ -7,7 +7,7 @@ description: Production workflow for making a whole video from a brief — write
 
 **Script first.** Every session starts with `get_script`. If there are no scenes, write the script before anything else — even for a small request, capture the video as it is plus the change (it costs one tool call and gives the user a map of the work).
 
-The editor shows `script.json` live in the "Сценарий" panel, and the user watches the preview change as you work.
+The editor shows `script.json` live in the "Script" panel, and the user watches the preview change as you work.
 Work in small visible steps so mistakes are caught early.
 
 ## 1. Brief → script

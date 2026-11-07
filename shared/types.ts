@@ -151,6 +151,9 @@ export type TaskStatus = 'queued' | 'running' | 'done' | 'error' | 'cancelled';
 export interface AgentEvent {
   t: number;
   kind: 'user' | 'text' | 'thinking' | 'tool' | 'tool_result' | 'status' | 'error' | 'result' | 'image';
+  /** translatable form of `text` (English key + params) */
+  key?: string;
+  params?: Record<string, string | number>;
   /** for kind=image: URL of a frame the agent rendered to look at */
   src?: string;
   text?: string;
@@ -273,6 +276,8 @@ export interface ExportJob {
   status: 'running' | 'done' | 'error';
   progress: number;
   stage: string;
+  stageKey?: string;
+  stageParams?: Record<string, string | number>;
   output?: string;
   error?: string;
   from: number;
@@ -293,4 +298,4 @@ export type ServerEvent =
   | { type: 'design'; design: DesignSystem }
   | { type: 'board'; notes: BoardNote[] }
   | { type: 'record'; job: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string } }
-  | { type: 'notice'; level: 'info' | 'error'; text: string };
+  | { type: 'notice'; level: 'info' | 'error'; text: string; key?: string; params?: Record<string, string | number> };

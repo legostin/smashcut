@@ -1,3 +1,4 @@
+import { msg, uerr } from './i18n.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
@@ -25,10 +26,18 @@ import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
 import { recordWeb, defaultWebActions, recordJobs, emitJob, type RecordJob } from './record/web.ts';
 import { recordScreen, listApps } from './record/screen.ts';
+import { createVariant, family, variantPrompt } from './variants.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
 
 const SKELETONS = path.join(ROOT, 'server', 'skeletons');
+
+const LANG_NAMES: Record<string, string> = { en: 'English', ru: 'Russian', es: 'Spanish', de: 'German', fr: 'French', pt: 'Portuguese', zh: 'Chinese (Simplified)', ja: 'Japanese' };
+/** agents work in English but talk to the user in the UI language */
+function langLine(code?: string) {
+  if (!code || code === 'en' || !LANG_NAMES[code]) return '';
+  return `\n\n(Write your replies and summaries for the user in ${LANG_NAMES[code]}. Keep code, file names, ids and tool arguments in English unless the content itself must be in another language.)`;
+}
 
 function trackFor(p: Project, kind: Item['kind'], ref: string): string {
   let want: string[] = ['graphics'];
@@ -199,7 +208,7 @@ function overview() {
   };
 }
 
-async function sendComments(ids: string[] | undefined, agent?: 'claude' | 'codex') {
+async function sendComments(ids: string[] | undefined, agent?: 'claude' | 'codex', lang = '') {
   const store = cur();
   const p = store.project;
   const drafts = store.comments.filter((c) => c.status === 'draft' && (!ids || ids.includes(c.id)));
@@ -225,7 +234,7 @@ async function sendComments(ids: string[] | undefined, agent?: 'claude' | 'codex
       for (const c of cs) c.snapshot = rel;
       n++;
     }
-    const prompt = commentTaskPrompt({ clipId, item, project: p, comments: list, snapshots });
+    const prompt = commentTaskPrompt({ clipId, item, project: p, comments: list, snapshots }) + lang;
     const task = startTask({ agent, title: `${list.length} comment${list.length > 1 ? 's' : ''} on ${clipId || 'timeline'}`, prompt, clipId, commentIds: list.map((c) => c.id), images: snapshots.map((s) => store.p(s)) });
     await store.updateComments((all) => { for (const c of all) { const m = list.find((x) => x.id === c.id); if (m) { c.status = 'sent'; c.taskId = task.id; c.snapshot = m.snapshot; c.updatedAt = new Date().toISOString(); } } });
     created.push(task);
@@ -427,7 +436,7 @@ export async function registerRoutes(app: FastifyInstance) {
       else if (k.startsWith('__')) pj.schema[k] = { type: 'number', default: v, hidden: true };
     }
     writeJson(pf, pj);
-    const name = req.body.name || `${info.name} · мой стиль`;
+    const name = req.body.name || `${info.name} · my style`;
     writeJson(path.join(dst, 'manifest.json'), { ...readJson(path.join(dst, 'manifest.json'), {}), id, kind: 'clip', name, source: `style:${it.ref}`, duration: +(it.duration).toFixed(2), transform: it.transform, fx: it.fx });
     return { id, name };
   });
@@ -461,10 +470,10 @@ export async function registerRoutes(app: FastifyInstance) {
     const c = store.comments.find((x) => x.id === req.params.id);
     if (!c) throw Object.assign(new Error('comment not found: ' + req.params.id), { statusCode: 404 });
     await store.updateComments((l) => l.filter((x) => x.id !== c.id));
-    bus.send({ type: 'notice', level: 'info', text: `Агент удалил правку «${c.text.slice(0, 60)}» как неактуальную: ${req.body.reason}` });
+    bus.send({ type: 'notice', level: 'info', ...msg('The agent removed the obsolete note “{note}”: {reason}', { note: c.text.slice(0, 60), reason: req.body.reason }) });
     return { ok: true, id: c.id, deleted: true };
   });
-  app.post<{ Body: { ids?: string[]; agent?: 'claude' | 'codex' } }>('/api/comments/send', async (req) => { need(); return sendComments(req.body?.ids, req.body?.agent); });
+  app.post<{ Body: { ids?: string[]; agent?: 'claude' | 'codex'; lang?: string } }>('/api/comments/send', async (req) => { need(); return sendComments(req.body?.ids, req.body?.agent, langLine(req.body?.lang)); });
 
   // ---------- tasks ----------
   app.get('/api/tasks', async () => listTasks());
@@ -474,10 +483,10 @@ export async function registerRoutes(app: FastifyInstance) {
     const item = b.itemId ? store.project.items.find((i) => i.id === b.itemId) : undefined;
     const clipId = b.clipId || (item?.kind === 'clip' ? item.ref : undefined);
     const prompt = chatTaskPrompt({ prompt: b.prompt, project: store.project, playhead: b.playhead, item, clipId, hasScript: getScript().scenes.length > 0 });
-    return startTask({ agent: b.agent, title: b.prompt.split('\n')[0].slice(0, 80), prompt, clipId: undefined });
+    return startTask({ agent: b.agent, title: b.prompt.split('\n')[0].slice(0, 80), prompt: prompt + langLine((b as any).lang), clipId: undefined });
   });
-  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[] } }>('/api/tasks/:id/message', async (req) => followUp(req.params.id, req.body.prompt, req.body.images || []));
-  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[] } }>('/api/tasks/:id/interrupt', async (req) => interruptTask(req.params.id, req.body.prompt, req.body.images || []));
+  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[]; lang?: string } }>('/api/tasks/:id/message', async (req) => followUp(req.params.id, req.body.prompt + langLine(req.body.lang), req.body.images || []));
+  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[]; lang?: string } }>('/api/tasks/:id/interrupt', async (req) => interruptTask(req.params.id, req.body.prompt + langLine(req.body.lang), req.body.images || []));
   app.post<{ Params: { id: string } }>('/api/tasks/:id/cancel', async (req) => { cancelTask(req.params.id); return { ok: true }; });
   app.get('/api/agents/check', async () => {
     const check = async (cmd: string) => { try { const r = await run(cmd, ['--version']); return r.code === 0 ? r.stdout.trim().split('\n')[0] : null; } catch { return null; } };
@@ -519,7 +528,7 @@ export async function registerRoutes(app: FastifyInstance) {
       // one voice-over per scene: replace a previous VO item at that scene
       const p = store.project;
       let track = p.tracks.find((t) => t.kind === 'audio' && /озвуч|voice|vo/i.test(t.name)) || p.tracks.find((t) => t.kind === 'audio');
-      if (!track) { track = { id: 'vo', kind: 'audio', name: 'Озвучка' }; }
+      if (!track) { track = { id: 'vo', kind: 'audio', name: 'Voice-over' }; }
       const tr = track;
       const iid = 'i' + nid();
       await store.update((pp) => {
@@ -562,7 +571,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const n = readNotes().find((x) => x.id === req.params.id);
     if (!n) throw Object.assign(new Error('board note not found: ' + req.params.id), { statusCode: 404 });
     writeNotes(readNotes().map((x) => (x.id === n.id ? { ...x, status: 'resolved', resolution: req.body.note } : x)));
-    bus.send({ type: 'notice', level: 'info', text: `Агент закрыл комментарий «${n.text.slice(0, 60)}»: ${req.body.note}` });
+    bus.send({ type: 'notice', level: 'info', ...msg('The agent resolved “{note}”: {resolution}', { note: n.text.slice(0, 60), resolution: req.body.note }) });
     return { ok: true, id: n.id, status: 'resolved' };
   });
   app.post<{ Params: { id: string }; Body: { reason: string } }>('/api/board/notes/:id/dismiss', async (req) => {
@@ -570,12 +579,26 @@ export async function registerRoutes(app: FastifyInstance) {
     const n = readNotes().find((x) => x.id === req.params.id);
     if (!n) throw Object.assign(new Error('board note not found: ' + req.params.id), { statusCode: 404 });
     writeNotes(readNotes().filter((x) => x.id !== n.id));
-    bus.send({ type: 'notice', level: 'info', text: `Агент удалил комментарий «${n.text.slice(0, 60)}» как неактуальный: ${req.body.reason}` });
+    bus.send({ type: 'notice', level: 'info', ...msg('The agent removed the obsolete comment “{note}”: {reason}', { note: n.text.slice(0, 60), reason: req.body.reason }) });
     return { ok: true, id: n.id, deleted: true };
   });
   app.get('/api/agent/board-notes', async () => {
     need();
     return readNotes().map((n) => ({ ...n, status: n.status || 'open' }));
+  });
+
+  // ---------- video versions (language / aspect / length variants) ----------
+  app.get('/api/variants', async () => { need(); return family(); });
+  app.post<{ Body: any }>('/api/variants', async (req) => {
+    const store = need();
+    const b = req.body as any;
+    if (!b.label?.trim()) throw uerr('Name the version');
+    const parentName = store.project.name, parentSize = { width: store.project.width, height: store.project.height };
+    const { dir } = await createVariant(b);
+    syncSkills(dir, path.basename(dir));
+    openProject(dir);
+    const task = startTask({ agent: b.agent, title: `Version: ${b.label}`, prompt: variantPrompt(b, parentName, parentSize) + langLine(b.lang) });
+    return { dir, task, state: state() };
   });
 
   // ---------- footage recording (web pages, macOS apps) ----------
@@ -591,19 +614,19 @@ export async function registerRoutes(app: FastifyInstance) {
     return store.project.items.find((i) => i.id === iid);
   };
   const runRecording = (kind: 'web' | 'screen', label: string, fn: (job: RecordJob) => Promise<{ file: string; duration: number }>, place?: { start?: number; track?: string }) => {
-    const job: RecordJob = { id: 'r' + nid(), kind, status: 'running', stage: 'подготовка', label };
+    const job: RecordJob = { id: 'r' + nid(), kind, status: 'running', stage: 'preparing', label };
     emitJob(job);
     const done = (async () => {
       try {
         const r = await fn(job);
-        job.status = 'done'; job.stage = 'готово'; job.file = r.file; job.duration = r.duration;
+        job.status = 'done'; job.stage = 'done'; job.file = r.file; job.duration = r.duration;
         const item = await placeRecording(r.file, r.duration, place);
         emitJob(job);
-        bus.send({ type: 'notice', level: 'info', text: `Футаж записан: ${r.file} (${r.duration.toFixed(1)} с)${item ? ' — добавлен на таймлайн' : ''}` });
+        bus.send({ type: 'notice', level: 'info', ...msg(item ? 'Footage recorded: {file} ({seconds} s) — added to the timeline' : 'Footage recorded: {file} ({seconds} s)', { file: r.file, seconds: r.duration.toFixed(1) }) });
         return { ...r, item };
       } catch (e) {
         job.status = 'error'; job.error = (e as Error).message; emitJob(job);
-        bus.send({ type: 'notice', level: 'error', text: `Запись не удалась: ${job.error}` });
+        bus.send({ type: 'notice', level: 'error', ...msg('Recording failed: {error}', { error: job.error! }) });
         throw e;
       }
     })();
@@ -614,7 +637,7 @@ export async function registerRoutes(app: FastifyInstance) {
   app.post<{ Body: any }>('/api/record/web', async (req) => {
     need();
     const b = { ...(req.body as any) };
-    if (!b.url) throw Object.assign(new Error('укажите url'), { statusCode: 400 });
+    if (!b.url) throw uerr('Enter a URL');
     if (!/^https?:\/\//.test(b.url)) b.url = 'https://' + b.url;
     if (!b.actions || !b.actions.length) b.actions = defaultWebActions(b.seconds || 10);
     const { job, done } = runRecording('web', b.url, (j) => recordWeb(b, j), b.place);
@@ -624,7 +647,7 @@ export async function registerRoutes(app: FastifyInstance) {
   app.post<{ Body: any }>('/api/record/screen', async (req) => {
     need();
     const b = req.body as any;
-    const { job, done } = runRecording('screen', b.app || 'экран', () => recordScreen(b), b.place);
+    const { job, done } = runRecording('screen', b.app || 'screen', () => recordScreen(b), b.place);
     done.catch(() => {});
     return job;
   });
@@ -640,7 +663,7 @@ export async function registerRoutes(app: FastifyInstance) {
   app.post<{ Body: any }>('/api/agent/record-screen', async (req) => {
     need();
     const b = req.body as any;
-    const { done } = runRecording('screen', b.app || 'экран', () => recordScreen(b), b.place);
+    const { done } = runRecording('screen', b.app || 'screen', () => recordScreen(b), b.place);
     return done;
   });
 
@@ -668,7 +691,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const s = getScript();
     const b = (req.body || {}) as any;
     const last = s.scenes[s.scenes.length - 1];
-    const scene = { id: 's' + nid(), title: b.title || `Сцена ${s.scenes.length + 1}`, start: b.start ?? (last ? last.start + last.duration : 0), duration: b.duration ?? 4, voiceover: b.voiceover || '', visual: b.visual || '', notes: '', status: 'todo' as const, itemIds: [] };
+    const scene = { id: 's' + nid(), title: b.title || `Scene ${s.scenes.length + 1}`, start: b.start ?? (last ? last.start + last.duration : 0), duration: b.duration ?? 4, voiceover: b.voiceover || '', visual: b.visual || '', notes: '', status: 'todo' as const, itemIds: [] };
     return saveScript({ scenes: [...s.scenes, scene] });
   });
   app.patch<{ Params: { id: string }; Body: any }>('/api/script/scenes/:id', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', id: req.params.id, at: Date.now() }); return patchScene(req.params.id, req.body as any); });
@@ -724,14 +747,14 @@ export async function registerRoutes(app: FastifyInstance) {
     need();
     const r = await renderClipSheet(req.body.clipId, req.body);
     const tid = taskOf(req);
-    if (tid) { taskEvent(tid, { kind: 'image', src: '/p/' + r.file, text: `${req.body.clipId} · ${r.times.length} кадр.` }); setFocus(tid, { kind: 'clip', id: req.body.clipId, at: Date.now() }); }
+    if (tid) { taskEvent(tid, { kind: 'image', src: '/p/' + r.file, ...msg('{clip} · {n} frames', { clip: req.body.clipId, n: r.times.length }) }); setFocus(tid, { kind: 'clip', id: req.body.clipId, at: Date.now() }); }
     return { ...r, png: r.png.toString('base64'), file: cur().p(r.file) };
   });
   app.post<{ Body: { times: number[] } }>('/api/agent/render-frame', async (req) => {
     need();
     const r = await renderFrames(req.body.times);
     const tid = taskOf(req);
-    if (tid) taskEvent(tid, { kind: 'image', src: '/p/' + r.file, text: `кадр ${req.body.times.map((t) => t.toFixed(1) + 's').join(', ')}` });
+    if (tid) taskEvent(tid, { kind: 'image', src: '/p/' + r.file, ...msg('frame {times}', { times: req.body.times.map((t) => t.toFixed(1) + 's').join(', ') }) });
     return { ...r, png: r.png.toString('base64'), file: cur().p(r.file) };
   });
   app.post<{ Body: { clipId: string } }>('/api/agent/lint-clip', async (req) => { need(); return lintClip(req.body.clipId); });
@@ -747,7 +770,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const a = readJson<AudioAnalysis | null>(store.p('.studio', 'analysis', `music-${req.body.musicId}.json`), null);
     const spec = store.p('.studio', 'frames', `spec-${req.body.musicId}.png`);
     await spectrogram(store.p(info.rendered!), spec);
-    { const tid = taskOf(req); if (tid) taskEvent(tid, { kind: 'image', src: `/p/.studio/frames/spec-${req.body.musicId}.png?v=${Date.now()}`, text: `спектр трека ${req.body.musicId}` }); }
+    { const tid = taskOf(req); if (tid) taskEvent(tid, { kind: 'image', src: `/p/.studio/frames/spec-${req.body.musicId}.png?v=${Date.now()}`, ...msg('spectrogram of {track}', { track: req.body.musicId }) }); }
     return {
       summary: { ...info.meta, rendered: info.rendered, peakDbfs: a ? +(20 * Math.log10(a.peak + 1e-9)).toFixed(1) : null, loudness: a ? loudnessSparkline(a.loudness) : null, loudnessNote: 'one char ≈ ' + (a ? (a.duration / Math.min(80, a.loudness.length)).toFixed(2) : '?') + 's, ▁ quiet → █ loud', accents: a?.accents, detectedBpm: a?.bpm },
       spectrogram: fs.readFileSync(spec).toString('base64'),

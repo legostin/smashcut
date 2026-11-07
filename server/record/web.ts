@@ -1,3 +1,4 @@
+import { uerr } from '../i18n.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium, type Page } from 'playwright-core';
@@ -98,7 +99,7 @@ async function target(page: Page, a: { selector?: string; text?: string; x?: num
   const loc = a.selector ? page.locator(a.selector).first() : page.getByText(a.text || '', { exact: false }).first();
   await loc.scrollIntoViewIfNeeded({ timeout: 8000 }).catch(() => {});
   const b = await loc.boundingBox({ timeout: 8000 });
-  if (!b) throw new Error(`элемент не найден: ${a.selector || a.text}`);
+  if (!b) throw uerr('Element not found: {target}', { target: String(a.selector || a.text) });
   return { x: b.x + b.width / 2, y: b.y + b.height / 2, loc };
 }
 
@@ -140,7 +141,7 @@ export async function recordWeb(o: WebRecordOptions, job?: RecordJob): Promise<{
     if (o.cursor !== false && !mobile) await ctx.addInitScript(CURSOR_JS);
     if (o.hideScrollbars !== false) await ctx.addInitScript(`(() => { const s = document.createElement('style'); s.textContent = ${JSON.stringify(HIDE_SCROLLBARS)}; (document.head || document.documentElement).appendChild(s); })()`);
     const page = await ctx.newPage();
-    stage('загрузка страницы');
+    stage('loading the page');
     await page.goto(o.url, { waitUntil: 'networkidle', timeout: 45000 }).catch(() => page.waitForLoadState('load'));
     await page.waitForTimeout(600);
     if (o.cursor !== false && !mobile) await page.evaluate(({ width, height }) => (window as any).__studioCursor?.set(width * 0.62, height * 0.7), viewport);
@@ -157,7 +158,7 @@ export async function recordWeb(o: WebRecordOptions, job?: RecordJob): Promise<{
     });
     await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: W, maxHeight: H, everyNthFrame: 1 });
     const t0 = Date.now();
-    stage('запись');
+    stage('recording');
 
     const cursor = o.cursor !== false && !mobile;
     const moveTo = async (x: number, y: number, ms = 700) => { if (cursor) await page.evaluate(({ x, y, ms }) => (window as any).__studioCursor?.move(x, y, ms), { x, y, ms }); else await page.mouse.move(x, y); };
@@ -214,10 +215,10 @@ export async function recordWeb(o: WebRecordOptions, job?: RecordJob): Promise<{
     await cdp.send('Page.stopScreencast').catch(() => {});
     await page.waitForTimeout(150);
     const tEnd = Date.now();
-    if (!frames.length) throw new Error('страница не отдала ни одного кадра');
+    if (!frames.length) throw uerr('The page produced no frames');
 
     // constant-fps video from timestamped frames
-    stage('кодирование');
+    stage('encoding');
     frames.sort((a, b) => a.ts - b.ts);
     const endTs = frames[0].ts + (tEnd - t0) / 1000;
     const list = frames.map((f, i) => `file '${f.file}'\nduration ${Math.max(0.001, (frames[i + 1]?.ts ?? endTs) - f.ts).toFixed(4)}`).join('\n') + `\nfile '${frames[frames.length - 1].file}'\n`;

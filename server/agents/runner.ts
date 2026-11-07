@@ -1,3 +1,4 @@
+import { msg } from '../i18n.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
@@ -46,7 +47,7 @@ export function loadTasks() {
   for (const t of recover) {
     if (t.status === 'queued' && t.pending) { queue.push({ taskId: t.id, prompt: t.pending.prompt, images: t.pending.images }); continue; }
     if (t.status === 'running' && t.logFile) {
-      pushEvent(t, { kind: 'status', text: alive(t.pid) ? 'редактор перезапустился — агент продолжает работу' : 'редактор перезапускался — восстанавливаю задачу' });
+      pushEvent(t, { kind: 'status', ...msg(alive(t.pid) ? 'the editor restarted — the agent keeps working' : 'the editor restarted — recovering the task') });
       attach(t);
       continue;
     }
@@ -83,7 +84,7 @@ export function followUp(taskId: string, prompt: string, images: string[] = []) 
   if (t.status === 'running' || t.status === 'queued') {
     // agent is busy: deliver after the current run
     t.later = [...(t.later || []), { prompt, images }];
-    pushEvent(t, { kind: 'status', text: 'сообщение в очереди — отправлю, когда агент закончит текущий шаг' });
+    pushEvent(t, { kind: 'status', ...msg('message queued — it will be sent when the agent finishes the current step') });
     emitTask(t);
     return t;
   }
@@ -106,7 +107,7 @@ export function interruptTask(taskId: string, prompt: string, images: string[] =
   if (t.status === 'queued') {
     // not started yet: just replace/extend what it will run
     const q = queue.find((x) => x.taskId === taskId);
-    if (q) q.prompt = `${q.prompt}\n\nДополнение от пользователя: ${prompt}`;
+    if (q) q.prompt = `${q.prompt}\n\nAddition from the user: ${prompt}`;
     pushEvent(t, { kind: 'user', text: prompt });
     emitTask(t);
     return t;
@@ -114,7 +115,7 @@ export function interruptTask(taskId: string, prompt: string, images: string[] =
   if (t.status !== 'running' || !t.pid || !alive(t.pid)) return followUp(taskId, prompt, images);
   t.interrupt = { prompt, images };
   pushEvent(t, { kind: 'user', text: prompt });
-  pushEvent(t, { kind: 'status', text: 'перебиваю агента…' });
+  pushEvent(t, { kind: 'status', ...msg('interrupting the agent…') });
   emitTask(t);
   const pid = t.pid;
   try { process.kill(-pid, 'SIGINT'); } catch { try { process.kill(pid, 'SIGINT'); } catch {} }
@@ -264,7 +265,7 @@ function attach(t: Task) {
       // continue the same session with the user's interjection (no 'user' event: already shown)
       const it = t.interrupt;
       t.interrupt = undefined;
-      const prompt = `Пользователь перебил тебя во время работы. Его сообщение:\n\n${it.prompt}\n\nУчти это и продолжай (уже сделанное не переделывай без необходимости).`;
+      const prompt = `The user interrupted you while you were working. Their message:\n\n${it.prompt}\n\nTake it into account and continue (don't redo finished work unless needed).`;
       t.status = 'queued';
       t.pending = { prompt, images: it.images };
       emitTask(t);
@@ -287,16 +288,16 @@ function attach(t: Task) {
     const errTail = (() => { try { return fs.readFileSync(t.logFile!.replace(/\.log$/, '.err'), 'utf8').slice(-2000); } catch { return ''; } })();
     if ((t.resumes || 0) < 2 && t.sessionId) {
       t.resumes = (t.resumes || 0) + 1;
-      pushEvent(t, { kind: 'status', text: 'агент был прерван — продолжаю в той же сессии' });
+      pushEvent(t, { kind: 'status', ...msg('the agent was interrupted — continuing in the same session') });
       t.status = 'queued';
-      const prompt = 'Работа была прервана (перезапуск редактора). Проверь текущее состояние проекта (get_script, get_project, файлы) и продолжи задачу с того места, где остановился. Не переделывай уже сделанное.';
+      const prompt = 'Your work was interrupted (the editor restarted). Check the current project state (get_script, get_project, files) and continue the task from where you stopped. Do not redo finished work.';
       t.pending = { prompt, images: [] };
       emitTask(t);
       queue.unshift({ taskId: t.id, prompt, images: [] });
       pump();
       return;
     }
-    pushEvent(t, { kind: 'error', text: `${t.agent} завершился без результата${errTail ? '\n' + errTail : ''}` });
+    pushEvent(t, { kind: 'error', text: `${t.agent} exited without a result${errTail ? '\n' + errTail : ''}` });
     await finish(t, 'error');
     pump();
   };
@@ -350,7 +351,7 @@ function parseClaude(t: Task, m: any) {
       if (c.type === 'tool_result') {
         const content = Array.isArray(c.content) ? c.content.map((x: any) => (x.type === 'text' ? x.text : x.type === 'image' ? '[image]' : '')).join('\n') : c.content;
         // a tool call cut short by the user's interruption is not an error
-        if (t.interrupt && c.is_error && /doesn't want to proceed|rejected|interrupted/i.test(String(content))) { pushEvent(t, { kind: 'tool_result', ok: true, text: 'прервано пользователем' }); continue; }
+        if (t.interrupt && c.is_error && /doesn't want to proceed|rejected|interrupted/i.test(String(content))) { pushEvent(t, { kind: 'tool_result', ok: true, ...msg('interrupted by the user') }); continue; }
         pushEvent(t, { kind: 'tool_result', ok: !c.is_error, text: short(content) });
       }
     }
@@ -360,7 +361,7 @@ function parseClaude(t: Task, m: any) {
     if (m.session_id) t.sessionId = m.session_id;
     if (t.interrupt && (m.subtype === 'error_during_execution' || m.is_error)) {
       if (typeof m.total_cost_usd === 'number') t.costUsd = (t.costUsd || 0) + m.total_cost_usd;
-      pushEvent(t, { kind: 'status', text: 'агент остановлен — продолжаю с вашим сообщением' });
+      pushEvent(t, { kind: 'status', ...msg('agent stopped — continuing with your message') });
       return;
     }
     if (typeof m.total_cost_usd === 'number') t.costUsd = (t.costUsd || 0) + m.total_cost_usd;
@@ -372,7 +373,7 @@ function parseCodex(t: Task, m: any) {
   const type: string = m.type || m.msg?.type || '';
   if (type === 'thread.started' || type === 'session.created') { t.sessionId = m.thread_id || m.session_id || t.sessionId; return; }
   if (type === 'error' || type === 'turn.failed') {
-    if (t.interrupt) { pushEvent(t, { kind: 'status', text: 'агент остановлен — продолжаю с вашим сообщением' }); return; }
+    if (t.interrupt) { pushEvent(t, { kind: 'status', ...msg('agent stopped — continuing with your message') }); return; }
     pushEvent(t, { kind: 'error', text: m.message || m.error?.message || JSON.stringify(m) });
     return;
   }
