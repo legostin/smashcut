@@ -58,8 +58,7 @@ export function Library() {
       <div className="lib-modal">
         <nav className="lib-nav">
           <div className="lib-nav-title">{t('Graphics')}</div>
-          {nav({ kind: 'graphics', cat: 'all' }, t('All templates'), clips.length)}
-          {cats.map(([c, n]) => <div key={c}>{nav({ kind: 'graphics', cat: c }, catLabel(c), n)}</div>)}
+          {nav({ kind: 'graphics', cat: section.kind === 'graphics' ? section.cat : 'all' }, t('Techniques'), clips.length, 'sparkle')}
           <div className="lib-nav-title">{t('Edit')}</div>
           {nav({ kind: 'transitions' }, t('Transitions'), TRANSITIONS.length, 'layers')}
           {nav({ kind: 'effects' }, t('Effects & color'), EFFECTS.length, 'sparkle')}
@@ -79,7 +78,15 @@ export function Library() {
             <button className="icon-btn" onClick={close} title={t('Close (Esc)')}><Icon name="x" size={15} /></button>
           </header>
           <div className="lib-scroll">
-            {section.kind === 'graphics' && <ClipGrid items={clips.filter((g) => section.cat === 'all' || (g.category || 'other') === section.cat)} q={q} />}
+            {section.kind === 'graphics' && (
+              <>
+                <div className="wall-cats">
+                  <button className={'wall-cat' + (section.cat === 'all' ? ' on' : '')} onClick={() => setSection({ kind: 'graphics', cat: 'all' })}>{t('All')} <span>{clips.length}</span></button>
+                  {cats.map(([c, n]) => <button key={c} className={'wall-cat' + (section.cat === c ? ' on' : '')} onClick={() => setSection({ kind: 'graphics', cat: c })}>{catLabel(c)} <span>{n}</span></button>)}
+                </div>
+                <Wall items={clips.filter((g) => (section.cat === 'all' || (g.category || 'other') === section.cat) && match(g, q))} />
+              </>
+            )}
             {section.kind === 'mine' && <ClipGrid items={gallery.filter((g) => g.origin === 'library')} q={q} empty={t('Save your best clips and tracks here: the item’s “⋯” menu → “Save to library”.')} />}
             {section.kind === 'music' && <MusicList items={gallery.filter((g) => g.kind === 'music')} q={q} />}
             {section.kind === 'media' && <Media />}
@@ -137,6 +144,77 @@ function Card({ g, i }: { g: GalleryItem; i: number }) {
       </div>
       <div className="lib-card-name">{g.name}</div>
       {g.description && <div className="lib-card-desc">{g.description}</div>}
+    </div>
+  );
+}
+
+/**
+ * The technique wall: a bento grid of looping previews (pre-rendered videos), playing while on screen.
+ * Every few tiles one is a large feature tile, like a curated feed.
+ */
+function Wall({ items }: { items: GalleryItem[] }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [row, setRow] = useState(150);
+  const [cols, setCols] = useState(4);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const w = el.clientWidth;
+      const c = Math.max(2, Math.min(5, Math.floor((w + 10) / 260)));
+      setCols(c);
+      setRow(Math.round(((w - (c - 1) * 10) / c) * 9 / 16));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  if (!items.length) return <div className="lib-empty">{t('Nothing found')}</div>;
+  return (
+    <div ref={box} className="wall" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridAutoRows: `${row}px` }}>
+      {items.map((g, i) => <Tile key={g.origin + g.id} g={g} i={i} big={cols >= 3 && i % 7 === 0} />)}
+    </div>
+  );
+}
+
+function Tile({ g, i, big }: { g: GalleryItem; i: number; big: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [src, setSrc] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { rootMargin: '200px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  // fetch the preview once visible; while it's being rendered (202) keep the still and retry
+  useEffect(() => {
+    if (!visible || src) return;
+    let stop = false, timer = 0 as any;
+    const url = `/api/gallery/preview/${g.origin}/${g.id}`;
+    const tryLoad = () => fetch(url, { method: 'HEAD' }).then((r) => { if (stop) return; if (r.status === 200) setSrc(url); else timer = setTimeout(tryLoad, 2500); }).catch(() => { timer = setTimeout(tryLoad, 4000); });
+    tryLoad();
+    return () => { stop = true; clearTimeout(timer); };
+  }, [visible, src, g.origin, g.id]);
+  useEffect(() => { const v = video.current; if (!v) return; if (visible) v.play().catch(() => {}); else v.pause(); }, [visible, src]);
+  return (
+    <div ref={ref} className={'tile' + (big ? ' big' : '') + (playing ? ' playing' : '')} style={{ animationDelay: `${Math.min(i, 16) * 25}ms` }}
+      role="button" tabIndex={0} onClick={() => makeWithTechnique(g)} onKeyDown={(e) => e.key === 'Enter' && makeWithTechnique(g)}>
+      <img className="tile-still" src={g.thumb} loading="lazy" alt="" />
+      {src && <video ref={video} className="tile-video" src={src} muted loop playsInline autoPlay preload="auto" onPlaying={() => setPlaying(true)} />}
+      <div className="tile-shade" />
+      {g.category && <span className="tile-cat">{catLabel(g.category)}</span>}
+      {g.origin === 'library' && <span className="tile-mine">{t('mine')}</span>}
+      <div className="tile-info">
+        <div className="tile-name">{g.name}</div>
+        {g.description && <div className="tile-desc">{g.description}</div>}
+      </div>
+      <div className="tile-actions">
+        <span className="tile-cta"><Icon name="sparkle" size={12} /> {t('Make in my style')}</span>
+        <button className="tile-insert" title={t('Insert the reference clip as-is (quick draft)')} onClick={(e) => { e.stopPropagation(); addTemplate(g); }}><Icon name="plus" size={13} /></button>
+      </div>
     </div>
   );
 }

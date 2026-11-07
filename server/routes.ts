@@ -11,7 +11,7 @@ import { bus } from './bus.ts';
 import { nid, readJson, writeJson, copyDir, slug, safeJoin, run } from './util.ts';
 import { bin } from './bin.ts';
 import { log as gitLog, restore as gitRestore, exportAt, commit } from './git.ts';
-import { listGallery, galleryThumb, useTemplate, saveToLibrary, deleteFromLibrary } from './gallery.ts';
+import { listGallery, galleryThumb, galleryPreview, previewPath, useTemplate, saveToLibrary, deleteFromLibrary } from './gallery.ts';
 import { listSkills, syncSkills } from './skills.ts';
 import { probeMedia, analyzeMedia, transcribeMedia } from './media.ts';
 import { renderMusic, musicPeaks } from './render/music.ts';
@@ -401,6 +401,13 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- gallery & library ----------
   app.get('/api/gallery', async () => listGallery());
+  /** looping preview video for the live gallery; 202 while it is being rendered (the UI shows the still meanwhile) */
+  app.get<{ Params: { origin: 'builtin' | 'library'; id: string } }>('/api/gallery/preview/:origin/:id', async (req, reply) => {
+    const f = previewPath(req.params.origin, req.params.id);
+    if (fs.existsSync(f)) { reply.header('cache-control', 'max-age=86400'); return reply.sendFile(path.basename(f), path.dirname(f)); }
+    galleryPreview(req.params.origin, req.params.id, true).catch(() => {});
+    return reply.code(202).send({ pending: true });
+  });
   app.get<{ Params: { origin: 'builtin' | 'library'; id: string } }>('/api/gallery/thumb/:origin/:id', async (req, reply) => {
     const f = await galleryThumb(req.params.origin, req.params.id);
     reply.header('cache-control', 'max-age=60').type('image/png');

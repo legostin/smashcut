@@ -1,6 +1,8 @@
+import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { GalleryItem, PackageManifest } from '../shared/types.ts';
+import { runOk } from './util.ts';
 import { GALLERY_DIR, LIBRARY_DIR, HOME_DIR, BASE_URL } from './config.ts';
 import { cur } from './project.ts';
 import { copyDir, readJson, writeJson, hashDir, slug } from './util.ts';
@@ -60,6 +62,63 @@ export function galleryThumb(origin: Origin, id: string): Promise<string> {
   })().finally(() => thumbJobs.delete(key));
   thumbJobs.set(key, p);
   return p;
+}
+
+/**
+ * Looping preview video of a technique (for the live gallery grid): ~5 s at 24 fps, 640 px wide, H.264.
+ * Rendered once per clip version and cached in ~/.agent-videostudio/previews; generated one at a time.
+ */
+const previewQueue: (() => Promise<void>)[] = [];
+const previewJobs = new Map<string, Promise<string>>();
+let previewBusy = false;
+function pumpPreviews() {
+  if (previewBusy) return;
+  const next = previewQueue.shift();
+  if (!next) return;
+  previewBusy = true;
+  next().finally(() => { previewBusy = false; pumpPreviews(); });
+}
+export function previewPath(origin: Origin, id: string) {
+  const dir = packageDir(origin, 'clip', id);
+  return path.join(HOME_DIR, 'previews', `${origin}-${id}-${hashDir(dir)}.mp4`);
+}
+export function galleryPreview(origin: Origin, id: string, front = false): Promise<string> {
+  const out = previewPath(origin, id);
+  if (fs.existsSync(out)) return Promise.resolve(out);
+  if (previewJobs.has(out)) return previewJobs.get(out)!;
+  const p = new Promise<string>((resolve, reject) => {
+    const job = async () => {
+      try {
+        const dir = packageDir(origin, 'clip', id);
+        const m = readJson<Partial<PackageManifest>>(path.join(dir, 'manifest.json'), {});
+        const d = m.duration || 5;
+        const len = Math.min(d, 6), fps = 24;
+        const input = { width: 1920, height: 1080, fps: 30, duration: d, timing: false };
+        const url = `${BASE_URL}${urlBase[origin]}/clips/${id}/index.html#${encodeURIComponent(JSON.stringify(input))}`;
+        // the most lively stretch: start a little in so entrances are visible, end before long holds
+        const t0 = Math.max(0, Math.min(d - len, d * 0.05));
+        const times = Array.from({ length: Math.round(len * fps) }, (_, k) => t0 + k / fps);
+        const r = await renderClipFrames(url, { width: 1920, height: 1080 }, times);
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'avs-prev-'));
+        const ext = r.frames[0]?.[0] === 0xff ? 'jpg' : 'png';
+        r.frames.forEach((f, k) => fs.writeFileSync(path.join(tmp, `f${String(k).padStart(4, '0')}.${ext}`), f));
+        fs.mkdirSync(path.dirname(out), { recursive: true });
+        await runOk('ffmpeg', ['-y', '-v', 'error', '-framerate', String(fps), '-i', path.join(tmp, `f%04d.${ext}`), '-vf', 'scale=640:-2:flags=lanczos,format=yuv420p', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '24', '-movflags', '+faststart', '-an', out + '.tmp.mp4']);
+        fs.renameSync(out + '.tmp.mp4', out);
+        fs.rmSync(tmp, { recursive: true, force: true });
+        resolve(out);
+      } catch (e) { reject(e); } finally { previewJobs.delete(out); }
+    };
+    if (front) previewQueue.unshift(job); else previewQueue.push(job);
+    pumpPreviews();
+  });
+  previewJobs.set(out, p);
+  p.catch(() => {});
+  return p;
+}
+/** warm all previews in the background (once per clip version) */
+export function warmPreviews() {
+  for (const g of listGallery()) if (g.kind === 'clip' && !fs.existsSync(previewPath(g.origin as Origin, g.id))) galleryPreview(g.origin as Origin, g.id).catch((e) => console.error('preview', g.id, (e as Error).message));
 }
 
 function uniqueId(base: string, exists: (id: string) => boolean) {

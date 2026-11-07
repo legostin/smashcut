@@ -147,6 +147,8 @@ if (target && !ProjectStore.exists(target)) {
 if (!target) target = await createDemoProject(path.join(PROJECTS_DIR, 'demo'));
 openProject(target);
 
+// render looping gallery previews in the background (cached; once per technique version)
+setTimeout(() => { import('./gallery.ts').then((g) => g.warmPreviews()).catch(() => {}); }, 15000);
 console.log(`\n  Agent Video Studio  →  ${BASE_URL}\n  project: ${cur().dir}\n`);
 if (!fs.existsSync(path.join(WEB_DIST, 'index.html'))) console.log('  (web UI not built — run `npm run dev` and open http://localhost:5173, or `npm start`)\n');
 // first-run checks: compact summary; fetch the render browser in the background if there is none
