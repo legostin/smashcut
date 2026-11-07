@@ -22,8 +22,9 @@ export function request(taskId: string, tool: string, input: unknown): { id: str
   return { id };
 }
 
-export function poll(id: string): Decision | null {
-  return decided.get(id) || null;
+export function poll(id: string): Decision | null | 'unknown' {
+  if (decided.has(id)) return decided.get(id)!;
+  return pending.has(id) ? null : 'unknown';
 }
 
 export function decide(id: string, allow: boolean, opts: { always?: boolean; message?: string } = {}) {

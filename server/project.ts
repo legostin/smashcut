@@ -39,6 +39,9 @@ export class ProjectStore {
     this.dir = path.resolve(dir);
     this.reload();
     this.ensureDirs();
+    const h = readJson<{ undo?: string[]; redo?: string[] }>(this.p('.studio', 'history.json'), {});
+    this.undoStack = h.undo || [];
+    this.redoStack = h.redo || [];
   }
 
   static exists(dir: string) { return fs.existsSync(path.join(dir, 'project.json')); }
@@ -85,6 +88,14 @@ export class ProjectStore {
   private undoStack: string[] = [];
   private redoStack: string[] = [];
   private lastPush = 0;
+  private historyTimer: NodeJS.Timeout | null = null;
+  /** undo history survives restarts (debounced to disk) */
+  private saveHistory() {
+    if (this.historyTimer) clearTimeout(this.historyTimer);
+    this.historyTimer = setTimeout(() => {
+      try { writeJson(this.p('.studio', 'history.json'), { undo: this.undoStack.slice(-120), redo: this.redoStack.slice(-120) }); } catch {}
+    }, 400);
+  }
   private pushHistory(prev: Project, coalesce = true) {
     const snap = JSON.stringify(prev);
     if (this.undoStack[this.undoStack.length - 1] === snap) return;
@@ -95,6 +106,7 @@ export class ProjectStore {
     if (this.undoStack.length > 300) this.undoStack.shift();
     this.redoStack = [];
     this.lastPush = now;
+    this.saveHistory();
   }
   history() { return { canUndo: this.undoStack.length > 0, canRedo: this.redoStack.length > 0 }; }
   undo() {
@@ -103,6 +115,7 @@ export class ProjectStore {
     this.redoStack.push(JSON.stringify(this.project));
     this.writeProject(JSON.parse(snap));
     this.lastPush = 0;
+    this.saveHistory();
     return true;
   }
   redo() {
@@ -111,6 +124,7 @@ export class ProjectStore {
     this.undoStack.push(JSON.stringify(this.project));
     this.writeProject(JSON.parse(snap));
     this.lastPush = 0;
+    this.saveHistory();
     return true;
   }
   private writeProject(p: Project) {

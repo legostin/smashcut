@@ -9,7 +9,20 @@ import { z } from 'zod';
 const BASE = process.env.STUDIO_URL || 'http://127.0.0.1:4317';
 const TASK = process.env.STUDIO_TASK || '';
 
+// the editor may restart while the agent works: retry connection failures for up to ~2 minutes
 async function api(method, path, body) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await apiOnce(method, path, body);
+    } catch (e) {
+      const transient = e && (e.code === 'ECONNREFUSED' || e.cause?.code === 'ECONNREFUSED' || e.cause?.code === 'ECONNRESET' || /fetch failed|ECONNREFUSED|socket hang up/i.test(String(e.message)));
+      if (!transient || attempt >= 60) throw e;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+}
+
+async function apiOnce(method, path, body) {
   const res = await fetch(BASE + path, {
     method,
     headers: body ? { 'content-type': 'application/json', 'x-studio-task': TASK } : { 'x-studio-task': TASK },
@@ -180,12 +193,15 @@ server.registerTool('approve_permission', {
 }, async ({ tool_name, input }) => {
   const reply = (d) => text(d.allow ? { behavior: 'allow', updatedInput: input } : { behavior: 'deny', message: d.message || 'Denied by the user.' });
   try {
-    const r = await api('POST', '/api/agent/permission', { taskId: TASK, tool: tool_name, input });
+    const ask = () => api('POST', '/api/agent/permission', { taskId: TASK, tool: tool_name, input });
+    let r = await ask();
     if (r.decision) return reply(r.decision);
     for (;;) {
       await new Promise((res) => setTimeout(res, 800));
       const p = await api('GET', `/api/agent/permission/${r.id}`);
       if (p.decision) return reply(p.decision);
+      // editor restarted and forgot the request → ask again
+      if (p.unknown) { r = await ask(); if (r.decision) return reply(r.decision); }
     }
   } catch (e) {
     return reply({ allow: false, message: 'Editor unreachable, permission denied: ' + e.message });

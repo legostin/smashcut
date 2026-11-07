@@ -455,7 +455,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const taskId = req.body.taskId || String(req.headers['x-studio-task'] || '');
     return permissions.request(taskId, req.body.tool, req.body.input);
   });
-  app.get<{ Params: { id: string } }>('/api/agent/permission/:id', async (req) => ({ decision: permissions.poll(req.params.id) }));
+  app.get<{ Params: { id: string } }>('/api/agent/permission/:id', async (req) => { const d = permissions.poll(req.params.id); return d === 'unknown' ? { decision: null, unknown: true } : { decision: d }; });
   app.get('/api/permissions', async () => permissions.list());
   app.post<{ Params: { id: string }; Body: { allow: boolean; always?: boolean; message?: string } }>('/api/permissions/:id', async (req) => {
     if (!permissions.decide(req.params.id, !!req.body.allow, { always: req.body.always, message: req.body.message })) throw Object.assign(new Error('permission request not found'), { statusCode: 404 });

@@ -102,6 +102,7 @@ export async function renderItemSequence(item: Item, project: Project, onProgres
     // resume: skip frames already written by a previous (crashed) attempt
     let start = a;
     while (start < b && fs.existsSync(path.join(dir, String(start).padStart(6, '0') + '.png'))) start++;
+    if (attempt === 0) { done += start - a; onProgress?.(done, count); }
     if (start >= b) return;
     try {
       await withPage({ width: project.width, height: project.height }, async (page, errs) => {

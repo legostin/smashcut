@@ -135,6 +135,10 @@ export function startExport(opts: ExportOptions = {}): ExportJob {
   aborts.set(job.id, signal);
   const emit = () => bus.send({ type: 'export', job: { ...job } });
   emit();
+  // remember the unfinished export so it resumes after an editor restart (cached frames are reused)
+  const activeFile = store.p('.studio', 'exports', 'active.json');
+  fs.mkdirSync(path.dirname(activeFile), { recursive: true });
+  fs.writeFileSync(activeFile, JSON.stringify({ ...opts, from, to }));
   (async () => {
     try {
       job.output = await exportRange({ ...opts, from, to, name: opts.name || p.name }, (stage, prog) => { job.stage = stage; job.progress = prog; emit(); }, signal);
@@ -144,9 +148,21 @@ export function startExport(opts: ExportOptions = {}): ExportJob {
       job.error = signal.aborted ? 'Отменено' : (e as Error).message.slice(-2000);
     }
     aborts.delete(job.id);
+    try { fs.rmSync(activeFile, { force: true }); } catch {}
     emit();
   })();
   return job;
+}
+
+/** resume an export that was running when the editor stopped */
+export function resumeExport() {
+  const f = cur().p('.studio', 'exports', 'active.json');
+  if (!fs.existsSync(f)) return null;
+  try {
+    const opts = JSON.parse(fs.readFileSync(f, 'utf8'));
+    bus.send({ type: 'notice', level: 'info', text: 'Продолжаю экспорт, прерванный перезапуском (готовые кадры берутся из кэша)' });
+    return startExport(opts);
+  } catch { fs.rmSync(f, { force: true }); return null; }
 }
 
 const QUALITY = { high: 15, standard: 19, small: 26 } as const;

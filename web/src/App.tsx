@@ -64,6 +64,7 @@ export function App() {
       <Modal open={dialog === 'export'}><ExportDialog /></Modal>
       <Modal open={!!dialog && typeof dialog === 'object'} wide>{dialog && typeof dialog === 'object' && 'compare' in dialog ? <CompareDialog clipId={dialog.compare.clipId} sha={dialog.compare.sha} /> : null}</Modal>
       <Lightbox />
+      <Reconnecting />
       <Notices />
     </div>
   );
@@ -111,6 +112,13 @@ function useFollowAgent() {
     const t = time.get();
     if (t < it.start || t >= it.start + it.duration) seekTo(it.start + Math.min(it.duration / 2, 1.2));
   }, [tasks, follow]);
+}
+
+function Reconnecting() {
+  const connected = useStore((s) => s.connected);
+  const [show, setShow] = useState(false);
+  useEffect(() => { if (connected) { setShow(false); return; } const t = setTimeout(() => setShow(true), 700); return () => clearTimeout(t); }, [connected]);
+  return <div className={'reconnect' + (show ? ' show' : '')}><span className="spinner sm" /> Переподключение к редактору… агенты продолжают работать</div>;
 }
 
 function Lightbox() {

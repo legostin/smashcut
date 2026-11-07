@@ -144,10 +144,18 @@ async function refreshLists() {
 }
 
 let ws: WebSocket | null = null;
+let everConnected = false;
+let lostAt = 0;
 function connect() {
   ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
-  ws.onopen = () => setState({ connected: true });
-  ws.onclose = () => { setState({ connected: false }); setTimeout(connect, 1200); };
+  ws.onopen = () => {
+    setState({ connected: true });
+    // came back after the server restarted: pull fresh state, nothing is lost
+    if (everConnected && lostAt) { void refresh(); void refreshGallery(); if (Date.now() - lostAt > 1500) notify('info', 'Связь с редактором восстановлена'); }
+    everConnected = true;
+    lostAt = 0;
+  };
+  ws.onclose = () => { if (!lostAt) lostAt = Date.now(); setState({ connected: false }); setTimeout(connect, 1000); };
   ws.onmessage = (m) => onEvent(JSON.parse(m.data));
 }
 

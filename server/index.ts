@@ -14,6 +14,7 @@ import { renderMusic } from './render/music.ts';
 import { probeMedia } from './media.ts';
 import { recomputeTiming } from './timing.ts';
 import { closeBrowser } from './render/browser.ts';
+import { resumeExport } from './render/compose.ts';
 import { createDemoProject } from './demo.ts';
 import { onScriptFileChanged } from './script.ts';
 import { onDesignFileChanged } from './design.ts';
@@ -80,6 +81,7 @@ onProjectOpen((store) => {
     for (const m of store.listMedia()) await probeMedia(m.file).catch(() => {});
     for (const m of store.listMusic()) await renderMusic(m.id).catch(() => {});
     recomputeTiming();
+    resumeExport();
   }, 300);
 });
 
@@ -99,6 +101,7 @@ openProject(target);
 console.log(`\n  Agent Video Studio  →  ${BASE_URL}\n  project: ${cur().dir}\n`);
 if (!fs.existsSync(path.join(WEB_DIST, 'index.html'))) console.log('  (web UI not built — run `npm run dev` and open http://localhost:5173, or `npm start`)\n');
 
+// agents run detached and keep working while the editor restarts; only the render browser closes
 const shutdown = async () => { await closeBrowser(); process.exit(0); };
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);

@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn, type ChildProcess } from 'node:child_process';
-import readline from 'node:readline';
+import { spawn } from 'node:child_process';
 import type { AgentEvent, AgentKind, Task } from '../../shared/types.ts';
 import { BASE_URL, MCP_STDIO, GALLERY_DIR, getSettings, LIBRARY_DIR } from '../config.ts';
 import { cur, hasProject } from '../project.ts';
@@ -12,11 +11,13 @@ import { SYSTEM_PROMPT } from './prompts.ts';
 import { denyTask } from '../permissions.ts';
 
 const tasks = new Map<string, Task>();
-const procs = new Map<string, ChildProcess>();
+/** running tasks: taskId → watcher (agents run detached; the server only tails their stream log) */
+const live = new Map<string, { timer: NodeJS.Timeout; partial: string }>();
 const queue: { taskId: string; prompt: string; images: string[] }[] = [];
 
 function taskFile(id: string) { return cur().p('.studio', 'tasks', id + '.json'); }
 function persist(t: Task) { if (hasProject()) writeJson(taskFile(t.id), t); }
+const alive = (pid?: number) => { if (!pid) return false; try { process.kill(pid, 0); return true; } catch (e: any) { return e.code === 'EPERM'; } };
 function emitTask(t: Task) { persist(t); bus.send({ type: 'task', task: { ...t, events: t.events.slice(-400) } }); }
 function pushEvent(t: Task, ev: Omit<AgentEvent, 't'>) {
   const e: AgentEvent = { t: Date.now(), ...ev };
@@ -26,16 +27,33 @@ function pushEvent(t: Task, ev: Omit<AgentEvent, 't'>) {
 }
 
 export function loadTasks() {
+  for (const w of live.values()) clearInterval(w.timer);
+  live.clear();
+  queue.length = 0;
   tasks.clear();
   const dir = cur().p('.studio', 'tasks');
   if (!fs.existsSync(dir)) return;
+  const recover: Task[] = [];
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.json') || f.endsWith('.mcp.json')) continue;
     const t = readJson<Task | null>(path.join(dir, f), null);
     if (!t || !t.id || !t.createdAt) continue;
-    if (t.status === 'running' || t.status === 'queued') t.status = 'cancelled';
     tasks.set(t.id, t);
+    if (t.status === 'running' || t.status === 'queued') recover.push(t);
   }
+  // continue where we left off: re-attach to live agents, finish or resume dead ones, re-queue waiting ones
+  recover.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  for (const t of recover) {
+    if (t.status === 'queued' && t.pending) { queue.push({ taskId: t.id, prompt: t.pending.prompt, images: t.pending.images }); continue; }
+    if (t.status === 'running' && t.logFile) {
+      pushEvent(t, { kind: 'status', text: alive(t.pid) ? 'редактор перезапустился — агент продолжает работу' : 'редактор перезапускался — восстанавливаю задачу' });
+      attach(t);
+      continue;
+    }
+    t.status = 'cancelled';
+    persist(t);
+  }
+  setTimeout(pump, 500);
 }
 export function listTasks() {
   return [...tasks.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((t) => ({ ...t, events: t.events.slice(-400) }));
@@ -51,6 +69,7 @@ export function startTask(o: StartOpts): Task {
   };
   tasks.set(t.id, t);
   pushEvent(t, { kind: 'user', text: o.prompt });
+  t.pending = { prompt: o.prompt, images: o.images || [] };
   emitTask(t);
   queue.push({ taskId: t.id, prompt: o.prompt, images: o.images || [] });
   pump();
@@ -64,6 +83,7 @@ export function followUp(taskId: string, prompt: string, images: string[] = []) 
   if (t.status === 'running' || t.status === 'queued') throw new Error('task is still running');
   t.status = 'queued';
   pushEvent(t, { kind: 'user', text: prompt });
+  t.pending = { prompt, images };
   emitTask(t);
   queue.push({ taskId, prompt, images });
   pump();
@@ -75,9 +95,13 @@ export function cancelTask(id: string) {
   if (!t) return;
   const qi = queue.findIndex((q) => q.taskId === id);
   if (qi >= 0) queue.splice(qi, 1);
-  const p = procs.get(id);
-  if (p) { p.kill('SIGTERM'); setTimeout(() => p.kill('SIGKILL'), 3000); }
+  if (t.pid && alive(t.pid)) {
+    const pid = t.pid;
+    try { process.kill(-pid, 'SIGTERM'); } catch { try { process.kill(pid, 'SIGTERM'); } catch {} }
+    setTimeout(() => { try { process.kill(-pid, 'SIGKILL'); } catch {} }, 3000);
+  }
   t.status = 'cancelled';
+  t.pending = undefined;
   t.endedAt = new Date().toISOString();
   denyTask(id);
   pushEvent(t, { kind: 'status', text: 'cancelled' });
@@ -85,7 +109,7 @@ export function cancelTask(id: string) {
 }
 
 function pump() {
-  while (procs.size < getSettings().parallelTasks && queue.length) {
+  while (live.size < getSettings().parallelTasks && queue.length) {
     const next = queue.shift()!;
     const t = tasks.get(next.taskId);
     if (!t || t.status === 'cancelled') continue;
@@ -146,32 +170,90 @@ async function runTask(t: Task, prompt: string, images: string[]) {
   }
 
   pushEvent(t, { kind: 'status', text: `${t.agent} started${t.sessionId ? ' (resumed)' : ''}` });
-  let proc: ChildProcess;
+  // the agent runs detached and streams into a log file, so it survives editor restarts
+  const logFile = store.p('.studio', 'tasks', `${t.id}.log`);
+  const errFile = store.p('.studio', 'tasks', `${t.id}.err`);
+  const out = fs.openSync(logFile, 'a');
+  const err = fs.openSync(errFile, 'a');
+  t.logFile = logFile;
+  t.logOffset = fs.statSync(logFile).size;
+  t.pending = undefined;
   try {
-    proc = spawn(cmd, args, { cwd: store.dir, env, stdio: ['ignore', 'pipe', 'pipe'] });
+    const proc = spawn(cmd, args, { cwd: store.dir, env, stdio: ['ignore', out, err], detached: true });
+    proc.on('error', (e) => { pushEvent(t, { kind: 'error', text: `Failed to start ${cmd}: ${e.message}. Is it installed and logged in?` }); });
+    t.pid = proc.pid;
+    proc.unref();
   } catch (e) {
+    fs.closeSync(out); fs.closeSync(err);
     return finish(t, 'error', (e as Error).message);
   }
-  procs.set(t.id, proc);
-  proc.on('close', () => denyTask(t.id));
-  let stderr = '';
-  proc.stderr!.on('data', (d) => { stderr += d; if (stderr.length > 20000) stderr = stderr.slice(-20000); });
-  const rl = readline.createInterface({ input: proc.stdout! });
-  rl.on('line', (line) => {
-    if (!line.trim()) return;
-    let msg: any;
-    try { msg = JSON.parse(line); } catch { pushEvent(t, { kind: 'text', text: line }); return; }
-    try { (t.agent === 'claude' ? parseClaude : parseCodex)(t, msg); } catch (e) { /* ignore parse issues */ }
-  });
-  proc.on('error', (e) => { pushEvent(t, { kind: 'error', text: `Failed to start ${cmd}: ${e.message}. Is it installed and logged in?` }); });
-  proc.on('close', async (code) => {
-    procs.delete(t.id);
-    if (t.status === 'cancelled') { await afterRun(t); pump(); return; }
-    const failed = code !== 0 && !t.events.some((e) => e.kind === 'result' && e.ok !== false);
-    if (failed) pushEvent(t, { kind: 'error', text: `${cmd} exited with code ${code}\n${stderr.slice(-3000)}` });
-    await finish(t, failed ? 'error' : 'done');
+  fs.closeSync(out); fs.closeSync(err);
+  emitTask(t);
+  attach(t);
+}
+
+/** tail the agent's stream log from the persisted offset; finish or resume when the process ends */
+function attach(t: Task) {
+  if (live.has(t.id)) return;
+  const w = { partial: '', timer: null as unknown as NodeJS.Timeout };
+  let lastPersist = 0;
+  const drain = () => {
+    if (!t.logFile || !fs.existsSync(t.logFile)) return;
+    const size = fs.statSync(t.logFile).size;
+    if (size <= (t.logOffset || 0)) return;
+    const fd = fs.openSync(t.logFile, 'r');
+    const buf = Buffer.alloc(size - (t.logOffset || 0));
+    fs.readSync(fd, buf, 0, buf.length, t.logOffset || 0);
+    fs.closeSync(fd);
+    const text = w.partial + buf.toString('utf8');
+    const lines = text.split('\n');
+    w.partial = lines.pop() || '';
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      let msg: any;
+      try { msg = JSON.parse(line); } catch { pushEvent(t, { kind: 'text', text: line }); continue; }
+      try { (t.agent === 'claude' ? parseClaude : parseCodex)(t, msg); } catch { /* ignore */ }
+    }
+    // offset = bytes fully consumed (complete lines)
+    t.logOffset = size - Buffer.byteLength(w.partial, 'utf8');
+    if (Date.now() - lastPersist > 1000) { persist(t); lastPersist = Date.now(); }
+  };
+  const tick = async () => {
+    drain();
+    if (alive(t.pid)) return;
+    // process gone: final drain, then decide
+    clearInterval(w.timer);
+    drain();
+    live.delete(t.id);
+    denyTask(t.id);
+    if (t.status === 'cancelled') { await afterRun(t); emitTask(t); pump(); return; }
+    const completed = t.events.some((e) => e.kind === 'result' && e.ok !== false && e.t >= Date.parse(t.startedAt || '0'));
+    const resultEvents = t.events.filter((e) => e.kind === 'result');
+    const lastResult = resultEvents[resultEvents.length - 1];
+    const finishedThisRun = completed && lastResult && t.events.lastIndexOf(lastResult) > t.events.map((e) => e.kind).lastIndexOf('user');
+    if (finishedThisRun) { await finish(t, 'done'); pump(); return; }
+    // died mid-run (e.g. machine/editor restart): resume the same session a couple of times
+    const errTail = (() => { try { return fs.readFileSync(t.logFile!.replace(/\.log$/, '.err'), 'utf8').slice(-2000); } catch { return ''; } })();
+    if ((t.resumes || 0) < 2 && t.sessionId) {
+      t.resumes = (t.resumes || 0) + 1;
+      pushEvent(t, { kind: 'status', text: 'агент был прерван — продолжаю в той же сессии' });
+      t.status = 'queued';
+      const prompt = 'Работа была прервана (перезапуск редактора). Проверь текущее состояние проекта (get_script, get_project, файлы) и продолжи задачу с того места, где остановился. Не переделывай уже сделанное.';
+      t.pending = { prompt, images: [] };
+      emitTask(t);
+      queue.unshift({ taskId: t.id, prompt, images: [] });
+      pump();
+      return;
+    }
+    pushEvent(t, { kind: 'error', text: `${t.agent} завершился без результата${errTail ? '\n' + errTail : ''}` });
+    await finish(t, 'error');
     pump();
-  });
+  };
+  w.timer = setInterval(() => { void tick(); }, 300);
+  live.set(t.id, w);
+  t.status = 'running';
+  emitTask(t);
+  void tick();
 }
 
 async function afterRun(t: Task) {
@@ -266,7 +348,7 @@ function toolSummary(name: string, input: any): string {
   return short(input, 160);
 }
 
-export function runningCount() { return procs.size; }
+export function runningCount() { return live.size; }
 
 /** attach an event (e.g. a rendered frame) to a task from outside the stream (MCP bridge) */
 export function taskEvent(taskId: string, ev: Omit<AgentEvent, 't'>) {

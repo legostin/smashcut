@@ -170,6 +170,13 @@ export interface Task {
   commitBefore?: string;
   commitAfter?: string;
   costUsd?: number;
+  /** process & stream bookkeeping (survives server restarts) */
+  pid?: number;
+  logFile?: string;
+  logOffset?: number;
+  /** prompt/images waiting to run (queued tasks survive restarts) */
+  pending?: { prompt: string; images: string[] };
+  resumes?: number;
   /** what the agent is working on right now (derived from its tool calls) */
   focus?: { kind: 'clip' | 'music' | 'timeline' | 'script' | 'design'; id?: string; at: number };
 }
