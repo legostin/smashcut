@@ -68,6 +68,7 @@ Expose every user-facing string, colour and key number in `params.json` so human
 - Sync hits to beats: `tl.from(el, {...}, studio.beat(4))`.
 
 ## Fonts (bundled, offline)
+Outline-only text: `-webkit-text-stroke` shows internal overlapping contours on variable/display fonts such as Unbounded — draw outlines with an SVG `feMorphology` dilate filter (see builtin title-marquee-repeat) instead.
 All bundled faces are loaded before `setup()` runs, so measuring text (`getBoundingClientRect`, auto-fit) in setup is safe.
 Inter, Manrope, Space Grotesk, JetBrains Mono, Playfair Display, Bebas Neue, Unbounded. Cyrillic: Inter, Manrope, JetBrains Mono, Playfair Display, Unbounded (+ check fonts.css). Bebas Neue / Space Grotesk are Latin-only — don't use them for Russian text.
 

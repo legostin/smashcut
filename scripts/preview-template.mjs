@@ -29,6 +29,7 @@ function resolveUrl(u) {
   return path.join(ROOT, p);
 }
 const server = http.createServer((req, res) => {
+  if (req.url.startsWith('/api/design')) { res.writeHead(200, { 'content-type': 'application/json' }); return res.end('{"colors":[],"type":[],"motion":[],"spacing":[]}'); }
   if (req.url.startsWith('/api/')) { res.writeHead(404); return res.end(); }
   const f = resolveUrl(req.url);
   fs.readFile(f, (err, data) => {
