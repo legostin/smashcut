@@ -5,8 +5,10 @@ description: Motion design craft rules (timing, easing, typography, composition,
 
 # Motion design craft
 
+> The numbers, the banned "generated" defaults and the review loop live in **studio-craft** — read it first; this skill adds techniques.
+
 ## Timing
-- Entrances 0.4–0.8 s, exits 0.25–0.5 s (exits are faster than entrances). Holds long enough to read: ~0.3 s per word + 1 s.
+- Entrances 0.4–0.8 s, exits 0.25–0.5 s (exits are faster than entrances). Holds long enough to read: ≥ 0.5 s + 0.3 s per word (the final line ≥ 2 s).
 - Stagger related elements 0.04–0.12 s. Never move everything at once; never stagger so long that the last item arrives late.
 - Overlap: start the next motion before the previous fully settles (offsets like `'-=0.3'`).
 - Cut to the beat: put the main hit on a beat/bar (`studio.beat(n)`), secondary motion on off-beats.

@@ -12,12 +12,13 @@ Work in small visible steps so mistakes are caught early.
 
 ## 1. Brief → script
 - `get_script` first. If the brief is empty, write the user's request into `brief`.
+- **Story first (studio-craft §0–1):** add to the brief the ONE thing the viewer must remember (one line), the viewer and their task, a LOOK line (palette/type/motion as numbers, from references) and a BANNED line (the defaults this video must avoid). `list_references` before deciding the look.
 - Draft scenes with `set_script {stage:'script', scenes:[...]}`. Each scene: `title` (3–6 words), `start`/`duration` (seconds, contiguous, total = target length), `voiceover` (spoken or on-screen copy), `visual` (what we see: layout, motion, style, which template/technique).
 - Timing rules: hook in the first 1.5–3 s; one idea per scene; 2–6 s per scene for social, 4–10 s for explainers; land scene boundaries on bars if there is music (`get_timing`).
 - Stop after the script if the user asked only for a script; otherwise continue.
 
 ## 2. Design system
-- Before building clips: `get_design`; if empty, `set_design` with 4–7 colours (bg, surface, text, muted, accent, accent-2), 3–4 type roles (display, title, body, caption — bundled fonts only; Cyrillic-capable for Russian), 3–4 motion tokens (enter, exit, emphasis, ambient with GSAP eases + durations), spacing (margin, gap). Derive it from the brief (brand, tone).
+- Before building clips: `get_design`; if empty, `set_design` with 4–7 colours (bg, surface, text, muted, accent, accent-2), 3–4 type roles (display, title, body, caption — bundled fonts only; Cyrillic-capable for Russian), 3–4 motion tokens (enter, exit, emphasis, camera — GSAP eases + durations from studio-craft §2–3; no 'ambient' idle loops), spacing (margin, gap). Derive it from the brief (brand, tone).
 - All clips use the tokens (see studio-clip-authoring). The user sees the system on the board.
 
 ## Voice-over (ElevenLabs)
@@ -36,5 +37,5 @@ Work in small visible steps so mistakes are caught early.
 - Keep the user's preview meaningful at every moment: finish one scene before starting the next.
 
 ## 5. Review
-- `set_script {stage:'review'}`; render 4–8 frames across the whole video (`render_frame`), fix inconsistencies (type sizes, colours, safe areas, timing gaps), then summarise.
+- `set_script {stage:'review'}`; run the studio-craft review loop (§10): measure (read times, dead stretches, sizes, safe areas, loudness), look (frames at scene starts, around every cut, the payoff, the end card), rank P0/P1/P2, fix P0s first (≤ 3 passes), then summarise with the numbers you checked.
 - Export is triggered by the user; you may set `stage:'export'` when everything is done.
