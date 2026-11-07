@@ -78,7 +78,10 @@ function FxLayer({ item, project, seed, hidden, children }: { item: Item; projec
       if (!on) return;
       const f = layerFrame(item.fx, t - item.start, item.duration, project, seed);
       el.style.opacity = String((item.opacity ?? 1) * f.opacity);
-      el.style.transform = f.transform;
+      // layer transform (position / scale / rotation around the content's centre) then fx motion
+      const tr = item.transform || {};
+      el.style.transformOrigin = `${tr.ox ?? 50}% ${tr.oy ?? 50}%`;
+      el.style.transform = `${layerTransform(tr)} ${f.transform}`.trim();
       // filters act on the content only; overlays (dips, tints, vignette, grain) sit on top unfiltered
       cc.style.filter = f.chromatic ? `url(#${caId}) ${f.filter}` : f.filter;
       el.style.clipPath = f.clipPath;
@@ -122,10 +125,20 @@ function decoHtml(f: LayerFrame, p: { width: number; height: number }, caId: str
   return h;
 }
 
-function mediaStyle(item: Item): React.CSSProperties {
-  const tr = item.transform || {};
-  return { objectFit: tr.fit || 'contain', transform: `translate(${tr.x || 0}px,${tr.y || 0}px) scale(${tr.scale ?? 1})` };
+export function layerTransform(tr: NonNullable<Item['transform']>) {
+  const parts: string[] = [];
+  if (tr.x || tr.y) parts.push(`translate(${tr.x || 0}px, ${tr.y || 0}px)`);
+  if (tr.rotate) parts.push(`rotate(${tr.rotate}deg)`);
+  if (tr.scale != null && tr.scale !== 1) parts.push(`scale(${tr.scale})`);
+  return parts.join(' ');
 }
+
+function mediaStyle(item: Item): React.CSSProperties {
+  return { objectFit: item.transform?.fit || 'contain' };
+}
+
+/** live clip iframes (for measuring content bounds: anchoring, on-frame gizmo) */
+export const clipFrames = new Map<string, HTMLIFrameElement>();
 
 function ImageLayer({ item }: { item: Item }) {
   const ref = useRef<HTMLImageElement>(null);
@@ -205,7 +218,7 @@ function ClipFrame({ v, item, project, visible, onReady }: { v: number; item: It
         const first = !ready.current;
         ready.current = true;
         post({ type: 'seek', t: Math.max(0, time.get() - item.start + item.in) });
-        setState((s) => ({ clipErrors: { ...s.clipErrors, [item.id]: e.data.errors || [] } }));
+        setState((s) => ({ clipErrors: { ...s.clipErrors, [item.id]: e.data.errors || [] }, clipBindings: { ...s.clipBindings, [item.id]: e.data.bindings || {} } }));
         if (first) { readyResolve.current?.(); requestAnimationFrame(() => requestAnimationFrame(() => onReady(v))); }
       }
       if (e.data.type === 'error') setState((s) => ({ clipErrors: { ...s.clipErrors, [item.id]: [...(s.clipErrors[item.id] || []), e.data.message].slice(-5) } }));
@@ -231,6 +244,7 @@ function ClipFrame({ v, item, project, visible, onReady }: { v: number; item: It
     return time.sub(onT);
   }, [item.start, item.in, item.duration]);
 
+  useEffect(() => { if (visible && ref.current) clipFrames.set(item.id, ref.current); }, [visible, item.id]);
   return <iframe ref={ref} className="layer clip-layer" src={src} title={item.ref} style={{ visibility: visible ? 'visible' : 'hidden' }} />;
 }
 

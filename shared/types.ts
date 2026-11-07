@@ -32,7 +32,8 @@ export interface Item {
   opacity?: number;
   volume?: number;
   /** media placement: fit + scale + offset in px of the project frame */
-  transform?: { fit?: 'contain' | 'cover'; scale?: number; x?: number; y?: number };
+  /** layer transform (all visual items): offset px, uniform scale, rotation °, origin in % of the frame */
+  transform?: { fit?: 'contain' | 'cover'; scale?: number; x?: number; y?: number; rotate?: number; ox?: number; oy?: number };
   /** transitions in/out, effects, mask, blend mode (see shared/fx.ts) */
   fx?: ItemFx;
   /** reserved for video generators (Higgsfield & co) */

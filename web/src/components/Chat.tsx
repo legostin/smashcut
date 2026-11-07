@@ -99,6 +99,7 @@ function buildBlocks(events: AgentEvent[]): Block[] {
       continue;
     }
     if (e.kind === 'tool_result') { const st = pending.shift(); if (st) st.result = e; continue; }
+    if (e.kind === 'status' && /перебив|остановлен|перезапус|прерв|очеред/i.test(e.text || '')) { blocks.push({ kind: 'event', e }); continue; }
     if (e.kind === 'status' || (e.kind === 'result' && e.ok !== false)) continue;
     if (e.kind === 'image') {
       // frames the agent looked at: attach to the current steps group so they read as "what it saw"
@@ -142,6 +143,7 @@ function Message({ e }: { e: AgentEvent }) {
     return <div className={'msg-user' + (long && !open ? ' clamp' : '')} onClick={() => long && setOpen(!open)}>{e.text}</div>;
   }
   if (e.kind === 'text') return <div className="msg-agent"><Markdown text={e.text || ''} /></div>;
+  if (e.kind === 'status') return <div className="msg-status">{e.text}</div>;
   if (e.kind === 'image') return <Frames images={[e]} />;
   return <div className="msg-error">{e.text}</div>;
 }

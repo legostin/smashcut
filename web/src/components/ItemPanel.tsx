@@ -3,6 +3,7 @@ import type { Item, ParamSpec, Project } from '../../../shared/types';
 import { useStore, actions, api, setState, notify, refreshGallery, getState } from '../store';
 import { Icon } from './Icon';
 import { FxPanel } from './FxPanel';
+import { LayoutPanel, TokenChip } from './LayoutPanel';
 
 /** Contextual panel for the selected timeline item: the few controls that matter + "ask the agent". */
 export function ItemPanel({ item, project }: { item: Item; project: Project }) {
@@ -10,12 +11,14 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
   const music = useStore((s) => (item.kind === 'music' ? s.music.find((m) => m.id === item.ref) : undefined));
   const media = useStore((s) => (item.kind === 'media' ? s.media.find((m) => m.file === item.ref) : undefined));
   const errors = useStore((s) => s.clipErrors[item.id]);
+  const bindings = useStore((s) => s.clipBindings[item.id]);
+  const design = useStore((s) => s.design);
   const [ask, setAsk] = useState('');
   const up = (patch: Partial<Item>) => actions.updateItem(item.id, patch);
   const name = clip?.name || music?.name || item.ref;
   const visual = item.kind === 'clip' || (item.kind === 'media' && media?.type !== 'audio');
   const audible = item.kind === 'music' || (item.kind === 'media' && (media?.type === 'audio' || media?.hasAudio));
-  const schema = clip?.schema || {};
+  const schema = Object.fromEntries(Object.entries(clip?.schema || {}).filter(([k, v]) => !k.startsWith('__') && !(v as any).hidden));
   const askAgent = async () => {
     const what = ask.trim();
     if (!what) return;
@@ -39,7 +42,11 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
 
         {Object.keys(schema).length > 0 && (
           <Section title="Параметры">
-            {Object.entries(schema).map(([k, spec]) => <ParamField key={k} k={k} spec={spec} value={item.params?.[k] ?? spec.default} onChange={(v) => up({ params: { [k]: v } })} />)}
+            {Object.entries(schema).map(([k, spec]) => {
+              const tok = !(k in (item.params || {})) ? bindings?.[k] : undefined;
+              const tokVal = tok ? (spec.type === 'color' ? design.colors.find((c) => c.name === tok)?.value : design.type.find((t) => t.role === tok)?.family) : undefined;
+              return <ParamField key={k} k={k} spec={spec} token={tok} value={item.params?.[k] ?? tokVal ?? spec.default} onChange={(v) => up({ params: { [k]: v } })} />;
+            })}
           </Section>
         )}
 
@@ -52,6 +59,8 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
           {visual && <Slider label="Прозрачность" value={item.opacity ?? 1} max={1} onChange={(v) => up({ opacity: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
           {audible && <Slider label="Громкость" value={item.volume ?? 1} max={1.5} onChange={(v) => up({ volume: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
         </Section>
+
+        {visual && <LayoutPanel item={item} project={project} />}
 
         {item.kind !== 'music' && <FxPanel item={item} />}
 
@@ -83,6 +92,8 @@ function Menu({ item }: { item: Item }) {
         <div className="menu right">
           {item.kind === 'clip' && <button className="menu-item" onClick={run(async () => { const r = await api('POST', '/api/agent/lint-clip', { clipId: item.ref }); notify(r.ok ? 'info' : 'error', r.ok ? 'Клип в порядке' : r.issues.join('\n')); })}>Проверить клип</button>}
           {(item.kind === 'clip' || item.kind === 'music') && <button className="menu-item" onClick={run(async () => { await api('POST', '/api/library', { kind: item.kind, id: item.ref }); notify('info', 'Сохранено в библиотеку'); refreshGallery(); })}>Сохранить в библиотеку</button>}
+          {item.kind === 'clip' && <button className="menu-item" onClick={run(async () => { const r = await api('POST', '/api/library/style', { itemId: item.id }); notify('info', `Стиль «${r.name}» сохранён в «Мою библиотеку»`); refreshGallery(); })}>Сохранить как стиль</button>}
+          {item.kind === 'clip' && <button className="menu-item" onClick={run(() => actions.startTask(variationsPrompt(item, getState().clips.find((c) => c.id === item.ref)?.name || item.ref)))}>Вариации от агента…</button>}
           {item.kind === 'clip' && <button className="menu-item" onClick={run(() => api('POST', `/api/clips/${item.ref}/duplicate`))}>Дублировать клип</button>}
           {item.params && Object.keys(item.params).length > 0 && <button className="menu-item" onClick={run(() => { const p = useStoreSnapshot(); api('PATCH', '/api/project', { items: p.items.map((i) => (i.id === item.id ? { ...i, params: {} } : i)) }); })}>Сбросить параметры</button>}
           <div className="menu-sep" />
@@ -110,20 +121,20 @@ function Num({ label, value, onChange }: { label: string; value: number; onChang
   );
 }
 
-function Slider({ label, value, max, onChange, fmt }: { label: string; value: number; max: number; onChange: (v: number) => void; fmt: (v: number) => string }) {
+function Slider({ label, value, max, min = 0, step = 0.01, onChange, fmt }: { label: React.ReactNode; value: number; max: number; min?: number; step?: number; onChange: (v: number) => void; fmt: (v: number) => string }) {
   const [v, setV] = useState(value);
   useEffect(() => setV(value), [value]);
   return (
     <label className="slider">
       <span>{label}</span>
-      <input type="range" min={0} max={max} step={0.01} value={v} onChange={(e) => setV(Number(e.target.value))} onPointerUp={() => onChange(v)} onKeyUp={() => onChange(v)} />
+      <input type="range" min={min} max={max} step={step} value={v} onChange={(e) => setV(Number(e.target.value))} onPointerUp={() => onChange(v)} onKeyUp={() => onChange(v)} />
       <span className="slider-val">{fmt(v)}</span>
     </label>
   );
 }
 
-function ParamField({ k, spec, value, onChange }: { k: string; spec: ParamSpec; value: unknown; onChange: (v: unknown) => void }) {
-  const label = spec.label || k;
+function ParamField({ k, spec, value, onChange, token }: { k: string; spec: ParamSpec; value: unknown; onChange: (v: unknown) => void; token?: string }) {
+  const label = <>{spec.label || k}<TokenChip token={token} /></>;
   const [local, setLocal] = useState(value);
   useEffect(() => setLocal(value), [value]);
   const commit = () => { if (local !== value) onChange(local); };
@@ -136,7 +147,7 @@ function ParamField({ k, spec, value, onChange }: { k: string; spec: ParamSpec; 
   if (spec.type === 'boolean') return <label className="field-line"><span>{label}</span><input type="checkbox" className="toggle" checked={!!local} onChange={(e) => onChange(e.target.checked)} /></label>;
   if (spec.type === 'select') return <label className="field-line"><span>{label}</span><select value={String(local)} onChange={(e) => onChange(e.target.value)}>{(spec.options || []).map((o) => <option key={o}>{o}</option>)}</select></label>;
   if (spec.type === 'number') {
-    if (spec.min != null && spec.max != null && spec.max - spec.min <= 1000) return <Slider label={label} value={Number(local)} max={spec.max} onChange={onChange} fmt={(v) => String(+v.toFixed(2))} />;
+    if (spec.min != null && spec.max != null && spec.max - spec.min <= 1000) return <Slider label={label} value={Number(local)} min={spec.min} max={spec.max} step={spec.step || 0.01} onChange={onChange} fmt={(v) => String(+v.toFixed(2))} />;
     return <label className="field-line"><span>{label}</span><input className="inline-input" value={String(local)} onChange={(e) => setLocal(e.target.value)} onBlur={() => { const n = Number(local); if (!Number.isNaN(n)) onChange(n); }} /></label>;
   }
   if (spec.type === 'textarea') return <label className="field-block"><span>{label}</span><textarea rows={4} value={String(local ?? '')} onChange={(e) => setLocal(e.target.value)} onBlur={commit} /></label>;
@@ -165,4 +176,11 @@ function History({ path, clipId }: { path: string; clipId?: string }) {
       ))}
     </div>
   );
+}
+
+function variationsPrompt(item: Item, name: string) {
+  return `Сделай 3 стилистические вариации клипа «${name}» (clips/${item.ref}, элемент ${item.id}, ${item.start.toFixed(2)}–${(item.start + item.duration).toFixed(2)} с).
+Каждую — отдельным клипом clips/${item.ref}-v1, -v2, -v3 (скопируй пакет и меняй копию): разные типографика, ритм анимации, композиция и цветовой акцент; тексты и смысл те же; следуй дизайн-системе проекта, если она есть.
+Поставь варианты на новую дорожку графики (set_project tracks) в то же время, что и оригинал, но выключи их видимость (hidden: true) — пользователь переключит сам. Оригинал не меняй.
+Отрендери контакт-листы всех трёх (render_clip) и коротко опиши, чем они отличаются.`;
 }

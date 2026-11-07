@@ -349,6 +349,8 @@ function parseClaude(t: Task, m: any) {
     for (const c of m.message?.content || []) {
       if (c.type === 'tool_result') {
         const content = Array.isArray(c.content) ? c.content.map((x: any) => (x.type === 'text' ? x.text : x.type === 'image' ? '[image]' : '')).join('\n') : c.content;
+        // a tool call cut short by the user's interruption is not an error
+        if (t.interrupt && c.is_error && /doesn't want to proceed|rejected|interrupted/i.test(String(content))) { pushEvent(t, { kind: 'tool_result', ok: true, text: 'прервано пользователем' }); continue; }
         pushEvent(t, { kind: 'tool_result', ok: !c.is_error, text: short(content) });
       }
     }
@@ -356,6 +358,11 @@ function parseClaude(t: Task, m: any) {
   }
   if (m.type === 'result') {
     if (m.session_id) t.sessionId = m.session_id;
+    if (t.interrupt && (m.subtype === 'error_during_execution' || m.is_error)) {
+      if (typeof m.total_cost_usd === 'number') t.costUsd = (t.costUsd || 0) + m.total_cost_usd;
+      pushEvent(t, { kind: 'status', text: 'агент остановлен — продолжаю с вашим сообщением' });
+      return;
+    }
     if (typeof m.total_cost_usd === 'number') t.costUsd = (t.costUsd || 0) + m.total_cost_usd;
     pushEvent(t, { kind: 'result', ok: !m.is_error, text: m.result ? short(m.result, 4000) : m.subtype });
   }
@@ -364,7 +371,11 @@ function parseClaude(t: Task, m: any) {
 function parseCodex(t: Task, m: any) {
   const type: string = m.type || m.msg?.type || '';
   if (type === 'thread.started' || type === 'session.created') { t.sessionId = m.thread_id || m.session_id || t.sessionId; return; }
-  if (type === 'error' || type === 'turn.failed') { pushEvent(t, { kind: 'error', text: m.message || m.error?.message || JSON.stringify(m) }); return; }
+  if (type === 'error' || type === 'turn.failed') {
+    if (t.interrupt) { pushEvent(t, { kind: 'status', text: 'агент остановлен — продолжаю с вашим сообщением' }); return; }
+    pushEvent(t, { kind: 'error', text: m.message || m.error?.message || JSON.stringify(m) });
+    return;
+  }
   if (type === 'turn.completed') { pushEvent(t, { kind: 'result', ok: true, text: 'turn completed' + (m.usage ? ` · ${m.usage.input_tokens ?? '?'} in / ${m.usage.output_tokens ?? '?'} out tokens` : '') }); return; }
   const it = m.item;
   if (!it) return;

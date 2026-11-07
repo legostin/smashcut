@@ -40,3 +40,8 @@ Export is done by the user from the UI (or POST /api/export); you can't watch vi
 - Fades/dips also fade the item's audio. Ken Burns brings stills to life; `look` presets: teal-orange, film, noir, warm, cool, vivid, fade, cyber.
 - Rhythm: transitions 0.25–0.6 s; land them on beats (`get_timing`). Don't stack many different transition types in one video — pick 1–2 that fit the style.
 - Verify with `render_frame` mid-transition (it uses the same renderer as export).
+
+## Placement & rhythm of clips
+- Move/scale/rotate any visual item: `timeline_update {id, patch:{transform:{x, y, scale, rotate, ox, oy}}}` (x/y in project px, ox/oy pivot in % of the frame — use the content centre).
+- Faster or calmer animation without touching code: `patch:{params:{__energy: 1.6}}` (1 = as authored).
+- `params.__style: "own"` stops a clip following the design system; omit it to follow tokens.

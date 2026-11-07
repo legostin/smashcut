@@ -56,6 +56,13 @@ If the project has a design system (`get_design`), use its tokens instead of har
 - JS: `studio.design.color('accent', '#fff')`, `studio.design.motion('enter')` → `{ease, duration}` for GSAP.
 - Params may still override (e.g. a colour param whose default is empty → fall back to the token).
 
+## Universal controls (you get them for free)
+Every clip — yours and the gallery's — supports, without extra code:
+- layout: `item.transform {x, y, scale, rotate, ox, oy}` (the editor's anchor grid / on-frame gizmo);
+- rhythm: `params.__energy` (0.5–2.5) remaps time so entrance/exit run faster or calmer while the hold stretches — so build entrances in the first ~1.2 s and exits in the last ~1 s;
+- style: colour/font params follow the design system unless the user overrides them. Bind explicitly in params.json: `"accent": { "type": "color", "token": "accent", "default": "#ff5a36" }`, `"font": { "type": "select", "token": "display", ... }` (heuristics also map accent/textColor/background/cardColor…).
+Keep content inside one tight group (no huge invisible boxes) so the bounding box used for anchoring is accurate.
+
 ## Params
 Expose every user-facing string, colour and key number in `params.json` so humans can tweak without you.
 `type: textarea` for multi-line data (e.g. chart rows `Label: 42`). Use readable labels. Defaults must look great.

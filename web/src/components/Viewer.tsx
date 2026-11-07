@@ -3,6 +3,9 @@ import type { Comment, Project } from '../../../shared/types';
 import { Player } from './Player';
 import { useStore, usePlayhead, setState, getState, actions, togglePlay, seek, fmtTime, projectEnd, time } from '../store';
 import { Icon } from './Icon';
+import { measureItem, type Box } from './LayoutPanel';
+import { layerTransform } from './Player';
+import type { Item } from '../../../shared/types';
 
 export function Viewer({ project }: { project: Project }) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -26,6 +29,7 @@ export function Viewer({ project }: { project: Project }) {
             <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0', width: project.width, height: project.height }}>
               <Player project={project} />
             </div>
+            {!commentMode && <TransformGizmo project={project} scale={scale} />}
             <CommentLayer project={project} active={commentMode} />
           </div>
         )}
@@ -224,6 +228,99 @@ function Transport({ project }: { project: Project }) {
         <span className="tc mono muted">{fmtTime(end, project.fps)}</span>
         <button className={'icon-btn' + (commentMode ? ' on' : '')} title="Правки на кадре (C)" onClick={() => setState({ commentMode: !commentMode })}><Icon name="comment" size={15} /></button>
       </div>
+    </div>
+  );
+}
+
+/** On-frame transform: drag to move, corners to scale, top handle to rotate (any visual item). */
+function TransformGizmo({ project, scale: k }: { project: Project; scale: number }) {
+  const item = useStore((s) => s.project?.items.find((i) => i.id === s.selectedItemId) || null);
+  const fv = useStore((s) => s.fileVersion);
+  const playing = useStore((s) => s.playing);
+  const t = usePlayhead();
+  const [box, setBox] = useState<Box | null>(null);
+  const visual = item && (item.kind === 'clip' || (item.kind === 'media' && !/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(item.ref)));
+  const active = !!item && visual && t >= item.start && t < item.start + item.duration;
+  useEffect(() => {
+    if (!active || playing || !item) { setBox(null); return; }
+    let tries = 0;
+    const measure = () => { const b = measureItem(item, project); if (b) setBox(b); else if (tries++ < 8) setTimeout(measure, 120); else setBox(null); };
+    const id = setTimeout(measure, 60);
+    return () => clearTimeout(id);
+  }, [active, playing, item?.id, item?.ref, JSON.stringify(item?.params), fv, Math.round(t * 10)]);
+  if (!item || !box || !active || playing) return null;
+  const tr = item.transform || {};
+  const s = tr.scale ?? 1, r = tr.rotate ?? 0;
+  const O = { x: ((tr.ox ?? 50) / 100) * project.width, y: ((tr.oy ?? 50) / 100) * project.height };
+
+  const live = (patch: Partial<NonNullable<Item['transform']>>) => {
+    setState((st) => st.project ? ({ project: { ...st.project, items: st.project.items.map((i) => (i.id === item.id ? { ...i, transform: { ...(i.transform || {}), ...patch } } : i)) } }) : {});
+  };
+  const commit = () => {
+    const it = getState().project?.items.find((i) => i.id === item.id);
+    if (it) actions.updateItem(item.id, { transform: it.transform });
+  };
+  /** first interaction: pivot at the content centre (no visual change while unscaled/unrotated) */
+  const ensureOrigin = () => {
+    if (tr.ox != null || s !== 1 || r !== 0) return { ...tr };
+    const o = { ox: +(((box.x + box.w / 2) / project.width) * 100).toFixed(3), oy: +(((box.y + box.h / 2) / project.height) * 100).toFixed(3) };
+    live(o);
+    return { ...tr, ...o };
+  };
+  const startMove = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    const base = ensureOrigin();
+    const sx = e.clientX, sy = e.clientY;
+    const mv = (ev: PointerEvent) => {
+      let x = (base.x || 0) + (ev.clientX - sx) / k, y = (base.y || 0) + (ev.clientY - sy) / k;
+      // snap the content centre to the frame centre lines
+      const cx = box.x + box.w / 2 + x, cy = box.y + box.h / 2 + y;
+      if (Math.abs(cx - project.width / 2) < 8 / k) x += project.width / 2 - cx;
+      if (Math.abs(cy - project.height / 2) < 8 / k) y += project.height / 2 - cy;
+      live({ x: Math.round(x), y: Math.round(y) });
+    };
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); commit(); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  };
+  const pivotScreen = (base: NonNullable<Item['transform']>, el: HTMLElement) => {
+    const fr = el.closest('.frame')!.getBoundingClientRect();
+    return { x: fr.left + (((base.ox ?? 50) / 100) * project.width + (base.x || 0)) * k, y: fr.top + (((base.oy ?? 50) / 100) * project.height + (base.y || 0)) * k };
+  };
+  const startScale = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    const base = ensureOrigin();
+    const P = pivotScreen(base, e.currentTarget as HTMLElement);
+    const d0 = Math.hypot(e.clientX - P.x, e.clientY - P.y) || 1;
+    const s0 = base.scale ?? 1;
+    const mv = (ev: PointerEvent) => { const d = Math.hypot(ev.clientX - P.x, ev.clientY - P.y); live({ scale: +Math.max(0.05, Math.min(8, (s0 * d) / d0)).toFixed(3) }); };
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); commit(); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  };
+  const startRotate = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    const base = ensureOrigin();
+    const P = pivotScreen(base, e.currentTarget as HTMLElement);
+    const a0 = Math.atan2(e.clientY - P.y, e.clientX - P.x);
+    const r0 = base.rotate ?? 0;
+    const mv = (ev: PointerEvent) => {
+      let r1 = r0 + ((Math.atan2(ev.clientY - P.y, ev.clientX - P.x) - a0) * 180) / Math.PI;
+      if (ev.shiftKey) r1 = Math.round(r1 / 15) * 15; else if (Math.abs(r1 % 90) < 3) r1 = Math.round(r1 / 90) * 90;
+      live({ rotate: +r1.toFixed(1) });
+    };
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); commit(); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  };
+  const style: React.CSSProperties = {
+    left: box.x * k, top: box.y * k, width: box.w * k, height: box.h * k,
+    transformOrigin: `${(O.x - box.x) * k}px ${(O.y - box.y) * k}px`,
+    transform: layerTransform({ ...tr, x: (tr.x || 0) * k, y: (tr.y || 0) * k }),
+  };
+  const inv = 1 / Math.max(0.05, s);
+  return (
+    <div className="gizmo" style={style} onPointerDown={startMove} title="Перетащите, чтобы сдвинуть">
+      {(['nw', 'ne', 'sw', 'se'] as const).map((h) => <span key={h} className={`gz-h ${h}`} style={{ transform: `scale(${inv})` }} onPointerDown={startScale} />)}
+      <span className="gz-stem" style={{ transform: `scaleX(${inv})` }} />
+      <span className="gz-rot" style={{ transform: `scale(${inv})` }} onPointerDown={startRotate} title="Поворот (Shift — шаг 15°)" />
     </div>
   );
 }

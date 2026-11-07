@@ -88,6 +88,7 @@
   let timing = { beats: [], bars: [], sections: [], markers: [], words: [], bpm: 120 };
   const timelines = new Set();
   let currentT = 0;
+  let lastT = 0;
   let readyResolve;
   const ready = new Promise((r) => (readyResolve = r));
   let isReady = false;
@@ -188,7 +189,90 @@
     const defaults = {};
     for (const [k, s] of Object.entries(schema)) defaults[k] = s.default;
     params = { ...defaults, ...(input.params || {}) };
+    bindTokens();
   }
+
+  // ---------- universal controls: design-system style binding ----------
+  // Colour/font params follow the project's design system unless the user set them explicitly on the item
+  // (or chose "own style"). Explicit binding: params.json  "accent": { "type": "color", "token": "accent" }.
+  const ROLE_SYNONYMS = {
+    accent: ['accent', 'primary', 'brand'],
+    'accent-2': ['accent-2', 'accent2', 'secondary'],
+    text: ['text', 'fg', 'foreground', 'ink'],
+    muted: ['muted', 'text-2', 'subtle', 'secondary-text'],
+    bg: ['bg', 'background', 'base'],
+    surface: ['surface', 'card', 'panel', 'bg-2', 'plate'],
+  };
+  const KEY_ROLES = [
+    [/^(accent2|color2|c2|colorb|keycolor2|glowcolor2|secondary.*)$/i, 'accent-2'],
+    [/^(highlighttext|accenttext|pilltextcolor)$/i, 'bg'],
+    [/^(accent|accentcolor|highlight|highlightcolor|color1|c1|colora|keycolor1|pincolor|barcolor|bar|pillcolor|ripplecolor|glow|glowcolor|linecolor|strokecolor|color)$/i, 'accent'],
+    [/^(textcolor|cardtext|typecolor|facecolor)$/i, 'text'],
+    [/^(labelcolor|sublinecolor|rolecolor)$/i, 'muted'],
+    [/^(background|bg|bgcolor|bg1|bgcenter|dark|navy|basecolor)$/i, 'bg'],
+    [/^(cardcolor|plate|bg2|bgedge|surface)$/i, 'surface'],
+  ];
+  let bindings = {};
+  function tokenColor(role) {
+    const cs = (design && design.colors) || [];
+    for (const n of ROLE_SYNONYMS[role] || [role]) { const c = cs.find((x) => x.name === n); if (c) return c; }
+    return null;
+  }
+  function bindTokens() {
+    bindings = {};
+    if (!design || (!(design.colors || []).length && !(design.type || []).length)) return;
+    if (params.__style === 'own') return;
+    const explicit = input.params || {};
+    for (const [k, sp] of Object.entries(schema)) {
+      if (k in explicit) continue; // user's own value wins
+      if (sp.type === 'color') {
+        let role = sp.token;
+        if (!role) for (const [re, r] of KEY_ROLES) if (re.test(k)) { role = r; break; }
+        const c = role && tokenColor(role);
+        if (c) { params[k] = c.value; bindings[k] = c.name; }
+      } else if (/font/i.test(k) && !/size/i.test(k) && (sp.type === 'select' || sp.type === 'text')) {
+        const roles = design.type || [];
+        const want = sp.token || (/body|sub|caption|role/i.test(k) ? 'body' : 'display');
+        const t = roles.find((x) => x.role === want) || roles.find((x) => x.role === 'title') || roles[0];
+        if (t) { params[k] = t.family; bindings[k] = t.role; }
+      }
+    }
+  }
+
+  // ---------- universal controls: energy (time remap) ----------
+  // e > 1: entrance & exit play faster and the hold stretches; e < 1: calmer. Start and end stay put.
+  function remap(t) {
+    const e = Number(params.__energy || 1);
+    const D = studio.duration;
+    if (!(e > 0) || Math.abs(e - 1) < 1e-3 || !(D > 0)) return t;
+    const H = Math.min(1.2, D / 3), T = Math.min(1.0, D / 3);
+    const h = Math.min(H / e, D / 2), tt = Math.min(T / e, D / 2);
+    if (t <= h) return (t / h) * H;
+    if (t >= D - tt) return D - T + ((t - (D - tt)) / tt) * T;
+    const a = h, b = D - tt, A = H, B = D - T;
+    return b > a ? A + ((t - a) / (b - a)) * (B - A) : A;
+  }
+
+  /** union box (px) of everything visible on the stage at the current time — for anchoring / gizmos */
+  function bbox() {
+    const root = document.getElementById('stage') || document.body;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, n = 0;
+    const els = root.querySelectorAll('*');
+    for (let i = 0; i < els.length && i < 4000; i++) {
+      const el = els[i];
+      if (el.children.length && !(el instanceof HTMLCanvasElement) && !(el instanceof SVGSVGElement) && el.tagName !== 'IMG' && !hasOwnText(el)) continue;
+      const cs = getComputedStyle(el);
+      if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) < 0.02) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) continue;
+      if (r.width >= studio.width * 0.98 && r.height >= studio.height * 0.98 && !(el instanceof HTMLCanvasElement)) continue;
+      x0 = Math.min(x0, r.left); y0 = Math.min(y0, r.top); x1 = Math.max(x1, r.right); y1 = Math.max(y1, r.bottom); n++;
+    }
+    if (!n) return null;
+    x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(studio.width, x1); y1 = Math.min(studio.height, y1);
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  }
+  function hasOwnText(el) { for (const c of el.childNodes) if (c.nodeType === 3 && c.textContent.trim()) return true; return false; }
 
   // design system tokens → CSS custom properties + studio.design
   let design = { colors: [], type: [], motion: [], spacing: [] };
@@ -252,7 +336,8 @@
     await waitAssets();
   }
 
-  function applyTime(t) {
+  function applyTime(tIn) {
+    const t = remap(tIn);
     currentT = t;
     virtualMs = t * 1000;
     // rAF callbacks get the virtual timestamp
@@ -302,12 +387,12 @@
     document.documentElement.style.setProperty('--h', studio.height + 'px');
     // load every bundled face up-front so setup() can measure text with final metrics
     const fontsP = Promise.all([...document.fonts].map((f) => f.load().catch(() => null)));
-    await Promise.all([loadParams(), loadTiming(), loadDesign(), Promise.race([fontsP, new Promise((r) => nativeTimeout(r, 5000))])]);
+    await Promise.all([loadParams(), loadTiming(), loadDesign().then(() => bindTokens()), Promise.race([fontsP, new Promise((r) => nativeTimeout(r, 5000))])]);
     await runSetup();
     applyTime(Number(input.t || 0));
     isReady = true;
     readyResolve();
-    post({ type: 'ready', duration: def.duration || null, schema, errors });
+    post({ type: 'ready', duration: def.duration || null, schema, errors, bindings });
   }
 
   function post(msg) {
@@ -319,6 +404,7 @@
     const m = e.data;
     if (!m || !m.__studio) return;
     if (m.type === 'seek') {
+      lastT = m.t;
       if (isReady) applyTime(m.t);
       // render mode: confirm once this time is fully applied (incl. <video> seeks inside the clip)
       if (m.ack != null) { if (isReady) await seekVideos(m.t); post({ type: 'seeked', ack: m.ack }); }
@@ -328,8 +414,8 @@
       if (!isReady) return;
       await loadParams();
       await runSetup();
-      applyTime(currentT);
-      post({ type: 'ready', duration: def.duration || null, schema, errors });
+      applyTime(lastT);
+      post({ type: 'ready', duration: def.duration || null, schema, errors, bindings });
     }
   });
 
@@ -338,7 +424,8 @@
     ready,
     seek,
     errors,
-    info: () => ({ duration: def && def.duration, schema, params, errors }),
+    info: () => ({ duration: def && def.duration, schema, params, errors, bindings }),
+    bbox,
   };
 
   // safety: if clip never calls studio.clip()

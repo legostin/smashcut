@@ -399,7 +399,8 @@ export async function registerRoutes(app: FastifyInstance) {
       const iid = 'i' + nid();
       await store.update((p) => {
         const kind = b.kind === 'clip' ? 'clip' : 'music';
-        p.items.push({ id: iid, kind, ref: id, track: b.place!.track || trackFor(p, kind, id), start: b.place!.start, in: 0, duration: b.place!.duration || defaultDuration(kind, id), params: b.place!.params });
+        const mf = readJson<any>(store.p(kind === 'clip' ? 'clips' : 'music', id, 'manifest.json'), {});
+        p.items.push({ id: iid, kind, ref: id, track: b.place!.track || trackFor(p, kind, id), start: b.place!.start, in: 0, duration: b.place!.duration || defaultDuration(kind, id), params: b.place!.params, ...(mf.transform ? { transform: mf.transform } : {}), ...(mf.fx ? { fx: mf.fx } : {}) });
         p.duration = Math.max(p.duration, Math.ceil(b.place!.start + (b.place!.duration || 5)));
       });
       item = store.project.items.find((i) => i.id === iid);
@@ -408,6 +409,26 @@ export async function registerRoutes(app: FastifyInstance) {
     return { id, item };
   });
   app.post<{ Body: { kind: 'clip' | 'music'; id: string; name?: string } }>('/api/library', async (req) => { need(); return saveToLibrary(req.body.kind, req.body.id, req.body.name); });
+  /** save a timeline item's current settings as a reusable style (template copy with these params as defaults) */
+  app.post<{ Body: { itemId: string; name?: string } }>('/api/library/style', async (req) => {
+    const store = need();
+    const it = store.project.items.find((i) => i.id === req.body.itemId);
+    if (!it || it.kind !== 'clip') throw Object.assign(new Error('select a graphics clip'), { statusCode: 400 });
+    const info = store.clipInfo(it.ref)!;
+    const id = slug(`${it.ref}-style-${nid().slice(0, 4)}`);
+    const dst = path.join(LIBRARY_DIR, 'clips', id);
+    copyDir(store.p('clips', it.ref), dst);
+    const pf = path.join(dst, 'params.json');
+    const pj = readJson<{ schema: Record<string, any> }>(pf, { schema: {} });
+    for (const [k, v] of Object.entries(it.params || {})) {
+      if (pj.schema[k]) pj.schema[k] = { ...pj.schema[k], default: v };
+      else if (k.startsWith('__')) pj.schema[k] = { type: 'number', default: v, hidden: true };
+    }
+    writeJson(pf, pj);
+    const name = req.body.name || `${info.name} · мой стиль`;
+    writeJson(path.join(dst, 'manifest.json'), { ...readJson(path.join(dst, 'manifest.json'), {}), id, kind: 'clip', name, source: `style:${it.ref}`, duration: +(it.duration).toFixed(2), transform: it.transform, fx: it.fx });
+    return { id, name };
+  });
   app.delete<{ Params: { kind: 'clip' | 'music'; id: string } }>('/api/library/:kind/:id', async (req) => { deleteFromLibrary(req.params.kind, req.params.id); return { ok: true }; });
   app.get('/api/skills', async () => listSkills());
   app.post('/api/skills/sync', async () => { const s = need(); syncSkills(s.dir, s.project.name); return listSkills(); });

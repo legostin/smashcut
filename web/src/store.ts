@@ -46,6 +46,8 @@ export interface State {
   snap: boolean;
   fileVersion: Record<string, number>;
   clipErrors: Record<string, string[]>;
+  /** param → design token the runtime bound it to (per timeline item) */
+  clipBindings: Record<string, Record<string, string>>;
   playing: boolean;
   dialog: null | 'projects' | 'settings' | 'export' | { compare: { clipId: string; sha: string } };
   agent: AgentKind;
@@ -58,7 +60,7 @@ const initial: State = {
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
   view: (() => { try { return localStorage.getItem('view') === 'board' ? 'board' : 'edit'; } catch { return 'edit'; } })() as 'edit' | 'board', sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [],
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
-  fileVersion: {}, clipErrors: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
+  fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
 
 let state: State = initial;
