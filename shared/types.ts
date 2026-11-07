@@ -173,6 +173,9 @@ export interface Timing {
   sections: { name: string; start: number; end: number }[];
   markers: { name: string; time: number }[];
   words: { text: string; start: number; end: number }[];
+  /** loudness of the project's music/audio, 0..1, sampled at `levelsRate` Hz from project time 0 */
+  levels?: number[];
+  levelsRate?: number;
 }
 
 export interface Settings {

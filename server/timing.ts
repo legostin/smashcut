@@ -40,6 +40,27 @@ export function computeTiming(): Timing {
       if (tr) for (const w of tr.words) { const s = off + w.start; if (inRange(s, it)) t.words.push({ text: w.text, start: +s.toFixed(3), end: +(off + w.end).toFixed(3) }); }
     }
   }
+  // loudness envelope (10 Hz) from analysed music / audio items
+  const rate = 10;
+  const end = Math.max(0, ...p.items.map((i) => i.start + i.duration));
+  const levels = new Array(Math.ceil(end * rate) + 1).fill(0);
+  let any = false;
+  for (const it of items) {
+    const file = it.kind === 'music' ? store.p('.studio', 'analysis', `music-${it.ref}.json`) : it.kind === 'media' ? store.p('.studio', 'analysis', it.ref + '.json') : null;
+    if (!file) continue;
+    const an = readJson<AudioAnalysis | null>(file, null);
+    if (!an?.loudness?.length) continue;
+    any = true;
+    const vol = it.volume ?? 1;
+    for (let k = Math.max(0, Math.floor(it.start * rate)); k < Math.min(levels.length, Math.ceil((it.start + it.duration) * rate)); k++) {
+      const src = Math.round((k / rate - it.start + it.in) * 10);
+      const db = an.loudness[src];
+      if (db == null) continue;
+      const v = Math.max(0, Math.min(1, (db + 48) / 48)) * Math.min(1, vol);
+      if (v > levels[k]) levels[k] = +v.toFixed(3);
+    }
+  }
+  if (any) { t.levels = levels; t.levelsRate = rate; }
   for (const m of p.markers) t.markers.push({ name: m.label, time: m.time });
   t.beats.sort((a, b) => a - b);
   t.words.sort((a, b) => a.start - b.start);

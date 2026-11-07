@@ -57,6 +57,7 @@ Expose every user-facing string, colour and key number in `params.json` so human
 ## Timing context
 - `ctx.duration` / `studio.duration` — actual item length: entrances near 0, exits ending ≤ duration, holds stretch.
 - `studio.beats`, `studio.bars`, `studio.sections`, `studio.markers` — project music timing **in clip-local seconds** (negative = before the clip). `studio.beat(n)` = n-th beat at/after clip start. Falls back to a 120 bpm grid.
+- `studio.level(t?)` — loudness 0..1 of the project's music/audio at clip-local time (audiograms, visualizers, beat-reactive scale). Falls back to a synthetic pulse on the beat grid.
 - `studio.words` — transcript words `[{text,start,end}]` in clip-local seconds (captions, kinetic type).
 - Sync hits to beats: `tl.from(el, {...}, studio.beat(4))`.
 

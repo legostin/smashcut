@@ -131,6 +131,21 @@
       const spb = 60 / studio.bpm;
       return b.length ? b[b.length - 1] + (n - (b.length - 1)) * spb : n * spb;
     },
+    /**
+     * loudness 0..1 of the project's music/audio at clip-local time t (default: current time).
+     * Uses the analysed mix when available, otherwise a synthetic pulse on the beat grid.
+     */
+    level(t = currentT) {
+      const L = timing.levels, rate = timing.levelsRate || 10;
+      if (L && L.length) {
+        const x = (t + offset()) * rate, i = Math.floor(x), f = x - i;
+        const a = L[Math.max(0, Math.min(L.length - 1, i))] || 0, b = L[Math.max(0, Math.min(L.length - 1, i + 1))] || 0;
+        return a + (b - a) * f;
+      }
+      const spb = 60 / studio.bpm;
+      const since = (((t + offset()) % spb) + spb) % spb;
+      return 0.35 + 0.55 * Math.exp(-since * 7);
+    },
     /** paused GSAP timeline that the runtime seeks for you */
     timeline(vars) {
       if (!window.gsap) throw new Error('GSAP not loaded: add <script src="/vendor/gsap.min.js"></script>');
