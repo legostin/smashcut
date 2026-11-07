@@ -80,13 +80,46 @@ export function startTask(o: StartOpts): Task {
 export function followUp(taskId: string, prompt: string, images: string[] = []) {
   const t = tasks.get(taskId);
   if (!t) throw new Error('task not found');
-  if (t.status === 'running' || t.status === 'queued') throw new Error('task is still running');
+  if (t.status === 'running' || t.status === 'queued') {
+    // agent is busy: deliver after the current run
+    t.later = [...(t.later || []), { prompt, images }];
+    pushEvent(t, { kind: 'status', text: 'сообщение в очереди — отправлю, когда агент закончит текущий шаг' });
+    emitTask(t);
+    return t;
+  }
   t.status = 'queued';
   pushEvent(t, { kind: 'user', text: prompt });
   t.pending = { prompt, images };
   emitTask(t);
   queue.push({ taskId, prompt, images });
   pump();
+  return t;
+}
+
+/**
+ * Interrupt a running agent: stop it gracefully (SIGINT keeps the session transcript) and continue the same
+ * session with the user's message. Work done so far stays in the files and in the session.
+ */
+export function interruptTask(taskId: string, prompt: string, images: string[] = []) {
+  const t = tasks.get(taskId);
+  if (!t) throw new Error('task not found');
+  if (t.status === 'queued') {
+    // not started yet: just replace/extend what it will run
+    const q = queue.find((x) => x.taskId === taskId);
+    if (q) q.prompt = `${q.prompt}\n\nДополнение от пользователя: ${prompt}`;
+    pushEvent(t, { kind: 'user', text: prompt });
+    emitTask(t);
+    return t;
+  }
+  if (t.status !== 'running' || !t.pid || !alive(t.pid)) return followUp(taskId, prompt, images);
+  t.interrupt = { prompt, images };
+  pushEvent(t, { kind: 'user', text: prompt });
+  pushEvent(t, { kind: 'status', text: 'перебиваю агента…' });
+  emitTask(t);
+  const pid = t.pid;
+  try { process.kill(-pid, 'SIGINT'); } catch { try { process.kill(pid, 'SIGINT'); } catch {} }
+  // if it ignores SIGINT, escalate
+  setTimeout(() => { if (alive(pid)) { try { process.kill(-pid, 'SIGTERM'); } catch {} } }, 4000);
   return t;
 }
 
@@ -227,11 +260,29 @@ function attach(t: Task) {
     live.delete(t.id);
     denyTask(t.id);
     if (t.status === 'cancelled') { await afterRun(t); emitTask(t); pump(); return; }
+    if (t.interrupt) {
+      // continue the same session with the user's interjection (no 'user' event: already shown)
+      const it = t.interrupt;
+      t.interrupt = undefined;
+      const prompt = `Пользователь перебил тебя во время работы. Его сообщение:\n\n${it.prompt}\n\nУчти это и продолжай (уже сделанное не переделывай без необходимости).`;
+      t.status = 'queued';
+      t.pending = { prompt, images: it.images };
+      emitTask(t);
+      queue.unshift({ taskId: t.id, prompt, images: it.images });
+      pump();
+      return;
+    }
     const completed = t.events.some((e) => e.kind === 'result' && e.ok !== false && e.t >= Date.parse(t.startedAt || '0'));
     const resultEvents = t.events.filter((e) => e.kind === 'result');
     const lastResult = resultEvents[resultEvents.length - 1];
     const finishedThisRun = completed && lastResult && t.events.lastIndexOf(lastResult) > t.events.map((e) => e.kind).lastIndexOf('user');
-    if (finishedThisRun) { await finish(t, 'done'); pump(); return; }
+    if (finishedThisRun) {
+      await finish(t, 'done');
+      const next = t.later?.shift();
+      if (next) { emitTask(t); followUp(t.id, next.prompt, next.images); }
+      pump();
+      return;
+    }
     // died mid-run (e.g. machine/editor restart): resume the same session a couple of times
     const errTail = (() => { try { return fs.readFileSync(t.logFile!.replace(/\.log$/, '.err'), 'utf8').slice(-2000); } catch { return ''; } })();
     if ((t.resumes || 0) < 2 && t.sessionId) {

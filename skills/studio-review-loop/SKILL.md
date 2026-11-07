@@ -17,3 +17,8 @@ optional rectangle `w,h`, and text. You receive an **annotated snapshot** (numbe
 7. If a comment is ambiguous or impossible, still resolve it with a note explaining what you did and the question.
 
 Comments on `timeline` (no clip) are about the edit: timing of items, order, music, cuts — use the timeline tools.
+
+## Board comments & cleanup
+- Board comments (pins on scenes, storyboard frames, design tokens, layers, components) come with their note id in the task. When done: `resolve_board_note {id, note}`.
+- Obsolete comments: if the object was removed/replaced or the remark no longer applies (e.g. already fixed by another change), delete it — `dismiss_comment {id, reason}` for frame comments, `delete_board_note {id, reason}` for board ones. The reason is shown to the user; never delete silently or just to make the list shorter.
+- Periodically (start of a review, after big changes) check `list_comments {status:'open'}` and `list_board_notes` for stale items.

@@ -17,7 +17,7 @@ import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
 import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport, getManifest } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
-import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus } from './agents/runner.ts';
+import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus, interruptTask } from './agents/runner.ts';
 import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
@@ -64,6 +64,7 @@ export function state() {
     permissions: permissions.list(),
     script: getScript(),
     design: getDesign(),
+    boardNotes: readJson<{ notes: any[] }>(cur().p('board.json'), { notes: [] }).notes,
     exports: listExports(),
     recents: getRecents(),
     projectsDir: PROJECTS_DIR,
@@ -432,6 +433,14 @@ export async function registerRoutes(app: FastifyInstance) {
     if (!found) throw Object.assign(new Error('comment not found: ' + req.params.id), { statusCode: 404 });
     return { ok: true, id: req.params.id, status: 'resolved' };
   });
+  app.post<{ Params: { id: string }; Body: { reason: string } }>('/api/comments/:id/dismiss', async (req) => {
+    const store = need();
+    const c = store.comments.find((x) => x.id === req.params.id);
+    if (!c) throw Object.assign(new Error('comment not found: ' + req.params.id), { statusCode: 404 });
+    await store.updateComments((l) => l.filter((x) => x.id !== c.id));
+    bus.send({ type: 'notice', level: 'info', text: `Агент удалил правку «${c.text.slice(0, 60)}» как неактуальную: ${req.body.reason}` });
+    return { ok: true, id: c.id, deleted: true };
+  });
   app.post<{ Body: { ids?: string[]; agent?: 'claude' | 'codex' } }>('/api/comments/send', async (req) => { need(); return sendComments(req.body?.ids, req.body?.agent); });
 
   // ---------- tasks ----------
@@ -444,7 +453,8 @@ export async function registerRoutes(app: FastifyInstance) {
     const prompt = chatTaskPrompt({ prompt: b.prompt, project: store.project, playhead: b.playhead, item, clipId, hasScript: getScript().scenes.length > 0 });
     return startTask({ agent: b.agent, title: b.prompt.split('\n')[0].slice(0, 80), prompt, clipId: undefined });
   });
-  app.post<{ Params: { id: string }; Body: { prompt: string } }>('/api/tasks/:id/message', async (req) => followUp(req.params.id, req.body.prompt));
+  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[] } }>('/api/tasks/:id/message', async (req) => followUp(req.params.id, req.body.prompt, req.body.images || []));
+  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[] } }>('/api/tasks/:id/interrupt', async (req) => interruptTask(req.params.id, req.body.prompt, req.body.images || []));
   app.post<{ Params: { id: string } }>('/api/tasks/:id/cancel', async (req) => { cancelTask(req.params.id); return { ok: true }; });
   app.get('/api/agents/check', async () => {
     const check = async (cmd: string) => { try { const r = await run(cmd, ['--version']); return r.code === 0 ? r.stdout.trim().split('\n')[0] : null; } catch { return null; } };
@@ -508,6 +518,42 @@ export async function registerRoutes(app: FastifyInstance) {
   app.put<{ Body: any }>('/api/design', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'design', at: Date.now() }); return saveDesign(req.body as any); });
 
   app.get('/api/fx', async () => ({ transitions: TRANSITIONS, effects: EFFECTS.map((e) => ({ type: e.type, name: e.name, group: e.group, params: e.params.map((p) => ({ key: p.key, min: p.min, max: p.max, default: p.def })), options: e.options })), masks: MASKS, blends: BLENDS.map((b) => b.mode) }));
+
+  // ---------- board notes (comments on board objects) ----------
+  const notesFile = () => cur().p('board.json');
+  const readNotes = () => readJson<{ notes: any[] }>(notesFile(), { notes: [] }).notes;
+  const writeNotes = (notes: any[]) => { writeJson(notesFile(), { notes }); bus.send({ type: 'board', notes } as any); return notes; };
+  app.get('/api/board/notes', async () => { need(); return readNotes(); });
+  app.post<{ Body: any }>('/api/board/notes', async (req) => {
+    need();
+    const b = req.body as any;
+    const note = { id: 'n' + nid(), anchors: b.anchors || [], labels: b.labels || [], text: String(b.text || ''), taskId: b.taskId, createdAt: new Date().toISOString() };
+    writeNotes([...readNotes(), note]);
+    return note;
+  });
+  app.patch<{ Params: { id: string }; Body: any }>('/api/board/notes/:id', async (req) => { need(); return writeNotes(readNotes().map((n) => (n.id === req.params.id ? { ...n, ...(req.body as any), id: n.id } : n))); });
+  app.delete<{ Params: { id: string } }>('/api/board/notes/:id', async (req) => { need(); return writeNotes(readNotes().filter((n) => n.id !== req.params.id)); });
+  // agent side: resolve (fixed) or delete (obsolete) a board note, always with a reason the user can read
+  app.post<{ Params: { id: string }; Body: { note: string } }>('/api/board/notes/:id/resolve', async (req) => {
+    need();
+    const n = readNotes().find((x) => x.id === req.params.id);
+    if (!n) throw Object.assign(new Error('board note not found: ' + req.params.id), { statusCode: 404 });
+    writeNotes(readNotes().map((x) => (x.id === n.id ? { ...x, status: 'resolved', resolution: req.body.note } : x)));
+    bus.send({ type: 'notice', level: 'info', text: `Агент закрыл комментарий «${n.text.slice(0, 60)}»: ${req.body.note}` });
+    return { ok: true, id: n.id, status: 'resolved' };
+  });
+  app.post<{ Params: { id: string }; Body: { reason: string } }>('/api/board/notes/:id/dismiss', async (req) => {
+    need();
+    const n = readNotes().find((x) => x.id === req.params.id);
+    if (!n) throw Object.assign(new Error('board note not found: ' + req.params.id), { statusCode: 404 });
+    writeNotes(readNotes().filter((x) => x.id !== n.id));
+    bus.send({ type: 'notice', level: 'info', text: `Агент удалил комментарий «${n.text.slice(0, 60)}» как неактуальный: ${req.body.reason}` });
+    return { ok: true, id: n.id, deleted: true };
+  });
+  app.get('/api/agent/board-notes', async () => {
+    need();
+    return readNotes().map((n) => ({ ...n, status: n.status || 'open' }));
+  });
 
   // ---------- renderer manifests (headless Player) ----------
   app.get<{ Params: { id: string } }>('/api/render/manifest/:id', async (req) => {

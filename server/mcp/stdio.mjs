@@ -57,6 +57,26 @@ server.registerTool('resolve_comment', {
   inputSchema: { id: z.string(), note: z.string() },
 }, safe(async ({ id, note }) => text(await api('POST', `/api/comments/${id}/resolve`, { note, taskId: TASK }))));
 
+server.registerTool('dismiss_comment', {
+  description: 'Delete a frame comment that is no longer relevant (the commented object was removed/replaced, or the remark no longer applies). Always give the reason — the user sees it.',
+  inputSchema: { id: z.string(), reason: z.string() },
+}, safe(async ({ id, reason }) => text(await api('POST', `/api/comments/${id}/dismiss`, { reason }))));
+
+server.registerTool('list_board_notes', {
+  description: 'Comments the user pinned to objects on the board (scenes, storyboard frames, design tokens, layers, components): id, anchors, labels, text, status open|resolved.',
+  inputSchema: {},
+}, safe(async () => text(await api('GET', '/api/agent/board-notes'))));
+
+server.registerTool('resolve_board_note', {
+  description: 'Mark a board comment as done after you addressed it, with a one-line note of what you changed.',
+  inputSchema: { id: z.string(), note: z.string() },
+}, safe(async ({ id, note }) => text(await api('POST', `/api/board/notes/${id}/resolve`, { note }))));
+
+server.registerTool('delete_board_note', {
+  description: 'Delete a board comment that is obsolete: its object no longer exists (scene/layer removed) or the remark no longer applies. Give the reason.',
+  inputSchema: { id: z.string(), reason: z.string() },
+}, safe(async ({ id, reason }) => text(await api('POST', `/api/board/notes/${id}/dismiss`, { reason }))));
+
 server.registerTool('render_clip', {
   description: 'Render frames of a clip in isolation (transparent areas shown as checkerboard) and return a contact sheet image. Use after every edit to SEE your work. Times are clip-local seconds; default = `count` evenly spaced frames. Pass itemId to use that timeline item\'s params/duration. Also returns runtime errors.',
   inputSchema: { clipId: z.string(), times: z.array(z.number()).optional(), count: z.number().int().min(1).max(16).optional(), itemId: z.string().optional() },

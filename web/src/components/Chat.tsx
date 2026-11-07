@@ -234,37 +234,59 @@ function Composer({ task }: { task: Task | null }) {
   const draft = useStore((s) => s.chatDraft);
   const agent = useStore((s) => s.agent);
   const agents = useStore((s) => s.agents);
+  const ctx = useStore((s) => s.chatContext);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const busy = task && (task.status === 'running' || task.status === 'queued');
+  const busy = !!task && (task.status === 'running' || task.status === 'queued');
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = Math.min(220, el.scrollHeight) + 'px';
   }, [draft]);
-  useEffect(() => { if (draft) ref.current?.focus(); }, [draft === '']);
-  const send = async () => {
-    const text = draft.trim();
-    if (!text || busy) return;
-    if (task) await actions.followUp(task.id, text); else await actions.startTask(text);
-    setState({ chatDraft: '' });
+  useEffect(() => { if (draft || ctx.length) ref.current?.focus(); }, [draft === '', ctx.length]);
+  /** how: send (idle) · interrupt (busy, default) · later (busy, after the current step) */
+  const send = async (how: 'send' | 'interrupt' | 'later' = busy ? 'interrupt' : 'send') => {
+    const text = withContext(draft.trim(), ctx);
+    if (!draft.trim() && !ctx.length) return;
+    if (!task) await actions.startTask(text);
+    else if (how === 'interrupt') await actions.interrupt(task.id, text);
+    else await actions.followUp(task.id, text);
+    setState({ chatDraft: '', chatContext: [] });
   };
   const missing = agents && !agents[agent];
+  const empty = !draft.trim() && !ctx.length;
   return (
-    <div className="composer">
+    <div className={'composer' + (busy ? ' busy' : '')}>
       {missing && <div className="composer-warn">CLI «{agent}» не найден в PATH</div>}
-      <textarea ref={ref} rows={1} value={draft} disabled={!!busy}
-        placeholder={busy ? 'Агент работает…' : task ? 'Продолжить…' : 'Опишите, что сделать'}
+      {ctx.length > 0 && (
+        <div className="ctx-chips">
+          {ctx.map((c) => (
+            <span key={c.key} className="ctx-chip" title={c.text}>{c.label}<button onClick={() => setState((s) => ({ chatContext: s.chatContext.filter((x) => x.key !== c.key) }))}><Icon name="x" size={9} /></button></span>
+          ))}
+        </div>
+      )}
+      <textarea ref={ref} rows={1} value={draft}
+        placeholder={busy ? 'Перебить агента: напишите, что изменить (Enter)…' : task ? 'Продолжить…' : ctx.length ? 'Что сделать с выделенным?' : 'Опишите, что сделать'}
         onChange={(e) => setState({ chatDraft: e.target.value })}
         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} />
       <div className="composer-bar">
         {!task
           ? <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>
-          : <span className="muted xsmall">{task.agent}</span>}
-        {busy
-          ? <button className="btn sm" onClick={() => actions.cancelTask(task!.id)}><Icon name="stop" size={10} /> Стоп</button>
-          : <button className="send" disabled={!draft.trim()} onClick={send} title="Enter"><Icon name="arrowUp" size={14} /></button>}
+          : <span className="muted xsmall">{busy ? <><span className="spinner sm" /> {task.agent} работает</> : task.agent}</span>}
+        {busy ? (
+          <div className="row gap6">
+            <button className="btn xs ghost" onClick={() => actions.cancelTask(task!.id)} title="Остановить совсем"><Icon name="stop" size={9} /> Стоп</button>
+            {!empty && <button className="btn xs ghost" onClick={() => send('later')} title="Отправить, когда агент закончит текущий шаг">После</button>}
+            <button className="btn xs primary" disabled={empty} onClick={() => send('interrupt')} title="Агент остановится и сразу продолжит с учётом сообщения (Enter)">Перебить</button>
+          </div>
+        ) : <button className="send" disabled={empty} onClick={() => send()} title="Enter"><Icon name="arrowUp" size={14} /></button>}
       </div>
     </div>
   );
+}
+
+/** append the board selection to the message so the agent knows exactly what is meant */
+export function withContext(text: string, ctx: { label: string; text: string }[]) {
+  if (!ctx.length) return text;
+  return `${text || 'Посмотри на выделенное и предложи улучшения.'}\n\nКонтекст — выделено на холсте:\n${ctx.map((c) => '- ' + c.text).join('\n')}`;
 }

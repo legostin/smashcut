@@ -181,9 +181,16 @@ export interface Task {
   /** prompt/images waiting to run (queued tasks survive restarts) */
   pending?: { prompt: string; images: string[] };
   resumes?: number;
+  /** user interrupted the running agent with this message (applied when the process stops) */
+  interrupt?: { prompt: string; images: string[] };
+  /** messages to send after the current run finishes */
+  later?: { prompt: string; images: string[] }[];
   /** what the agent is working on right now (derived from its tool calls) */
   focus?: { kind: 'clip' | 'music' | 'timeline' | 'script' | 'design'; id?: string; at: number };
 }
+
+/** a comment pinned to objects on the board (sent to the agent as a chat message) */
+export interface BoardNote { id: string; anchors: string[]; labels: string[]; text: string; taskId?: string; createdAt: string; status?: 'open' | 'resolved'; resolution?: string }
 
 export interface DesignSystem {
   name?: string;
@@ -283,4 +290,5 @@ export type ServerEvent =
   | { type: 'permissions'; permissions: PermissionRequest[] }
   | { type: 'script'; script: Script }
   | { type: 'design'; design: DesignSystem }
+  | { type: 'board'; notes: BoardNote[] }
   | { type: 'notice'; level: 'info' | 'error'; text: string };

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script, DesignSystem } from '../../shared/types';
+import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script, DesignSystem, BoardNote } from '../../shared/types';
 
 export interface SkillInfo { name: string; description: string; origin: string; path: string }
 export interface State {
@@ -29,6 +29,10 @@ export interface State {
   sideTab: 'agent' | 'script';
   followAgent: boolean;
   lightbox: string | null;
+  /** objects selected on the board, attached to the next chat message */
+  chatContext: { key: string; label: string; text: string }[];
+  boardSelection: string[];
+  boardNotes: BoardNote[];
   // ui
   libraryOpen: boolean;
   libraryTab: 'templates' | 'media' | 'project';
@@ -52,7 +56,7 @@ const initial: State = {
   connected: false, project: null, comments: [], clips: [], music: [], media: [], tasks: [], skills: [], jobs: [], exports: [], gallery: [], recents: [],
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
-  view: (() => { try { return localStorage.getItem('view') === 'board' ? 'board' : 'edit'; } catch { return 'edit'; } })() as 'edit' | 'board', sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null,
+  view: (() => { try { return localStorage.getItem('view') === 'board' ? 'board' : 'edit'; } catch { return 'edit'; } })() as 'edit' | 'board', sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [],
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -195,6 +199,7 @@ function onEvent(ev: ServerEvent) {
     case 'notice': notify(ev.level, ev.text); break;
     case 'script': setState({ script: ev.script }); break;
     case 'design': setState({ design: ev.design }); break;
+    case 'board': setState({ boardNotes: ev.notes }); break;
     case 'permissions': {
       const prev = new Set(getState().permissions.map((p) => p.id));
       setState({ permissions: ev.permissions });
@@ -266,6 +271,7 @@ export const actions = {
     return t;
   },
   followUp(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/message`, { prompt }); },
+  interrupt(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/interrupt`, { prompt }); },
   cancelTask(taskId: string) { return api('POST', `/api/tasks/${taskId}/cancel`); },
   setView(v: 'edit' | 'board') { try { localStorage.setItem('view', v); } catch {} setState({ view: v }); },
   setFollow(v: boolean) { try { localStorage.setItem('follow', v ? '1' : '0'); } catch {} setState({ followAgent: v }); },

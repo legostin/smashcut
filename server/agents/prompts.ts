@@ -10,7 +10,7 @@ Non-negotiable:
 - Clips are pure functions of time (GSAP on ctx.tl / CSS animations / render(t)); no Date.now, rAF loops, timers, network or unseeded randomness.
 - After each meaningful edit: render_clip (and render_frame for the composite over footage) and actually LOOK at the images. Fix what looks off — spacing, contrast, cut-off text, timing — before you finish.
 - Keep edits scoped to what was asked. Never modify media/ or .studio/.
-- When addressing comments: call resolve_comment for each comment you fixed, with a short note.
+- Comments: for each frame comment you fixed call resolve_comment; for each board comment call resolve_board_note (short note of what changed). If a comment is obsolete — its object no longer exists or the remark no longer applies — remove it with dismiss_comment / delete_board_note and a clear reason. When you notice stale comments while working (list_comments, list_board_notes), clean them up the same way.
 - Finish with a 2–4 line summary of what you changed.`;
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DesignSystem, Item, Project, Scene, Task } from '../../../shared/types';
-import { useStore, actions, seek, setState, fmtTime } from '../store';
+import { useStore, actions, seek, setState, getState, fmtTime, api } from '../store';
+import { withContext } from './Chat';
 import { Icon } from './Icon';
 
 type Cam = { x: number; y: number; z: number };
@@ -72,17 +73,69 @@ export function Board({ project }: { project: Project }) {
     return () => el.removeEventListener('wheel', prevent);
   }, []);
   const [panning, setPanning] = useState(false);
+  const space = useRef(false);
+  useEffect(() => {
+    const dn = (e: KeyboardEvent) => { if (e.code === 'Space' && !(e.target as HTMLElement).closest('input,textarea')) { space.current = true; e.preventDefault(); } };
+    const up = (e: KeyboardEvent) => { if (e.code === 'Space') space.current = false; };
+    window.addEventListener('keydown', dn); window.addEventListener('keyup', up);
+    return () => { window.removeEventListener('keydown', dn); window.removeEventListener('keyup', up); };
+  }, []);
+  const selection = useStore((s) => s.boardSelection);
+  const [marquee, setMarquee] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
+  const toWorld = (cx: number, cy: number) => { const r = viewport.current!.getBoundingClientRect(); return { x: (cx - r.left - camRef.current.x) / camRef.current.z, y: (cy - r.top - camRef.current.y) / camRef.current.z }; };
   const onDown = (e: React.PointerEvent) => {
-    if (e.button !== 0 && e.button !== 1) return;
-    if ((e.target as HTMLElement).closest('[data-interactive]')) return;
+    if ((e.target as HTMLElement).closest('[data-ui]')) return;
     cancelAnimationFrame(anim.current);
-    const sx = e.clientX, sy = e.clientY, c0 = { ...cam };
-    setPanning(true);
-    const mv = (ev: PointerEvent) => setCam({ ...c0, x: c0.x + ev.clientX - sx, y: c0.y + ev.clientY - sy });
-    const up = () => { setPanning(false); window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    // pan: space + drag, middle mouse
+    if (space.current || e.button === 1) {
+      const sx = e.clientX, sy = e.clientY, c0 = { ...cam };
+      setPanning(true);
+      const mv = (ev: PointerEvent) => setCam({ ...c0, x: c0.x + ev.clientX - sx, y: c0.y + ev.clientY - sy });
+      const up = () => { setPanning(false); window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+      window.addEventListener('pointermove', mv);
+      window.addEventListener('pointerup', up);
+      return;
+    }
+    if (e.button !== 0) return;
+    const hit = (e.target as HTMLElement).closest<HTMLElement>('[data-anchor]');
+    if (hit && world.current?.contains(hit)) {
+      const a = hit.dataset.anchor!;
+      const cur = getState().boardSelection;
+      setState({ boardSelection: e.shiftKey || e.metaKey ? (cur.includes(a) ? cur.filter((x) => x !== a) : [...cur, a]) : [a] });
+      return;
+    }
+    // marquee selection on empty canvas
+    const p0 = toWorld(e.clientX, e.clientY);
+    const base = e.shiftKey ? getState().boardSelection : [];
+    setMarquee({ x0: p0.x, y0: p0.y, x1: p0.x, y1: p0.y });
+    const mv = (ev: PointerEvent) => {
+      const p1 = toWorld(ev.clientX, ev.clientY);
+      const box = { x: Math.min(p0.x, p1.x), y: Math.min(p0.y, p1.y), w: Math.abs(p1.x - p0.x), h: Math.abs(p1.y - p0.y) };
+      setMarquee({ x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y });
+      if (box.w < 4 && box.h < 4) return;
+      const hits: string[] = [];
+      for (const el of world.current!.querySelectorAll<HTMLElement>('[data-anchor]:not([data-frame])')) {
+        const r = worldRect(el, world.current!);
+        if (r.x < box.x + box.w && r.x + r.w > box.x && r.y < box.y + box.h && r.y + r.h > box.y) hits.push(el.dataset.anchor!);
+      }
+      // keep the most specific objects (drop containers when their children are hit)
+      setState({ boardSelection: [...new Set([...base, ...hits])] });
+    };
+    const up = (ev: PointerEvent) => {
+      window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up);
+      const p1 = toWorld(ev.clientX, ev.clientY);
+      if (Math.abs(p1.x - p0.x) < 4 && Math.abs(p1.y - p0.y) < 4 && !ev.shiftKey) setState({ boardSelection: [] });
+      setMarquee(null);
+    };
     window.addEventListener('pointermove', mv);
     window.addEventListener('pointerup', up);
   };
+  // highlight selected objects
+  useEffect(() => {
+    const w = world.current;
+    if (!w) return;
+    for (const el of w.querySelectorAll<HTMLElement>('[data-anchor]')) el.classList.toggle('b-sel', selection.includes(el.dataset.anchor!));
+  });
 
   // segments: script scenes, or automatic ones derived from the edit
   const segs: Seg[] = useMemo(() => {
@@ -117,7 +170,7 @@ export function Board({ project }: { project: Project }) {
   useEffect(() => { if (!readCam()) setTimeout(fitAll, 60); }, []);
 
   return (
-    <section className="board" ref={viewport} onWheel={onWheel} onPointerDown={onDown} data-panning={panning || undefined}>
+    <section className="board" ref={viewport} onWheel={onWheel} onPointerDown={onDown} data-panning={panning || undefined} onKeyDown={(e) => { if (e.key === 'Escape') setState({ boardSelection: [] }); }} tabIndex={-1}>
       <div className="board-grid" style={{ backgroundPosition: `${cam.x}px ${cam.y}px`, backgroundSize: `${24 * cam.z}px ${24 * cam.z}px` }} />
       <div className="board-world" ref={world} style={{ transform: `translate(${cam.x}px, ${cam.y}px) scale(${cam.z})` }} data-active-anchor={anchor || undefined}>
         <div className="board-row">
@@ -130,13 +183,16 @@ export function Board({ project }: { project: Project }) {
           <ComponentsFrame project={project} active={anchor} />
         </div>
         {lead && cursor && <AgentCursor x={cursor.x} y={cursor.y} task={lead} z={cam.z} />}
+        {marquee && <div className="b-marquee" style={{ left: Math.min(marquee.x0, marquee.x1), top: Math.min(marquee.y0, marquee.y1), width: Math.abs(marquee.x1 - marquee.x0), height: Math.abs(marquee.y1 - marquee.y0), borderWidth: 1 / cam.z }} />}
+        <Notes world={world} z={cam.z} />
       </div>
-      <div className="board-hud" data-interactive>
+      {selection.length > 0 && !marquee && <SelectionBar world={world} cam={cam} selection={selection} project={project} />}
+      <div className="board-hud" data-ui>
         <button className="icon-btn sm" onClick={() => setCam({ ...cam, z: Math.max(0.15, cam.z / 1.2) })} title="Отдалить">−</button>
         <button className="hud-zoom" onClick={fitAll} title="Показать всё">{Math.round(cam.z * 100)}%</button>
         <button className="icon-btn sm" onClick={() => setCam({ ...cam, z: Math.min(2.5, cam.z * 1.2) })} title="Приблизить">+</button>
       </div>
-      <div className="board-hint">Колесо — панорама · ⌘ + колесо — масштаб · перетаскивание — двигать холст</div>
+      <div className="board-hint">Клик — выделить · Shift — добавить · рамка — выделить область · пробел + перетаскивание или колесо — панорама · ⌘ + колесо — масштаб</div>
     </section>
   );
 }
@@ -179,9 +235,9 @@ function ScriptFrame({ segs, hasScript, brief, active }: { segs: Seg[]; hasScrip
   return (
     <Frame id="script" title="Сценарий" sub={hasScript ? `${segs.length} сцен` : 'черновик'} x={0} y={0} w={400} active={active}>
       <div className="sticky">{brief || 'Бриф пока пуст. Опишите идею во вкладке «Сценарий» — агент разложит её на сцены.'}</div>
-      {!hasScript && <button className="btn sm b-cta" data-interactive onClick={() => setState({ sideTab: 'script' })}>Открыть сценарий</button>}
+      {!hasScript && <button className="btn sm b-cta" data-ui onClick={() => setState({ sideTab: 'script' })}>Открыть сценарий</button>}
       {hasScript && segs.map((s, i) => (
-        <div key={s.id} className={`b-scene st-${s.status || 'todo'}${active === `scene:${s.id}` ? ' active' : ''}`} data-anchor={`scene:${s.id}`} data-interactive onClick={() => seek(s.start + 0.001)}>
+        <div key={s.id} className={`b-scene st-${s.status || 'todo'}${active === `scene:${s.id}` ? ' active' : ''}`} data-anchor={`scene:${s.id}`} onDoubleClick={() => seek(s.start + 0.001)}>
           <div className="b-scene-top"><span className="b-num">{i + 1}</span><span className="grow ellipsis">{s.title}</span><span className="mono muted">{fmtTime(s.start, fps)}</span></div>
           {s.voiceover && <div className="b-scene-vo">{s.voiceover}</div>}
         </div>
@@ -198,14 +254,14 @@ function DesignFrame({ design, active }: { design: DesignSystem; active: string 
       {empty ? (
         <div className="b-empty">
           Токены ещё не заданы. Агент спроектирует палитру, типографику и моушн-токены, и все клипы будут использовать их через CSS-переменные.
-          <button className="btn sm" data-interactive onClick={() => actions.startTask('Спроектируй дизайн-систему проекта по брифу (get_script, get_design → set_design): палитра, типографика (только встроенные шрифты, кириллица), моушн-токены, отступы. Затем примени токены к клипам на таймлайне.')}><Icon name="sparkle" size={11} /> Спроектировать</button>
+          <button className="btn sm" data-ui onClick={() => actions.startTask('Спроектируй дизайн-систему проекта по брифу (get_script, get_design → set_design): палитра, типографика (только встроенные шрифты, кириллица), моушн-токены, отступы. Затем примени токены к клипам на таймлайне.')}><Icon name="sparkle" size={11} /> Спроектировать</button>
         </div>
       ) : (
         <>
           {design.colors.length > 0 && <div className="ds-label">Цвета</div>}
           <div className="ds-colors">
             {design.colors.map((c) => (
-              <div key={c.name} className="ds-color" style={{ animationDelay: '0ms' }}>
+              <div key={c.name} className="ds-color" data-anchor={`design:color:${c.name}`}>
                 <div className="ds-swatch" style={{ background: c.value }} />
                 <div className="ds-cname">{c.name}</div>
                 <div className="ds-cval mono">{c.value}</div>
@@ -214,14 +270,14 @@ function DesignFrame({ design, active }: { design: DesignSystem; active: string 
           </div>
           {design.type.length > 0 && <div className="ds-label">Типографика</div>}
           {design.type.map((t) => (
-            <div key={t.role} className="ds-type">
+            <div key={t.role} className="ds-type" data-anchor={`design:type:${t.role}`}>
               <div className="ds-type-sample" style={{ fontFamily: `'${t.family}'`, fontWeight: t.weight, fontSize: Math.max(13, Math.min(44, t.size * 0.32)), letterSpacing: t.tracking != null ? `${t.tracking}em` : undefined }}>{t.sample || 'Делай видео кодом'}</div>
               <div className="ds-type-meta mono">{t.role} · {t.family} {t.weight} · {t.size}px</div>
             </div>
           ))}
           {design.motion.length > 0 && <div className="ds-label">Движение</div>}
           <div className="ds-motion">
-            {design.motion.map((m) => <EaseCurve key={m.name} name={m.name} ease={m.ease} duration={m.duration} />)}
+            {design.motion.map((m) => <div key={m.name} data-anchor={`design:motion:${m.name}`}><EaseCurve name={m.name} ease={m.ease} duration={m.duration} /></div>)}
           </div>
           {(design.spacing || []).length > 0 && <div className="ds-label">Отступы</div>}
           <div className="ds-spacing">
@@ -292,7 +348,7 @@ function StoryCard({ s, n, project, active }: { s: Seg; n: number; project: Proj
   }, [src]);
   const fps = project.fps;
   return (
-    <div className={`sb-card st-${s.status || 'todo'}${active ? ' active' : ''}`} data-anchor={`scene:${s.id}`} data-interactive onClick={() => seek(t)}>
+    <div className={`sb-card st-${s.status || 'todo'}${active ? ' active' : ''}`} data-anchor={`shot:${s.id}`} onDoubleClick={() => seek(t)}>
       <div className="sb-img" style={{ aspectRatio: `${project.width} / ${project.height}` }}>
         {shown ? <img key={shown} src={shown} alt="" /> : <div className="sb-placeholder">{inScene.length ? '' : 'пусто'}</div>}
         {loading && <span className="sb-loading"><span className="spinner sm" /></span>}
@@ -340,8 +396,8 @@ function LayerBlock({ it, s, active }: { it: Item; s: Seg; active: boolean }) {
   const name = useStore((st) => (it.kind === 'clip' ? st.clips.find((c) => c.id === it.ref)?.name : it.kind === 'music' ? st.music.find((m) => m.id === it.ref)?.name : undefined) || it.ref);
   const a = Math.max(0, (it.start - s.start) / s.duration), b = Math.min(1, (it.start + it.duration - s.start) / s.duration);
   return (
-    <div className={`ly-item kind-${it.kind}${active ? ' active' : ''}`} style={{ left: `${a * 100}%`, width: `${Math.max(2, (b - a) * 100)}%` }} data-anchor={`layer:${it.id}`} data-interactive
-      onClick={() => { setState({ selectedItemId: it.id }); }} title={name}>
+    <div className={`ly-item kind-${it.kind}${active ? ' active' : ''}`} style={{ left: `${a * 100}%`, width: `${Math.max(2, (b - a) * 100)}%` }} data-anchor={`layer:${it.id}`}
+      onDoubleClick={() => { setState({ selectedItemId: it.id }); }} title={name}>
       <span className="ellipsis">{name}</span>
     </div>
   );
@@ -392,5 +448,128 @@ function AgentCursor({ x, y, task, z }: { x: number; y: number; task: Task; z: n
       <svg width="18" height="20" viewBox="0 0 18 20"><path d="M1 1l15 7.5-6.5 1.6L6.7 18z" /></svg>
       <div className="ac-label">{label}{doing && <span className="ac-doing">{doing.slice(0, 48)}</span>}</div>
     </div>
+  );
+}
+
+// ---------- selection → chat / comment ----------
+const plural = (n: number, one: string, few: string, many: string) => (n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many);
+
+/** human label + precise agent-facing description of a board object */
+export function describeAnchor(a: string, project: Project): { label: string; text: string } {
+  const st = getState();
+  const [kind, ...rest] = a.split(':');
+  const id = rest.join(':');
+  const scenes = st.script.scenes;
+  const sc = scenes.find((x) => x.id === id);
+  const n = sc ? scenes.indexOf(sc) + 1 : 0;
+  const tm = (x: number) => x.toFixed(2);
+  switch (kind) {
+    case 'scene': return sc ? { label: `Сцена ${n}`, text: `сцена ${n} «${sc.title}» (id ${sc.id}, ${tm(sc.start)}–${tm(sc.start + sc.duration)} с)${sc.voiceover ? `, текст: «${sc.voiceover}»` : ''}${sc.visual ? `, визуал: «${sc.visual}»` : ''}` } : { label: 'Сцена', text: `сцена ${id}` };
+    case 'shot': return sc ? { label: `Кадр ${n}`, text: `кадр раскадровки сцены ${n} «${sc.title}» (${tm(sc.start)}–${tm(sc.start + sc.duration)} с) — посмотри его через render_frame` } : { label: 'Кадр', text: `кадр ${id}` };
+    case 'design': {
+      const [sub, name] = id.split(':');
+      if (sub === 'color') { const c = st.design.colors.find((x) => x.name === name); return { label: `Цвет ${name}`, text: `цвет дизайн-системы «${name}» = ${c?.value}` }; }
+      if (sub === 'type') { const t = st.design.type.find((x) => x.role === name); return { label: `Шрифт ${name}`, text: `типографика «${name}»: ${t?.family} ${t?.weight}, ${t?.size}px` }; }
+      if (sub === 'motion') { const m = st.design.motion.find((x) => x.name === name); return { label: `Движение ${name}`, text: `моушн-токен «${name}»: ${m?.ease}, ${m?.duration}s` }; }
+      return { label: 'Дизайн', text: `дизайн-система: ${id}` };
+    }
+    case 'layer': {
+      const it = project.items.find((x) => x.id === id);
+      if (!it) return { label: 'Слой', text: `элемент ${id}` };
+      const name = it.kind === 'clip' ? st.clips.find((c) => c.id === it.ref)?.name || it.ref : it.kind === 'music' ? st.music.find((m) => m.id === it.ref)?.name || it.ref : it.ref;
+      return { label: name, text: `элемент таймлайна ${it.id}: ${it.kind} «${name}» (${it.kind === 'clip' ? `clips/${it.ref}` : it.kind === 'music' ? `music/${it.ref}` : `media/${it.ref}`}), ${tm(it.start)}–${tm(it.start + it.duration)} с, дорожка ${it.track}` };
+    }
+    case 'clip': { const c = st.clips.find((x) => x.id === id); return { label: c?.name || id, text: `клип clips/${id} («${c?.name || id}»)` }; }
+    case 'music': { const m = st.music.find((x) => x.id === id); return { label: m?.name || id, text: `трек music/${id} («${m?.name || id}»)` }; }
+    case 'media': return { label: id, text: `медиафайл media/${id}` };
+    case 'frame': return { label: ({ script: 'Сценарий', design: 'Дизайн-система', storyboard: 'Раскадровка', layers: 'Слои', components: 'Компоненты' } as Record<string, string>)[id] || id, text: `весь раздел «${id}» на холсте` };
+  }
+  return { label: a, text: a };
+}
+
+function SelectionBar({ world, cam, selection, project }: { world: React.RefObject<HTMLDivElement | null>; cam: Cam; selection: string[]; project: Project }) {
+  const [mode, setMode] = useState<'bar' | 'comment'>('bar');
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setMode('bar'); setText(''); }, [selection.join('|')]);
+  const w = world.current;
+  if (!w) return null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const a of selection) {
+    const el = w.querySelector<HTMLElement>(`[data-anchor="${CSS.escape(a)}"]`);
+    if (!el) continue;
+    const r = worldRect(el, w);
+    x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h);
+  }
+  if (!isFinite(x0)) return null;
+  const left = ((x0 + x1) / 2) * cam.z + cam.x;
+  // above the selection, or below it when there is no room at the top of the viewport
+  const above = y0 * cam.z + cam.y - 12 > (mode === 'comment' ? 130 : 60);
+  const top = above ? y0 * cam.z + cam.y - 12 : y1 * cam.z + cam.y + 12;
+  const items = selection.map((a) => ({ key: a, ...describeAnchor(a, project) }));
+  const toChat = () => { setState((s) => ({ chatContext: [...s.chatContext.filter((c) => !selection.includes(c.key)), ...items], sideTab: 'agent', selectedItemId: null, boardSelection: [] })); };
+  const sendComment = async () => {
+    if (!text.trim()) return;
+    setBusy(true);
+    try {
+      // pin first, so the agent gets the note id and can resolve/delete it
+      const note = await api<{ id: string }>('POST', '/api/board/notes', { anchors: selection, labels: items.map((i) => i.label), text: text.trim() });
+      const task = await actions.startTask(`${withContext(text.trim(), items)}\n\n(Это комментарий на холсте, id ${note.id}. Когда сделаешь — resolve_board_note; если он неактуален — delete_board_note с причиной.)`);
+      await api('PATCH', `/api/board/notes/${note.id}`, { taskId: task.id });
+      setState({ boardSelection: [] });
+    } finally { setBusy(false); }
+  };
+  return (
+    <div className={'sel-bar' + (above ? '' : ' below')} style={{ left, top }} data-ui onPointerDown={(e) => e.stopPropagation()}>
+      {mode === 'bar' ? (
+        <>
+          <span className="sel-count">{selection.length === 1 ? items[0].label : `${selection.length} ${plural(selection.length, 'объект', 'объекта', 'объектов')}`}</span>
+          <button className="sel-btn primary" onClick={() => setMode('comment')}><Icon name="comment" size={13} /> Комментарий агенту</button>
+          <button className="sel-btn" onClick={toChat} title="Прикрепить выделенное к сообщению в чате"><Icon name="bot" size={13} /> В чат</button>
+        </>
+      ) : (
+        <div className="sel-comment">
+          <textarea autoFocus rows={2} value={text} placeholder={`Что изменить: ${items.map((i) => i.label).join(', ')}`} onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendComment(); } if (e.key === 'Escape') setMode('bar'); e.stopPropagation(); }} />
+          <div className="row between">
+            <span className="muted xsmall">Уйдёт агенту с контекстом выделенного</span>
+            <div className="row gap6"><button className="btn xs ghost" onClick={() => setMode('bar')}>Отмена</button><button className="btn xs primary" disabled={!text.trim() || busy} onClick={sendComment}>{busy ? <span className="spinner sm" /> : 'Отправить'}</button></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** pinned comments on board objects, with live task status */
+function Notes({ world, z }: { world: React.RefObject<HTMLDivElement | null>; z: number }) {
+  const notes = useStore((s) => s.boardNotes);
+  const tasks = useStore((s) => s.tasks);
+  const [, force] = useState(0);
+  useEffect(() => { const t = setTimeout(() => force((x) => x + 1), 50); return () => clearTimeout(t); }, [notes.length]);
+  const w = world.current;
+  if (!w) return null;
+  return (
+    <>
+      {notes.map((n, i) => {
+        const el = n.anchors.map((a) => w.querySelector<HTMLElement>(`[data-anchor="${CSS.escape(a)}"]`)).find(Boolean);
+        if (!el) return null;
+        const r = worldRect(el, w);
+        const task = tasks.find((t) => t.id === n.taskId);
+        const st = n.status === 'resolved' ? 'done' : task?.status === 'done' ? 'open' : task?.status || 'open';
+        return (
+          <div key={n.id} className={`b-note st-${st}`} style={{ left: r.x + r.w - 10, top: r.y - 14, transform: `scale(${1 / Math.max(0.6, z)})` }} data-ui
+            onPointerDown={(e) => e.stopPropagation()} onClick={() => task && setState({ selectedTaskId: task.id, sideTab: 'agent', selectedItemId: null })}>
+            <span className="b-note-pin">{st === 'running' || st === 'queued' ? <span className="spinner sm" /> : st === 'done' ? <Icon name="check" size={10} /> : i + 1}</span>
+            <div className="b-note-pop">
+              <div className="b-note-text">{n.text}</div>
+              {n.resolution && <div className="c-res">{n.resolution}</div>}
+              <div className="b-note-meta">{n.labels.join(', ')} · {({ running: 'агент работает', queued: 'в очереди', done: 'закрыт агентом', open: 'открыт', error: 'ошибка', cancelled: 'остановлено' } as Record<string, string>)[st]}</div>
+              <button className="link" onClick={(e) => { e.stopPropagation(); api('DELETE', `/api/board/notes/${n.id}`); }}>убрать</button>
+            </div>
+          </div>
+        );
+      })}
+    </>
   );
 }
