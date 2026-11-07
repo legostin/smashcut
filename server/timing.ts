@@ -68,13 +68,13 @@ export function computeTiming(): Timing {
   return t;
 }
 
-let last = '';
+const last = new Map<string, string>();
 export function recomputeTiming() {
   if (!hasProject()) return null;
   const t = computeTiming();
   const s = JSON.stringify(t);
-  if (s !== last) {
-    last = s;
+  if (s !== last.get(cur().id)) {
+    last.set(cur().id, s);
     writeJson(cur().p('.studio', 'timing.json'), t);
   }
   return t;

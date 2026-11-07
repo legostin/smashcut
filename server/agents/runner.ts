@@ -4,7 +4,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import type { AgentEvent, AgentKind, Task } from '../../shared/types.ts';
 import { BASE_URL, MCP_STDIO, GALLERY_DIR, getSettings, LIBRARY_DIR } from '../config.ts';
-import { cur, hasProject } from '../project.ts';
+import { cur, hasProject, runIn, type ProjectStore } from '../project.ts';
 import { bus } from '../bus.ts';
 import { nid, readJson, writeJson } from '../util.ts';
 import { commit } from '../git.ts';
@@ -15,24 +15,36 @@ const tasks = new Map<string, Task>();
 /** running tasks: taskId → watcher (agents run detached; the server only tails their stream log) */
 const live = new Map<string, { timer: NodeJS.Timeout; partial: string }>();
 const queue: { taskId: string; prompt: string; images: string[] }[] = [];
+/** which open project a task belongs to (several projects can be open in different tabs) */
+const owner = new Map<string, ProjectStore>();
+/** run fn in the context of the task's project */
+const inTask = <T>(t: Task | string, fn: () => T): T => { const s = owner.get(typeof t === 'string' ? t : t.id); return s ? runIn(s, fn) : fn(); };
+export function taskProject(taskId: string) { return owner.get(taskId); }
 
-function taskFile(id: string) { return cur().p('.studio', 'tasks', id + '.json'); }
-function persist(t: Task) { if (hasProject()) writeJson(taskFile(t.id), t); }
+function taskFile(id: string) { return (owner.get(id) || cur()).p('.studio', 'tasks', id + '.json'); }
+function persist(t: Task) { if (owner.has(t.id) || hasProject()) writeJson(taskFile(t.id), t); }
 const alive = (pid?: number) => { if (!pid) return false; try { process.kill(pid, 0); return true; } catch (e: any) { return e.code === 'EPERM'; } };
-function emitTask(t: Task) { persist(t); bus.send({ type: 'task', task: { ...t, events: t.events.slice(-400) } }); }
+function emitTask(t: Task) { persist(t); inTask(t, () => bus.send({ type: 'task', task: { ...t, events: t.events.slice(-400) } })); }
 function pushEvent(t: Task, ev: Omit<AgentEvent, 't'>) {
   const e: AgentEvent = { t: Date.now(), ...ev };
   if (e.text && e.text.length > 6000) e.text = e.text.slice(0, 6000) + '…';
   t.events.push(e);
-  bus.send({ type: 'task-event', taskId: t.id, event: e });
+  inTask(t, () => bus.send({ type: 'task-event', taskId: t.id, event: e }));
 }
 
+/** (re)load the tasks of the current project; tasks of other open projects are left alone */
 export function loadTasks() {
-  for (const w of live.values()) clearInterval(w.timer);
-  live.clear();
-  queue.length = 0;
-  tasks.clear();
-  const dir = cur().p('.studio', 'tasks');
+  const store = cur();
+  for (const [id, s] of owner) {
+    if (s.dir !== store.dir) continue;
+    const w = live.get(id);
+    if (w) { clearInterval(w.timer); live.delete(id); }
+    const qi = queue.findIndex((q) => q.taskId === id);
+    if (qi >= 0) queue.splice(qi, 1);
+    tasks.delete(id);
+    owner.delete(id);
+  }
+  const dir = store.p('.studio', 'tasks');
   if (!fs.existsSync(dir)) return;
   const recover: Task[] = [];
   for (const f of fs.readdirSync(dir)) {
@@ -40,6 +52,7 @@ export function loadTasks() {
     const t = readJson<Task | null>(path.join(dir, f), null);
     if (!t || !t.id || !t.createdAt) continue;
     tasks.set(t.id, t);
+    owner.set(t.id, store);
     if (t.status === 'running' || t.status === 'queued') recover.push(t);
   }
   // continue where we left off: re-attach to live agents, finish or resume dead ones, re-queue waiting ones
@@ -57,7 +70,8 @@ export function loadTasks() {
   setTimeout(pump, 500);
 }
 export function listTasks() {
-  return [...tasks.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((t) => ({ ...t, events: t.events.slice(-400) }));
+  const store = cur();
+  return [...tasks.values()].filter((t) => owner.get(t.id) === store).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((t) => ({ ...t, events: t.events.slice(-400) }));
 }
 export function getTask(id: string) { return tasks.get(id); }
 
@@ -69,6 +83,7 @@ export function startTask(o: StartOpts): Task {
     status: 'queued', events: [], createdAt: new Date().toISOString(),
   };
   tasks.set(t.id, t);
+  owner.set(t.id, cur());
   pushEvent(t, { kind: 'user', text: o.prompt });
   t.pending = { prompt: o.prompt, images: o.images || [] };
   emitTask(t);
@@ -147,13 +162,13 @@ function pump() {
     const next = queue.shift()!;
     const t = tasks.get(next.taskId);
     if (!t || t.status === 'cancelled') continue;
-    void runTask(t, next.prompt, next.images);
+    void inTask(t, () => runTask(t, next.prompt, next.images));
   }
 }
 
 function mcpConfigFile(taskId: string) {
   const f = cur().p('.studio', 'tasks', `${taskId}.mcp.json`);
-  writeJson(f, { mcpServers: { studio: { command: process.execPath, args: [MCP_STDIO], env: { STUDIO_URL: BASE_URL, STUDIO_TASK: taskId } } } });
+  writeJson(f, { mcpServers: { studio: { command: process.execPath, args: [MCP_STDIO], env: { STUDIO_URL: BASE_URL, STUDIO_TASK: taskId, STUDIO_PROJECT: cur().id } } } });
   return f;
 }
 
@@ -171,7 +186,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
 
   let cmd: string, args: string[];
   // MCP_TOOL_TIMEOUT: permission prompts wait for a human in the editor
-  const env = { ...process.env, STUDIO_URL: BASE_URL, STUDIO_TASK: t.id, MCP_TOOL_TIMEOUT: '3600000' };
+  const env = { ...process.env, STUDIO_URL: BASE_URL, STUDIO_TASK: t.id, STUDIO_PROJECT: store.id, MCP_TOOL_TIMEOUT: '3600000' };
   if (t.agent === 'claude') {
     cmd = 'claude';
     args = ['-p', prompt, '--output-format', 'stream-json', '--verbose',
@@ -192,7 +207,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
     const common = ['--json', '--skip-git-repo-check', ...access,
       '-c', `mcp_servers.studio.command=${JSON.stringify(process.execPath)}`,
       '-c', `mcp_servers.studio.args=[${JSON.stringify(MCP_STDIO)}]`,
-      '-c', `mcp_servers.studio.env={STUDIO_URL=${JSON.stringify(BASE_URL)},STUDIO_TASK=${JSON.stringify(t.id)}}`,
+      '-c', `mcp_servers.studio.env={STUDIO_URL=${JSON.stringify(BASE_URL)},STUDIO_TASK=${JSON.stringify(t.id)},STUDIO_PROJECT=${JSON.stringify(store.id)}}`,
       '-c', 'mcp_servers.studio.startup_timeout_sec=30',
       '-c', 'mcp_servers.studio.tool_timeout_sec=600',
       '-c', 'mcp_servers.studio.default_tools_approval_mode="approve"',

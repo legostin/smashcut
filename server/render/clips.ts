@@ -3,13 +3,13 @@ import path from 'node:path';
 import type { Page } from 'playwright-core';
 import type { Item, Project } from '../../shared/types.ts';
 import { BASE_URL, RUNTIME_DIR } from '../config.ts';
-import { cur } from '../project.ts';
+import { cur, pbase } from '../project.ts';
 import { hashDir, sha1 } from '../util.ts';
 import { withPage } from './browser.ts';
 
 export interface ClipInput { params?: Record<string, unknown>; offset?: number; duration?: number; width: number; height: number; fps: number; timing?: boolean; t?: number }
 
-export function clipUrl(clipId: string, input: ClipInput, base = '/p/clips') {
+export function clipUrl(clipId: string, input: ClipInput, base = pbase() + '/clips') {
   return `${BASE_URL}${base}/${encodeURIComponent(clipId)}/index.html#${encodeURIComponent(JSON.stringify(input))}`;
 }
 export function itemInput(item: Item, project: Project): ClipInput {

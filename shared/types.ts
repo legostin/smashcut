@@ -273,6 +273,8 @@ export interface PermissionRequest {
 
 export interface ExportJob {
   id: string;
+  /** id of the project being exported */
+  project?: string;
   status: 'running' | 'done' | 'error';
   progress: number;
   stage: string;
@@ -284,7 +286,8 @@ export interface ExportJob {
   to: number;
 }
 
-export type ServerEvent =
+/** every event is tagged with the id of the project it belongs to (`pid`, absent = global) */
+export type ServerEvent = (
   | { type: 'project'; project: Project }
   | { type: 'files'; paths: string[] }
   | { type: 'comments'; comments: Comment[] }
@@ -298,4 +301,4 @@ export type ServerEvent =
   | { type: 'design'; design: DesignSystem }
   | { type: 'board'; notes: BoardNote[] }
   | { type: 'record'; job: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string } }
-  | { type: 'notice'; level: 'info' | 'error'; text: string; key?: string; params?: Record<string, string | number> };
+  | { type: 'notice'; level: 'info' | 'error'; text: string; key?: string; params?: Record<string, string | number> }) & { pid?: string };

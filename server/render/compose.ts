@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import type { ExportJob, Item, Project } from '../../shared/types.ts';
-import { cur } from '../project.ts';
+import { cur, pbase } from '../project.ts';
 import { bus } from '../bus.ts';
 import { nid, slug, sha1, runOk } from '../util.ts';
 import { BASE_URL, getSettings } from '../config.ts';
@@ -50,7 +50,7 @@ async function videoFrames(it: Item, p: Project, srcIn: number, dur: number) {
     fs.writeFileSync(doneFile, '1');
   }
   const count = fs.readdirSync(dir).filter((x) => x.endsWith('.jpg')).length;
-  return { base: `/p/${rel}`, srcIn, fps: p.fps, count };
+  return { base: `${pbase()}/${rel}`, srcIn, fps: p.fps, count };
 }
 
 /** build a render manifest for the time window [from, to] */
@@ -79,7 +79,7 @@ async function makeManifest(from: number, to: number, opts: { transparent?: bool
 /** open the renderer page for a manifest and run fn with a frame grabber */
 async function withRenderer<T>(manifestId: string, size: { width: number; height: number }, fn: (seek: (t: number) => Promise<void>, grab: (fmt: 'png' | 'jpeg') => Promise<Buffer>, errors: string[]) => Promise<T>): Promise<T> {
   return withPage(size, async (page, errors) => {
-    await page.goto(`${BASE_URL}/render.html?m=${manifestId}`, { waitUntil: 'load', timeout: 60000 });
+    await page.goto(`${BASE_URL}/render.html?m=${manifestId}&p=${cur().id}`, { waitUntil: 'load', timeout: 60000 });
     await page.waitForFunction(() => (window as any).__render, null, { timeout: 20000 });
     await page.evaluate(() => (window as any).__render.ready);
     const cdp = await page.context().newCDPSession(page);
@@ -146,7 +146,8 @@ export interface ExportOptions {
 
 const jobs = new Map<string, ExportJob>();
 const aborts = new Map<string, { aborted: boolean; kill?: () => void }>();
-export function getJobs() { return [...jobs.values()]; }
+/** export jobs of the current project */
+export function getJobs() { const id = cur().id; return [...jobs.values()].filter((j) => !j.project || j.project === id); }
 export function cancelExport(id: string) {
   const a = aborts.get(id);
   if (!a) return false;
@@ -161,7 +162,7 @@ export function startExport(opts: ExportOptions = {}): ExportJob {
   const end = Math.max(0, ...p.items.map((i) => i.start + i.duration));
   const from = Math.max(0, opts.from ?? 0);
   const to = Math.min(opts.to ?? (end || p.duration), end || p.duration);
-  const job: ExportJob = { id: nid(), status: 'running', progress: 0, stage: 'preparing', stageKey: 'preparing', from, to };
+  const job: ExportJob = { id: nid(), project: store.id, status: 'running', progress: 0, stage: 'preparing', stageKey: 'preparing', from, to };
   jobs.set(job.id, job);
   const signal = { aborted: false } as { aborted: boolean; kill?: () => void };
   aborts.set(job.id, signal);

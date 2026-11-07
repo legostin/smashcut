@@ -9,6 +9,7 @@ import { Chat } from './components/Chat';
 import { ItemPanel } from './components/ItemPanel';
 import { Icon } from './components/Icon';
 import type { Project, Settings, Voice } from '../../shared/types';
+import { t, tn, LANGS, setLocale, useLocale, fmtNumber, type Lang } from './i18n';
 
 function useUndoRedo() {
   useEffect(() => {
@@ -18,7 +19,7 @@ function useUndoRedo() {
       if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return;
       e.preventDefault();
       const r = await api<{ ok: boolean }>('POST', e.shiftKey ? '/api/redo' : '/api/undo');
-      if (!r.ok) notify('info', e.shiftKey ? 'Нечего повторять' : 'Нечего отменять');
+      if (!r.ok) notify('info', e.shiftKey ? t('Nothing to redo') : t('Nothing to undo'));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -35,7 +36,7 @@ export function App() {
   const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 240));
   if (!project) return (
     <div className="app-empty">
-      {!connected ? <div className="muted">Подключение к серверу…</div> : <div className="sheet"><ProjectsDialog /></div>}
+      {!connected ? <div className="muted">{t('Connecting to the server…')}</div> : <div className="sheet"><ProjectsDialog /></div>}
       <Notices />
     </div>
   );
@@ -80,8 +81,8 @@ function Side({ project }: { project: Project }) {
   return (
     <aside className="side">
       <div className="side-tabs">
-        <button className={tab === 'agent' ? 'on' : ''} onClick={() => setState({ sideTab: 'agent' })}>Агент{running > 0 && <span className="tab-live" />}</button>
-        <button className={tab === 'script' ? 'on' : ''} onClick={() => setState({ sideTab: 'script' })}>Сценарий{scenes.length > 0 && <span className="tab-count">{doneScenes}/{scenes.length}</span>}</button>
+        <button className={tab === 'agent' ? 'on' : ''} onClick={() => setState({ sideTab: 'agent' })}>{t('Agent')}{running > 0 && <span className="tab-live" />}</button>
+        <button className={tab === 'script' ? 'on' : ''} onClick={() => setState({ sideTab: 'script' })}>{t('Script')}{scenes.length > 0 && <span className="tab-count">{doneScenes}/{scenes.length}</span>}</button>
       </div>
       <div className="side-stack">
         <div className={'side-layer' + (tab === 'agent' ? '' : ' hidden left')}><Chat /></div>
@@ -118,7 +119,7 @@ function Reconnecting() {
   const connected = useStore((s) => s.connected);
   const [show, setShow] = useState(false);
   useEffect(() => { if (connected) { setShow(false); return; } const t = setTimeout(() => setShow(true), 700); return () => clearTimeout(t); }, [connected]);
-  return <div className={'reconnect' + (show ? ' show' : '')}><span className="spinner sm" /> Переподключение к редактору… агенты продолжают работать</div>;
+  return <div className={'reconnect' + (show ? ' show' : '')}><span className="spinner sm" /> {t('Reconnecting to the editor… agents keep working')}</div>;
 }
 
 function Lightbox() {
@@ -143,17 +144,17 @@ function TopBar() {
     <header className="topbar">
       <div className="row gap8">
         <ViewSwitch />
-        <button className={'tb-btn' + (libraryOpen ? ' on' : '')} onClick={() => setState({ libraryOpen: !libraryOpen })} title="Шаблоны, медиа, ассеты">
-          <Icon name="plus" size={14} /> Добавить
+        <button className={'tb-btn' + (libraryOpen ? ' on' : '')} onClick={() => setState({ libraryOpen: !libraryOpen })} title={t('Templates, media, assets')}>
+          <Icon name="plus" size={14} /> {t('Add')}
         </button>
       </div>
-      <button className="project-name" onClick={() => setState({ dialog: 'projects' })} title="Проекты">
+      <button className="project-name" onClick={() => setState({ dialog: 'projects' })} title={t('Projects')}>
         <span className={'conn' + (connected ? '' : ' off')} />{project.name}<Icon name="chevron" size={12} />
       </button>
       <div className="row gap8 end">
-        {job && <div className="tb-progress"><div style={{ width: `${Math.round(job.progress * 100)}%` }} /><span>Экспорт {Math.round(job.progress * 100)}%</span></div>}
-        <button className="icon-btn" title="Настройки" onClick={() => setState({ dialog: 'settings' })}><Icon name="gear" size={15} /></button>
-        <button className="btn sm primary" onClick={() => setState({ dialog: 'export' })}>Экспорт</button>
+        {job && <div className="tb-progress"><div style={{ width: `${Math.round(job.progress * 100)}%` }} /><span>{t('Export {p}%', { p: Math.round(job.progress * 100) })}</span></div>}
+        <button className="icon-btn" title={t('Settings')} onClick={() => setState({ dialog: 'settings' })}><Icon name="gear" size={15} /></button>
+        <button className="btn sm primary" onClick={() => setState({ dialog: 'export' })}>{t('Export')}</button>
       </div>
     </header>
   );
@@ -164,8 +165,8 @@ function ViewSwitch() {
   return (
     <div className="view-switch">
       <span className="vs-thumb" style={{ transform: `translateX(${view === 'edit' ? 0 : 100}%)` }} />
-      <button className={view === 'edit' ? 'on' : ''} onClick={() => actions.setView('edit')}>Монтаж</button>
-      <button className={view === 'board' ? 'on' : ''} onClick={() => actions.setView('board')}>Холст</button>
+      <button className={view === 'edit' ? 'on' : ''} onClick={() => actions.setView('edit')}>{t('Edit')}</button>
+      <button className={view === 'board' ? 'on' : ''} onClick={() => actions.setView('board')}>{t('Canvas')}</button>
     </div>
   );
 }
@@ -191,12 +192,12 @@ function ProjectsDialog() {
   const open = async (p: string) => { await api('POST', '/api/projects/open', { path: p }); await refresh(); setState({ dialog: null, selectedItemId: null, selectedTaskId: null }); time.set(0); };
   const create = async () => {
     const [w, h] = size.split('x').map(Number);
-    await api('POST', '/api/projects/create', { name: name || 'Новый проект', width: w, height: h });
+    await api('POST', '/api/projects/create', { name: name || t('New project'), width: w, height: h });
     await refresh(); setState({ dialog: null, selectedItemId: null, selectedTaskId: null }); time.set(0);
   };
   return (
     <div className="col gap16">
-      <h2>Проекты</h2>
+      <h2>{t('Projects')}</h2>
       <div className="col gap6">
         {data?.projects.map((p) => (
           <button key={p} className={'project-row' + (p === data.current ? ' current' : '')} onClick={() => open(p)}>
@@ -205,19 +206,19 @@ function ProjectsDialog() {
         ))}
       </div>
       <div className="card col gap8">
-        <div className="strong small">Новый проект</div>
+        <div className="strong small">{t('New project')}</div>
         <div className="row gap6">
-          <input className="input grow" placeholder="Название" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input grow" placeholder={t('Name')} value={name} onChange={(e) => setName(e.target.value)} />
           <select className="input" value={size} onChange={(e) => setSize(e.target.value)}>
             <option value="1920x1080">16:9 · 1920×1080</option><option value="1080x1920">9:16 · 1080×1920</option><option value="1080x1080">1:1 · 1080×1080</option><option value="1080x1350">4:5 · 1080×1350</option><option value="3840x2160">4K</option>
           </select>
-          <button className="btn primary sm" onClick={create}>Создать</button>
+          <button className="btn primary sm" onClick={create}>{t('Create')}</button>
         </div>
-        <div className="muted xsmall">Создаётся в {data?.projectsDir}. Проект — обычная папка с git-историей.</div>
+        <div className="muted xsmall">{t('Created in {dir}. A project is a regular folder with git history.', { dir: data?.projectsDir ?? '' })}</div>
       </div>
       <div className="row gap6">
-        <input className="input grow" placeholder="/путь/к/папке/проекта" value={openPath} onChange={(e) => setOpenPath(e.target.value)} />
-        <button className="btn sm" onClick={() => openPath && open(openPath)}>Открыть</button>
+        <input className="input grow" placeholder={t('/path/to/project/folder')} value={openPath} onChange={(e) => setOpenPath(e.target.value)} />
+        <button className="btn sm" onClick={() => openPath && open(openPath)}>{t('Open')}</button>
       </div>
     </div>
   );
@@ -230,29 +231,30 @@ function SettingsDialog() {
   const repo = useStore((s) => (s as any).repo as string | undefined);
   const [s, setS] = useState<Settings | undefined>(settings);
   if (!s) return null;
-  const save = async () => { const next = await api('PATCH', '/api/settings', s); setState({ settings: next, agent: next.defaultAgent, dialog: null }); notify('info', 'Сохранено'); };
+  const save = async () => { const next = await api('PATCH', '/api/settings', s); setState({ settings: next, agent: next.defaultAgent, dialog: null }); notify('info', t('Saved')); };
   const mcpCmd = `claude mcp add studio -e STUDIO_URL=${location.protocol}//${location.hostname}:4317 -- node ${repo || '<repo>'}/server/mcp/stdio.mjs`;
   return (
     <div className="col gap12">
-      <h2>Настройки</h2>
+      <h2>{t('Settings')}</h2>
       <div className="grid2">
-        <label className="field"><span>Агент по умолчанию</span><select className="input" value={s.defaultAgent} onChange={(e) => setS({ ...s, defaultAgent: e.target.value as any })}><option value="claude">Claude Code</option><option value="codex">Codex</option></select></label>
-        <label className="field"><span>Права агентов</span><select className="input" value={s.permissionMode} onChange={(e) => setS({ ...s, permissionMode: e.target.value as any })}><option value="auto">Авто — спорное спрашивать здесь</option><option value="acceptEdits">Только правки файлов — остальное спрашивать</option><option value="bypassPermissions">Всё без вопросов</option></select></label>
-        <label className="field"><span>Модель Claude (пусто = по умолчанию)</span><input className="input" value={s.claudeModel || ''} onChange={(e) => setS({ ...s, claudeModel: e.target.value || undefined })} placeholder="напр. opus / sonnet" /></label>
-        <label className="field"><span>Модель Codex</span><input className="input" value={s.codexModel || ''} onChange={(e) => setS({ ...s, codexModel: e.target.value || undefined })} /></label>
-        <label className="field"><span>Параллельных агентов</span><input className="input" type="number" min={1} max={8} value={s.parallelTasks} onChange={(e) => setS({ ...s, parallelTasks: Number(e.target.value) })} /></label>
-        <label className="field"><span>Воркеров рендера</span><input className="input" type="number" min={1} max={12} value={s.renderWorkers} onChange={(e) => setS({ ...s, renderWorkers: Number(e.target.value) })} /></label>
-        <label className="field"><span>Модель транскрипции</span><select className="input" value={s.transcribeModel} onChange={(e) => setS({ ...s, transcribeModel: e.target.value })}><option value="Xenova/whisper-tiny">whisper-tiny (быстро)</option><option value="Xenova/whisper-base">whisper-base</option><option value="Xenova/whisper-small">whisper-small (точнее)</option></select></label>
+        <LanguageField />
+        <label className="field"><span>{t('Default agent')}</span><select className="input" value={s.defaultAgent} onChange={(e) => setS({ ...s, defaultAgent: e.target.value as any })}><option value="claude">Claude Code</option><option value="codex">Codex</option></select></label>
+        <label className="field"><span>{t('Agent permissions')}</span><select className="input" value={s.permissionMode} onChange={(e) => setS({ ...s, permissionMode: e.target.value as any })}><option value="auto">{t('Auto — ask here when in doubt')}</option><option value="acceptEdits">{t('File edits only — ask for the rest')}</option><option value="bypassPermissions">{t('Everything, no questions')}</option></select></label>
+        <label className="field"><span>{t('Claude model (empty = default)')}</span><input className="input" value={s.claudeModel || ''} onChange={(e) => setS({ ...s, claudeModel: e.target.value || undefined })} placeholder={t('e.g. opus / sonnet')} /></label>
+        <label className="field"><span>{t('Codex model')}</span><input className="input" value={s.codexModel || ''} onChange={(e) => setS({ ...s, codexModel: e.target.value || undefined })} /></label>
+        <label className="field"><span>{t('Parallel agents')}</span><input className="input" type="number" min={1} max={8} value={s.parallelTasks} onChange={(e) => setS({ ...s, parallelTasks: Number(e.target.value) })} /></label>
+        <label className="field"><span>{t('Render workers')}</span><input className="input" type="number" min={1} max={12} value={s.renderWorkers} onChange={(e) => setS({ ...s, renderWorkers: Number(e.target.value) })} /></label>
+        <label className="field"><span>{t('Transcription model')}</span><select className="input" value={s.transcribeModel} onChange={(e) => setS({ ...s, transcribeModel: e.target.value })}><option value="Xenova/whisper-tiny">{t('whisper-tiny (fast)')}</option><option value="Xenova/whisper-base">whisper-base</option><option value="Xenova/whisper-small">{t('whisper-small (more accurate)')}</option></select></label>
       </div>
       <VoiceSettings s={s} setS={setS} />
       <div className="card small col gap4">
-        <div><b>Claude Code:</b> {agents?.claude || 'не найден'}</div>
-        <div><b>Codex:</b> {agents?.codex || 'не найден'}</div>
-        <div className="muted xsmall">Подключить MCP редактора к агенту в своём терминале:</div>
+        <div><b>Claude Code:</b> {agents?.claude || t('not found')}</div>
+        <div><b>Codex:</b> {agents?.codex || t('not found')}</div>
+        <div className="muted xsmall">{t('Connect the editor MCP to an agent in your own terminal:')}</div>
         <code className="xsmall selectable">{mcpCmd}</code>
-        <div className="muted xsmall">Папка проекта: <code className="selectable">{dir}</code></div>
+        <div className="muted xsmall">{t('Project folder:')} <code className="selectable">{dir}</code></div>
       </div>
-      <div className="row gap6 end"><button className="btn ghost sm" onClick={() => setState({ dialog: null })}>Отмена</button><button className="btn primary sm" onClick={save}>Сохранить</button></div>
+      <div className="row gap6 end"><button className="btn ghost sm" onClick={() => setState({ dialog: null })}>{t('Cancel')}</button><button className="btn primary sm" onClick={save}>{t('Save')}</button></div>
     </div>
   );
 }
@@ -279,40 +281,40 @@ function VoiceSettings({ s, setS }: { s: Settings; setS: (s: Settings) => void }
   const voice = voices?.find((v) => v.id === s.elevenlabsVoiceId);
   return (
     <div className="card col gap10">
-      <div className="row between"><span className="strong">Озвучка · ElevenLabs</span>{voices && <span className="muted xsmall">{voices.length} голосов</span>}</div>
+      <div className="row between"><span className="strong">{t('Voiceover · ElevenLabs')}</span>{voices && <span className="muted xsmall">{tn(voices.length, '{n} voice', '{n} voices')}</span>}</div>
       <div className="row gap6">
-        <input className="input grow" type="password" placeholder="API-ключ ElevenLabs (xi-api-key)" value={s.elevenlabsKey || ''} onChange={(e) => setS({ ...s, elevenlabsKey: e.target.value })} autoComplete="off" />
-        <button className="btn sm" disabled={loading} onClick={() => load(true)}>{loading ? <span className="spinner sm" /> : 'Проверить'}</button>
+        <input className="input grow" type="password" placeholder={t('ElevenLabs API key (xi-api-key)')} value={s.elevenlabsKey || ''} onChange={(e) => setS({ ...s, elevenlabsKey: e.target.value })} autoComplete="off" />
+        <button className="btn sm" disabled={loading} onClick={() => load(true)}>{loading ? <span className="spinner sm" /> : t('Check')}</button>
       </div>
       {err && <div className="error-box">{err}</div>}
       {voices && (
         <div className="grid2">
-          <label className="field"><span>Голос по умолчанию</span>
+          <label className="field"><span>{t('Default voice')}</span>
             <div className="row gap6">
               <select className="input grow" value={s.elevenlabsVoiceId || ''} onChange={(e) => setS({ ...s, elevenlabsVoiceId: e.target.value })}>
-                <option value="">— выберите —</option>
+                <option value="">{t('— choose —')}</option>
                 {voices.map((v) => <option key={v.id} value={v.id}>{v.name}{v.labels?.gender ? ` · ${v.labels.gender}` : ''}{v.labels?.accent ? ` · ${v.labels.accent}` : ''}</option>)}
               </select>
-              <button className="icon-btn" title="Прослушать" disabled={!voice?.preview} onClick={() => preview(voice)}><Icon name="play" size={12} /></button>
+              <button className="icon-btn" title={t('Listen')} disabled={!voice?.preview} onClick={() => preview(voice)}><Icon name="play" size={12} /></button>
             </div>
           </label>
-          <label className="field"><span>Модель</span>
+          <label className="field"><span>{t('Model')}</span>
             <select className="input" value={s.elevenlabsModel || 'eleven_multilingual_v2'} onChange={(e) => setS({ ...s, elevenlabsModel: e.target.value })}>
               {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
           </label>
         </div>
       )}
-      <div className="muted xsmall">Ключ хранится только локально (~/.agent-videostudio). Озвучка ложится на аудиодорожку, а тайминги слов сразу работают для субтитров.</div>
+      <div className="muted xsmall">{t('The key is stored only locally (~/.agent-videostudio). The voiceover lands on an audio track, and word timings work for subtitles right away.')}</div>
     </div>
   );
 }
 
 const FORMATS = [
-  { id: 'mp4', name: 'MP4 · H.264', hint: 'Соцсети, YouTube, мессенджеры' },
-  { id: 'prores', name: 'ProRes 4444 · MOV', hint: 'Монтаж в Premiere, DaVinci, Final Cut; поддерживает альфу' },
-  { id: 'webm', name: 'WebM · VP9', hint: 'Веб, поддерживает альфу' },
-  { id: 'gif', name: 'GIF', hint: 'Превью и стикеры, до 20 fps, без звука' },
+  { id: 'mp4', name: 'MP4 · H.264', hint: 'Social media, YouTube, messengers' },
+  { id: 'prores', name: 'ProRes 4444 · MOV', hint: 'Editing in Premiere, DaVinci, Final Cut; supports alpha' },
+  { id: 'webm', name: 'WebM · VP9', hint: 'Web, supports alpha' },
+  { id: 'gif', name: 'GIF', hint: 'Previews and stickers, up to 20 fps, no sound' },
 ] as const;
 
 function ExportDialog() {
@@ -334,44 +336,44 @@ function ExportDialog() {
   const outW = Math.round((project.width * scale) / 2) * 2, outH = Math.round((project.height * scale) / 2) * 2;
   return (
     <div className="col gap16">
-      <h2>Экспорт</h2>
+      <h2>{t('Export')}</h2>
       <div className="fmt-grid">
         {FORMATS.map((f) => (
           <button key={f.id} className={'fmt' + (format === f.id ? ' on' : '')} onClick={() => setFormat(f.id)}>
-            <span className="fmt-name">{f.name}</span><span className="fmt-hint">{f.hint}</span>
+            <span className="fmt-name">{f.name}</span><span className="fmt-hint">{t(f.hint)}</span>
           </button>
         ))}
       </div>
       <div className="exp-opts">
-        <label className="field"><span>Фрагмент, с</span><div className="row gap6"><input className="input" type="number" step={0.1} value={from} onChange={(e) => setFrom(Number(e.target.value))} /><span className="muted">—</span><input className="input" type="number" step={0.1} value={to} onChange={(e) => setTo(Number(e.target.value))} /></div></label>
-        <label className="field"><span>Размер · {outW}×{outH}</span><div className="seg">{[0.5, 1, 2].map((v) => <button key={v} className={scale === v ? 'on' : ''} onClick={() => setScale(v)}>{v * 100}%</button>)}</div></label>
-        {format !== 'gif' && format !== 'prores' && <label className="field"><span>Качество</span><div className="seg">{([['small', 'Компактно'], ['standard', 'Стандарт'], ['high', 'Максимум']] as const).map(([k, l]) => <button key={k} className={quality === k ? 'on' : ''} onClick={() => setQuality(k)}>{l}</button>)}</div></label>}
-        <label className="field"><span>Motion blur {blur > 1 ? `· ×${blur} подкадров, затвор 180°` : '· выкл'}</span><div className="seg">{[1, 4, 8].map((v) => <button key={v} className={blur === v ? 'on' : ''} onClick={() => setBlur(v)}>{v === 1 ? 'Выкл' : v === 4 ? 'Мягкий' : 'Кино'}</button>)}</div></label>
-        {alphaOk && <label className="field-line"><span>Прозрачный фон (только графика, для наложения в другом редакторе)</span><input type="checkbox" className="toggle" checked={transparent} onChange={(e) => setTransparent(e.target.checked)} /></label>}
+        <label className="field"><span>{t('Range, s')}</span><div className="row gap6"><input className="input" type="number" step={0.1} value={from} onChange={(e) => setFrom(Number(e.target.value))} /><span className="muted">—</span><input className="input" type="number" step={0.1} value={to} onChange={(e) => setTo(Number(e.target.value))} /></div></label>
+        <label className="field"><span>{t('Size · {w}×{h}', { w: outW, h: outH })}</span><div className="seg">{[0.5, 1, 2].map((v) => <button key={v} className={scale === v ? 'on' : ''} onClick={() => setScale(v)}>{v * 100}%</button>)}</div></label>
+        {format !== 'gif' && format !== 'prores' && <label className="field"><span>{t('Quality')}</span><div className="seg">{([['small', 'Compact'], ['standard', 'Standard'], ['high', 'Maximum']] as const).map(([k, l]) => <button key={k} className={quality === k ? 'on' : ''} onClick={() => setQuality(k)}>{t(l)}</button>)}</div></label>}
+        <label className="field"><span>Motion blur {blur > 1 ? t('· ×{n} subframes, 180° shutter', { n: blur }) : t('· off')}</span><div className="seg">{[1, 4, 8].map((v) => <button key={v} className={blur === v ? 'on' : ''} onClick={() => setBlur(v)}>{v === 1 ? t('Off') : v === 4 ? t('Soft') : t('Cinema')}</button>)}</div></label>
+        {alphaOk && <label className="field-line"><span>{t('Transparent background (graphics only, for overlaying in another editor)')}</span><input type="checkbox" className="toggle" checked={transparent} onChange={(e) => setTransparent(e.target.checked)} /></label>}
       </div>
       <div className="row between">
-        <span className="muted xsmall">{blur > 1 ? `Рендер графики дольше в ${blur} раз. ` : ''}Цвет BT.709 · {project.fps} fps</span>
+        <span className="muted xsmall">{blur > 1 ? t('Graphics render {n}× slower. ', { n: blur }) : ''}{t('Color BT.709 · {fps} fps', { fps: project.fps })}</span>
         {running
-          ? <button className="btn sm" onClick={() => api('POST', `/api/export/${job.id}/cancel`)}>Отменить</button>
-          : <button className="btn primary" onClick={start}>Экспортировать</button>}
+          ? <button className="btn sm" onClick={() => api('POST', `/api/export/${job.id}/cancel`)}>{t('Cancel export')}</button>
+          : <button className="btn primary" onClick={start}>{t('Start export')}</button>}
       </div>
       {job && (
         <div className="col gap8">
-          <div className="row between small"><span>{job.status === 'done' ? 'Готово' : job.status === 'error' ? (job.error === 'Отменено' ? 'Отменено' : 'Ошибка') : job.stage}</span><span className="mono">{Math.round(job.progress * 100)}%</span></div>
+          <div className="row between small"><span>{job.status === 'done' ? t('Done') : job.status === 'error' ? (isCancelled(job.error) ? t('Cancelled') : t('Error')) : t(job.stageKey || job.stage, job.stageParams)}</span><span className="mono">{Math.round(job.progress * 100)}%</span></div>
           <div className="progress"><div style={{ width: `${job.progress * 100}%` }} /></div>
-          {job.error && job.error !== 'Отменено' && <pre className="error-box xsmall">{job.error}</pre>}
+          {job.error && !isCancelled(job.error) && <pre className="error-box xsmall">{job.error}</pre>}
           {job.output && /\.(mp4|webm)$/.test(job.output) && <video className="export-preview" src={`/p/${job.output}`} controls />}
           {job.output && /\.gif$/.test(job.output) && <img className="export-preview" src={`/p/${job.output}`} alt="" />}
         </div>
       )}
       {exportsList.length > 0 && (
         <div className="col gap4">
-          <div className="section-title">Файлы</div>
+          <div className="section-title">{t('Files')}</div>
           {exportsList.slice(0, 8).map((e) => (
             <div key={e.file} className="row gap8 small">
               <a href={`/p/${e.file}`} target="_blank" rel="noreferrer" className="ellipsis grow">{e.file.split('/').pop()}</a>
-              <span className="muted xsmall">{(e.size / 1e6).toFixed(1)} MB</span>
-              <a className="btn xs" href={`/p/${e.file}`} download>Скачать</a>
+              <span className="muted xsmall">{fmtNumber(e.size / 1e6, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB</span>
+              <a className="btn xs" href={`/p/${e.file}`} download>{t('Download')}</a>
             </div>
           ))}
         </div>
@@ -383,7 +385,7 @@ function ExportDialog() {
 function CompareDialog({ clipId, sha }: { clipId: string; sha: string }) {
   const project = useStore((s) => s.project)!;
   const [base, setBase] = useState<string | null>(null);
-  const [t, setT] = useState(() => {
+  const [tm, setT] = useState(() => {
     const it = project.items.find((i) => i.kind === 'clip' && i.ref === clipId);
     return it ? Math.max(0, time.get() - it.start + it.in) : 1;
   });
@@ -391,29 +393,42 @@ function CompareDialog({ clipId, sha }: { clipId: string; sha: string }) {
   const dur = item ? item.duration + item.in : getState().clips.find((c) => c.id === clipId)?.duration || 5;
   const a = useRef<HTMLIFrameElement>(null), b = useRef<HTMLIFrameElement>(null);
   useEffect(() => { api('POST', '/api/versions/materialize', { sha, clipId }).then((r) => setBase(r.base)); }, [sha, clipId]);
-  useEffect(() => { for (const f of [a.current, b.current]) f?.contentWindow?.postMessage({ __studio: true, type: 'seek', t }, '*'); }, [t, base]);
+  useEffect(() => { for (const f of [a.current, b.current]) f?.contentWindow?.postMessage({ __studio: true, type: 'seek', t: tm }, '*'); }, [tm, base]);
   const input = encodeURIComponent(JSON.stringify(item ? { params: item.params || {}, offset: item.start - item.in, duration: dur, width: project.width, height: project.height, fps: project.fps } : { width: project.width, height: project.height, fps: project.fps, duration: dur }));
   const scale = 0.3;
   const frame = (src: string, ref: React.RefObject<HTMLIFrameElement | null>, label: string) => (
     <div className="col gap4">
       <div className="small strong">{label}</div>
       <div className="compare-frame" style={{ width: project.width * scale, height: project.height * scale }}>
-        <iframe ref={ref} src={src} style={{ width: project.width, height: project.height, transform: `scale(${scale})` }} onLoad={() => setTimeout(() => ref.current?.contentWindow?.postMessage({ __studio: true, type: 'seek', t }, '*'), 300)} />
+        <iframe ref={ref} src={src} style={{ width: project.width, height: project.height, transform: `scale(${scale})` }} onLoad={() => setTimeout(() => ref.current?.contentWindow?.postMessage({ __studio: true, type: 'seek', t: tm }, '*'), 300)} />
       </div>
     </div>
   );
   return (
     <div className="col gap12">
-      <h2>Сравнение версий · {clipId}</h2>
+      <h2>{t('Compare versions · {clip}', { clip: clipId })}</h2>
       <div className="row gap12 wrap">
-        {base && frame(`${base}/${clipId}/index.html#${input}`, a, `Версия ${sha}`)}
-        {frame(`/p/clips/${clipId}/index.html#${input}`, b, 'Текущая')}
+        {base && frame(`${base}/${clipId}/index.html#${input}`, a, t('Version {sha}', { sha }))}
+        {frame(`/p/clips/${clipId}/index.html#${input}`, b, t('Current'))}
       </div>
-      <input type="range" min={0} max={dur} step={1 / project.fps} value={t} onChange={(e) => setT(Number(e.target.value))} />
-      <div className="row between small"><span className="muted">t = {t.toFixed(2)}s (время клипа)</span>
-        <button className="btn sm" onClick={async () => { if (confirm('Вернуть эту версию?')) { await api('POST', '/api/versions/restore', { sha, path: `clips/${clipId}` }); setState({ dialog: null }); notify('info', 'Восстановлено'); } }}>↺ Вернуть версию {sha}</button>
+      <input type="range" min={0} max={dur} step={1 / project.fps} value={tm} onChange={(e) => setT(Number(e.target.value))} />
+      <div className="row between small"><span className="muted">t = {tm.toFixed(2)}s {t('(clip time)')}</span>
+        <button className="btn sm" onClick={async () => { if (confirm(t('Restore this version?'))) { await api('POST', '/api/versions/restore', { sha, path: `clips/${clipId}` }); setState({ dialog: null }); notify('info', t('Restored')); } }}>↺ {t('Restore version {sha}', { sha })}</button>
       </div>
     </div>
+  );
+}
+
+function isCancelled(err?: string) { return err === 'Cancelled' || err === '\u041e\u0442\u043c\u0435\u043d\u0435\u043d\u043e'; /* legacy server value */ }
+
+function LanguageField() {
+  const lang = useLocale();
+  return (
+    <label className="field"><span>{t('Language')}</span>
+      <select className="input" value={lang} onChange={(e) => setLocale(e.target.value as Lang)}>
+        {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+      </select>
+    </label>
   );
 }
 

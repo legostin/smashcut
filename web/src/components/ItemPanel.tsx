@@ -4,6 +4,7 @@ import { useStore, actions, api, setState, notify, refreshGallery, getState } fr
 import { Icon } from './Icon';
 import { FxPanel } from './FxPanel';
 import { LayoutPanel, TokenChip } from './LayoutPanel';
+import { t, fmtDate } from '../i18n';
 
 /** Contextual panel for the selected timeline item: the few controls that matter + "ask the agent". */
 export function ItemPanel({ item, project }: { item: Item; project: Project }) {
@@ -22,17 +23,17 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
   const askAgent = async () => {
     const what = ask.trim();
     if (!what) return;
-    const subject = item.kind === 'clip' ? `В клипе «${name}» (clips/${item.ref})` : item.kind === 'music' ? `В треке «${name}» (music/${item.ref})` : `Для элемента ${item.ref} на таймлайне`;
+    const subject = item.kind === 'clip' ? `In clip "${name}" (clips/${item.ref})` : item.kind === 'music' ? `In track "${name}" (music/${item.ref})` : `For timeline item ${item.ref}`;
     await actions.startTask(`${subject}: ${what}`, { itemId: item.id });
     setAsk('');
   };
   return (
     <div className="item-panel">
       <div className="ip-head">
-        <button className="icon-btn" title="Назад к агенту (Esc)" onClick={() => setState({ selectedItemId: null })}><Icon name="back" size={15} /></button>
+        <button className="icon-btn" title={t('Back to the agent (Esc)')} onClick={() => setState({ selectedItemId: null })}><Icon name="back" size={15} /></button>
         <div className="grow minw0">
           <div className="ip-title ellipsis">{name}</div>
-          <div className="ip-sub ellipsis">{item.kind === 'clip' ? 'Графика' : item.kind === 'music' ? `Музыка${music?.meta ? ` · ${music.meta.bpm} BPM` : ''}` : media?.type === 'audio' ? 'Аудио' : media?.type === 'image' ? 'Изображение' : 'Видео'} · {item.start.toFixed(2)}–{(item.start + item.duration).toFixed(2)} s</div>
+          <div className="ip-sub ellipsis">{item.kind === 'clip' ? t('Graphics') : item.kind === 'music' ? `${t('Music')}${music?.meta ? ` · ${music.meta.bpm} BPM` : ''}` : media?.type === 'audio' ? t('Audio') : media?.type === 'image' ? t('Image') : t('Video')} · {item.start.toFixed(2)}–{(item.start + item.duration).toFixed(2)} s</div>
         </div>
         <Menu item={item} />
       </div>
@@ -41,7 +42,7 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
         {errors?.length ? <div className="ip-error">{errors.slice(-2).join('\n')}</div> : null}
 
         {Object.keys(schema).length > 0 && (
-          <Section title="Параметры">
+          <Section title={t('Parameters')}>
             {Object.entries(schema).map(([k, spec]) => {
               const tok = !(k in (item.params || {})) ? bindings?.[k] : undefined;
               const tokVal = tok ? (spec.type === 'color' ? design.colors.find((c) => c.name === tok)?.value : design.type.find((t) => t.role === tok)?.family) : undefined;
@@ -50,14 +51,14 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
           </Section>
         )}
 
-        <Section title="Время">
+        <Section title={t('Time')}>
           <div className="row gap8">
-            <Num label="Старт" value={item.start} onChange={(v) => up({ start: Math.max(0, v) })} />
-            <Num label="Длина" value={item.duration} onChange={(v) => up({ duration: Math.max(0.04, v) })} />
-            <Num label="Сдвиг" value={item.in} onChange={(v) => up({ in: Math.max(0, v) })} />
+            <Num label={t('Start')} value={item.start} onChange={(v) => up({ start: Math.max(0, v) })} />
+            <Num label={t('Duration')} value={item.duration} onChange={(v) => up({ duration: Math.max(0.04, v) })} />
+            <Num label={t('In offset')} value={item.in} onChange={(v) => up({ in: Math.max(0, v) })} />
           </div>
-          {visual && <Slider label="Прозрачность" value={item.opacity ?? 1} max={1} onChange={(v) => up({ opacity: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
-          {audible && <Slider label="Громкость" value={item.volume ?? 1} max={1.5} onChange={(v) => up({ volume: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
+          {visual && <Slider label={t('Opacity')} value={item.opacity ?? 1} max={1} onChange={(v) => up({ opacity: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
+          {audible && <Slider label={t('Volume')} value={item.volume ?? 1} max={1.5} onChange={(v) => up({ volume: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
         </Section>
 
         {visual && <LayoutPanel item={item} project={project} />}
@@ -68,7 +69,7 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
       </div>
 
       <div className="composer compact">
-        <textarea rows={1} value={ask} placeholder={item.kind === 'clip' ? 'Попросить агента изменить этот клип…' : 'Попросить агента…'}
+        <textarea rows={1} value={ask} placeholder={item.kind === 'clip' ? t('Ask the agent to change this clip…') : t('Ask the agent…')}
           onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askAgent(); } }} />
         <button className="send" disabled={!ask.trim()} onClick={askAgent}><Icon name="arrowUp" size={14} /></button>
       </div>
@@ -90,14 +91,14 @@ function Menu({ item }: { item: Item }) {
       <button className="icon-btn" onClick={() => setOpen(!open)}><Icon name="more" size={15} /></button>
       {open && (
         <div className="menu right">
-          {item.kind === 'clip' && <button className="menu-item" onClick={run(async () => { const r = await api('POST', '/api/agent/lint-clip', { clipId: item.ref }); notify(r.ok ? 'info' : 'error', r.ok ? 'Клип в порядке' : r.issues.join('\n')); })}>Проверить клип</button>}
-          {(item.kind === 'clip' || item.kind === 'music') && <button className="menu-item" onClick={run(async () => { await api('POST', '/api/library', { kind: item.kind, id: item.ref }); notify('info', 'Сохранено в библиотеку'); refreshGallery(); })}>Сохранить в библиотеку</button>}
-          {item.kind === 'clip' && <button className="menu-item" onClick={run(async () => { const r = await api('POST', '/api/library/style', { itemId: item.id }); notify('info', `Стиль «${r.name}» сохранён в «Мою библиотеку»`); refreshGallery(); })}>Сохранить как стиль</button>}
-          {item.kind === 'clip' && <button className="menu-item" onClick={run(() => actions.startTask(variationsPrompt(item, getState().clips.find((c) => c.id === item.ref)?.name || item.ref)))}>Вариации от агента…</button>}
-          {item.kind === 'clip' && <button className="menu-item" onClick={run(() => api('POST', `/api/clips/${item.ref}/duplicate`))}>Дублировать клип</button>}
-          {item.params && Object.keys(item.params).length > 0 && <button className="menu-item" onClick={run(() => { const p = useStoreSnapshot(); api('PATCH', '/api/project', { items: p.items.map((i) => (i.id === item.id ? { ...i, params: {} } : i)) }); })}>Сбросить параметры</button>}
+          {item.kind === 'clip' && <button className="menu-item" onClick={run(async () => { const r = await api('POST', '/api/agent/lint-clip', { clipId: item.ref }); notify(r.ok ? 'info' : 'error', r.ok ? t('The clip looks fine') : r.issues.join('\n')); })}>{t('Check clip')}</button>}
+          {(item.kind === 'clip' || item.kind === 'music') && <button className="menu-item" onClick={run(async () => { await api('POST', '/api/library', { kind: item.kind, id: item.ref }); notify('info', t('Saved to the library')); refreshGallery(); })}>{t('Save to library')}</button>}
+          {item.kind === 'clip' && <button className="menu-item" onClick={run(async () => { const r = await api('POST', '/api/library/style', { itemId: item.id }); notify('info', t('Style “{name}” saved to “My library”', { name: r.name })); refreshGallery(); })}>{t('Save as style')}</button>}
+          {item.kind === 'clip' && <button className="menu-item" onClick={run(() => actions.startTask(variationsPrompt(item, getState().clips.find((c) => c.id === item.ref)?.name || item.ref)))}>{t('Agent variations…')}</button>}
+          {item.kind === 'clip' && <button className="menu-item" onClick={run(() => api('POST', `/api/clips/${item.ref}/duplicate`))}>{t('Duplicate clip')}</button>}
+          {item.params && Object.keys(item.params).length > 0 && <button className="menu-item" onClick={run(() => { const p = useStoreSnapshot(); api('PATCH', '/api/project', { items: p.items.map((i) => (i.id === item.id ? { ...i, params: {} } : i)) }); })}>{t('Reset parameters')}</button>}
           <div className="menu-sep" />
-          <button className="menu-item danger" onClick={run(() => actions.removeItem(item.id))}>Убрать с таймлайна</button>
+          <button className="menu-item danger" onClick={run(() => actions.removeItem(item.id))}>{t('Remove from timeline')}</button>
         </div>
       )}
     </div>
@@ -163,15 +164,15 @@ function History({ path, clipId }: { path: string; clipId?: string }) {
   if (list.length < 2) return null;
   return (
     <div className="ip-section">
-      <button className="disclosure" onClick={() => setOpen(!open)}><Icon name="chevron" size={11} /> История · {list.length}</button>
+      <button className="disclosure" onClick={() => setOpen(!open)}><Icon name="chevron" size={11} /> {t('History')} · {list.length}</button>
       {open && list.slice(0, 15).map((v, i) => (
         <div key={v.sha} className="version">
           <div className="grow minw0">
             <div className="ellipsis">{v.message.replace(/^agent\((\w+)\): /, '$1: ')}</div>
-            <div className="muted xsmall">{new Date(v.date).toLocaleString()}</div>
+            <div className="muted xsmall">{fmtDate(v.date)}</div>
           </div>
-          {i > 0 && clipId && <button className="link" onClick={() => setState({ dialog: { compare: { clipId, sha: v.sha } } })}>сравнить</button>}
-          {i > 0 && <button className="link" onClick={async () => { if (confirm('Вернуть эту версию? Текущая останется в истории.')) { await api('POST', '/api/versions/restore', { sha: v.sha, path }); notify('info', 'Версия восстановлена'); } }}>вернуть</button>}
+          {i > 0 && clipId && <button className="link" onClick={() => setState({ dialog: { compare: { clipId, sha: v.sha } } })}>{t('compare')}</button>}
+          {i > 0 && <button className="link" onClick={async () => { if (confirm(t('Restore this version? The current one stays in the history.'))) { await api('POST', '/api/versions/restore', { sha: v.sha, path }); notify('info', t('Version restored')); } }}>{t('restore')}</button>}
         </div>
       ))}
     </div>
@@ -179,8 +180,8 @@ function History({ path, clipId }: { path: string; clipId?: string }) {
 }
 
 function variationsPrompt(item: Item, name: string) {
-  return `Сделай 3 стилистические вариации клипа «${name}» (clips/${item.ref}, элемент ${item.id}, ${item.start.toFixed(2)}–${(item.start + item.duration).toFixed(2)} с).
-Каждую — отдельным клипом clips/${item.ref}-v1, -v2, -v3 (скопируй пакет и меняй копию): разные типографика, ритм анимации, композиция и цветовой акцент; тексты и смысл те же; следуй дизайн-системе проекта, если она есть.
-Поставь варианты на новую дорожку графики (set_project tracks) в то же время, что и оригинал, но выключи их видимость (hidden: true) — пользователь переключит сам. Оригинал не меняй.
-Отрендери контакт-листы всех трёх (render_clip) и коротко опиши, чем они отличаются.`;
+  return `Make 3 stylistic variations of the clip "${name}" (clips/${item.ref}, item ${item.id}, ${item.start.toFixed(2)}–${(item.start + item.duration).toFixed(2)} s).
+Each one as a separate clip clips/${item.ref}-v1, -v2, -v3 (copy the package and edit the copy): different typography, animation rhythm, composition and color accent; same texts and meaning; follow the project's design system if there is one.
+Put the variants on a new graphics track (set_project tracks) at the same time as the original, but turn their visibility off (hidden: true) — the user will switch them. Do not change the original.
+Render contact sheets of all three (render_clip) and briefly describe how they differ.`;
 }

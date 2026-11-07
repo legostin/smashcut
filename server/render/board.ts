@@ -16,7 +16,7 @@ export function boardFrame(t: number, w: number): Promise<string> {
   const key = sha1(JSON.stringify({ t: +t.toFixed(3), w, layers, size: [p.width, p.height, p.background], clipHashes, design }));
   const out = store.p('.studio', 'board', `${key}.jpg`);
   if (fs.existsSync(out)) return Promise.resolve(out);
-  if (inflight.has(key)) return inflight.get(key)!;
+  if (inflight.has(out)) return inflight.get(out)!;
   const job = (async () => {
     fs.mkdirSync(path.dirname(out), { recursive: true });
     const { png } = await compositeFrame(t);
@@ -25,7 +25,7 @@ export function boardFrame(t: number, w: number): Promise<string> {
     await runOk('ffmpeg', ['-y', '-v', 'error', '-i', tmp, '-vf', `scale=${w}:-2:flags=lanczos`, '-q:v', '3', out]);
     fs.rmSync(tmp, { force: true });
     return out;
-  })().finally(() => inflight.delete(key));
-  inflight.set(key, job);
+  })().finally(() => inflight.delete(out));
+  inflight.set(out, job);
   return job;
 }

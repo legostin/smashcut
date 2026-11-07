@@ -12,7 +12,7 @@ import { recomputeTiming } from './timing.ts';
 const inflight = new Map<string, Promise<MediaInfo>>();
 
 export function probeMedia(file: string, force = false): Promise<MediaInfo> {
-  const key = file;
+  const key = cur().id + ':' + file;
   if (inflight.has(key)) return inflight.get(key)!;
   const p = (async () => {
     const store = cur();
@@ -86,7 +86,8 @@ export async function analyzeMedia(file: string): Promise<AudioAnalysis> {
 
 const transcribing = new Map<string, Promise<Transcript>>();
 export function transcribeMedia(file: string, language?: string): Promise<Transcript> {
-  if (transcribing.has(file)) return transcribing.get(file)!;
+  const tkey = cur().id + ':' + file;
+  if (transcribing.has(tkey)) return transcribing.get(tkey)!;
   const p = (async () => {
     const store = cur();
     const out = store.p('.studio', 'transcripts', file + '.json');
@@ -99,8 +100,8 @@ export function transcribeMedia(file: string, language?: string): Promise<Transc
     recomputeTiming();
     bus.send({ type: 'notice', level: 'info', text: `Transcript ready: ${file} (${t.words.length} words)` });
     return t;
-  })().finally(() => transcribing.delete(file));
-  transcribing.set(file, p);
+  })().finally(() => transcribing.delete(tkey));
+  transcribing.set(tkey, p);
   return p;
 }
 
@@ -118,18 +119,19 @@ function needsProxy(info: MediaInfo & { pixFmt?: string }) {
 
 const proxyJobs = new Set<string>();
 function makeProxy(file: string, rel: string) {
-  if (proxyJobs.has(file)) return;
-  proxyJobs.add(file);
+  const pkey = cur().id + ':' + file;
+  if (proxyJobs.has(pkey)) return;
+  proxyJobs.add(pkey);
   const store = cur();
   const out = store.p(rel);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   bus.send({ type: 'notice', level: 'info', ...msg('Preparing a preview proxy for {file}…', { file }) });
   run('ffmpeg', ['-y', '-v', 'error', '-i', store.p('media', file), '-vf', "scale='min(1280,iw)':-2:flags=bicubic,format=yuv420p", '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-g', '15', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', out + '.tmp.mp4'])
     .then(async (r) => {
-      proxyJobs.delete(file);
+      proxyJobs.delete(pkey);
       if (r.code !== 0) { bus.send({ type: 'notice', level: 'error', ...msg('Proxy for {file} failed: {error}', { file, error: r.stderr.slice(-300) }) }); return; }
       fs.renameSync(out + '.tmp.mp4', out);
       await probeMedia(file, true);
     })
-    .catch(() => proxyJobs.delete(file));
+    .catch(() => proxyJobs.delete(pkey));
 }

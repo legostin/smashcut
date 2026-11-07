@@ -3,6 +3,7 @@ import type { DesignSystem, Item, Project, Scene, Task } from '../../../shared/t
 import { useStore, actions, seek, setState, getState, fmtTime, api } from '../store';
 import { withContext } from './Chat';
 import { Icon } from './Icon';
+import { t, tn } from '../i18n';
 
 type Cam = { x: number; y: number; z: number };
 type Seg = { id: string; title: string; start: number; duration: number; status?: Scene['status']; voiceover?: string; auto?: boolean };
@@ -145,7 +146,7 @@ export function Board({ project }: { project: Project }) {
     const starts = [...new Set(project.items.filter((i) => i.kind === 'clip').map((i) => +i.start.toFixed(2)))].sort((a, b) => a - b);
     const cuts = starts.length >= 2 ? starts : Array.from({ length: Math.min(6, Math.ceil(end / 4)) }, (_, i) => (i * end) / Math.min(6, Math.ceil(end / 4)));
     if (cuts[0] > 0.05) cuts.unshift(0);
-    return cuts.map((s, i) => ({ id: 'auto' + i, title: `Фрагмент ${i + 1}`, start: s, duration: (cuts[i + 1] ?? end) - s, auto: true })).filter((s) => s.duration > 0.2).slice(0, 12);
+    return cuts.map((s, i) => ({ id: 'auto' + i, title: t('Fragment {n}', { n: i + 1 }), start: s, duration: (cuts[i + 1] ?? end) - s, auto: true })).filter((s) => s.duration > 0.2).slice(0, 12);
   }, [script.scenes, project.items]);
 
   // agent presence
@@ -188,11 +189,11 @@ export function Board({ project }: { project: Project }) {
       </div>
       {selection.length > 0 && !marquee && <SelectionBar world={world} cam={cam} selection={selection} project={project} />}
       <div className="board-hud" data-ui>
-        <button className="icon-btn sm" onClick={() => setCam({ ...cam, z: Math.max(0.15, cam.z / 1.2) })} title="Отдалить">−</button>
-        <button className="hud-zoom" onClick={fitAll} title="Показать всё">{Math.round(cam.z * 100)}%</button>
-        <button className="icon-btn sm" onClick={() => setCam({ ...cam, z: Math.min(2.5, cam.z * 1.2) })} title="Приблизить">+</button>
+        <button className="icon-btn sm" onClick={() => setCam({ ...cam, z: Math.max(0.15, cam.z / 1.2) })} title={t('Zoom out')}>−</button>
+        <button className="hud-zoom" onClick={fitAll} title={t('Show all')}>{Math.round(cam.z * 100)}%</button>
+        <button className="icon-btn sm" onClick={() => setCam({ ...cam, z: Math.min(2.5, cam.z * 1.2) })} title={t('Zoom in')}>+</button>
       </div>
-      <div className="board-hint">Клик — выделить · Shift — добавить · рамка — выделить область · пробел + перетаскивание или колесо — панорама · ⌘ + колесо — масштаб</div>
+      <div className="board-hint">{t('Click — select · Shift — add · drag a box — select an area · space + drag or wheel — pan · ⌘ + wheel — zoom')}</div>
     </section>
   );
 }
@@ -233,9 +234,9 @@ function Frame({ id, title, w, children, active, sub }: { id: string; title: str
 function ScriptFrame({ segs, hasScript, brief, active }: { segs: Seg[]; hasScript: boolean; brief: string; active: string | null }) {
   const fps = useStore((s) => s.project?.fps || 30);
   return (
-    <Frame id="script" title="Сценарий" sub={hasScript ? `${segs.length} сцен` : 'черновик'} x={0} y={0} w={400} active={active}>
-      <div className="sticky">{brief || 'Бриф пока пуст. Опишите идею во вкладке «Сценарий» — агент разложит её на сцены.'}</div>
-      {!hasScript && <button className="btn sm b-cta" data-ui onClick={() => setState({ sideTab: 'script' })}>Открыть сценарий</button>}
+    <Frame id="script" title={t('Script')} sub={hasScript ? tn(segs.length, '{n} scene', '{n} scenes') : t('draft')} x={0} y={0} w={400} active={active}>
+      <div className="sticky">{brief || t('The brief is empty. Describe your idea in the “Script” tab and the agent will break it into scenes.')}</div>
+      {!hasScript && <button className="btn sm b-cta" data-ui onClick={() => setState({ sideTab: 'script' })}>{t('Open script')}</button>}
       {hasScript && segs.map((s, i) => (
         <div key={s.id} className={`b-scene st-${s.status || 'todo'}${active === `scene:${s.id}` ? ' active' : ''}`} data-anchor={`scene:${s.id}`} onDoubleClick={() => seek(s.start + 0.001)}>
           <div className="b-scene-top"><span className="b-num">{i + 1}</span><span className="grow ellipsis">{s.title}</span><span className="mono muted">{fmtTime(s.start, fps)}</span></div>
@@ -250,15 +251,15 @@ function ScriptFrame({ segs, hasScript, brief, active }: { segs: Seg[]; hasScrip
 function DesignFrame({ design, active }: { design: DesignSystem; active: string | null }) {
   const empty = !design.colors.length && !design.type.length && !design.motion.length;
   return (
-    <Frame id="design" title="Дизайн-система" sub={design.name || undefined} x={460} y={0} w={560} active={active}>
+    <Frame id="design" title={t('Design system')} sub={design.name || undefined} x={460} y={0} w={560} active={active}>
       {empty ? (
         <div className="b-empty">
-          Токены ещё не заданы. Агент спроектирует палитру, типографику и моушн-токены, и все клипы будут использовать их через CSS-переменные.
-          <button className="btn sm" data-ui onClick={() => actions.startTask('Спроектируй дизайн-систему проекта по брифу (get_script, get_design → set_design): палитра, типографика (только встроенные шрифты, кириллица), моушн-токены, отступы. Затем примени токены к клипам на таймлайне.')}><Icon name="sparkle" size={11} /> Спроектировать</button>
+          {t('No tokens yet. The agent will design a palette, typography and motion tokens, and every clip will use them through CSS variables.')}
+          <button className="btn sm" data-ui onClick={() => actions.startTask('Design the project\'s design system from the brief (get_script, get_design → set_design): palette, typography (built-in fonts only, with coverage for the content\'s language, e.g. Cyrillic), motion tokens, spacing. Then apply the tokens to the clips on the timeline.')}><Icon name="sparkle" size={11} /> {t('Design it')}</button>
         </div>
       ) : (
         <>
-          {design.colors.length > 0 && <div className="ds-label">Цвета</div>}
+          {design.colors.length > 0 && <div className="ds-label">{t('Colors')}</div>}
           <div className="ds-colors">
             {design.colors.map((c) => (
               <div key={c.name} className="ds-color" data-anchor={`design:color:${c.name}`}>
@@ -268,18 +269,18 @@ function DesignFrame({ design, active }: { design: DesignSystem; active: string 
               </div>
             ))}
           </div>
-          {design.type.length > 0 && <div className="ds-label">Типографика</div>}
-          {design.type.map((t) => (
-            <div key={t.role} className="ds-type" data-anchor={`design:type:${t.role}`}>
-              <div className="ds-type-sample" style={{ fontFamily: `'${t.family}'`, fontWeight: t.weight, fontSize: Math.max(13, Math.min(44, t.size * 0.32)), letterSpacing: t.tracking != null ? `${t.tracking}em` : undefined }}>{t.sample || 'Делай видео кодом'}</div>
-              <div className="ds-type-meta mono">{t.role} · {t.family} {t.weight} · {t.size}px</div>
+          {design.type.length > 0 && <div className="ds-label">{t('Typography')}</div>}
+          {design.type.map((ty) => (
+            <div key={ty.role} className="ds-type" data-anchor={`design:type:${ty.role}`}>
+              <div className="ds-type-sample" style={{ fontFamily: `'${ty.family}'`, fontWeight: ty.weight, fontSize: Math.max(13, Math.min(44, ty.size * 0.32)), letterSpacing: ty.tracking != null ? `${ty.tracking}em` : undefined }}>{ty.sample || t('Make videos with code')}</div>
+              <div className="ds-type-meta mono">{ty.role} · {ty.family} {ty.weight} · {ty.size}px</div>
             </div>
           ))}
-          {design.motion.length > 0 && <div className="ds-label">Движение</div>}
+          {design.motion.length > 0 && <div className="ds-label">{t('Motion')}</div>}
           <div className="ds-motion">
             {design.motion.map((m) => <div key={m.name} data-anchor={`design:motion:${m.name}`}><EaseCurve name={m.name} ease={m.ease} duration={m.duration} /></div>)}
           </div>
-          {(design.spacing || []).length > 0 && <div className="ds-label">Отступы</div>}
+          {(design.spacing || []).length > 0 && <div className="ds-label">{t('Spacing')}</div>}
           <div className="ds-spacing">
             {(design.spacing || []).map((s) => <div key={s.name} className="ds-space"><div style={{ width: Math.min(160, s.value / 2) }} /><span className="mono">{s.name} · {s.value}</span></div>)}
           </div>
@@ -320,8 +321,8 @@ function StoryboardFrame({ segs, project, active }: { segs: Seg[]; project: Proj
   const cols = segs.length > 4 ? 3 : 2;
   const cardW = 300;
   return (
-    <Frame id="storyboard" title="Раскадровка" sub={segs.length ? `${segs.length} кадров` : undefined} x={1080} y={0} w={cols * cardW + (cols - 1) * 16 + 32} active={active}>
-      {!segs.length && <div className="b-empty">Кадры появятся, когда на таймлайне будет контент или в сценарии — сцены.</div>}
+    <Frame id="storyboard" title={t('Storyboard')} sub={segs.length ? tn(segs.length, '{n} shot', '{n} shots') : undefined} x={1080} y={0} w={cols * cardW + (cols - 1) * 16 + 32} active={active}>
+      {!segs.length && <div className="b-empty">{t('Shots will appear once there is content on the timeline or scenes in the script.')}</div>}
       <div className="sb-grid" style={{ gridTemplateColumns: `repeat(${cols}, ${cardW}px)` }}>
         {segs.map((s, i) => <StoryCard key={s.id} s={s} n={i + 1} project={project} active={active === `scene:${s.id}`} />)}
       </div>
@@ -332,10 +333,10 @@ function StoryboardFrame({ segs, project, active }: { segs: Seg[]; project: Proj
 function StoryCard({ s, n, project, active }: { s: Seg; n: number; project: Project; active: boolean }) {
   const fileVersion = useStore((st) => st.fileVersion);
   const designAt = useStore((st) => st.design.updatedAt);
-  const t = +(s.start + Math.min(s.duration * 0.55, Math.max(0.1, s.duration - 0.1))).toFixed(2);
+  const at = +(s.start + Math.min(s.duration * 0.55, Math.max(0.1, s.duration - 0.1))).toFixed(2);
   const inScene = project.items.filter((i) => i.start < s.start + s.duration && i.start + i.duration > s.start);
   const v = useMemo(() => hash(JSON.stringify([inScene.map((i) => [i.id, i.start, i.duration, i.in, i.params, i.track, i.opacity, fileVersion[i.ref]]), project.tracks.map((x) => x.hidden), designAt, project.width, project.height])), [inScene, fileVersion, designAt, project.tracks, project.width, project.height]);
-  const src = inScene.length ? `/api/board/frame?t=${t}&w=480&v=${v}` : null;
+  const src = inScene.length ? `/api/board/frame?t=${at}&w=480&v=${v}` : null;
   const [shown, setShown] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -348,9 +349,9 @@ function StoryCard({ s, n, project, active }: { s: Seg; n: number; project: Proj
   }, [src]);
   const fps = project.fps;
   return (
-    <div className={`sb-card st-${s.status || 'todo'}${active ? ' active' : ''}`} data-anchor={`shot:${s.id}`} onDoubleClick={() => seek(t)}>
+    <div className={`sb-card st-${s.status || 'todo'}${active ? ' active' : ''}`} data-anchor={`shot:${s.id}`} onDoubleClick={() => seek(at)}>
       <div className="sb-img" style={{ aspectRatio: `${project.width} / ${project.height}` }}>
-        {shown ? <img key={shown} src={shown} alt="" /> : <div className="sb-placeholder">{inScene.length ? '' : 'пусто'}</div>}
+        {shown ? <img key={shown} src={shown} alt="" /> : <div className="sb-placeholder">{inScene.length ? '' : t('empty')}</div>}
         {loading && <span className="sb-loading"><span className="spinner sm" /></span>}
         <span className="sb-n">{n}</span>
       </div>
@@ -365,14 +366,14 @@ const hash = (s: string) => { let h = 5381; for (let i = 0; i < s.length; i++) h
 function LayersFrame({ segs, project, active }: { segs: Seg[]; project: Project; active: string | null }) {
   const tracks = project.tracks;
   return (
-    <Frame id="layers" title="Слои и таймлайн" sub="по сценам" x={0} y={760} w={1020} active={active}>
-      {!segs.length && <div className="b-empty">Слои появятся вместе с первыми элементами на таймлайне.</div>}
+    <Frame id="layers" title={t('Layers & timeline')} sub={t('by scene')} x={0} y={760} w={1020} active={active}>
+      {!segs.length && <div className="b-empty">{t('Layers will appear with the first items on the timeline.')}</div>}
       <div className="ly-list">
         {segs.map((s, i) => {
           const items = project.items.filter((it) => it.start < s.start + s.duration && it.start + it.duration > s.start);
           return (
             <div key={s.id} className={'ly-scene' + (active === `scene:${s.id}` ? ' active' : '')}>
-              <div className="ly-head"><span className="b-num">{i + 1}</span>{s.title}<span className="muted mono">{s.duration.toFixed(1)}s · {items.length} эл.</span></div>
+              <div className="ly-head"><span className="b-num">{i + 1}</span>{s.title}<span className="muted mono">{s.duration.toFixed(1)}s · {tn(items.length, '{n} item', '{n} items')}</span></div>
               <div className="ly-tracks">
                 {tracks.filter((tr) => items.some((it) => it.track === tr.id)).map((tr) => (
                   <div key={tr.id} className="ly-track">
@@ -382,7 +383,7 @@ function LayersFrame({ segs, project, active }: { segs: Seg[]; project: Project;
                     </div>
                   </div>
                 ))}
-                {!items.length && <div className="ly-empty">нет слоёв</div>}
+                {!items.length && <div className="ly-empty">{t('no layers')}</div>}
               </div>
             </div>
           );
@@ -409,22 +410,22 @@ function ComponentsFrame({ project, active }: { project: Project; active: string
   const music = useStore((s) => s.music);
   const media = useStore((s) => s.media);
   return (
-    <Frame id="components" title="Компоненты" sub={`${clips.length + music.length + media.length}`} x={1080} y={760} w={640} active={active}>
-      {!clips.length && !music.length && !media.length && <div className="b-empty">Клипы, треки и медиа проекта появятся здесь.</div>}
+    <Frame id="components" title={t('Components')} sub={`${clips.length + music.length + media.length}`} x={1080} y={760} w={640} active={active}>
+      {!clips.length && !music.length && !media.length && <div className="b-empty">{t('The project\'s clips, tracks and media will appear here.')}</div>}
       <div className="cmp-grid">
         {clips.map((c) => {
           const uses = project.items.filter((i) => i.kind === 'clip' && i.ref === c.id).length;
           return (
             <div key={c.id} className={'cmp' + (active === `clip:${c.id}` ? ' active' : '')} data-anchor={`clip:${c.id}`}>
               <span className="cmp-icon kind-clip"><Icon name="layers" size={13} /></span>
-              <span className="grow minw0"><span className="ellipsis block">{c.name}</span><span className="muted xsmall">{uses ? `${uses}× на таймлайне` : 'не используется'}</span></span>
+              <span className="grow minw0"><span className="ellipsis block">{c.name}</span><span className="muted xsmall">{uses ? t('{n}× on the timeline', { n: uses }) : t('unused')}</span></span>
             </div>
           );
         })}
         {music.map((m) => (
           <div key={m.id} className={'cmp' + (active === `music:${m.id}` ? ' active' : '')} data-anchor={`music:${m.id}`}>
             <span className="cmp-icon kind-music"><Icon name="music" size={13} /></span>
-            <span className="grow minw0"><span className="ellipsis block">{m.name}</span><span className="muted xsmall">{m.meta ? `${m.meta.bpm} BPM · ${m.meta.duration.toFixed(0)}s` : 'рендерится…'}</span></span>
+            <span className="grow minw0"><span className="ellipsis block">{m.name}</span><span className="muted xsmall">{m.meta ? `${m.meta.bpm} BPM · ${m.meta.duration.toFixed(0)}s` : t('rendering…')}</span></span>
           </div>
         ))}
         {media.map((m) => (
@@ -452,8 +453,6 @@ function AgentCursor({ x, y, task, z }: { x: number; y: number; task: Task; z: n
 }
 
 // ---------- selection → chat / comment ----------
-const plural = (n: number, one: string, few: string, many: string) => (n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many);
-
 /** human label + precise agent-facing description of a board object */
 export function describeAnchor(a: string, project: Project): { label: string; text: string } {
   const st = getState();
@@ -464,25 +463,25 @@ export function describeAnchor(a: string, project: Project): { label: string; te
   const n = sc ? scenes.indexOf(sc) + 1 : 0;
   const tm = (x: number) => x.toFixed(2);
   switch (kind) {
-    case 'scene': return sc ? { label: `Сцена ${n}`, text: `сцена ${n} «${sc.title}» (id ${sc.id}, ${tm(sc.start)}–${tm(sc.start + sc.duration)} с)${sc.voiceover ? `, текст: «${sc.voiceover}»` : ''}${sc.visual ? `, визуал: «${sc.visual}»` : ''}` } : { label: 'Сцена', text: `сцена ${id}` };
-    case 'shot': return sc ? { label: `Кадр ${n}`, text: `кадр раскадровки сцены ${n} «${sc.title}» (${tm(sc.start)}–${tm(sc.start + sc.duration)} с) — посмотри его через render_frame` } : { label: 'Кадр', text: `кадр ${id}` };
+    case 'scene': return sc ? { label: t('Scene {n}', { n }), text: `scene ${n} "${sc.title}" (id ${sc.id}, ${tm(sc.start)}–${tm(sc.start + sc.duration)} s)${sc.voiceover ? `, voiceover: "${sc.voiceover}"` : ''}${sc.visual ? `, visual: "${sc.visual}"` : ''}` } : { label: t('Scene'), text: `scene ${id}` };
+    case 'shot': return sc ? { label: t('Shot {n}', { n }), text: `storyboard shot of scene ${n} "${sc.title}" (${tm(sc.start)}–${tm(sc.start + sc.duration)} s) — look at it with render_frame` } : { label: t('Shot'), text: `shot ${id}` };
     case 'design': {
       const [sub, name] = id.split(':');
-      if (sub === 'color') { const c = st.design.colors.find((x) => x.name === name); return { label: `Цвет ${name}`, text: `цвет дизайн-системы «${name}» = ${c?.value}` }; }
-      if (sub === 'type') { const t = st.design.type.find((x) => x.role === name); return { label: `Шрифт ${name}`, text: `типографика «${name}»: ${t?.family} ${t?.weight}, ${t?.size}px` }; }
-      if (sub === 'motion') { const m = st.design.motion.find((x) => x.name === name); return { label: `Движение ${name}`, text: `моушн-токен «${name}»: ${m?.ease}, ${m?.duration}s` }; }
-      return { label: 'Дизайн', text: `дизайн-система: ${id}` };
+      if (sub === 'color') { const c = st.design.colors.find((x) => x.name === name); return { label: t('Color {name}', { name }), text: `design-system color "${name}" = ${c?.value}` }; }
+      if (sub === 'type') { const ty = st.design.type.find((x) => x.role === name); return { label: t('Font {name}', { name }), text: `typography "${name}": ${ty?.family} ${ty?.weight}, ${ty?.size}px` }; }
+      if (sub === 'motion') { const m = st.design.motion.find((x) => x.name === name); return { label: t('Motion {name}', { name }), text: `motion token "${name}": ${m?.ease}, ${m?.duration}s` }; }
+      return { label: t('Design'), text: `design system: ${id}` };
     }
     case 'layer': {
       const it = project.items.find((x) => x.id === id);
-      if (!it) return { label: 'Слой', text: `элемент ${id}` };
+      if (!it) return { label: t('Layer'), text: `item ${id}` };
       const name = it.kind === 'clip' ? st.clips.find((c) => c.id === it.ref)?.name || it.ref : it.kind === 'music' ? st.music.find((m) => m.id === it.ref)?.name || it.ref : it.ref;
-      return { label: name, text: `элемент таймлайна ${it.id}: ${it.kind} «${name}» (${it.kind === 'clip' ? `clips/${it.ref}` : it.kind === 'music' ? `music/${it.ref}` : `media/${it.ref}`}), ${tm(it.start)}–${tm(it.start + it.duration)} с, дорожка ${it.track}` };
+      return { label: name, text: `timeline item ${it.id}: ${it.kind} "${name}" (${it.kind === 'clip' ? `clips/${it.ref}` : it.kind === 'music' ? `music/${it.ref}` : `media/${it.ref}`}), ${tm(it.start)}–${tm(it.start + it.duration)} s, track ${it.track}` };
     }
-    case 'clip': { const c = st.clips.find((x) => x.id === id); return { label: c?.name || id, text: `клип clips/${id} («${c?.name || id}»)` }; }
-    case 'music': { const m = st.music.find((x) => x.id === id); return { label: m?.name || id, text: `трек music/${id} («${m?.name || id}»)` }; }
-    case 'media': return { label: id, text: `медиафайл media/${id}` };
-    case 'frame': return { label: ({ script: 'Сценарий', design: 'Дизайн-система', storyboard: 'Раскадровка', layers: 'Слои', components: 'Компоненты' } as Record<string, string>)[id] || id, text: `весь раздел «${id}» на холсте` };
+    case 'clip': { const c = st.clips.find((x) => x.id === id); return { label: c?.name || id, text: `clip clips/${id} ("${c?.name || id}")` }; }
+    case 'music': { const m = st.music.find((x) => x.id === id); return { label: m?.name || id, text: `track music/${id} ("${m?.name || id}")` }; }
+    case 'media': return { label: id, text: `media file media/${id}` };
+    case 'frame': { const fl = ({ script: 'Script', design: 'Design system', storyboard: 'Storyboard', layers: 'Layers', components: 'Components' } as Record<string, string>)[id]; return { label: fl ? t(fl) : id, text: `the whole "${id}" section on the canvas` }; }
   }
   return { label: a, text: a };
 }
@@ -514,7 +513,7 @@ function SelectionBar({ world, cam, selection, project }: { world: React.RefObje
     try {
       // pin first, so the agent gets the note id and can resolve/delete it
       const note = await api<{ id: string }>('POST', '/api/board/notes', { anchors: selection, labels: items.map((i) => i.label), text: text.trim() });
-      const task = await actions.startTask(`${withContext(text.trim(), items)}\n\n(Это комментарий на холсте, id ${note.id}. Когда сделаешь — resolve_board_note; если он неактуален — delete_board_note с причиной.)`);
+      const task = await actions.startTask(`${withContext(text.trim(), items)}\n\n(This is a canvas comment, id ${note.id}. When done — resolve_board_note; if it is no longer relevant — delete_board_note with a reason.)`);
       await api('PATCH', `/api/board/notes/${note.id}`, { taskId: task.id });
       setState({ boardSelection: [] });
     } finally { setBusy(false); }
@@ -523,23 +522,25 @@ function SelectionBar({ world, cam, selection, project }: { world: React.RefObje
     <div className={'sel-bar' + (above ? '' : ' below')} style={{ left, top }} data-ui onPointerDown={(e) => e.stopPropagation()}>
       {mode === 'bar' ? (
         <>
-          <span className="sel-count">{selection.length === 1 ? items[0].label : `${selection.length} ${plural(selection.length, 'объект', 'объекта', 'объектов')}`}</span>
-          <button className="sel-btn primary" onClick={() => setMode('comment')}><Icon name="comment" size={13} /> Комментарий агенту</button>
-          <button className="sel-btn" onClick={toChat} title="Прикрепить выделенное к сообщению в чате"><Icon name="bot" size={13} /> В чат</button>
+          <span className="sel-count">{selection.length === 1 ? items[0].label : tn(selection.length, '{n} object', '{n} objects')}</span>
+          <button className="sel-btn primary" onClick={() => setMode('comment')}><Icon name="comment" size={13} /> {t('Comment to agent')}</button>
+          <button className="sel-btn" onClick={toChat} title={t('Attach the selection to a chat message')}><Icon name="bot" size={13} /> {t('To chat')}</button>
         </>
       ) : (
         <div className="sel-comment">
-          <textarea autoFocus rows={2} value={text} placeholder={`Что изменить: ${items.map((i) => i.label).join(', ')}`} onChange={(e) => setText(e.target.value)}
+          <textarea autoFocus rows={2} value={text} placeholder={t('What to change: {what}', { what: items.map((i) => i.label).join(', ') })} onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendComment(); } if (e.key === 'Escape') setMode('bar'); e.stopPropagation(); }} />
           <div className="row between">
-            <span className="muted xsmall">Уйдёт агенту с контекстом выделенного</span>
-            <div className="row gap6"><button className="btn xs ghost" onClick={() => setMode('bar')}>Отмена</button><button className="btn xs primary" disabled={!text.trim() || busy} onClick={sendComment}>{busy ? <span className="spinner sm" /> : 'Отправить'}</button></div>
+            <span className="muted xsmall">{t('Goes to the agent with the selection as context')}</span>
+            <div className="row gap6"><button className="btn xs ghost" onClick={() => setMode('bar')}>{t('Cancel')}</button><button className="btn xs primary" disabled={!text.trim() || busy} onClick={sendComment}>{busy ? <span className="spinner sm" /> : t('Send')}</button></div>
           </div>
         </div>
       )}
     </div>
   );
 }
+
+const NOTE_STATUS: Record<string, string> = { running: 'agent is working', queued: 'queued', done: 'closed by agent', open: 'open', error: 'error', cancelled: 'stopped' };
 
 /** pinned comments on board objects, with live task status */
 function Notes({ world, z }: { world: React.RefObject<HTMLDivElement | null>; z: number }) {
@@ -564,8 +565,8 @@ function Notes({ world, z }: { world: React.RefObject<HTMLDivElement | null>; z:
             <div className="b-note-pop">
               <div className="b-note-text">{n.text}</div>
               {n.resolution && <div className="c-res">{n.resolution}</div>}
-              <div className="b-note-meta">{n.labels.join(', ')} · {({ running: 'агент работает', queued: 'в очереди', done: 'закрыт агентом', open: 'открыт', error: 'ошибка', cancelled: 'остановлено' } as Record<string, string>)[st]}</div>
-              <button className="link" onClick={(e) => { e.stopPropagation(); api('DELETE', `/api/board/notes/${n.id}`); }}>убрать</button>
+              <div className="b-note-meta">{n.labels.join(', ')} · {t(NOTE_STATUS[st] || st)}</div>
+              <button className="link" onClick={(e) => { e.stopPropagation(); api('DELETE', `/api/board/notes/${n.id}`); }}>{t('remove')}</button>
             </div>
           </div>
         );

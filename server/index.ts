@@ -6,7 +6,8 @@ import fastifyWebsocket from '@fastify/websocket';
 import fastifyMultipart from '@fastify/multipart';
 import { ROOT, RUNTIME_DIR, GALLERY_DIR, LIBRARY_DIR, WEB_DIST, PORT, HOST, PROJECTS_DIR, getRecents, BASE_URL } from './config.ts';
 import { bus } from './bus.ts';
-import { cur, hasProject, openProject, onProjectOpen, ProjectStore } from './project.ts';
+import { cur, hasProject, openProject, onProjectOpen, ProjectStore, projectCtx, storeById } from './project.ts';
+import { taskProject } from './agents/runner.ts';
 import { registerRoutes } from './routes.ts';
 import { syncSkills } from './skills.ts';
 import { loadTasks } from './agents/runner.ts';
@@ -24,6 +25,31 @@ await app.register(fastifyWebsocket);
 await app.register(fastifyMultipart, { limits: { fileSize: 8 * 1024 * 1024 * 1024 } });
 await app.register(fastifyStatic, { root: WEB_DIST, prefix: '/', serve: true, wildcard: true, index: ['index.html'] });
 
+// ---------- which project a request belongs to (several can be open in different tabs) ----------
+const PID_PATH = /^\/p\/([0-9a-f]{10})(?:\/|$)/;
+function pidFromUrl(u: string): string | undefined {
+  const m = PID_PATH.exec(u.split('?')[0]);
+  if (m) return m[1];
+  const q = /[?&]p=([0-9a-f]{10})\b/.exec(u);
+  return q?.[1];
+}
+function resolveStore(req: { headers: Record<string, any>; url: string }): ProjectStore | undefined {
+  const h = req.headers['x-studio-project'];
+  const byHeader = storeById(Array.isArray(h) ? h[0] : h);
+  if (byHeader) return byHeader;
+  const task = req.headers['x-studio-task'];
+  const byTask = task ? taskProject(String(task)) : undefined;
+  if (byTask) return byTask;
+  const byUrl = storeById(pidFromUrl(req.url));
+  if (byUrl) return byUrl;
+  const ref = req.headers.referer;
+  if (ref) { try { const r = new URL(String(ref)); return storeById(pidFromUrl(r.pathname + r.search)); } catch {} }
+}
+app.addHook('preHandler', (req, _reply, done) => {
+  const store = resolveStore(req);
+  if (store) projectCtx.run(store, done); else done();
+});
+
 const noCache = { 'cache-control': 'no-store' };
 function serveFrom(prefix: string, root: () => string, headers: Record<string, string> = noCache) {
   app.get(prefix + '*', (req, reply) => {
@@ -40,11 +66,26 @@ serveFrom('/fonts/', () => path.join(ROOT, 'node_modules', '@fontsource'), { 'ca
 serveFrom('/vendor/gsap/', () => path.join(ROOT, 'node_modules', 'gsap', 'dist'), { 'cache-control': 'max-age=86400' });
 app.get('/vendor/gsap.min.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').sendFile('gsap.min.js', path.join(ROOT, 'node_modules', 'gsap', 'dist')));
 app.get('/vendor/Tone.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').sendFile('Tone.js', path.join(ROOT, 'node_modules', 'tone', 'build')));
-serveFrom('/p/', () => { if (!hasProject()) throw new Error('no project'); return cur().dir; });
+// project files: /p/<projectId>/… (legacy /p/… resolves through the request's project)
+app.get('/p/*', (req, reply) => {
+  let rel = decodeURIComponent((req.params as any)['*'] || '');
+  if (rel.includes('..')) return reply.code(400).send('bad path');
+  const m = /^([0-9a-f]{10})(?:\/|$)/.exec(rel);
+  const store = (m && storeById(m[1])) || (hasProject() ? cur() : null);
+  if (!store) return reply.code(404).send('no project');
+  if (m && store.id === m[1]) rel = rel.slice(m[0].length);
+  for (const [k, v] of Object.entries(noCache)) reply.header(k, v);
+  return reply.sendFile(rel, store.dir);
+});
 
 app.register(async (f) => {
-  f.get('/ws', { websocket: true }, (socket) => {
-    const onEv = (ev: unknown) => { try { socket.send(JSON.stringify(ev)); } catch {} };
+  f.get('/ws', { websocket: true }, (socket, req) => {
+    // a tab subscribes to its project (?p=<id>); events of other projects are not sent to it
+    const pid = (req.query as any)?.p as string | undefined;
+    const onEv = (ev: any) => {
+      if (pid && ev.pid && ev.pid !== pid) return;
+      try { socket.send(JSON.stringify(ev)); } catch {}
+    };
     bus.on('event', onEv);
     socket.on('close', () => bus.off('event', onEv));
   });
@@ -70,8 +111,8 @@ onProjectOpen((store) => {
   syncSkills(store.dir, store.project.name);
   loadTasks();
   store.listeners.music = (id) => {
-    clearTimeout(musicTimers.get(id));
-    musicTimers.set(id, setTimeout(() => renderMusic(id).catch((e) => console.error('music', e.message)), 400));
+    clearTimeout(musicTimers.get(store.id + id));
+    musicTimers.set(store.id + id, setTimeout(() => renderMusic(id).catch((e) => console.error('music', e.message)), 400));
   };
   store.listeners.script = () => onScriptFileChanged();
   store.listeners.design = () => onDesignFileChanged();

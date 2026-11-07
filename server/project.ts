@@ -5,7 +5,7 @@ import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, PackageManifest,
 import { bus } from './bus.ts';
 import { readJson, writeJson, nid, Mutex } from './util.ts';
 import { gitInit } from './git.ts';
-import { pushRecent } from './config.ts';
+import { pushRecent, getRecents } from './config.ts';
 
 export const MEDIA_EXT: Record<string, MediaInfo['type']> = {
   '.mp4': 'video', '.mov': 'video', '.webm': 'video', '.mkv': 'video', '.m4v': 'video',
@@ -27,6 +27,8 @@ media/
 `;
 
 export class ProjectStore {
+  /** stable id derived from the folder path (used in URLs, headers, events) */
+  id = '';
   dir: string;
   project!: Project;
   comments: Comment[] = [];
@@ -65,7 +67,9 @@ export class ProjectStore {
     for (const d of ['clips', 'music', 'media', '.studio']) fs.mkdirSync(path.join(dir, d), { recursive: true });
     fs.writeFileSync(path.join(dir, '.gitignore'), PROJECT_GITIGNORE);
     await gitInit(dir);
-    return new ProjectStore(dir);
+    const st = new ProjectStore(dir);
+    st.id = projectId(dir);
+    return st;
   }
 
   ensureDirs() {
@@ -223,7 +227,7 @@ export class ProjectStore {
     });
     let pending = new Set<string>();
     let timer: NodeJS.Timeout | null = null;
-    const flush = () => {
+    const flush = () => projectCtx.run(this, () => {
       timer = null;
       const paths = [...pending];
       pending = new Set();
@@ -235,17 +239,19 @@ export class ProjectStore {
         this.comments = readJson<Comment[]>(this.p('comments.json'), this.comments);
         bus.send({ type: 'comments', comments: this.comments });
       }
-      if (rels.includes('script.json')) this.listeners.script?.();
-      if (rels.includes('design.json')) this.listeners.design?.();
+      if (rels.includes('script.json')) projectCtx.run(this, () => this.listeners.script?.());
+      if (rels.includes('design.json')) projectCtx.run(this, () => this.listeners.design?.());
       const musicIds = new Set(rels.filter((r) => r.startsWith('music/')).map((r) => r.split('/')[1]).filter(Boolean));
+      projectCtx.run(this, () => {
       for (const id of musicIds) this.listeners.music?.(id);
       const mediaFiles = new Set(rels.filter((r) => r.startsWith('media/') && r.split('/').length === 2).map((r) => r.split('/')[1]));
       for (const f of mediaFiles) if (fs.existsSync(this.p('media', f))) this.listeners.media?.(f);
       const clipIds = new Set(rels.filter((r) => r.startsWith('clips/')).map((r) => r.split('/')[1]).filter(Boolean));
       for (const id of clipIds) this.listeners.clip?.(id);
+      });
       const other = rels.filter((r) => r !== 'project.json' && r !== 'comments.json' && r !== 'script.json' && r !== 'design.json');
       if (other.length) bus.send({ type: 'files', paths: other });
-    };
+    });
     w.on('all', (_ev, p) => {
       pending.add(p);
       if (!timer) timer = setTimeout(flush, 150);
@@ -271,21 +277,59 @@ function normalize(p: Project): Project {
   return out;
 }
 
-// ---------- current project singleton ----------
-let current: ProjectStore | null = null;
+// ---------- open projects (several at once, one per browser tab) ----------
+// Each request runs inside the AsyncLocalStorage context of its project (header / path / referer);
+// background work started in that context (agents, renders, exports) keeps it.
+import { AsyncLocalStorage } from 'node:async_hooks';
+import crypto from 'node:crypto';
+
+export const projectCtx = new AsyncLocalStorage<ProjectStore>();
+import { setPidResolver } from './bus.ts';
+setPidResolver(() => (projectCtx.getStore() || fallback)?.id);
+const stores = new Map<string, ProjectStore>();
+let fallback: ProjectStore | null = null;
 const openListeners: ((p: ProjectStore) => void)[] = [];
 export function onProjectOpen(fn: (p: ProjectStore) => void) { openListeners.push(fn); }
+export const projectId = (dir: string) => crypto.createHash('sha1').update(path.resolve(dir)).digest('hex').slice(0, 10);
+
+/** the project of the current request / background job (falls back to the most recently opened) */
 export function cur(): ProjectStore {
-  if (!current) throw new Error('No project open');
-  return current;
+  const s = projectCtx.getStore() || fallback;
+  if (!s) throw new Error('No project open');
+  return s;
 }
-export function hasProject() { return !!current; }
-export function openProject(dir: string) {
-  current?.close();
-  current = new ProjectStore(dir);
-  current.watch();
-  pushRecent(current.dir);
-  for (const fn of openListeners) fn(current);
-  bus.send({ type: 'project', project: current.project });
-  return current;
+/** URL prefix of the current project's files */
+export const pbase = () => `/p/${cur().id}`;
+export function hasProject() { return !!(projectCtx.getStore() || fallback); }
+export function getStore(id: string) { return stores.get(id); }
+export function openStores() { return [...stores.values()]; }
+export function runIn<T>(store: ProjectStore, fn: () => T): T { return projectCtx.run(store, fn); }
+
+/** an open project by id; projects from the recents list are opened on demand (e.g. a tab survives a server restart) */
+export function storeById(id: string | undefined | null): ProjectStore | undefined {
+  if (!id) return;
+  const s = stores.get(id);
+  if (s) return s;
+  if (!/^[0-9a-f]{10}$/.test(id)) return;
+  const dir = getRecents().find((d) => projectId(d) === id);
+  if (dir && ProjectStore.exists(dir)) return openProject(dir, { focus: false });
+}
+
+/** open (or focus) a project; it stays open alongside the others */
+export function openProject(dir: string, o: { focus?: boolean } = {}) {
+  const id = projectId(dir);
+  let store = stores.get(id);
+  if (!store) {
+    store = new ProjectStore(dir);
+    store.id = id;
+    stores.set(id, store);
+    const st = store;
+    projectCtx.run(st, () => {
+      st.watch();
+      for (const fn of openListeners) fn(st);
+    });
+  }
+  if (o.focus !== false || !fallback) { fallback = store; pushRecent(store.dir); }
+  projectCtx.run(store, () => bus.send({ type: 'project', project: store!.project }));
+  return store;
 }

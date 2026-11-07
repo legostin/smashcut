@@ -5,15 +5,16 @@ import { Icon } from './Icon';
 import { TransitionsGrid, EffectsGrid, MasksGrid } from './FxLibrary';
 import { RecordPanel } from './RecordPanel';
 import { TRANSITIONS, EFFECTS, MASKS } from '../../../shared/fx';
+import { t } from '../i18n';
 
 const close = () => setState({ libraryOpen: false });
 
 const CATEGORY: Record<string, string> = {
-  titles: 'Титры', 'lower-thirds': 'Плашки', captions: 'Субтитры', infographics: 'Инфографика', callouts: 'Выноски',
-  logos: 'Логотипы', transitions: 'Графические переходы', backgrounds: 'Фоны', social: 'Соцсети', product: 'Продукт и UI', maps: 'Карты',
-  audio: 'Подкасты и аудио', broadcast: 'Новости и эфир', 'text-effects': 'Текстовые эффекты', custom: 'Своё', other: 'Другое',
+  titles: 'Titles', 'lower-thirds': 'Lower thirds', captions: 'Captions', infographics: 'Infographics', callouts: 'Callouts',
+  logos: 'Logos', transitions: 'Graphic transitions', backgrounds: 'Backgrounds', social: 'Social media', product: 'Product & UI', maps: 'Maps',
+  audio: 'Podcasts & audio', broadcast: 'News & broadcast', 'text-effects': 'Text effects', custom: 'Custom', other: 'Other',
 };
-const catLabel = (c?: string) => CATEGORY[c || 'other'] || (c ? c[0].toUpperCase() + c.slice(1) : 'Другое');
+const catLabel = (c?: string) => { const k = CATEGORY[c || 'other']; return k ? t(k) : c ? c[0].toUpperCase() + c.slice(1) : t('Other'); };
 
 type Section = { kind: 'graphics'; cat: string } | { kind: 'music' } | { kind: 'mine' } | { kind: 'media' } | { kind: 'project' } | { kind: 'transitions' } | { kind: 'effects' } | { kind: 'masks' };
 const same = (a: Section, b: Section) => a.kind === b.kind && (a.kind !== 'graphics' || a.cat === (b as any).cat);
@@ -56,30 +57,30 @@ export function Library() {
     <div className={'modal-back lib-back' + (open ? ' open' : '')} onPointerDown={(e) => e.target === e.currentTarget && close()}>
       <div className="lib-modal">
         <nav className="lib-nav">
-          <div className="lib-nav-title">Графика</div>
-          {nav({ kind: 'graphics', cat: 'all' }, 'Все шаблоны', clips.length)}
+          <div className="lib-nav-title">{t('Graphics')}</div>
+          {nav({ kind: 'graphics', cat: 'all' }, t('All templates'), clips.length)}
           {cats.map(([c, n]) => <div key={c}>{nav({ kind: 'graphics', cat: c }, catLabel(c), n)}</div>)}
-          <div className="lib-nav-title">Монтаж</div>
-          {nav({ kind: 'transitions' }, 'Переходы', TRANSITIONS.length, 'layers')}
-          {nav({ kind: 'effects' }, 'Эффекты и цвет', EFFECTS.length, 'sparkle')}
-          {nav({ kind: 'masks' }, 'Маски', MASKS.length, 'grid')}
-          <div className="lib-nav-title">Звук</div>
-          {nav({ kind: 'music' }, 'Музыка', musicCount, 'music')}
-          <div className="lib-nav-title">Моё</div>
-          {nav({ kind: 'mine' }, 'Моя библиотека', mineCount, 'book')}
-          {nav({ kind: 'project' }, 'В этом проекте', projectCount, 'layers')}
-          {nav({ kind: 'media' }, 'Медиафайлы', mediaCount, 'film')}
+          <div className="lib-nav-title">{t('Edit')}</div>
+          {nav({ kind: 'transitions' }, t('Transitions'), TRANSITIONS.length, 'layers')}
+          {nav({ kind: 'effects' }, t('Effects & color'), EFFECTS.length, 'sparkle')}
+          {nav({ kind: 'masks' }, t('Masks'), MASKS.length, 'grid')}
+          <div className="lib-nav-title">{t('Sound')}</div>
+          {nav({ kind: 'music' }, t('Music'), musicCount, 'music')}
+          <div className="lib-nav-title">{t('Mine')}</div>
+          {nav({ kind: 'mine' }, t('My library'), mineCount, 'book')}
+          {nav({ kind: 'project' }, t('In this project'), projectCount, 'layers')}
+          {nav({ kind: 'media' }, t('Media files'), mediaCount, 'film')}
         </nav>
         <section className="lib-main">
           <header className="lib-top">
             {searchable
-              ? <div className="lib-searchbox"><Icon name="search" size={14} /><input autoFocus placeholder="Поиск по шаблонам" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-              : <div className="lib-heading">{section.kind === 'media' ? 'Медиафайлы' : section.kind === 'masks' ? 'Маски' : 'В этом проекте'}</div>}
-            <button className="icon-btn" onClick={close} title="Закрыть (Esc)"><Icon name="x" size={15} /></button>
+              ? <div className="lib-searchbox"><Icon name="search" size={14} /><input autoFocus placeholder={t('Search templates')} value={q} onChange={(e) => setQ(e.target.value)} /></div>
+              : <div className="lib-heading">{section.kind === 'media' ? t('Media files') : section.kind === 'masks' ? t('Masks') : t('In this project')}</div>}
+            <button className="icon-btn" onClick={close} title={t('Close (Esc)')}><Icon name="x" size={15} /></button>
           </header>
           <div className="lib-scroll">
             {section.kind === 'graphics' && <ClipGrid items={clips.filter((g) => section.cat === 'all' || (g.category || 'other') === section.cat)} q={q} />}
-            {section.kind === 'mine' && <ClipGrid items={gallery.filter((g) => g.origin === 'library')} q={q} empty="Сохраняйте сюда удачные клипы и треки: меню «⋯» у элемента → «Сохранить в библиотеку»." />}
+            {section.kind === 'mine' && <ClipGrid items={gallery.filter((g) => g.origin === 'library')} q={q} empty={t('Save your best clips and tracks here: the item’s “⋯” menu → “Save to library”.')} />}
             {section.kind === 'music' && <MusicList items={gallery.filter((g) => g.kind === 'music')} q={q} />}
             {section.kind === 'media' && <Media />}
             {section.kind === 'project' && <ProjectAssets />}
@@ -87,20 +88,20 @@ export function Library() {
             {section.kind === 'effects' && <EffectsGrid q={q} />}
             {section.kind === 'masks' && <MasksGrid />}
           </div>
-          <footer className="lib-foot">{['transitions', 'effects', 'masks'].includes(section.kind) ? 'Клик — применить к выбранному клипу · переход можно перетащить на край клипа' : `Клик — добавить на плейхед (${fmt(time.get())})`}</footer>
+          <footer className="lib-foot">{['transitions', 'effects', 'masks'].includes(section.kind) ? t('Click — apply to the selected clip · a transition can be dragged onto a clip edge') : t('Click — add at the playhead ({time})', { time: fmt(time.get()) })}</footer>
         </section>
       </div>
     </div>
   );
 }
-const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 
-const addTemplate = async (g: GalleryItem) => { close(); await actions.useTemplate(g, +time.get().toFixed(3)); notify('info', `«${g.name}» добавлен на таймлайн`); };
+const addTemplate = async (g: GalleryItem) => { close(); await actions.useTemplate(g, +time.get().toFixed(3)); notify('info', t('“{name}” added to the timeline', { name: g.name })); };
 const match = (g: GalleryItem, q: string) => !q || `${g.name} ${g.description} ${g.category} ${(g.tags || []).join(' ')}`.toLowerCase().includes(q.toLowerCase());
 
 function ClipGrid({ items, q, empty }: { items: GalleryItem[]; q: string; empty?: string }) {
   const list = items.filter((g) => match(g, q));
-  if (!list.length) return <div className="lib-empty">{empty || 'Ничего не найдено'}</div>;
+  if (!list.length) return <div className="lib-empty">{empty || t('Nothing found')}</div>;
   return <div className="lib-grid">{list.map((g, i) => g.kind === 'clip' ? <Card key={g.origin + g.id} g={g} i={i} /> : <MusicRow key={g.origin + g.id} g={g} />)}</div>;
 }
 
@@ -112,8 +113,8 @@ function Card({ g, i }: { g: GalleryItem; i: number }) {
       <div className={'lib-thumb' + (loaded ? ' loaded' : '')}>
         <img src={g.thumb} loading="lazy" alt="" onLoad={() => setLoaded(true)} />
         {hover && <Live g={g} />}
-        <span className="lib-add"><Icon name="plus" size={13} /> Добавить</span>
-        {g.origin === 'library' && <span className="lib-mine">моё</span>}
+        <span className="lib-add"><Icon name="plus" size={13} /> {t('Add')}</span>
+        {g.origin === 'library' && <span className="lib-mine">{t('mine')}</span>}
       </div>
       <div className="lib-card-name">{g.name}</div>
       {g.description && <div className="lib-card-desc">{g.description}</div>}
@@ -149,7 +150,7 @@ function Live({ g }: { g: GalleryItem }) {
 
 function MusicList({ items, q }: { items: GalleryItem[]; q: string }) {
   const list = items.filter((g) => match(g, q));
-  if (!list.length) return <div className="lib-empty">Ничего не найдено</div>;
+  if (!list.length) return <div className="lib-empty">{t('Nothing found')}</div>;
   return <div className="lib-rows">{list.map((g) => <MusicRow key={g.origin + g.id} g={g} />)}</div>;
 }
 function MusicRow({ g }: { g: GalleryItem }) {
@@ -157,7 +158,7 @@ function MusicRow({ g }: { g: GalleryItem }) {
     <button className="lib-row" onClick={() => addTemplate(g)}>
       <span className="lib-row-icon"><Icon name="music" size={16} /></span>
       <span className="grow minw0">
-        <span className="lib-row-name">{g.name}{g.origin === 'library' && <span className="lib-mine inline">моё</span>}</span>
+        <span className="lib-row-name">{g.name}{g.origin === 'library' && <span className="lib-mine inline">{t('mine')}</span>}</span>
         <span className="lib-row-desc">{g.description}</span>
       </span>
       <span className="lib-row-add"><Icon name="plus" size={13} /></span>
@@ -174,16 +175,16 @@ function Media() {
   return (
     <>
       <div className="row gap8" style={{ marginBottom: 12 }}>
-        <button className={'btn sm' + (rec ? ' primary' : '')} onClick={() => setRec(!rec)}><span className="rec-dot" /> Записать футаж</button>
-        <span className="muted xsmall">веб-страницы со сценарием и курсором или окна приложений</span>
+        <button className={'btn sm' + (rec ? ' primary' : '')} onClick={() => setRec(!rec)}><span className="rec-dot" /> {t('Record footage')}</button>
+        <span className="muted xsmall">{t('web pages with a script and cursor, or app windows')}</span>
       </div>
       {rec && <RecordPanel />}
       <button className={'lib-drop' + (over ? ' over' : '')} onClick={() => input.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); if (e.dataTransfer.files.length) actions.upload(e.dataTransfer.files); }}>
         <Icon name="upload" size={18} />
-        <span>Перетащите видео, аудио или картинки</span>
-        <span className="muted xsmall">или нажмите, чтобы выбрать файлы</span>
+        <span>{t('Drop video, audio or images')}</span>
+        <span className="muted xsmall">{t('or click to choose files')}</span>
         <input ref={input} type="file" multiple hidden accept="video/*,audio/*,image/*" onChange={(e) => e.target.files && actions.upload(e.target.files)} />
       </button>
       {media.length > 0 && (
@@ -192,12 +193,12 @@ function Media() {
             <div key={m.file} className="lib-card" style={{ animationDelay: `${Math.min(i, 12) * 22}ms` }} onClick={() => add(m.file)} role="button">
               <div className="lib-thumb loaded">
                 {m.thumb ? <img src={`/p/${m.thumb}`} alt="" /> : <div className="lib-thumb-icon"><Icon name={m.type === 'audio' ? 'music' : 'film'} size={22} /></div>}
-                <span className="lib-add"><Icon name="plus" size={13} /> Добавить</span>
+                <span className="lib-add"><Icon name="plus" size={13} /> {t('Add')}</span>
                 {m.duration > 0 && m.type !== 'image' && <span className="lib-dur">{fmt(m.duration)}</span>}
               </div>
               <div className="lib-card-name ellipsis">{m.file}</div>
               <div className="lib-card-desc row gap8">
-                {m.transcript ? 'есть транскрипт' : (m.type === 'audio' || m.hasAudio) ? <button className="link" onClick={(e) => { e.stopPropagation(); api('POST', `/api/media/${encodeURIComponent(m.file)}/transcribe`, {}); }}>распознать речь</button> : m.type}
+                {m.transcript ? t('has transcript') : (m.type === 'audio' || m.hasAudio) ? <button className="link" onClick={(e) => { e.stopPropagation(); api('POST', `/api/media/${encodeURIComponent(m.file)}/transcribe`, {}); }}>{t('transcribe speech')}</button> : m.type}
               </div>
             </div>
           ))}
@@ -210,24 +211,24 @@ function Media() {
 function ProjectAssets() {
   const clips = useStore((s) => s.clips);
   const music = useStore((s) => s.music);
-  if (!clips.length && !music.length) return <div className="lib-empty">В проекте пока нет своих клипов и треков. Попросите агента сделать что-нибудь — они появятся здесь.</div>;
+  if (!clips.length && !music.length) return <div className="lib-empty">{t('The project has no clips or tracks of its own yet. Ask the agent to make something and they will appear here.')}</div>;
   const add = (kind: 'clip' | 'music', id: string) => { close(); actions.addItem({ kind, ref: id, start: +time.get().toFixed(3) }); };
-  const save = async (kind: 'clip' | 'music', id: string, name: string) => { await api('POST', '/api/library', { kind, id, name }); notify('info', 'Сохранено в «Моя библиотека»'); refreshGallery(); };
+  const save = async (kind: 'clip' | 'music', id: string, name: string) => { await api('POST', '/api/library', { kind, id, name }); notify('info', t('Saved to “My library”')); refreshGallery(); };
   return (
     <div className="lib-rows">
       {clips.map((c) => (
         <div key={c.id} className="lib-row" role="button" onClick={() => add('clip', c.id)}>
           <span className="lib-row-icon"><Icon name="layers" size={16} /></span>
-          <span className="grow minw0"><span className="lib-row-name">{c.name}</span><span className="lib-row-desc">clips/{c.id} · {c.duration} с</span></span>
-          <button className="link" onClick={(e) => { e.stopPropagation(); save('clip', c.id, c.name); }}>в библиотеку</button>
+          <span className="grow minw0"><span className="lib-row-name">{c.name}</span><span className="lib-row-desc">clips/{c.id} · {t('{n} s', { n: c.duration })}</span></span>
+          <button className="link" onClick={(e) => { e.stopPropagation(); save('clip', c.id, c.name); }}>{t('to library')}</button>
           <span className="lib-row-add"><Icon name="plus" size={13} /></span>
         </div>
       ))}
       {music.map((m) => (
         <div key={m.id} className="lib-row" role="button" onClick={() => add('music', m.id)}>
           <span className="lib-row-icon"><Icon name="music" size={16} /></span>
-          <span className="grow minw0"><span className="lib-row-name">{m.name}</span><span className="lib-row-desc">{m.renderError ? 'ошибка рендера' : m.meta ? `${m.meta.bpm} BPM · ${m.meta.duration.toFixed(0)} с` : 'рендерится…'}</span></span>
-          <button className="link" onClick={(e) => { e.stopPropagation(); save('music', m.id, m.name); }}>в библиотеку</button>
+          <span className="grow minw0"><span className="lib-row-name">{m.name}</span><span className="lib-row-desc">{m.renderError ? t('render error') : m.meta ? `${m.meta.bpm} BPM · ${t('{n} s', { n: m.meta.duration.toFixed(0) })}` : t('rendering…')}</span></span>
+          <button className="link" onClick={(e) => { e.stopPropagation(); save('music', m.id, m.name); }}>{t('to library')}</button>
           <span className="lib-row-add"><Icon name="plus" size={13} /></span>
         </div>
       ))}

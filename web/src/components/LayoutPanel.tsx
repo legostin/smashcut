@@ -3,6 +3,7 @@ import type { Item, Project } from '../../../shared/types';
 import { actions, useStore, getState } from '../store';
 import { clipFrames } from './Player';
 import { Icon } from './Icon';
+import { t } from '../i18n';
 
 export type Box = { x: number; y: number; w: number; h: number };
 
@@ -45,7 +46,7 @@ export function LayoutPanel({ item, project }: { item: Item; project: Project })
   const setTr = (patch: Partial<NonNullable<Item['transform']>>) => actions.updateItem(item.id, { transform: { ...tr, ...patch } });
   const anchor = (ax: number, ay: number) => {
     const box = measureItem(item, project);
-    if (!box) { setMsg('Содержимое клипа сейчас не видно — поставьте плейхед туда, где графика на экране'); return; }
+    if (!box) { setMsg(t('The clip content is not visible right now — move the playhead to where the graphics are on screen')); return; }
     setMsg('');
     actions.updateItem(item.id, { transform: anchorTransform(item, project, box, ax, ay, margin) });
   };
@@ -53,45 +54,45 @@ export function LayoutPanel({ item, project }: { item: Item; project: Project })
   const style = (item.params?.__style as string) || 'design';
   return (
     <div className="ip-section">
-      <div className="ip-section-title row between"><span>Расположение</span>{(tr.x || tr.y || (tr.scale ?? 1) !== 1 || tr.rotate) ? <button className="link" onClick={() => actions.updateItem(item.id, { transform: { fit: tr.fit } })}>Сбросить</button> : null}</div>
+      <div className="ip-section-title row between"><span>{t('Layout')}</span>{(tr.x || tr.y || (tr.scale ?? 1) !== 1 || tr.rotate) ? <button className="link" onClick={() => actions.updateItem(item.id, { transform: { fit: tr.fit } })}>{t('Reset')}</button> : null}</div>
       <div className="layout-row">
-        <div className="anchor-grid" title="Прижать к краю кадра с безопасным отступом">
+        <div className="anchor-grid" title={t('Snap to the frame edge with a safe margin')}>
           {ANCHORS.map(([ax, ay]) => <button key={`${ax}${ay}`} onClick={() => anchor(ax, ay)} aria-label={`anchor ${ax} ${ay}`}><span /></button>)}
         </div>
         <div className="col gap8 grow minw0">
-          <Slide label="Масштаб" min={0.2} max={3} step={0.01} value={tr.scale ?? 1} fmt={(v) => `${Math.round(v * 100)}%`} onChange={(v) => setTr({ scale: v })} />
-          <Slide label="Поворот" min={-180} max={180} step={1} value={tr.rotate ?? 0} fmt={(v) => `${Math.round(v)}°`} onChange={(v) => setTr({ rotate: v })} />
-          <Slide label="Отступ" min={0} max={20} step={0.5} value={margin} fmt={(v) => `${v}%`} onChange={(v) => { setMargin(v); try { localStorage.setItem('safeMargin', String(v)); } catch {} }} />
+          <Slide label={t('Scale')} reset={1} min={0.2} max={3} step={0.01} value={tr.scale ?? 1} fmt={(v) => `${Math.round(v * 100)}%`} onChange={(v) => setTr({ scale: v })} />
+          <Slide label={t('Rotation')} reset={0} min={-180} max={180} step={1} value={tr.rotate ?? 0} fmt={(v) => `${Math.round(v)}°`} onChange={(v) => setTr({ rotate: v })} />
+          <Slide label={t('Margin')} min={0} max={20} step={0.5} value={margin} fmt={(v) => `${v}%`} onChange={(v) => { setMargin(v); try { localStorage.setItem('safeMargin', String(v)); } catch {} }} />
         </div>
       </div>
       {msg && <div className="muted xsmall">{msg}</div>}
-      <div className="muted xsmall">Двигайте и масштабируйте прямо в кадре: рамка с ручками у выбранного клипа.</div>
+      <div className="muted xsmall">{t('Move and scale right in the frame: the selected clip has a box with handles.')}</div>
 
       {item.kind === 'clip' && (
         <>
-          <div className="ip-section-title" style={{ marginTop: 6 }} title="Энергия ускоряет вход и выход и растягивает удержание; начало и конец клипа на месте">Ритм <span className="muted">· вход/выход быстрее или спокойнее</span></div>
-          <Slide label="Энергия" min={0.5} max={2.5} step={0.05} value={energy} fmt={(v) => `${v.toFixed(2)}×`} onChange={(v) => actions.updateItem(item.id, { params: { __energy: Math.abs(v - 1) < 0.03 ? 1 : v } })} />
+          <div className="ip-section-title" style={{ marginTop: 6 }} title={t('Energy speeds up the intro and outro and stretches the hold; the clip start and end stay put')}>{t('Rhythm')} <span className="muted">{t('· faster or calmer in/out')}</span></div>
+          <Slide label={t('Energy')} reset={1} min={0.5} max={2.5} step={0.05} value={energy} fmt={(v) => `${v.toFixed(2)}×`} onChange={(v) => actions.updateItem(item.id, { params: { __energy: Math.abs(v - 1) < 0.03 ? 1 : v } })} />
           <div className="ip-section-title row between" style={{ marginTop: 6 }}>
-            <span>Стиль</span>
+            <span>{t('Style')}</span>
             <div className="seg sm">
-              <button className={style !== 'own' ? 'on' : ''} disabled={!hasDesign} title={hasDesign ? '' : 'В проекте пока нет дизайн-системы'} onClick={() => actions.updateItem(item.id, { params: { __style: 'design' } })}>Дизайн-система</button>
-              <button className={style === 'own' ? 'on' : ''} onClick={() => actions.updateItem(item.id, { params: { __style: 'own' } })}>Свой</button>
+              <button className={style !== 'own' ? 'on' : ''} disabled={!hasDesign} title={hasDesign ? '' : t('The project has no design system yet')} onClick={() => actions.updateItem(item.id, { params: { __style: 'design' } })}>{t('Design system')}</button>
+              <button className={style === 'own' ? 'on' : ''} onClick={() => actions.updateItem(item.id, { params: { __style: 'own' } })}>{t('Own')}</button>
             </div>
           </div>
-          {!hasDesign && <div className="muted xsmall">Когда появится дизайн-система, цвета и шрифты шаблона будут браться из неё автоматически.</div>}
+          {!hasDesign && <div className="muted xsmall">{t('Once there is a design system, the template colors and fonts will come from it automatically.')}</div>}
         </>
       )}
     </div>
   );
 }
 
-function Slide({ label, min, max, step, value, fmt, onChange }: { label: string; min: number; max: number; step: number; value: number; fmt: (v: number) => string; onChange: (v: number) => void }) {
+function Slide({ label, min, max, step, value, fmt, onChange, reset }: { label: string; reset?: number; min: number; max: number; step: number; value: number; fmt: (v: number) => string; onChange: (v: number) => void }) {
   const [v, setV] = useState(value);
   useEffect(() => setV(value), [value]);
   return (
     <label className="slider">
       <span>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={v} onChange={(e) => setV(Number(e.target.value))} onPointerUp={() => onChange(v)} onKeyUp={() => onChange(v)} onDoubleClick={() => onChange(label === 'Масштаб' ? 1 : label === 'Поворот' ? 0 : label === 'Энергия' ? 1 : v)} />
+      <input type="range" min={min} max={max} step={step} value={v} onChange={(e) => setV(Number(e.target.value))} onPointerUp={() => onChange(v)} onKeyUp={() => onChange(v)} onDoubleClick={() => onChange(reset ?? v)} />
       <span className="slider-val">{fmt(v)}</span>
     </label>
   );
@@ -99,5 +100,5 @@ function Slide({ label, min, max, step, value, fmt, onChange }: { label: string;
 
 export function TokenChip({ token }: { token?: string }) {
   if (!token) return null;
-  return <span className="token-chip" title="Значение берётся из дизайн-системы. Измените параметр — и он станет своим."><Icon name="sparkle" size={9} />{token}</span>;
+  return <span className="token-chip" title={t('The value comes from the design system. Change the parameter and it becomes your own.')}><Icon name="sparkle" size={9} />{token}</span>;
 }

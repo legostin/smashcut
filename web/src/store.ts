@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { t, tn, getLocale, fmtNumber } from './i18n';
 import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script, DesignSystem, BoardNote } from '../../shared/types';
 
 export interface SkillInfo { name: string; description: string; origin: string; path: string }
@@ -158,7 +159,7 @@ function connect() {
   ws.onopen = () => {
     setState({ connected: true });
     // came back after the server restarted: pull fresh state, nothing is lost
-    if (everConnected && lostAt) { void refresh(); void refreshGallery(); if (Date.now() - lostAt > 1500) notify('info', 'Связь с редактором восстановлена'); }
+    if (everConnected && lostAt) { void refresh(); void refreshGallery(); if (Date.now() - lostAt > 1500) notify('info', t('Connection to the editor restored')); }
     everConnected = true;
     lostAt = 0;
   };
@@ -186,7 +187,7 @@ function onEvent(ev: ServerEvent) {
       return { tasks: exists ? s.tasks.map((t) => (t.id === ev.task.id ? ev.task : t)) : [ev.task, ...s.tasks] };
     }); break;
     case 'task-event': setState((s) => ({ tasks: s.tasks.map((t) => (t.id === ev.taskId ? { ...t, events: [...t.events, ev.event] } : t)) })); break;
-    case 'export': setState((s) => ({ jobs: [...s.jobs.filter((j) => j.id !== ev.job.id), ev.job] })); if (ev.job.status === 'done') { scheduleLists(); notify('info', 'Экспорт готов'); } if (ev.job.status === 'error') notify('error', 'Экспорт упал: ' + ev.job.error?.slice(0, 300)); break;
+    case 'export': setState((s) => ({ jobs: [...s.jobs.filter((j) => j.id !== ev.job.id), ev.job] })); if (ev.job.status === 'done') { scheduleLists(); notify('info', t('Export finished')); } if (ev.job.status === 'error') notify('error', t('Export failed: {error}', { error: ev.job.error?.slice(0, 300) })); break;
     case 'music': setState((s) => ({ music: s.music.some((m) => m.id === ev.music.id) ? s.music.map((m) => (m.id === ev.music.id ? ev.music : m)) : [...s.music, ev.music], fileVersion: { ...s.fileVersion, ['music:' + ev.music.id]: Date.now() } })); scheduleTiming(); break;
     case 'media': setState((s) => ({ media: s.media.some((m) => m.file === ev.media.file) ? s.media.map((m) => (m.file === ev.media.file ? ev.media : m)) : [...s.media, ev.media] })); scheduleTiming(); break;
     case 'files': {
@@ -199,7 +200,7 @@ function onEvent(ev: ServerEvent) {
       scheduleLists();
       break;
     }
-    case 'notice': notify(ev.level, ev.text); break;
+    case 'notice': notify(ev.level, ev.key ? t(ev.key, ev.params) : ev.text); break;
     case 'script': setState({ script: ev.script }); break;
     case 'design': setState({ design: ev.design }); break;
     case 'board': setState({ boardNotes: ev.notes }); break;
@@ -208,7 +209,7 @@ function onEvent(ev: ServerEvent) {
       const prev = new Set(getState().permissions.map((p) => p.id));
       setState({ permissions: ev.permissions });
       const fresh = ev.permissions.find((p) => !prev.has(p.id));
-      if (fresh) { notify('info', `Агент просит разрешение: ${fresh.tool}`); setState({ selectedTaskId: fresh.taskId, selectedItemId: null, sideTab: 'agent' }); }
+      if (fresh) { notify('info', t('Agent requests permission: {tool}', { tool: fresh.tool })); setState({ selectedTaskId: fresh.taskId, selectedItemId: null, sideTab: 'agent' }); }
       break;
     }
   }
@@ -250,9 +251,9 @@ export const actions = {
   async upload(files: FileList | File[]) {
     const fd = new FormData();
     for (const f of Array.from(files)) fd.append('file', f, f.name);
-    notify('info', `Загрузка ${Array.from(files).length} файл(ов)…`);
+    notify('info', tn(Array.from(files).length, 'Uploading {n} file…', 'Uploading {n} files…'));
     const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
-    if (!res.ok) { notify('error', 'Загрузка не удалась'); return []; }
+    if (!res.ok) { notify('error', t('Upload failed')); return []; }
     const infos = await res.json();
     await refreshLists();
     return infos as MediaInfo[];
@@ -265,17 +266,17 @@ export const actions = {
   updateComment(id: string, patch: Partial<Comment>) { return api('PATCH', `/api/comments/${id}`, patch); },
   deleteComment(id: string) { return api('DELETE', `/api/comments/${id}`); },
   async sendComments(ids?: string[]) {
-    notify('info', 'Готовлю снапшоты кадров и запускаю агентов…');
-    const tasks = await api<Task[]>('POST', '/api/comments/send', { ids, agent: getState().agent });
+    notify('info', t('Preparing frame snapshots and starting agents…'));
+    const tasks = await api<Task[]>('POST', '/api/comments/send', { ids, agent: getState().agent, lang: getLocale() });
     setState({ selectedItemId: null, selectedTaskId: tasks[0]?.id || null, sideTab: 'agent' });
   },
   async startTask(prompt: string, ctx: { itemId?: string | null; clipId?: string } = {}) {
-    const t = await api<Task>('POST', '/api/tasks', { prompt, agent: getState().agent, itemId: ctx.itemId || undefined, clipId: ctx.clipId, playhead: time.get() });
-    setState({ selectedTaskId: t.id, selectedItemId: null, sideTab: 'agent' });
-    return t;
+    const task = await api<Task>('POST', '/api/tasks', { prompt, agent: getState().agent, itemId: ctx.itemId || undefined, clipId: ctx.clipId, playhead: time.get(), lang: getLocale() });
+    setState({ selectedTaskId: task.id, selectedItemId: null, sideTab: 'agent' });
+    return task;
   },
-  followUp(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/message`, { prompt }); },
-  interrupt(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/interrupt`, { prompt }); },
+  followUp(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/message`, { prompt, lang: getLocale() }); },
+  interrupt(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/interrupt`, { prompt, lang: getLocale() }); },
   cancelTask(taskId: string) { return api('POST', `/api/tasks/${taskId}/cancel`); },
   setView(v: 'edit' | 'board') { try { localStorage.setItem('view', v); } catch {} setState({ view: v }); },
   setFollow(v: boolean) { try { localStorage.setItem('follow', v ? '1' : '0'); } catch {} setState({ followAgent: v }); },
@@ -286,9 +287,9 @@ export const actions = {
   },
   async voiceScene(sceneId: string) {
     const st = getState().settings as any;
-    if (!st?.hasElevenlabsKey || !st?.elevenlabsVoiceId) { notify('error', 'Настройте ElevenLabs: ключ и голос в Настройках'); setState({ dialog: 'settings' }); throw new Error('no voice'); }
+    if (!st?.hasElevenlabsKey || !st?.elevenlabsVoiceId) { notify('error', t('Set up ElevenLabs: key and voice in Settings')); setState({ dialog: 'settings' }); throw new Error('no voice'); }
     const r = await api<any>('POST', '/api/voice/tts', { sceneId });
-    notify(r.overflow > 0 ? 'error' : 'info', r.overflow > 0 ? `Озвучка длиннее сцены на ${r.overflow.toFixed(1)} с — удлините сцену или сократите текст` : `Озвучено: ${r.duration.toFixed(1)} с${r.cached ? ' (из кэша)' : ''}`);
+    notify(r.overflow > 0 ? 'error' : 'info', r.overflow > 0 ? t('Voiceover is {s}s longer than the scene — lengthen the scene or shorten the text', { s: fmtNumber(r.overflow, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) }) : t(r.cached ? 'Voiced: {s}s (cached)' : 'Voiced: {s}s', { s: fmtNumber(r.duration, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) }));
     return r;
   },
   addScene() { return api('POST', '/api/script/scenes', {}); },

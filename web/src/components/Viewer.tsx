@@ -3,6 +3,7 @@ import type { Comment, Project } from '../../../shared/types';
 import { Player } from './Player';
 import { useStore, usePlayhead, setState, getState, actions, togglePlay, seek, fmtTime, projectEnd, time } from '../store';
 import { Icon } from './Icon';
+import { t, tn } from '../i18n';
 import { measureItem, type Box } from './LayoutPanel';
 import { layerTransform } from './Player';
 import type { Item } from '../../../shared/types';
@@ -47,13 +48,13 @@ function LivePill() {
   const clips = useStore((s) => s.clips);
   const music = useStore((s) => s.music);
   const running = tasks.filter((t) => t.status === 'running');
-  const t = running.filter((x) => x.focus).sort((a, b) => b.focus!.at - a.focus!.at)[0] || running[0];
-  if (!t) return <div className="live-pill" />;
-  const f = t.focus;
-  const what = !f ? 'думает' : f.kind === 'clip' ? `правит «${clips.find((c) => c.id === f.id)?.name || f.id}»` : f.kind === 'music' ? `пишет музыку «${music.find((m) => m.id === f.id)?.name || f.id}»` : f.kind === 'script' ? 'работает над сценарием' : 'монтирует таймлайн';
+  const tk = running.filter((x) => x.focus).sort((a, b) => b.focus!.at - a.focus!.at)[0] || running[0];
+  if (!tk) return <div className="live-pill" />;
+  const f = tk.focus;
+  const what = !f ? t('is thinking') : f.kind === 'clip' ? t('is editing “{name}”', { name: clips.find((c) => c.id === f.id)?.name || f.id }) : f.kind === 'music' ? t('is writing music “{name}”', { name: music.find((m) => m.id === f.id)?.name || f.id }) : f.kind === 'script' ? t('is working on the script') : t('is editing the timeline');
   return (
-    <button className="live-pill show" onClick={() => setState({ sideTab: 'agent', selectedTaskId: t.id, selectedItemId: null })}>
-      <span className="live-dot" />{t.agent === 'claude' ? 'Claude' : 'Codex'} {what}{running.length > 1 ? <span className="muted"> · ещё {running.length - 1}</span> : null}
+    <button className="live-pill show" onClick={() => setState({ sideTab: 'agent', selectedTaskId: tk.id, selectedItemId: null })}>
+      <span className="live-dot" />{tk.agent === 'claude' ? 'Claude' : 'Codex'} {what}{running.length > 1 ? <span className="muted"> · {t('{n} more', { n: running.length - 1 })}</span> : null}
     </button>
   );
 }
@@ -79,32 +80,31 @@ function ReviewBar() {
   const nextResolved = () => { const c = resolved[0]; if (c) { seek(c.time); setState({ selectedCommentId: c.id }); } };
   return (
     <div className={'review-bar' + (show ? ' show' : '')}>
-      {commentMode && !drafts.length && <span className="muted">Кликните по кадру или выделите область</span>}
+      {commentMode && !drafts.length && <span className="muted">{t('Click the frame or select an area')}</span>}
       {drafts.length > 0 && (
         <>
-          <span>{drafts.length} {plural(drafts.length, 'правка', 'правки', 'правок')}</span>
+          <span>{tn(drafts.length, '{n} note', '{n} notes')}</span>
           <button className="btn sm primary" disabled={busy} onClick={async () => { setBusy(true); try { await actions.sendComments(); setState({ commentMode: false }); } finally { setBusy(false); } }}>
-            {busy ? <span className="spinner sm" /> : null} Отправить агенту
+            {busy ? <span className="spinner sm" /> : null} {t('Send to agent')}
           </button>
         </>
       )}
-      {sent.length > 0 && <span className="muted"><span className="spinner sm" /> агент правит {sent.length}</span>}
-      {resolved.length > 0 && <button className="btn sm" onClick={nextResolved}>Проверить исправленное · {resolved.length}</button>}
-      {commentMode && <button className="icon-btn sm" title="Выйти из режима правок (Esc)" onClick={() => setState({ commentMode: false })}><Icon name="x" size={12} /></button>}
+      {sent.length > 0 && <span className="muted"><span className="spinner sm" /> {t('agent is fixing {n}', { n: sent.length })}</span>}
+      {resolved.length > 0 && <button className="btn sm" onClick={nextResolved}>{t('Review fixes')} · {resolved.length}</button>}
+      {commentMode && <button className="icon-btn sm" title={t('Exit review mode (Esc)')} onClick={() => setState({ commentMode: false })}><Icon name="x" size={12} /></button>}
     </div>
   );
 }
-const plural = (n: number, one: string, few: string, many: string) => (n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many);
 
 function CommentLayer({ project, active }: { project: Project; active: boolean }) {
   const comments = useStore((s) => s.comments);
   const selected = useStore((s) => s.selectedCommentId);
-  const t = usePlayhead();
+  const ph = usePlayhead();
   const [drag, setDrag] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [draft, setDraft] = useState<{ x: number; y: number; w?: number; h?: number } | null>(null);
   const [text, setText] = useState('');
   const box = useRef<HTMLDivElement>(null);
-  const near = (c: Comment) => Math.abs(c.time - t) < 0.5 / project.fps + 1e-3 || (c.id === selected && Math.abs(c.time - t) < 0.6);
+  const near = (c: Comment) => Math.abs(c.time - ph) < 0.5 / project.fps + 1e-3 || (c.id === selected && Math.abs(c.time - ph) < 0.6);
   const visible = comments.filter((c) => c.status !== 'done' && near(c));
 
   const pos = (e: React.PointerEvent) => {
@@ -140,11 +140,11 @@ function CommentLayer({ project, active }: { project: Project; active: boolean }
           {draft.w && <div className="c-rect" style={rect(draft.x, draft.y, draft.w, draft.h!)} />}
           <div className="c-pin draft" style={{ left: `${draft.x * 100}%`, top: `${draft.y * 100}%` }} />
           <div className="c-pop" style={popPos(draft.x, draft.y)} onPointerDown={(e) => e.stopPropagation()}>
-            <textarea autoFocus value={text} placeholder="Что поправить?" onChange={(e) => setText(e.target.value)}
+            <textarea autoFocus value={text} placeholder={t('What to fix?')} onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } if (e.key === 'Escape') cancel(); e.stopPropagation(); }} />
             <div className="row between">
               <span className="muted xsmall mono">{fmtTime(time.get(), project.fps)}</span>
-              <div className="row gap6"><button className="btn xs ghost" onClick={cancel}>Отмена</button><button className="btn xs primary" disabled={!text.trim()} onClick={submit}>Добавить</button></div>
+              <div className="row gap6"><button className="btn xs ghost" onClick={cancel}>{t('Cancel')}</button><button className="btn xs primary" disabled={!text.trim()} onClick={submit}>{t('Add')}</button></div>
             </div>
           </div>
         </>
@@ -176,12 +176,12 @@ function Pin({ c, n, selected }: { c: Comment; n: number; selected: boolean }) {
             : <div className="c-text">{c.text}</div>}
           {c.resolution && <div className="c-res">{c.resolution}</div>}
           <div className="row between">
-            <span className="muted xsmall">{({ draft: 'черновик', sent: 'у агента', resolved: 'исправлено', done: 'принято' } as const)[c.status]}</span>
+            <span className="muted xsmall">{t(({ draft: 'draft', sent: 'with the agent', resolved: 'fixed', done: 'accepted' } as const)[c.status])}</span>
             <div className="row gap6">
-              {c.status === 'draft' && <button className="btn xs ghost" onClick={() => { actions.deleteComment(c.id); setState({ selectedCommentId: null }); }}>Удалить</button>}
+              {c.status === 'draft' && <button className="btn xs ghost" onClick={() => { actions.deleteComment(c.id); setState({ selectedCommentId: null }); }}>{t('Delete')}</button>}
               {c.status === 'resolved' && <>
-                <button className="btn xs ghost" onClick={() => actions.updateComment(c.id, { status: 'draft', resolution: undefined })}>Вернуть</button>
-                <button className="btn xs primary" onClick={() => { actions.updateComment(c.id, { status: 'done' }); setState({ selectedCommentId: null }); }}>Принять</button>
+                <button className="btn xs ghost" onClick={() => actions.updateComment(c.id, { status: 'draft', resolution: undefined })}>{t('Reopen')}</button>
+                <button className="btn xs primary" onClick={() => { actions.updateComment(c.id, { status: 'done' }); setState({ selectedCommentId: null }); }}>{t('Accept')}</button>
               </>}
             </div>
           </div>
@@ -192,7 +192,7 @@ function Pin({ c, n, selected }: { c: Comment; n: number; selected: boolean }) {
 }
 
 function Transport({ project }: { project: Project }) {
-  const t = usePlayhead();
+  const ph = usePlayhead();
   const playing = useStore((s) => s.playing);
   const commentMode = useStore((s) => s.commentMode);
   const end = projectEnd(project);
@@ -218,15 +218,15 @@ function Transport({ project }: { project: Project }) {
   }, [end, project.fps]);
   return (
     <div className="transport">
-      <div className="tc mono">{fmtTime(t, project.fps)}</div>
+      <div className="tc mono">{fmtTime(ph, project.fps)}</div>
       <div className="row gap2 center">
-        <button className="icon-btn" title="Кадр назад (←)" onClick={() => step(-1)}><Icon name="stepBack" size={14} /></button>
-        <button className="play" title="Пробел" onClick={togglePlay}><Icon name={playing ? 'pause' : 'play'} size={15} /></button>
-        <button className="icon-btn" title="Кадр вперёд (→)" onClick={() => step(1)}><Icon name="stepFwd" size={14} /></button>
+        <button className="icon-btn" title={t('Previous frame (←)')} onClick={() => step(-1)}><Icon name="stepBack" size={14} /></button>
+        <button className="play" title={t('Space')} onClick={togglePlay}><Icon name={playing ? 'pause' : 'play'} size={15} /></button>
+        <button className="icon-btn" title={t('Next frame (→)')} onClick={() => step(1)}><Icon name="stepFwd" size={14} /></button>
       </div>
       <div className="row gap4 end">
         <span className="tc mono muted">{fmtTime(end, project.fps)}</span>
-        <button className={'icon-btn' + (commentMode ? ' on' : '')} title="Правки на кадре (C)" onClick={() => setState({ commentMode: !commentMode })}><Icon name="comment" size={15} /></button>
+        <button className={'icon-btn' + (commentMode ? ' on' : '')} title={t('Notes on the frame (C)')} onClick={() => setState({ commentMode: !commentMode })}><Icon name="comment" size={15} /></button>
       </div>
     </div>
   );
@@ -237,17 +237,17 @@ function TransformGizmo({ project, scale: k }: { project: Project; scale: number
   const item = useStore((s) => s.project?.items.find((i) => i.id === s.selectedItemId) || null);
   const fv = useStore((s) => s.fileVersion);
   const playing = useStore((s) => s.playing);
-  const t = usePlayhead();
+  const ph = usePlayhead();
   const [box, setBox] = useState<Box | null>(null);
   const visual = item && (item.kind === 'clip' || (item.kind === 'media' && !/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(item.ref)));
-  const active = !!item && visual && t >= item.start && t < item.start + item.duration;
+  const active = !!item && visual && ph >= item.start && ph < item.start + item.duration;
   useEffect(() => {
     if (!active || playing || !item) { setBox(null); return; }
     let tries = 0;
     const measure = () => { const b = measureItem(item, project); if (b) setBox(b); else if (tries++ < 8) setTimeout(measure, 120); else setBox(null); };
     const id = setTimeout(measure, 60);
     return () => clearTimeout(id);
-  }, [active, playing, item?.id, item?.ref, JSON.stringify(item?.params), fv, Math.round(t * 10)]);
+  }, [active, playing, item?.id, item?.ref, JSON.stringify(item?.params), fv, Math.round(ph * 10)]);
   if (!item || !box || !active || playing) return null;
   const tr = item.transform || {};
   const s = tr.scale ?? 1, r = tr.rotate ?? 0;
@@ -317,10 +317,10 @@ function TransformGizmo({ project, scale: k }: { project: Project; scale: number
   };
   const inv = 1 / Math.max(0.05, s);
   return (
-    <div className="gizmo" style={style} onPointerDown={startMove} title="Перетащите, чтобы сдвинуть">
+    <div className="gizmo" style={style} onPointerDown={startMove} title={t('Drag to move')}>
       {(['nw', 'ne', 'sw', 'se'] as const).map((h) => <span key={h} className={`gz-h ${h}`} style={{ transform: `scale(${inv})` }} onPointerDown={startScale} />)}
       <span className="gz-stem" style={{ transform: `scaleX(${inv})` }} />
-      <span className="gz-rot" style={{ transform: `scale(${inv})` }} onPointerDown={startRotate} title="Поворот (Shift — шаг 15°)" />
+      <span className="gz-rot" style={{ transform: `scale(${inv})` }} onPointerDown={startRotate} title={t('Rotate (Shift — 15° steps)')} />
     </div>
   );
 }

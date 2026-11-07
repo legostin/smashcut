@@ -3,6 +3,7 @@ import type { AgentEvent, PermissionRequest, Task } from '../../../shared/types'
 import { useStore, setState, actions } from '../store';
 import { Icon } from './Icon';
 import { Markdown } from './Markdown';
+import { t, tn } from '../i18n';
 
 /** The agent conversation: task switcher, feed, permission cards, composer. */
 export function Chat() {
@@ -31,22 +32,22 @@ function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null 
   return (
     <div className="chat-head">
       <button className="switcher" onClick={() => setOpen(!open)} onPointerDown={(e) => e.stopPropagation()}>
-        {current ? <><Dot status={current.status} /><span className="ellipsis">{current.title}</span></> : <span>Новая задача</span>}
+        {current ? <><Dot status={current.status} /><span className="ellipsis">{current.title}</span></> : <span>{t('New task')}</span>}
         <Icon name="chevron" size={12} />
       </button>
       <div className="row gap6">
         <FollowToggle />
-        {pending > 0 && <span className="pill warn">{pending} ждёт разрешения</span>}
-        {running > 0 && <span className="pill">{running} в работе</span>}
-        {current && <button className="icon-btn" title="Новая задача" onClick={() => setState({ selectedTaskId: null })}><Icon name="plus" size={14} /></button>}
+        {pending > 0 && <span className="pill warn">{t('{n} awaiting permission', { n: pending })}</span>}
+        {running > 0 && <span className="pill">{t('{n} in progress', { n: running })}</span>}
+        {current && <button className="icon-btn" title={t('New task')} onClick={() => setState({ selectedTaskId: null })}><Icon name="plus" size={14} /></button>}
       </div>
       {open && (
         <div className="menu switcher-menu" onPointerDown={(e) => e.stopPropagation()}>
-          <button className="menu-item" onClick={() => { setState({ selectedTaskId: null }); setOpen(false); }}><Icon name="plus" size={13} /> Новая задача</button>
+          <button className="menu-item" onClick={() => { setState({ selectedTaskId: null }); setOpen(false); }}><Icon name="plus" size={13} /> {t('New task')}</button>
           {tasks.length > 0 && <div className="menu-sep" />}
-          {tasks.slice(0, 40).map((t) => (
-            <button key={t.id} className={'menu-item' + (t.id === current?.id ? ' active' : '')} onClick={() => { setState({ selectedTaskId: t.id }); setOpen(false); }}>
-              <Dot status={t.status} /><span className="ellipsis grow">{t.title}</span><span className="muted xsmall">{t.agent}</span>
+          {tasks.slice(0, 40).map((tk) => (
+            <button key={tk.id} className={'menu-item' + (tk.id === current?.id ? ' active' : '')} onClick={() => { setState({ selectedTaskId: tk.id }); setOpen(false); }}>
+              <Dot status={tk.status} /><span className="ellipsis grow">{tk.title}</span><span className="muted xsmall">{tk.agent}</span>
             </button>
           ))}
         </div>
@@ -58,7 +59,7 @@ function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null 
 function FollowToggle() {
   const follow = useStore((s) => s.followAgent);
   return (
-    <button className={'follow' + (follow ? ' on' : '')} onClick={() => actions.setFollow(!follow)} title="Следить за агентом: превью переходит к тому, что он сейчас правит">
+    <button className={'follow' + (follow ? ' on' : '')} onClick={() => actions.setFollow(!follow)} title={t('Follow the agent: the preview jumps to whatever it is editing right now')}>
       <Icon name="eye" size={13} />
     </button>
   );
@@ -69,14 +70,14 @@ const Dot = ({ status }: { status: Task['status'] }) => <span className={`dot st
 function Empty() {
   const hasScript = useStore((s) => s.script.scenes.length > 0);
   const examples = hasScript
-    ? ['Сделай всё видео по сценарию', 'Спроектируй дизайн-систему и примени её к клипам', 'Напиши трек под сценарий и синхронизируй сцены с битами']
-    : ['30-секундный промо-ролик продукта для соцсетей', 'Объясняющее видео на 1 минуту с субтитрами', 'Заставка для подкаста: 8 секунд, логотип и музыка'];
+    ? [t('Make the whole video from the script'), t('Design a design system and apply it to the clips'), t('Write a music track for the script and sync scenes to the beats')]
+    : [t('A 30-second product promo for social media'), t('A 1-minute explainer video with subtitles'), t('A podcast intro: 8 seconds, logo and music')];
   return (
     <div className="chat-empty">
-      <div className="chat-empty-title">{hasScript ? 'Что делаем дальше?' : 'Какое видео делаем?'}</div>
+      <div className="chat-empty-title">{hasScript ? t('What’s next?') : t('What video are we making?')}</div>
       <div className="muted">{hasScript
-        ? 'Агент работает по сценарию: сцена за сценой, со статусами — следите на холсте или в превью.'
-        : 'Опишите идею. Первым делом агент напишет сценарий — сцены, текст, визуал — а потом соберёт графику, музыку и монтаж.'}</div>
+        ? t('The agent works from the script, scene by scene, with statuses — follow along on the canvas or in the preview.')
+        : t('Describe your idea. First the agent writes a script — scenes, text, visuals — then builds the graphics, music and edit.')}</div>
       <div className="examples">{examples.map((e) => <button key={e} className="example" onClick={() => setState({ chatDraft: e })}>{e}</button>)}</div>
     </div>
   );
@@ -99,7 +100,7 @@ function buildBlocks(events: AgentEvent[]): Block[] {
       continue;
     }
     if (e.kind === 'tool_result') { const st = pending.shift(); if (st) st.result = e; continue; }
-    if (e.kind === 'status' && /перебив|остановлен|перезапус|прерв|очеред/i.test(e.text || '')) { blocks.push({ kind: 'event', e }); continue; }
+    if (e.kind === 'status' && /interrupt|stopped|restarted|queued/i.test(e.key || e.text || '')) { blocks.push({ kind: 'event', e }); continue; }
     if (e.kind === 'status' || (e.kind === 'result' && e.ok !== false)) continue;
     if (e.kind === 'image') {
       // frames the agent looked at: attach to the current steps group so they read as "what it saw"
@@ -125,16 +126,16 @@ function Feed({ task }: { task: Task }) {
         ? <Steps key={i} steps={b.steps} images={b.images} live={busy && i === blocks.length - 1} />
         : <Message key={i} e={b.e} />)}
       {perms.map((p) => <PermissionCard key={p.id} p={p} />)}
-      {busy && !perms.length && <div className="working"><span className="spinner" /> {task.status === 'queued' ? 'в очереди' : 'работает'}</div>}
+      {busy && !perms.length && <div className="working"><span className="spinner" /> {task.status === 'queued' ? t('queued') : t('working')}</div>}
       {!busy && (
         <div className="task-foot">
-          <span>{statusRu(task.status)}{task.commitAfter ? ` · версия ${task.commitAfter}` : ''}{task.costUsd ? ` · $${task.costUsd.toFixed(2)}` : ''}</span>
+          <span>{t(STATUS[task.status])}{task.commitAfter ? ' · ' + t('version {v}', { v: task.commitAfter }) : ''}{task.costUsd ? ` · $${task.costUsd.toFixed(2)}` : ''}</span>
         </div>
       )}
     </div>
   );
 }
-const statusRu = (s: Task['status']) => ({ queued: 'в очереди', running: 'работает', done: 'Готово', error: 'Ошибка', cancelled: 'Остановлено' }[s]);
+const STATUS: Record<Task['status'], string> = { queued: 'queued', running: 'working', done: 'Done', error: 'Error', cancelled: 'Stopped' };
 
 function Message({ e }: { e: AgentEvent }) {
   const [open, setOpen] = useState(false);
@@ -143,20 +144,20 @@ function Message({ e }: { e: AgentEvent }) {
     return <div className={'msg-user' + (long && !open ? ' clamp' : '')} onClick={() => long && setOpen(!open)}>{e.text}</div>;
   }
   if (e.kind === 'text') return <div className="msg-agent"><Markdown text={e.text || ''} /></div>;
-  if (e.kind === 'status') return <div className="msg-status">{e.text}</div>;
+  if (e.kind === 'status') return <div className="msg-status">{e.key ? t(e.key, e.params) : e.text}</div>;
   if (e.kind === 'image') return <Frames images={[e]} />;
   return <div className="msg-error">{e.text}</div>;
 }
 
 const LABEL: Record<string, string> = {
-  Read: 'Читает', Write: 'Создаёт', Edit: 'Правит', MultiEdit: 'Правит', edit: 'Правит', Glob: 'Ищет файлы', Grep: 'Ищет', Bash: 'Команда', shell: 'Команда',
-  WebFetch: 'Открывает страницу', WebSearch: 'Ищет в сети', TodoWrite: 'План', ToolSearch: 'Инструменты', Task: 'Субагент', Agent: 'Субагент',
-  get_project: 'Смотрит проект', render_clip: 'Рендерит клип', render_frame: 'Смотрит кадр', lint_clip: 'Проверяет клип', resolve_comment: 'Закрывает правку',
-  list_comments: 'Читает правки', create_clip: 'Создаёт клип', create_music: 'Создаёт трек', render_music: 'Слушает трек', analyze_audio: 'Анализирует аудио',
-  transcribe_media: 'Транскрибирует', get_timing: 'Смотрит ритм', timeline_add: 'Ставит на таймлайн', timeline_update: 'Двигает на таймлайне', timeline_remove: 'Убирает с таймлайна',
-  use_template: 'Берёт шаблон', list_templates: 'Смотрит галерею', set_project: 'Настройки проекта',
+  Read: 'Reading', Write: 'Creating', Edit: 'Editing', MultiEdit: 'Editing', edit: 'Editing', Glob: 'Finding files', Grep: 'Searching', Bash: 'Command', shell: 'Command',
+  WebFetch: 'Opening a page', WebSearch: 'Searching the web', TodoWrite: 'Plan', ToolSearch: 'Tools', Task: 'Subagent', Agent: 'Subagent',
+  get_project: 'Viewing the project', render_clip: 'Rendering a clip', render_frame: 'Looking at a frame', lint_clip: 'Checking a clip', resolve_comment: 'Closing a note',
+  list_comments: 'Reading notes', create_clip: 'Creating a clip', create_music: 'Creating a track', render_music: 'Listening to a track', analyze_audio: 'Analyzing audio',
+  transcribe_media: 'Transcribing', get_timing: 'Checking the rhythm', timeline_add: 'Placing on the timeline', timeline_update: 'Moving on the timeline', timeline_remove: 'Removing from the timeline',
+  use_template: 'Using a template', list_templates: 'Browsing the gallery', set_project: 'Project settings',
 };
-const label = (t?: string) => { const k = (t || '').replace(/^(studio\.|mcp__studio__)/, ''); return LABEL[k] || k; };
+const label = (tool?: string) => { const k = (tool || '').replace(/^(studio\.|mcp__studio__)/, ''); return LABEL[k] ? t(LABEL[k]) : k; };
 
 function Frames({ images }: { images: AgentEvent[] }) {
   const shown = images.slice(-6);
@@ -182,14 +183,13 @@ function Steps({ steps, live, images }: { steps: Step[]; live: boolean; images?:
         <span className="steps-icon">{live ? <span className="spinner sm" /> : <Icon name="chevron" size={11} />}</span>
         {live
           ? <span className="ellipsis">{label(last.tool.tool)} <span className="muted">{last.tool.text}</span></span>
-          : <span>{steps.length} {plural(steps.length, 'действие', 'действия', 'действий')}{failed ? <span className="muted"> · {failed} не удалось</span> : null}</span>}
+          : <span>{tn(steps.length, '{n} action', '{n} actions')}{failed ? <span className="muted"> · {t('{n} failed', { n: failed })}</span> : null}</span>}
       </button>
       {open && <div className="steps-list">{steps.map((s, i) => <StepRow key={i} s={s} />)}</div>}
       {images && images.length > 0 && <Frames images={images} />}
     </div>
   );
 }
-const plural = (n: number, one: string, few: string, many: string) => (n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many);
 
 function StepRow({ s }: { s: Step }) {
   const [open, setOpen] = useState(false);
@@ -199,7 +199,7 @@ function StepRow({ s }: { s: Step }) {
       <button className="step-line" onClick={() => setOpen(!open)}>
         <span className="step-name">{label(s.tool.tool)}</span>
         <span className="step-sum">{s.tool.text}</span>
-        {bad && <span className="step-x">не удалось</span>}
+        {bad && <span className="step-x">{t('failed')}</span>}
       </button>
       {open && (
         <div className="step-detail">
@@ -217,15 +217,15 @@ function PermissionCard({ p }: { p: PermissionRequest }) {
   const [details, setDetails] = useState(false);
   return (
     <div className="perm">
-      <div className="perm-title">Агент просит разрешение</div>
+      <div className="perm-title">{t('The agent asks for permission')}</div>
       <div className="perm-tool">{p.tool}</div>
       {main && <pre className="perm-main">{main}</pre>}
       {details && <pre className="perm-input">{JSON.stringify(p.input, null, 2).slice(0, 3000)}</pre>}
       <div className="row gap6">
-        <button className="btn sm primary" onClick={() => actions.decidePermission(p.id, true)}>Разрешить</button>
-        <button className="btn sm" onClick={() => actions.decidePermission(p.id, true, true)}>Всегда в этой задаче</button>
-        <button className="btn sm ghost" onClick={() => actions.decidePermission(p.id, false)}>Отклонить</button>
-        {!details && <button className="link" onClick={() => setDetails(true)}>детали</button>}
+        <button className="btn sm primary" onClick={() => actions.decidePermission(p.id, true)}>{t('Allow')}</button>
+        <button className="btn sm" onClick={() => actions.decidePermission(p.id, true, true)}>{t('Always in this task')}</button>
+        <button className="btn sm ghost" onClick={() => actions.decidePermission(p.id, false)}>{t('Deny')}</button>
+        {!details && <button className="link" onClick={() => setDetails(true)}>{t('details')}</button>}
       </div>
     </div>
   );
@@ -259,7 +259,7 @@ function Composer({ task }: { task: Task | null }) {
   const empty = !draft.trim() && !ctx.length;
   return (
     <div className={'composer' + (busy ? ' busy' : '')}>
-      {missing && <div className="composer-warn">CLI «{agent}» не найден в PATH</div>}
+      {missing && <div className="composer-warn">{t('CLI “{agent}” not found in PATH', { agent })}</div>}
       {ctx.length > 0 && (
         <div className="ctx-chips">
           {ctx.map((c) => (
@@ -268,18 +268,18 @@ function Composer({ task }: { task: Task | null }) {
         </div>
       )}
       <textarea ref={ref} rows={1} value={draft}
-        placeholder={busy ? 'Перебить агента: напишите, что изменить (Enter)…' : task ? 'Продолжить…' : ctx.length ? 'Что сделать с выделенным?' : 'Опишите, что сделать'}
+        placeholder={busy ? t('Interrupt the agent: write what to change (Enter)…') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do')}
         onChange={(e) => setState({ chatDraft: e.target.value })}
         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} />
       <div className="composer-bar">
         {!task
           ? <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>
-          : <span className="muted xsmall">{busy ? <><span className="spinner sm" /> {task.agent} работает</> : task.agent}</span>}
+          : <span className="muted xsmall">{busy ? <><span className="spinner sm" /> {t('{agent} is working', { agent: task.agent })}</> : task.agent}</span>}
         {busy ? (
           <div className="row gap6">
-            <button className="btn xs ghost" onClick={() => actions.cancelTask(task!.id)} title="Остановить совсем"><Icon name="stop" size={9} /> Стоп</button>
-            {!empty && <button className="btn xs ghost" onClick={() => send('later')} title="Отправить, когда агент закончит текущий шаг">После</button>}
-            <button className="btn xs primary" disabled={empty} onClick={() => send('interrupt')} title="Агент остановится и сразу продолжит с учётом сообщения (Enter)">Перебить</button>
+            <button className="btn xs ghost" onClick={() => actions.cancelTask(task!.id)} title={t('Stop completely')}><Icon name="stop" size={9} /> {t('Stop')}</button>
+            {!empty && <button className="btn xs ghost" onClick={() => send('later')} title={t('Send when the agent finishes the current step')}>{t('Later')}</button>}
+            <button className="btn xs primary" disabled={empty} onClick={() => send('interrupt')} title={t('The agent stops and immediately continues with your message (Enter)')}>{t('Interrupt')}</button>
           </div>
         ) : <button className="send" disabled={empty} onClick={() => send()} title="Enter"><Icon name="arrowUp" size={14} /></button>}
       </div>
@@ -290,5 +290,5 @@ function Composer({ task }: { task: Task | null }) {
 /** append the board selection to the message so the agent knows exactly what is meant */
 export function withContext(text: string, ctx: { label: string; text: string }[]) {
   if (!ctx.length) return text;
-  return `${text || 'Посмотри на выделенное и предложи улучшения.'}\n\nКонтекст — выделено на холсте:\n${ctx.map((c) => '- ' + c.text).join('\n')}`;
+  return `${text || 'Look at the selection and suggest improvements.'}\n\nContext — selected on the canvas:\n${ctx.map((c) => '- ' + c.text).join('\n')}`;
 }

@@ -41,9 +41,9 @@ export interface WebRecordOptions {
   maxSeconds?: number;
 }
 
-export interface RecordJob { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string }
+export interface RecordJob { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string; project?: string }
 const jobs = new Map<string, RecordJob>();
-export const recordJobs = () => [...jobs.values()];
+export const recordJobs = () => { const id = cur().id; return [...jobs.values()].filter((j) => !j.project || j.project === id); };
 export function emitJob(j: RecordJob) { jobs.set(j.id, j); bus.send({ type: 'record', job: { ...j } } as any); }
 
 const CURSOR_JS = `(() => {

@@ -15,7 +15,8 @@ export const STAGES: { id: StageId; label: string }[] = [
 
 const EMPTY: Script = { brief: '', stage: 'brief', scenes: [] };
 const mutex = new Mutex();
-let lastWrite = 0;
+/** last own write per project (ignore the watcher echo) */
+const lastWrites = new Map<string, number>();
 
 export function getScript(): Script {
   const s = readJson<Script>(cur().p('script.json'), EMPTY);
@@ -42,7 +43,7 @@ function normalize(s: Partial<Script>): Script {
 export function saveScript(next: Partial<Script>) {
   return mutex.run(async () => {
     const s = normalize({ ...getScript(), ...next, updatedAt: new Date().toISOString() });
-    lastWrite = Date.now();
+    lastWrites.set(cur().id, Date.now());
     writeJson(cur().p('script.json'), s);
     bus.send({ type: 'script', script: s });
     return s;
@@ -56,7 +57,7 @@ export function patchScene(id: string, patch: Partial<Scene>) {
     if (!sc) throw Object.assign(new Error('scene not found: ' + id), { statusCode: 404 });
     Object.assign(sc, patch, { id });
     const out = normalize({ ...s, updatedAt: new Date().toISOString() });
-    lastWrite = Date.now();
+    lastWrites.set(cur().id, Date.now());
     writeJson(cur().p('script.json'), out);
     bus.send({ type: 'script', script: out });
     return out;
@@ -65,6 +66,6 @@ export function patchScene(id: string, patch: Partial<Scene>) {
 
 /** called by the file watcher when script.json changes on disk (e.g. edited by an agent directly) */
 export function onScriptFileChanged() {
-  if (Date.now() - lastWrite < 800) return;
+  if (Date.now() - (lastWrites.get(cur().id) || 0) < 800) return;
   bus.send({ type: 'script', script: getScript() });
 }

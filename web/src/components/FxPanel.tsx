@@ -3,6 +3,8 @@ import type { Item } from '../../../shared/types';
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS, type ItemFx, type Transition, type Effect, type Mask, type TransitionType, type EffectType } from '../../../shared/fx';
 import { actions, setState } from '../store';
 import { Icon } from './Icon';
+import { t } from '../i18n';
+import { TRANSITION_NAMES, EFFECT_NAMES, trName, fxName, fxParam, maskName, blendName } from '../fxNames';
 
 /** Transitions / effects / mask / blend controls for the selected item */
 export function FxPanel({ item }: { item: Item }) {
@@ -11,13 +13,13 @@ export function FxPanel({ item }: { item: Item }) {
   return (
     <>
       <div className="ip-section">
-        <div className="ip-section-title row between"><span>Переходы</span><button className="link" onClick={() => setState({ libraryOpen: true })}>Библиотека</button></div>
-        <TransitionRow label="Вход" value={fx.in} max={item.duration} onChange={(v) => set({ in: v })} />
-        <TransitionRow label="Выход" value={fx.out} max={item.duration} onChange={(v) => set({ out: v })} />
+        <div className="ip-section-title row between"><span>{t('Transitions')}</span><button className="link" onClick={() => setState({ libraryOpen: true })}>{t('Library')}</button></div>
+        <TransitionRow label={t('In')} value={fx.in} max={item.duration} onChange={(v) => set({ in: v })} />
+        <TransitionRow label={t('Out')} value={fx.out} max={item.duration} onChange={(v) => set({ out: v })} />
       </div>
 
       <div className="ip-section">
-        <div className="ip-section-title row between"><span>Эффекты{fx.effects?.length ? ` · ${fx.effects.length}` : ''}</span><AddEffect onAdd={(type) => {
+        <div className="ip-section-title row between"><span>{t('Effects')}{fx.effects?.length ? ` · ${fx.effects.length}` : ''}</span><AddEffect onAdd={(type) => {
           const spec = EFFECTS.find((e) => e.type === type)!;
           const params: Record<string, number | string> = {};
           for (const p of spec.params) params[p.key] = p.def;
@@ -29,23 +31,23 @@ export function FxPanel({ item }: { item: Item }) {
             onChange={(ne) => set({ effects: fx.effects!.map((x, j) => (j === i ? ne : x)) })}
             onRemove={() => set({ effects: fx.effects!.filter((_, j) => j !== i) })} />
         ))}
-        {!fx.effects?.length && <div className="muted small">Цвет, размытие, виньетка, зерно, кен-бёрнс, тряска…</div>}
+        {!fx.effects?.length && <div className="muted small">{t('Color, blur, vignette, grain, Ken Burns, shake…')}</div>}
       </div>
 
       <div className="ip-section">
         <div className="ip-section-title row between">
-          <span>Маска</span>
+          <span>{t('Mask')}</span>
           {fx.mask
-            ? <button className="link danger" onClick={() => set({ mask: undefined })}>Убрать</button>
-            : <select className="mini-select" value="" onChange={(e) => { const m = MASKS.find((x) => x.shape === e.target.value); if (m) set({ mask: { ...m.def } }); }}><option value="">+ Добавить</option>{MASKS.map((m) => <option key={m.shape} value={m.shape}>{m.name}</option>)}</select>}
+            ? <button className="link danger" onClick={() => set({ mask: undefined })}>{t('Remove')}</button>
+            : <select className="mini-select" value="" onChange={(e) => { const m = MASKS.find((x) => x.shape === e.target.value); if (m) set({ mask: { ...m.def } }); }}><option value="">{t('+ Add')}</option>{MASKS.map((m) => <option key={m.shape} value={m.shape}>{maskName(m.shape)}</option>)}</select>}
         </div>
         {fx.mask && <MaskEditor m={fx.mask} onChange={(m) => set({ mask: m })} />}
       </div>
 
       <div className="ip-section">
-        <label className="field-line"><span>Наложение</span>
+        <label className="field-line"><span>{t('Blend')}</span>
           <select value={fx.blend || 'normal'} onChange={(e) => set({ blend: e.target.value as ItemFx['blend'] })}>
-            {BLENDS.map((b) => <option key={b.mode} value={b.mode}>{b.name}</option>)}
+            {BLENDS.map((b) => <option key={b.mode} value={b.mode}>{blendName(b.mode)}</option>)}
           </select>
         </label>
       </div>
@@ -70,9 +72,9 @@ function TransitionRow({ label, value, max, onChange }: { label: string; value?:
     <div className="tr-row">
       <span className="tr-label">{label}</span>
       <select value={value?.type || ''} onChange={(e) => onChange(e.target.value ? { type: e.target.value as TransitionType, duration: value?.duration ?? Math.min(0.6, +(max / 3).toFixed(2)) } : undefined)}>
-        <option value="">Нет</option>
-        {[...new Set(TRANSITIONS.map((t) => t.group))].map((g) => (
-          <optgroup key={g} label={g}>{TRANSITIONS.filter((t) => t.group === g).map((t) => <option key={t.type} value={t.type}>{t.name}</option>)}</optgroup>
+        <option value="">{t('None')}</option>
+        {[...new Set(TRANSITIONS.map((x) => TRANSITION_NAMES[x.type].group))].map((g) => (
+          <optgroup key={g} label={t(g)}>{TRANSITIONS.filter((x) => TRANSITION_NAMES[x.type].group === g).map((x) => <option key={x.type} value={x.type}>{trName(x.type)}</option>)}</optgroup>
         ))}
       </select>
       {value && (
@@ -88,8 +90,8 @@ function TransitionRow({ label, value, max, onChange }: { label: string; value?:
 function AddEffect({ onAdd }: { onAdd: (t: EffectType) => void }) {
   return (
     <select className="mini-select" value="" onChange={(e) => e.target.value && onAdd(e.target.value as EffectType)}>
-      <option value="">+ Добавить</option>
-      {[...new Set(EFFECTS.map((x) => x.group))].map((g) => <optgroup key={g} label={g}>{EFFECTS.filter((x) => x.group === g).map((x) => <option key={x.type} value={x.type}>{x.name}</option>)}</optgroup>)}
+      <option value="">{t('+ Add')}</option>
+      {[...new Set(EFFECTS.map((x) => EFFECT_NAMES[x.type].group))].map((g) => <optgroup key={g} label={t(g)}>{EFFECTS.filter((x) => EFFECT_NAMES[x.type].group === g).map((x) => <option key={x.type} value={x.type}>{fxName(x.type)}</option>)}</optgroup>)}
     </select>
   );
 }
@@ -102,16 +104,16 @@ function EffectRow({ e, onChange, onRemove }: { e: Effect; onChange: (e: Effect)
   return (
     <div className={'fx-row' + (on ? '' : ' off')}>
       <div className="fx-row-head">
-        <button className="fx-row-name" onClick={() => setOpen(!open)}><Icon name="chevron" size={10} />{spec.name}</button>
-        <input type="checkbox" className="toggle" checked={on} title="Вкл/выкл" onChange={(ev) => onChange({ ...e, enabled: ev.target.checked })} />
-        <button className="icon-btn xs" title="Удалить" onClick={onRemove}><Icon name="x" size={11} /></button>
+        <button className="fx-row-name" onClick={() => setOpen(!open)}><Icon name="chevron" size={10} />{fxName(spec.type)}</button>
+        <input type="checkbox" className="toggle" checked={on} title={t('On/off')} onChange={(ev) => onChange({ ...e, enabled: ev.target.checked })} />
+        <button className="icon-btn xs" title={t('Delete')} onClick={onRemove}><Icon name="x" size={11} /></button>
       </div>
       {open && (
         <div className="fx-row-body">
           {(spec.options || []).map((o) => o.values.length
-            ? <label key={o.key} className="field-line"><span>{o.label}</span><select value={String(e.params?.[o.key] ?? o.def)} onChange={(ev) => onChange({ ...e, params: { ...e.params, [o.key]: ev.target.value } })}>{o.values.map((v) => <option key={v} value={v}>{v}</option>)}</select></label>
-            : <label key={o.key} className="field-line"><span>{o.label}</span><span className="color-swatch" style={{ background: String(e.params?.[o.key] ?? o.def) }}><input type="color" value={String(e.params?.[o.key] ?? o.def)} onChange={(ev) => onChange({ ...e, params: { ...e.params, [o.key]: ev.target.value } })} /></span></label>)}
-          {spec.params.map((p) => <ParamSlider key={p.key} label={p.label} min={p.min} max={p.max} step={p.step} value={Number(e.params?.[p.key] ?? p.def)} onChange={(v) => onChange({ ...e, params: { ...e.params, [p.key]: v } })} />)}
+            ? <label key={o.key} className="field-line"><span>{fxParam(spec.type, o.key)}</span><select value={String(e.params?.[o.key] ?? o.def)} onChange={(ev) => onChange({ ...e, params: { ...e.params, [o.key]: ev.target.value } })}>{o.values.map((v) => <option key={v} value={v}>{v}</option>)}</select></label>
+            : <label key={o.key} className="field-line"><span>{fxParam(spec.type, o.key)}</span><span className="color-swatch" style={{ background: String(e.params?.[o.key] ?? o.def) }}><input type="color" value={String(e.params?.[o.key] ?? o.def)} onChange={(ev) => onChange({ ...e, params: { ...e.params, [o.key]: ev.target.value } })} /></span></label>)}
+          {spec.params.map((p) => <ParamSlider key={p.key} label={fxParam(spec.type, p.key)} min={p.min} max={p.max} step={p.step} value={Number(e.params?.[p.key] ?? p.def)} onChange={(v) => onChange({ ...e, params: { ...e.params, [p.key]: v } })} />)}
         </div>
       )}
     </div>
@@ -133,19 +135,19 @@ function ParamSlider({ label, min, max, step, value, onChange }: { label: string
 function MaskEditor({ m, onChange }: { m: Mask; onChange: (m: Mask) => void }) {
   return (
     <div className="col gap8">
-      <label className="field-line"><span>Форма</span>
-        <select value={m.shape} onChange={(e) => onChange({ ...MASKS.find((x) => x.shape === e.target.value)!.def, invert: m.invert })}>{MASKS.map((x) => <option key={x.shape} value={x.shape}>{x.name}</option>)}</select>
+      <label className="field-line"><span>{t('Shape')}</span>
+        <select value={m.shape} onChange={(e) => onChange({ ...MASKS.find((x) => x.shape === e.target.value)!.def, invert: m.invert })}>{MASKS.map((x) => <option key={x.shape} value={x.shape}>{maskName(x.shape)}</option>)}</select>
       </label>
       {m.shape !== 'linear' && <>
         <ParamSlider label="X" min={0} max={1} step={0.005} value={m.x} onChange={(x) => onChange({ ...m, x })} />
         <ParamSlider label="Y" min={0} max={1} step={0.005} value={m.y} onChange={(y) => onChange({ ...m, y })} />
-        <ParamSlider label="Ширина" min={0.02} max={1} step={0.005} value={m.w} onChange={(w) => onChange({ ...m, w })} />
-        <ParamSlider label="Высота" min={0.02} max={1} step={0.005} value={m.h} onChange={(h) => onChange({ ...m, h })} />
+        <ParamSlider label={t('Width')} min={0.02} max={1} step={0.005} value={m.w} onChange={(w) => onChange({ ...m, w })} />
+        <ParamSlider label={t('Height')} min={0.02} max={1} step={0.005} value={m.h} onChange={(h) => onChange({ ...m, h })} />
       </>}
-      {m.shape === 'rounded' && <ParamSlider label="Скругление" min={0} max={0.5} step={0.005} value={m.radius ?? 0.06} onChange={(radius) => onChange({ ...m, radius })} />}
-      {m.shape === 'linear' && <ParamSlider label="Угол, °" min={0} max={360} step={1} value={m.angle ?? 90} onChange={(angle) => onChange({ ...m, angle })} />}
-      <ParamSlider label="Растушёвка, px" min={0} max={600} step={2} value={m.feather ?? 0} onChange={(feather) => onChange({ ...m, feather })} />
-      <label className="field-line"><span>Инвертировать</span><input type="checkbox" className="toggle" checked={!!m.invert} onChange={(e) => onChange({ ...m, invert: e.target.checked })} /></label>
+      {m.shape === 'rounded' && <ParamSlider label={t('Corner radius')} min={0} max={0.5} step={0.005} value={m.radius ?? 0.06} onChange={(radius) => onChange({ ...m, radius })} />}
+      {m.shape === 'linear' && <ParamSlider label={t('Angle, °')} min={0} max={360} step={1} value={m.angle ?? 90} onChange={(angle) => onChange({ ...m, angle })} />}
+      <ParamSlider label={t('Feather, px')} min={0} max={600} step={2} value={m.feather ?? 0} onChange={(feather) => onChange({ ...m, feather })} />
+      <label className="field-line"><span>{t('Inverted')}</span><input type="checkbox" className="toggle" checked={!!m.invert} onChange={(e) => onChange({ ...m, invert: e.target.checked })} /></label>
     </div>
   );
 }

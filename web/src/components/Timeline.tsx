@@ -3,6 +3,8 @@ import type { Item, Project, Track } from '../../../shared/types';
 import { useStore, usePlayhead, setState, getState, actions, seek, time, projectEnd, api, fmtTime, notify } from '../store';
 import { Icon } from './Icon';
 import { applyTransition } from './FxLibrary';
+import { t } from '../i18n';
+import { trName } from '../fxNames';
 
 const HEADER_W = 132;
 const ROW_H: Record<string, number> = { graphics: 40, video: 48, audio: 40, music: 40 };
@@ -125,10 +127,10 @@ export function Timeline({ project }: { project: Project }) {
     const d = JSON.parse(raw);
     if (d.type === 'transition') {
       // dropped on a lane: apply to the item under the cursor, edge decides in/out
-      const t = xToT(e.clientX);
-      const it = project.items.find((i) => i.track === track.id && t >= i.start && t <= i.start + i.duration);
-      if (!it) { notify('error', 'Бросьте переход на клип'); return; }
-      applyTransition(d.transition, t - it.start < it.duration / 2 ? 'in' : 'out', it);
+      const at = xToT(e.clientX);
+      const it = project.items.find((i) => i.track === track.id && at >= i.start && at <= i.start + i.duration);
+      if (!it) { notify('error', t('Drop the transition onto a clip')); return; }
+      applyTransition(d.transition, at - it.start < it.duration / 2 ? 'in' : 'out', it);
       setState({ selectedItemId: it.id });
       return;
     }
@@ -164,7 +166,7 @@ export function Timeline({ project }: { project: Project }) {
           <div className="tl-ruler-row">
             <div className="tl-corner" style={{ width: HEADER_W }}>
               <AddTrack onAdd={addTrack} />
-              <input className="tl-zoom" type="range" min={8} max={400} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} title="Масштаб (⌘ + колесо)" />
+              <input className="tl-zoom" type="range" min={8} max={400} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} title={t('Zoom (⌘ + wheel)')} />
             </div>
             <div className="tl-ruler" style={{ width }} onPointerDown={scrub}>
               {scenes.map((sc, i) => (
@@ -185,10 +187,10 @@ export function Timeline({ project }: { project: Project }) {
               <div className="tl-head" style={{ width: HEADER_W }}>
                 <input className="tl-name" value={tr.name} onChange={(e) => actions.patchProject({ tracks: project.tracks.map((t) => (t.id === tr.id ? { ...t, name: e.target.value } : t)) })} />
                 {tr.kind === 'graphics' || tr.kind === 'video'
-                  ? <button className="icon-btn xs" title="Скрыть" onClick={() => toggleTrack(tr.id, 'hidden')}><Icon name={tr.hidden ? 'eyeOff' : 'eye'} size={14} /></button>
+                  ? <button className="icon-btn xs" title={t('Hide')} onClick={() => toggleTrack(tr.id, 'hidden')}><Icon name={tr.hidden ? 'eyeOff' : 'eye'} size={14} /></button>
                   : <button className="icon-btn xs" title="Mute" onClick={() => toggleTrack(tr.id, 'muted')}><Icon name={tr.muted ? 'mute' : 'volume'} size={14} /></button>}
                 {!project.items.some((i) => i.track === tr.id) && project.tracks.filter((t) => t.kind === tr.kind).length > 1 && (
-                  <button className="icon-btn xs" title="Удалить дорожку" onClick={() => actions.patchProject({ tracks: project.tracks.filter((t) => t.id !== tr.id) })}><Icon name="x" size={12} /></button>
+                  <button className="icon-btn xs" title={t('Delete track')} onClick={() => actions.patchProject({ tracks: project.tracks.filter((t) => t.id !== tr.id) })}><Icon name="x" size={12} /></button>
                 )}
               </div>
               <div className="tl-lane" data-track={tr.id} style={{ width }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => onDrop(e, tr)}
@@ -243,13 +245,13 @@ function TlItem({ item, zoom, selected, dragging, onDown }: { item: Item; zoom: 
       onPointerDown={(e) => onDown(e, 'move')}
       title={`${label}\n${item.start.toFixed(2)}s → ${(item.start + item.duration).toFixed(2)}s${errors?.length ? '\n⚠ ' + errors.join('\n') : ''}`}>
       {peaksUrl && <Wave url={peaksUrl} k={peaksKey} item={item} zoom={zoom} />}
-      {item.fx?.in && <div className="tl-tr in" style={{ width: Math.min(w, item.fx.in.duration * zoom) }} title={`Вход: ${item.fx.in.type} · ${item.fx.in.duration}s`} />}
-      {item.fx?.out && <div className="tl-tr out" style={{ width: Math.min(w, item.fx.out.duration * zoom) }} title={`Выход: ${item.fx.out.type} · ${item.fx.out.duration}s`} />}
+      {item.fx?.in && <div className="tl-tr in" style={{ width: Math.min(w, item.fx.in.duration * zoom) }} title={t('In: {name} · {d}s', { name: trName(item.fx.in.type), d: item.fx.in.duration })} />}
+      {item.fx?.out && <div className="tl-tr out" style={{ width: Math.min(w, item.fx.out.duration * zoom) }} title={t('Out: {name} · {d}s', { name: trName(item.fx.out.type), d: item.fx.out.duration })} />}
       <div className="tl-item-label">
-        {running && <span className="tl-dot live" title="Агент работает" />}
-        {errors?.length ? <span className="tl-dot err" title="Ошибка в клипе" /> : null}
+        {running && <span className="tl-dot live" title={t('Agent is working')} />}
+        {errors?.length ? <span className="tl-dot err" title={t('Error in clip')} /> : null}
         <span className="ellipsis">{label}</span>
-        {(item.fx?.effects?.length || item.fx?.mask) ? <span className="tl-fx" title="Эффекты / маска">fx</span> : null}
+        {(item.fx?.effects?.length || item.fx?.mask) ? <span className="tl-fx" title={t('Effects / mask')}>fx</span> : null}
         {openComments > 0 && <span className="tl-count">{openComments}</span>}
       </div>
       <div className="tl-handle left" onPointerDown={(e) => onDown(e, 'left')} />
@@ -297,11 +299,11 @@ function AddTrack({ onAdd }: { onAdd: (k: Track['kind']) => void }) {
   }, [open]);
   return (
     <div className="rel" onPointerDown={(e) => e.stopPropagation()}>
-      <button className="icon-btn sm" title="Добавить дорожку" onClick={() => setOpen(!open)}><Icon name="plus" size={12} /></button>
+      <button className="icon-btn sm" title={t('Add track')} onClick={() => setOpen(!open)}><Icon name="plus" size={12} /></button>
       {open && (
         <div className="menu">
-          {([['graphics', 'Графика'], ['video', 'Видео'], ['audio', 'Аудио'], ['music', 'Музыка']] as const).map(([k, l]) => (
-            <button key={k} className="menu-item" onClick={() => { onAdd(k); setOpen(false); }}>{l}</button>
+          {([['graphics', 'Graphics'], ['video', 'Video'], ['audio', 'Audio'], ['music', 'Music']] as const).map(([k, l]) => (
+            <button key={k} className="menu-item" onClick={() => { onAdd(k); setOpen(false); }}>{t(l)}</button>
           ))}
         </div>
       )}

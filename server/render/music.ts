@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { MusicInfo } from '../../shared/types.ts';
 import { BASE_URL } from '../config.ts';
-import { cur } from '../project.ts';
+import { cur, pbase } from '../project.ts';
 import { bus } from '../bus.ts';
 import { hashDir, writeJson, readJson } from '../util.ts';
 import { withPage } from './browser.ts';
@@ -13,7 +13,8 @@ const inflight = new Map<string, Promise<MusicInfo>>();
 
 /** render music/<id>/score.js → WAV (cached by content hash) + beat map + peaks + analysis */
 export function renderMusic(id: string, force = false): Promise<MusicInfo> {
-  if (inflight.has(id)) return inflight.get(id)!;
+  const key = cur().id + ':' + id;
+  if (inflight.has(key)) return inflight.get(key)!;
   const p = (async () => {
     const store = cur();
     const dir = store.p('music', id);
@@ -26,7 +27,7 @@ export function renderMusic(id: string, force = false): Promise<MusicInfo> {
     fs.mkdirSync(path.dirname(store.p(rel)), { recursive: true });
     try {
       const r = await withPage({ width: 400, height: 300 }, async (page, errors) => {
-        await page.goto(`${BASE_URL}/runtime/music.html?src=${encodeURIComponent(`/p/music/${id}/score.js`)}`, { waitUntil: 'load' });
+        await page.goto(`${BASE_URL}/runtime/music.html?src=${encodeURIComponent(`${pbase()}/music/${id}/score.js`)}`, { waitUntil: 'load' });
         const res = await Promise.race([
           page.evaluate(async () => (window as any).__music.render(48000)),
           new Promise((_, rej) => setTimeout(() => rej(new Error('music render timeout (did the score call studio.music()?) ' + errors.join('; '))), 120000)),
@@ -53,8 +54,8 @@ export function renderMusic(id: string, force = false): Promise<MusicInfo> {
     recomputeTiming();
     bus.send({ type: 'music', music: info });
     return info;
-  })().finally(() => inflight.delete(id));
-  inflight.set(id, p);
+  })().finally(() => inflight.delete(key));
+  inflight.set(key, p);
   return p;
 }
 

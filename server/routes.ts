@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import type { FastifyInstance } from 'fastify';
 import type { Comment, Item, Project, PackageManifest } from '../shared/types.ts';
 import { ROOT, GALLERY_DIR, LIBRARY_DIR, PROJECTS_DIR, getSettings, saveSettings, getRecents, HOME_DIR } from './config.ts';
-import { cur, hasProject, openProject, ProjectStore, MEDIA_EXT } from './project.ts';
+import { cur, hasProject, openProject, ProjectStore, MEDIA_EXT, pbase, runIn, openStores } from './project.ts';
 import { bus } from './bus.ts';
 import { nid, readJson, writeJson, copyDir, slug, safeJoin, run } from './util.ts';
 import { log as gitLog, restore as gitRestore, exportAt, commit } from './git.ts';
@@ -62,6 +62,7 @@ export function state() {
   if (!hasProject()) return { project: null, recents: getRecents(), projectsDir: PROJECTS_DIR, settings: { ...getSettings(), elevenlabsKey: '' } };
   const store = cur();
   return {
+    pid: store.id,
     dir: store.dir,
     project: store.project,
     comments: store.comments,
@@ -250,13 +251,13 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get('/api/state', async () => state());
   app.get('/api/projects', async () => {
     const dirs = fs.existsSync(PROJECTS_DIR) ? fs.readdirSync(PROJECTS_DIR).map((d) => path.join(PROJECTS_DIR, d)).filter((d) => ProjectStore.exists(d)) : [];
-    return { current: hasProject() ? cur().dir : null, recents: getRecents(), projects: [...new Set([...getRecents(), ...dirs])], projectsDir: PROJECTS_DIR };
+    return { current: hasProject() ? cur().dir : null, open: openStores().map((s) => ({ id: s.id, dir: s.dir, name: s.project.name })), recents: getRecents(), projects: [...new Set([...getRecents(), ...dirs])], projectsDir: PROJECTS_DIR };
   });
   app.post<{ Body: { path: string } }>('/api/projects/open', async (req) => {
     const dir = path.resolve(req.body.path.replace(/^~/, process.env.HOME || ''));
     if (!ProjectStore.exists(dir)) throw Object.assign(new Error('not a project folder (no project.json): ' + dir), { statusCode: 400 });
-    openProject(dir);
-    return state();
+    // the response describes the newly opened project (the tab switches to it)
+    return runIn(openProject(dir), state);
   });
   app.post<{ Body: { name: string; path?: string; width?: number; height?: number; fps?: number } }>('/api/projects/create', async (req) => {
     const name = req.body.name || 'Untitled';
@@ -265,8 +266,7 @@ export async function registerRoutes(app: FastifyInstance) {
     await ProjectStore.create(dir, { name, width: req.body.width, height: req.body.height, fps: req.body.fps });
     syncSkills(dir, name);
     await commit(dir, 'Add agent skills');
-    openProject(dir);
-    return state();
+    return runIn(openProject(dir), state);
   });
 
   // ---------- project & items ----------
@@ -596,9 +596,10 @@ export async function registerRoutes(app: FastifyInstance) {
     const parentName = store.project.name, parentSize = { width: store.project.width, height: store.project.height };
     const { dir } = await createVariant(b);
     syncSkills(dir, path.basename(dir));
-    openProject(dir);
-    const task = startTask({ agent: b.agent, title: `Version: ${b.label}`, prompt: variantPrompt(b, parentName, parentSize) + langLine(b.lang) });
-    return { dir, task, state: state() };
+    return runIn(openProject(dir), () => {
+      const task = startTask({ agent: b.agent, title: `Version: ${b.label}`, prompt: variantPrompt(b, parentName, parentSize) + langLine(b.lang) });
+      return { dir, task, state: state() };
+    });
   });
 
   // ---------- footage recording (web pages, macOS apps) ----------
@@ -614,7 +615,7 @@ export async function registerRoutes(app: FastifyInstance) {
     return store.project.items.find((i) => i.id === iid);
   };
   const runRecording = (kind: 'web' | 'screen', label: string, fn: (job: RecordJob) => Promise<{ file: string; duration: number }>, place?: { start?: number; track?: string }) => {
-    const job: RecordJob = { id: 'r' + nid(), kind, status: 'running', stage: 'preparing', label };
+    const job: RecordJob = { id: 'r' + nid(), project: cur().id, kind, status: 'running', stage: 'preparing', label };
     emitJob(job);
     const done = (async () => {
       try {
@@ -711,7 +712,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const store = need();
     const out = store.p('.studio', 'versions', req.body.sha);
     await exportAt(store.dir, req.body.sha, `clips/${req.body.clipId}`, out);
-    return { base: `/p/.studio/versions/${req.body.sha}/clips` };
+    return { base: `${pbase()}/.studio/versions/${req.body.sha}/clips` };
   });
 
   // ---------- export ----------
@@ -747,14 +748,14 @@ export async function registerRoutes(app: FastifyInstance) {
     need();
     const r = await renderClipSheet(req.body.clipId, req.body);
     const tid = taskOf(req);
-    if (tid) { taskEvent(tid, { kind: 'image', src: '/p/' + r.file, ...msg('{clip} · {n} frames', { clip: req.body.clipId, n: r.times.length }) }); setFocus(tid, { kind: 'clip', id: req.body.clipId, at: Date.now() }); }
+    if (tid) { taskEvent(tid, { kind: 'image', src: pbase() + '/' + r.file, ...msg('{clip} · {n} frames', { clip: req.body.clipId, n: r.times.length }) }); setFocus(tid, { kind: 'clip', id: req.body.clipId, at: Date.now() }); }
     return { ...r, png: r.png.toString('base64'), file: cur().p(r.file) };
   });
   app.post<{ Body: { times: number[] } }>('/api/agent/render-frame', async (req) => {
     need();
     const r = await renderFrames(req.body.times);
     const tid = taskOf(req);
-    if (tid) taskEvent(tid, { kind: 'image', src: '/p/' + r.file, ...msg('frame {times}', { times: req.body.times.map((t) => t.toFixed(1) + 's').join(', ') }) });
+    if (tid) taskEvent(tid, { kind: 'image', src: pbase() + '/' + r.file, ...msg('frame {times}', { times: req.body.times.map((t) => t.toFixed(1) + 's').join(', ') }) });
     return { ...r, png: r.png.toString('base64'), file: cur().p(r.file) };
   });
   app.post<{ Body: { clipId: string } }>('/api/agent/lint-clip', async (req) => { need(); return lintClip(req.body.clipId); });
@@ -770,7 +771,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const a = readJson<AudioAnalysis | null>(store.p('.studio', 'analysis', `music-${req.body.musicId}.json`), null);
     const spec = store.p('.studio', 'frames', `spec-${req.body.musicId}.png`);
     await spectrogram(store.p(info.rendered!), spec);
-    { const tid = taskOf(req); if (tid) taskEvent(tid, { kind: 'image', src: `/p/.studio/frames/spec-${req.body.musicId}.png?v=${Date.now()}`, ...msg('spectrogram of {track}', { track: req.body.musicId }) }); }
+    { const tid = taskOf(req); if (tid) taskEvent(tid, { kind: 'image', src: `${pbase()}/.studio/frames/spec-${req.body.musicId}.png?v=${Date.now()}`, ...msg('spectrogram of {track}', { track: req.body.musicId }) }); }
     return {
       summary: { ...info.meta, rendered: info.rendered, peakDbfs: a ? +(20 * Math.log10(a.peak + 1e-9)).toFixed(1) : null, loudness: a ? loudnessSparkline(a.loudness) : null, loudnessNote: 'one char ≈ ' + (a ? (a.duration / Math.min(80, a.loudness.length)).toFixed(2) : '?') + 's, ▁ quiet → █ loud', accents: a?.accents, detectedBpm: a?.bpm },
       spectrogram: fs.readFileSync(spec).toString('base64'),

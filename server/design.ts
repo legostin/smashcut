@@ -6,7 +6,8 @@ import { readJson, writeJson, Mutex } from './util.ts';
 /** design.json — the project's design system (colour, type, motion, spacing tokens). Clips read it as CSS vars. */
 export const EMPTY_DESIGN: DesignSystem = { colors: [], type: [], motion: [], spacing: [] };
 const mutex = new Mutex();
-let lastWrite = 0;
+/** last own write per project (ignore the watcher echo) */
+const lastWrites = new Map<string, number>();
 
 const slugKey = (s: string) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'x';
 
@@ -29,7 +30,7 @@ export function getDesign(): DesignSystem {
 export function saveDesign(patch: Partial<DesignSystem>) {
   return mutex.run(async () => {
     const d = normalizeDesign({ ...getDesign(), ...patch, updatedAt: new Date().toISOString() });
-    lastWrite = Date.now();
+    lastWrites.set(cur().id, Date.now());
     writeJson(cur().p('design.json'), d);
     bus.send({ type: 'design', design: d });
     return d;
@@ -37,7 +38,7 @@ export function saveDesign(patch: Partial<DesignSystem>) {
 }
 
 export function onDesignFileChanged() {
-  if (Date.now() - lastWrite < 800) return;
+  if (Date.now() - (lastWrites.get(cur().id) || 0) < 800) return;
   bus.send({ type: 'design', design: getDesign() });
 }
 

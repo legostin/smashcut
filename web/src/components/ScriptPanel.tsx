@@ -2,16 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import type { Scene, StageId } from '../../../shared/types';
 import { useStore, usePlayhead, actions, seek, fmtTime, setState } from '../store';
 import { Icon } from './Icon';
+import { t, tn } from '../i18n';
 
 const STAGES: { id: StageId; label: string }[] = [
-  { id: 'brief', label: 'Бриф' },
-  { id: 'script', label: 'Сценарий' },
-  { id: 'storyboard', label: 'Раскадровка' },
-  { id: 'production', label: 'Производство' },
-  { id: 'review', label: 'Проверка' },
-  { id: 'export', label: 'Экспорт' },
+  { id: 'brief', label: 'Brief' },
+  { id: 'script', label: 'Script' },
+  { id: 'storyboard', label: 'Storyboard' },
+  { id: 'production', label: 'Production' },
+  { id: 'review', label: 'Review' },
+  { id: 'export', label: 'Export' },
 ];
-const STATUS: Record<Scene['status'], string> = { todo: 'Не начато', doing: 'В работе', done: 'Готово' };
+const STATUS: Record<Scene['status'], string> = { todo: 'Not started', doing: 'In progress', done: 'Done' };
 const NEXT: Record<Scene['status'], Scene['status']> = { todo: 'doing', doing: 'done', done: 'todo' };
 
 /** Script & production pipeline: stage stepper, brief, scene cards (storyboard). */
@@ -26,18 +27,18 @@ export function ScriptPanel() {
 
   const writeScript = () => actions.startTask(
     script.scenes.length
-      ? 'Перепиши сценарий видео по брифу (get_script → set_script). Сохрани удачные сцены, улучши хук и тайминг. Пока только сценарий, без производства.'
-      : 'Напиши сценарий видео по брифу из сценария проекта (get_script → set_script, stage "script"): сцены с таймингом, закадровым текстом и визуалом. Пока только сценарий, без производства.',
+      ? 'Rewrite the video script from the brief (get_script → set_script). Keep the scenes that work, improve the hook and the timing. Script only for now, no production.'
+      : 'Write the video script from the brief in the project script (get_script → set_script, stage "script"): scenes with timing, voiceover text and visuals. Script only for now, no production.',
   );
-  const produceAll = () => actions.startTask('Сделай видео по сценарию (get_script): раскадровка → производство сцена за сценой с обновлением статусов (update_scene) → проверка. Следуй скиллу studio-production.');
+  const produceAll = () => actions.startTask('Make the video from the script (get_script): storyboard → production scene by scene, updating statuses (update_scene) → review. Follow the studio-production skill.');
 
   return (
     <div className="script">
       <div className="stepper">
         {STAGES.map((st, i) => (
-          <button key={st.id} className={'step-pill' + (i < stageIdx ? ' past' : '') + (i === stageIdx ? ' now' : '')} onClick={() => actions.saveScript({ stage: st.id })} title={`Этап: ${st.label}`}>
+          <button key={st.id} className={'step-pill' + (i < stageIdx ? ' past' : '') + (i === stageIdx ? ' now' : '')} onClick={() => actions.saveScript({ stage: st.id })} title={t('Stage: {name}', { name: t(st.label) })}>
             <span className="step-dot">{i < stageIdx ? <Icon name="check" size={9} /> : i + 1}</span>
-            <span className="step-label">{st.label}</span>
+            <span className="step-label">{t(st.label)}</span>
           </button>
         ))}
       </div>
@@ -45,7 +46,7 @@ export function ScriptPanel() {
       <div className="script-body">
         <div className={'brief' + (briefOpen ? ' open' : '')}>
           <button className="brief-head" onClick={() => setBriefOpen(!briefOpen)}>
-            <span>Бриф</span>
+            <span>{t('Brief')}</span>
             {!briefOpen && script.brief && <span className="brief-peek ellipsis">{script.brief}</span>}
             <Icon name="chevron" size={11} />
           </button>
@@ -53,7 +54,7 @@ export function ScriptPanel() {
             <>
               <BriefEditor value={script.brief} />
               <div className="row gap6">
-                <button className="btn sm primary" disabled={!script.brief.trim()} onClick={writeScript}><Icon name="sparkle" size={11} /> {script.scenes.length ? 'Переписать сценарий' : 'Написать сценарий'}</button>
+                <button className="btn sm primary" disabled={!script.brief.trim()} onClick={writeScript}><Icon name="sparkle" size={11} /> {script.scenes.length ? t('Rewrite script') : t('Write script')}</button>
               </div>
             </>
           )}
@@ -61,7 +62,7 @@ export function ScriptPanel() {
 
         {script.scenes.length > 0 && (
           <div className="scenes-head">
-            <span>{script.scenes.length} {plural(script.scenes.length, 'сцена', 'сцены', 'сцен')} · {fmtTime(total, fps)}</span>
+            <span>{tn(script.scenes.length, '{n} scene', '{n} scenes')} · {fmtTime(total, fps)}</span>
             <span className="scenes-progress"><span style={{ width: `${(done / script.scenes.length) * 100}%` }} /></span>
             <span>{done}/{script.scenes.length}</span>
           </div>
@@ -72,21 +73,20 @@ export function ScriptPanel() {
         </div>
 
         <div className="row gap6 script-actions">
-          <button className="btn sm ghost" onClick={() => actions.addScene()}><Icon name="plus" size={12} /> Сцена</button>
-          {script.scenes.length > 0 && <button className="btn sm" onClick={produceAll}><Icon name="sparkle" size={11} /> Сделать всё видео</button>}
+          <button className="btn sm ghost" onClick={() => actions.addScene()}><Icon name="plus" size={12} /> {t('Scene')}</button>
+          {script.scenes.length > 0 && <button className="btn sm" onClick={produceAll}><Icon name="sparkle" size={11} /> {t('Make the whole video')}</button>}
           {script.scenes.some((x) => x.voiceover?.trim()) && <VoiceAll />}
         </div>
       </div>
     </div>
   );
 }
-const plural = (n: number, one: string, few: string, many: string) => (n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many);
 
 function BriefEditor({ value }: { value: string }) {
   const [v, setV] = useState(value);
   useEffect(() => setV(value), [value]);
   const ref = useAutoGrow(v);
-  return <textarea ref={ref} className="brief-input" rows={3} value={v} placeholder="О чём ролик, для кого, длительность, формат (16:9 / 9:16), тон, обязательные фразы, ссылки…" onChange={(e) => setV(e.target.value)} onBlur={() => v !== value && actions.saveScript({ brief: v })} />;
+  return <textarea ref={ref} className="brief-input" rows={3} value={v} placeholder={t('What the video is about, who it is for, length, format (16:9 / 9:16), tone, must-have phrases, links…')} onChange={(e) => setV(e.target.value)} onBlur={() => v !== value && actions.saveScript({ brief: v })} />;
 }
 
 function VoiceAll() {
@@ -100,7 +100,7 @@ function VoiceAll() {
     }
     setProg(null);
   };
-  return <button className="btn sm ghost" disabled={!!prog} onClick={run}>{prog ? <><span className="spinner sm" /> Озвучка {prog}</> : <>♪ Озвучить всё</>}</button>;
+  return <button className="btn sm ghost" disabled={!!prog} onClick={run}>{prog ? <><span className="spinner sm" /> {t('Voiceover {p}', { p: prog })}</> : <>♪ {t('Voice all')}</>}</button>;
 }
 
 function useAutoGrow(v: string) {
@@ -110,11 +110,11 @@ function useAutoGrow(v: string) {
 }
 
 function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
-  const t = usePlayhead();
-  const active = t >= sc.start && t < sc.start + sc.duration;
+  const ph = usePlayhead();
+  const active = ph >= sc.start && ph < sc.start + sc.duration;
   const [open, setOpen] = useState(false);
   const live = useStore((s) => s.tasks.some((x) => x.status === 'running' && x.focus?.kind === 'script') && sc.status === 'doing');
-  const make = () => actions.startTask(`Сделай сцену ${n} «${sc.title}» (id ${sc.id}, ${sc.start.toFixed(2)}–${(sc.start + sc.duration).toFixed(2)} s) по сценарию: get_script → update_scene status doing → клипы/музыка/таймлайн → проверка render_frame → update_scene done с itemIds.`);
+  const make = () => actions.startTask(`Make scene ${n} "${sc.title}" (id ${sc.id}, ${sc.start.toFixed(2)}–${(sc.start + sc.duration).toFixed(2)} s) from the script: get_script → update_scene status doing → clips/music/timeline → check with render_frame → update_scene done with itemIds.`);
   return (
     <div className={`scene st-${sc.status}${active ? ' active' : ''}${open ? ' open' : ''}`}>
       <div className="scene-top" onClick={() => { seek(sc.start + 0.001); setState({ selectedItemId: null }); }}>
@@ -122,23 +122,23 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
         <TitleEdit sc={sc} />
         <span className="scene-time mono">{fmtTime(sc.start, fps)}</span>
       </div>
-      {(sc.voiceover || open) && <Field label="Текст" value={sc.voiceover || ''} onSave={(v) => actions.patchScene(sc.id, { voiceover: v })} open={open} placeholder="Закадровый или экранный текст" />}
-      {(sc.visual || open) && <Field label="Визуал" value={sc.visual || ''} onSave={(v) => actions.patchScene(sc.id, { visual: v })} open={open} placeholder="Что в кадре: композиция, движение, стиль" />}
+      {(sc.voiceover || open) && <Field label={t('Text')} value={sc.voiceover || ''} onSave={(v) => actions.patchScene(sc.id, { voiceover: v })} open={open} placeholder={t('Voiceover or on-screen text')} />}
+      {(sc.visual || open) && <Field label={t('Visual')} value={sc.visual || ''} onSave={(v) => actions.patchScene(sc.id, { visual: v })} open={open} placeholder={t('What is in the frame: composition, motion, style')} />}
       {open && (
         <div className="scene-timing">
-          <TimeInput label="Начало" value={sc.start} onSave={(v) => actions.patchScene(sc.id, { start: v })} />
-          <TimeInput label="Длина" value={sc.duration} onSave={(v) => actions.patchScene(sc.id, { duration: v })} />
+          <TimeInput label={t('Starts at')} value={sc.start} onSave={(v) => actions.patchScene(sc.id, { start: v })} />
+          <TimeInput label={t('Duration')} value={sc.duration} onSave={(v) => actions.patchScene(sc.id, { duration: v })} />
         </div>
       )}
       <div className="scene-bar">
-        <button className={`scene-status st-${sc.status}`} onClick={() => actions.patchScene(sc.id, { status: NEXT[sc.status] })} title="Сменить статус">
-          {live ? <span className="spinner sm" /> : <span className="dot" />}{STATUS[sc.status]}
+        <button className={`scene-status st-${sc.status}`} onClick={() => actions.patchScene(sc.id, { status: NEXT[sc.status] })} title={t('Change status')}>
+          {live ? <span className="spinner sm" /> : <span className="dot" />}{t(STATUS[sc.status])}
         </button>
         <span className="grow" />
-        <button className="link" onClick={() => setOpen(!open)}>{open ? 'Свернуть' : 'Подробнее'}</button>
+        <button className="link" onClick={() => setOpen(!open)}>{open ? t('Collapse') : t('More')}</button>
         {sc.voiceover?.trim() && <VoiceButton sc={sc} />}
-        <button className="link" onClick={make}>Сделать</button>
-        {open && <button className="link danger" onClick={() => actions.deleteScene(sc.id)}>Удалить</button>}
+        <button className="link" onClick={make}>{t('Make')}</button>
+        {open && <button className="link danger" onClick={() => actions.deleteScene(sc.id)}>{t('Delete')}</button>}
       </div>
     </div>
   );
@@ -148,9 +148,9 @@ function VoiceButton({ sc }: { sc: Scene }) {
   const [busy, setBusy] = useState(false);
   const voiced = useStore((s) => (sc.itemIds || []).some((id) => s.project?.items.find((i) => i.id === id && i.label?.startsWith('VO'))));
   return (
-    <button className={'link' + (voiced ? ' voiced' : '')} disabled={busy} title="Озвучить текст сцены через ElevenLabs"
+    <button className={'link' + (voiced ? ' voiced' : '')} disabled={busy} title={t('Voice the scene text with ElevenLabs')}
       onClick={async () => { setBusy(true); try { await actions.voiceScene(sc.id); } catch {} finally { setBusy(false); } }}>
-      {busy ? <span className="spinner sm" /> : voiced ? '♪ Переозвучить' : 'Озвучить'}
+      {busy ? <span className="spinner sm" /> : voiced ? '♪ ' + t('Re-voice') : t('Voice')}
     </button>
   );
 }

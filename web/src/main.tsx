@@ -6,7 +6,13 @@ import '@fontsource/inter/700.css';
 import '@fontsource/jetbrains-mono/400.css';
 import './styles.css';
 import { App } from './App';
+import { useLocale } from './i18n';
+
+function Root() {
+  const lang = useLocale();
+  return <App key={lang} />;
+}
 import { boot } from './store';
 
 boot();
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(<Root />);

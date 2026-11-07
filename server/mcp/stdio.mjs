@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 // Agent Video Studio — MCP server (stdio). Thin bridge to the editor's REST API.
 // Attach to any agent:  claude mcp add studio -- node <repo>/server/mcp/stdio.mjs
-// Env: STUDIO_URL (default http://127.0.0.1:4317), STUDIO_TASK (task id for attribution)
+// Env: STUDIO_URL (default http://127.0.0.1:4317), STUDIO_TASK (task id for attribution), STUDIO_PROJECT (open project id)
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
 const BASE = process.env.STUDIO_URL || 'http://127.0.0.1:4317';
 const TASK = process.env.STUDIO_TASK || '';
+const PROJECT = process.env.STUDIO_PROJECT || '';
 
 // the editor may restart while the agent works: retry connection failures for up to ~2 minutes
 async function api(method, path, body) {
@@ -25,7 +26,7 @@ async function api(method, path, body) {
 async function apiOnce(method, path, body) {
   const res = await fetch(BASE + path, {
     method,
-    headers: body ? { 'content-type': 'application/json', 'x-studio-task': TASK } : { 'x-studio-task': TASK },
+    headers: body ? { 'content-type': 'application/json', 'x-studio-task': TASK, 'x-studio-project': PROJECT } : { 'x-studio-task': TASK, 'x-studio-project': PROJECT },
     body: body ? JSON.stringify(body) : undefined,
   });
   const ct = res.headers.get('content-type') || '';

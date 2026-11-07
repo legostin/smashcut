@@ -3,6 +3,8 @@ import type { Item } from '../../../shared/types';
 import { TRANSITIONS, EFFECTS, MASKS, layerFrame, type ItemFx, type TransitionType, type EffectType, type Mask, type LayerFrame } from '../../../shared/fx';
 import { useStore, actions, notify, getState, setState } from '../store';
 import { Icon } from './Icon';
+import { t } from '../i18n';
+import { TRANSITION_NAMES, EFFECT_NAMES, trName, trHint, fxName, maskName, maskHint } from '../fxNames';
 
 /** two sample "shots" for previews (inline SVG, no assets) */
 const shot = (a: string, b: string, label: string) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="320" height="180" fill="url(#g)"/><circle cx="250" cy="40" r="60" fill="#fff" opacity=".12"/><text x="24" y="150" font-family="Unbounded, sans-serif" font-weight="800" font-size="64" fill="#fff" opacity=".92">${label}</text></svg>`)}`;
@@ -57,7 +59,7 @@ export function FxPreview({ fx, mode }: { fx: ItemFx; mode: 'transition' | 'effe
 const selectedItem = (): Item | null => { const s = getState(); return s.project?.items.find((i) => i.id === s.selectedItemId) || null; };
 function needItem() {
   const it = selectedItem();
-  if (!it) { notify('error', 'Сначала выберите клип на таймлайне — эффект применится к нему'); return null; }
+  if (!it) { notify('error', t('Select a clip on the timeline first — the effect will be applied to it')); return null; }
   return it;
 }
 const patchFx = (it: Item, fx: ItemFx) => actions.updateItem(it.id, { fx: { ...(it.fx || {}), ...fx } });
@@ -68,7 +70,7 @@ export function applyTransition(type: TransitionType, where: 'in' | 'out' | 'bot
   const d = Math.min(0.6, it.duration / 3);
   const tr = { type, duration: +d.toFixed(2) };
   patchFx(it, where === 'both' ? { in: tr, out: tr } : { [where]: tr });
-  notify('info', `Переход добавлен: ${TRANSITIONS.find((x) => x.type === type)?.name}`);
+  notify('info', t('Transition added: {name}', { name: trName(type) }));
 }
 export function applyEffect(type: EffectType) {
   const it = needItem();
@@ -78,38 +80,38 @@ export function applyEffect(type: EffectType) {
   for (const p of spec.params) params[p.key] = p.def;
   for (const o of spec.options || []) params[o.key] = o.def;
   patchFx(it, { effects: [...(it.fx?.effects || []), { id: Math.random().toString(36).slice(2, 8), type, params }] });
-  notify('info', `Эффект добавлен: ${spec.name}`);
+  notify('info', t('Effect added: {name}', { name: fxName(spec.type) }));
 }
 export function applyMask(m: Mask) {
   const it = needItem();
   if (!it) return;
   patchFx(it, { mask: { ...m } });
-  notify('info', 'Маска применена');
+  notify('info', t('Mask applied'));
 }
 
 const drag = (data: object) => (e: React.DragEvent) => { e.dataTransfer.setData('application/x-studio', JSON.stringify(data)); e.dataTransfer.effectAllowed = 'copy'; };
 
 export function TransitionsGrid({ q }: { q: string }) {
-  const groups = [...new Set(TRANSITIONS.map((t) => t.group))];
+  const groups = [...new Set(TRANSITIONS.map((x) => TRANSITION_NAMES[x.type].group))];
   const sel = useStore((s) => !!s.selectedItemId);
   return (
     <div className="col gap16">
-      <Hint sel={sel} what="переход" />
+      <Hint sel={sel} what={t('a transition')} />
       {groups.map((g) => {
-        const list = TRANSITIONS.filter((t) => t.group === g && (!q || (t.name + t.hint).toLowerCase().includes(q.toLowerCase())));
+        const list = TRANSITIONS.filter((x) => TRANSITION_NAMES[x.type].group === g && (!q || (trName(x.type) + trHint(x.type)).toLowerCase().includes(q.toLowerCase())));
         if (!list.length) return null;
         return (
           <div key={g} className="col gap8">
-            <div className="lib-group">{g}</div>
+            <div className="lib-group">{t(g)}</div>
             <div className="fx-grid">
-              {list.map((t) => (
-                <div key={t.type} className="fx-card" draggable onDragStart={drag({ type: 'transition', transition: t.type })} title={t.hint}>
-                  <FxPreview fx={{ in: { type: t.type, duration: 0.8 }, out: { type: t.type, duration: 0.8 } }} mode="transition" />
-                  <div className="fx-name">{t.name}</div>
+              {list.map((x) => (
+                <div key={x.type} className="fx-card" draggable onDragStart={drag({ type: 'transition', transition: x.type })} title={trHint(x.type)}>
+                  <FxPreview fx={{ in: { type: x.type, duration: 0.8 }, out: { type: x.type, duration: 0.8 } }} mode="transition" />
+                  <div className="fx-name">{trName(x.type)}</div>
                   <div className="fx-actions">
-                    <button onClick={() => applyTransition(t.type, 'in')}>Вход</button>
-                    <button onClick={() => applyTransition(t.type, 'out')}>Выход</button>
-                    <button onClick={() => applyTransition(t.type, 'both')}>Оба</button>
+                    <button onClick={() => applyTransition(x.type, 'in')}>{t('In')}</button>
+                    <button onClick={() => applyTransition(x.type, 'out')}>{t('Out')}</button>
+                    <button onClick={() => applyTransition(x.type, 'both')}>{t('Both')}</button>
                   </div>
                 </div>
               ))}
@@ -122,17 +124,17 @@ export function TransitionsGrid({ q }: { q: string }) {
 }
 
 export function EffectsGrid({ q }: { q: string }) {
-  const groups = [...new Set(EFFECTS.map((t) => t.group))];
+  const groups = [...new Set(EFFECTS.map((x) => EFFECT_NAMES[x.type].group))];
   const sel = useStore((s) => !!s.selectedItemId);
   return (
     <div className="col gap16">
-      <Hint sel={sel} what="эффект" />
+      <Hint sel={sel} what={t('an effect')} />
       {groups.map((g) => {
-        const list = EFFECTS.filter((t) => t.group === g && (!q || t.name.toLowerCase().includes(q.toLowerCase())));
+        const list = EFFECTS.filter((x) => EFFECT_NAMES[x.type].group === g && (!q || fxName(x.type).toLowerCase().includes(q.toLowerCase())));
         if (!list.length) return null;
         return (
           <div key={g} className="col gap8">
-            <div className="lib-group">{g}</div>
+            <div className="lib-group">{t(g)}</div>
             <div className="fx-grid">
               {list.map((e) => {
                 const params: Record<string, number | string> = {};
@@ -141,7 +143,7 @@ export function EffectsGrid({ q }: { q: string }) {
                 return (
                   <button key={e.type} className="fx-card click" onClick={() => applyEffect(e.type)}>
                     <FxPreview fx={{ effects: [{ type: e.type, params }] }} mode="effect" />
-                    <div className="fx-name">{e.name}</div>
+                    <div className="fx-name">{fxName(e.type)}</div>
                   </button>
                 );
               })}
@@ -157,12 +159,12 @@ export function MasksGrid() {
   const sel = useStore((s) => !!s.selectedItemId);
   return (
     <div className="col gap16">
-      <Hint sel={sel} what="маску" />
+      <Hint sel={sel} what={t('a mask')} />
       <div className="fx-grid">
         {MASKS.map((m) => (
-          <button key={m.shape} className="fx-card click" onClick={() => applyMask(m.def)} title={m.hint}>
+          <button key={m.shape} className="fx-card click" onClick={() => applyMask(m.def)} title={maskHint(m.shape)}>
             <FxPreview fx={{ mask: m.def }} mode="mask" />
-            <div className="fx-name">{m.name}</div>
+            <div className="fx-name">{maskName(m.shape)}</div>
           </button>
         ))}
       </div>
@@ -173,8 +175,8 @@ export function MasksGrid() {
 function Hint({ sel, what }: { sel: boolean; what: string }) {
   const name = useStore((s) => { const it = s.project?.items.find((i) => i.id === s.selectedItemId); return it ? (s.clips.find((c) => c.id === it.ref)?.name || it.label || it.ref) : ''; });
   return sel
-    ? <div className="fx-hint">Применяется к: <b>{name}</b></div>
-    : <div className="fx-hint warn"><Icon name="layers" size={13} /> Выберите клип на таймлайне, затем кликните {what}. Переходы можно перетащить прямо на край клипа.</div>;
+    ? <div className="fx-hint">{t('Applies to:')} <b>{name}</b></div>
+    : <div className="fx-hint warn"><Icon name="layers" size={13} /> {t('Select a clip on the timeline, then click {what}. Transitions can be dragged straight onto a clip edge.', { what })}</div>;
 }
 
 export function useFxLibrarySelectedGuard() { return useStore((s) => s.selectedItemId); }
