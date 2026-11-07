@@ -229,7 +229,13 @@ export interface Settings {
   parallelTasks: number;
   renderWorkers: number;
   transcribeModel: string;
+  /** ElevenLabs: API key (stored locally; masked when sent to the UI), default voice & model */
+  elevenlabsKey?: string;
+  elevenlabsVoiceId?: string;
+  elevenlabsModel?: string;
 }
+
+export interface Voice { id: string; name: string; category?: string; labels?: Record<string, string>; preview?: string; languages?: string[] }
 
 export interface PermissionRequest {
   id: string;

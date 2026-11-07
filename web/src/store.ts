@@ -266,6 +266,13 @@ export const actions = {
     setState((s) => ({ script: { ...s.script, scenes: s.script.scenes.map((x) => (x.id === id ? { ...x, ...patch } : x)) } }));
     return api('PATCH', `/api/script/scenes/${id}`, patch);
   },
+  async voiceScene(sceneId: string) {
+    const st = getState().settings as any;
+    if (!st?.hasElevenlabsKey || !st?.elevenlabsVoiceId) { notify('error', 'Настройте ElevenLabs: ключ и голос в Настройках'); setState({ dialog: 'settings' }); throw new Error('no voice'); }
+    const r = await api<any>('POST', '/api/voice/tts', { sceneId });
+    notify(r.overflow > 0 ? 'error' : 'info', r.overflow > 0 ? `Озвучка длиннее сцены на ${r.overflow.toFixed(1)} с — удлините сцену или сократите текст` : `Озвучено: ${r.duration.toFixed(1)} с${r.cached ? ' (из кэша)' : ''}`);
+    return r;
+  },
   addScene() { return api('POST', '/api/script/scenes', {}); },
   deleteScene(id: string) { return api('DELETE', `/api/script/scenes/${id}`); },
   decidePermission(id: string, allow: boolean, always = false) { return api('POST', `/api/permissions/${id}`, { allow, always }); },

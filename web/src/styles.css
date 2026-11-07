@@ -603,3 +603,7 @@ input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.15); }
 .ac-label { position: absolute; left: 14px; top: 16px; display: inline-flex; flex-direction: column; gap: 1px; padding: 4px 9px 5px; border-radius: 4px 10px 10px 10px; background: rgb(var(--c-graphics)); color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
 .agent-cursor.ag-codex .ac-label { background: #16a34a; }
 .ac-doing { font-size: 10.5px; font-weight: 400; opacity: 0.85; max-width: 260px; overflow: hidden; text-overflow: ellipsis; font-family: 'JetBrains Mono', monospace; }
+
+.link.voiced { color: var(--ok); }
+.link:disabled { opacity: 0.6; cursor: default; }
+.gap10 { gap: 10px; }

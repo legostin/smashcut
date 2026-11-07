@@ -74,6 +74,7 @@ export function ScriptPanel() {
         <div className="row gap6 script-actions">
           <button className="btn sm ghost" onClick={() => actions.addScene()}><Icon name="plus" size={12} /> Сцена</button>
           {script.scenes.length > 0 && <button className="btn sm" onClick={produceAll}><Icon name="sparkle" size={11} /> Сделать всё видео</button>}
+          {script.scenes.some((x) => x.voiceover?.trim()) && <VoiceAll />}
         </div>
       </div>
     </div>
@@ -86,6 +87,20 @@ function BriefEditor({ value }: { value: string }) {
   useEffect(() => setV(value), [value]);
   const ref = useAutoGrow(v);
   return <textarea ref={ref} className="brief-input" rows={3} value={v} placeholder="О чём ролик, для кого, длительность, формат (16:9 / 9:16), тон, обязательные фразы, ссылки…" onChange={(e) => setV(e.target.value)} onBlur={() => v !== value && actions.saveScript({ brief: v })} />;
+}
+
+function VoiceAll() {
+  const scenes = useStore((s) => s.script.scenes);
+  const [prog, setProg] = useState<string | null>(null);
+  const run = async () => {
+    const list = scenes.filter((x) => x.voiceover?.trim());
+    for (let i = 0; i < list.length; i++) {
+      setProg(`${i + 1}/${list.length}`);
+      try { await actions.voiceScene(list[i].id); } catch { break; }
+    }
+    setProg(null);
+  };
+  return <button className="btn sm ghost" disabled={!!prog} onClick={run}>{prog ? <><span className="spinner sm" /> Озвучка {prog}</> : <>♪ Озвучить всё</>}</button>;
 }
 
 function useAutoGrow(v: string) {
@@ -121,10 +136,22 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
         </button>
         <span className="grow" />
         <button className="link" onClick={() => setOpen(!open)}>{open ? 'Свернуть' : 'Подробнее'}</button>
+        {sc.voiceover?.trim() && <VoiceButton sc={sc} />}
         <button className="link" onClick={make}>Сделать</button>
         {open && <button className="link danger" onClick={() => actions.deleteScene(sc.id)}>Удалить</button>}
       </div>
     </div>
+  );
+}
+
+function VoiceButton({ sc }: { sc: Scene }) {
+  const [busy, setBusy] = useState(false);
+  const voiced = useStore((s) => (sc.itemIds || []).some((id) => s.project?.items.find((i) => i.id === id && i.label?.startsWith('VO'))));
+  return (
+    <button className={'link' + (voiced ? ' voiced' : '')} disabled={busy} title="Озвучить текст сцены через ElevenLabs"
+      onClick={async () => { setBusy(true); try { await actions.voiceScene(sc.id); } catch {} finally { setBusy(false); } }}>
+      {busy ? <span className="spinner sm" /> : voiced ? '♪ Переозвучить' : 'Озвучить'}
+    </button>
   );
 }
 

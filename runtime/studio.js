@@ -61,6 +61,8 @@
     outExpo: (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
     inOutExpo: (t) => (t === 0 ? 0 : t === 1 ? 1 : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2),
     outBack: (t) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
+    inBack: (t) => { const c1 = 1.70158, c3 = c1 + 1; return c3 * t * t * t - c1 * t * t; },
+    inOutSine: (t) => -(Math.cos(Math.PI * t) - 1) / 2,
     outElastic: (t) => { const c4 = (2 * Math.PI) / 3; return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1; },
   };
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));

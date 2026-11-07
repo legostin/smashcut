@@ -20,6 +20,12 @@ Work in small visible steps so mistakes are caught early.
 - Before building clips: `get_design`; if empty, `set_design` with 4–7 colours (bg, surface, text, muted, accent, accent-2), 3–4 type roles (display, title, body, caption — bundled fonts only; Cyrillic-capable for Russian), 3–4 motion tokens (enter, exit, emphasis, ambient with GSAP eases + durations), spacing (margin, gap). Derive it from the brief (brand, tone).
 - All clips use the tokens (see studio-clip-authoring). The user sees the system on the board.
 
+## Voice-over (ElevenLabs)
+- If the user wants narration and an ElevenLabs key is configured (`list_voices` works): write natural spoken text into each scene's `voiceover`, then `generate_voiceover {sceneId}` per scene (in order — neighbouring text is passed for natural intonation).
+- Check `overflow`: if the voice runs past the scene, lengthen the scene (and shift later scenes) or tighten the text and regenerate. Pacing: ~2.5 words/s for RU, ~2.8 for EN.
+- Word timings from ElevenLabs feed `studio.words` immediately — use a captions template over the VO range.
+- Duck music under the voice: music item `volume` 0.25–0.4 while VO plays (split the music item if needed).
+
 ## 3. Storyboard
 - `set_script {stage:'storyboard'}`. For each scene decide the concrete build: gallery template (`list_templates`) vs. new clip, music bed, captions. Put that into `visual`/`notes`.
 

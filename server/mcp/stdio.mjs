@@ -161,6 +161,19 @@ server.registerTool('set_design', {
   },
 }, safe(async (a) => text(await api('PUT', '/api/design', a))));
 
+server.registerTool('list_voices', {
+  description: 'ElevenLabs voices available to the user (id, name, labels: accent/gender/age/use case) and TTS models. Needs an API key in the editor settings.',
+  inputSchema: {},
+}, safe(async () => text(await api('GET', '/api/voice/voices'))));
+
+server.registerTool('generate_voiceover', {
+  description: 'Generate voice-over with ElevenLabs and (by default) place it on the audio track. Pass sceneId to voice a scene from the script (uses its voiceover text, starts at the scene start, replaces a previous take of that scene, links the item to the scene) — or text + start. Returns duration and overflow (seconds the voice runs past the scene) so you can re-time scenes. Word timestamps become studio.words for captions automatically.',
+  inputSchema: {
+    sceneId: z.string().optional(), text: z.string().optional(), start: z.number().optional(), place: z.boolean().optional(),
+    voiceId: z.string().optional(), modelId: z.string().optional(), speed: z.number().min(0.7).max(1.2).optional(), stability: z.number().min(0).max(1).optional(), style: z.number().min(0).max(1).optional(), name: z.string().optional(),
+  },
+}, safe(async (a) => text(await api('POST', '/api/voice/tts', a))));
+
 server.registerTool('approve_permission', {
   description: 'Internal: permission prompt bridge. Claude Code calls this (via --permission-prompt-tool) when an action needs approval; the user approves or denies it in the editor UI.',
   inputSchema: { tool_name: z.string(), input: z.record(z.string(), z.any()), tool_use_id: z.string().optional() },

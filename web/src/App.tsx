@@ -8,7 +8,7 @@ import { Library } from './components/Library';
 import { Chat } from './components/Chat';
 import { ItemPanel } from './components/ItemPanel';
 import { Icon } from './components/Icon';
-import type { Project, Settings } from '../../shared/types';
+import type { Project, Settings, Voice } from '../../shared/types';
 
 export function App() {
   useFollowAgent();
@@ -220,6 +220,7 @@ function SettingsDialog() {
         <label className="field"><span>Воркеров рендера</span><input className="input" type="number" min={1} max={12} value={s.renderWorkers} onChange={(e) => setS({ ...s, renderWorkers: Number(e.target.value) })} /></label>
         <label className="field"><span>Модель транскрипции</span><select className="input" value={s.transcribeModel} onChange={(e) => setS({ ...s, transcribeModel: e.target.value })}><option value="Xenova/whisper-tiny">whisper-tiny (быстро)</option><option value="Xenova/whisper-base">whisper-base</option><option value="Xenova/whisper-small">whisper-small (точнее)</option></select></label>
       </div>
+      <VoiceSettings s={s} setS={setS} />
       <div className="card small col gap4">
         <div><b>Claude Code:</b> {agents?.claude || 'не найден'}</div>
         <div><b>Codex:</b> {agents?.codex || 'не найден'}</div>
@@ -228,6 +229,57 @@ function SettingsDialog() {
         <div className="muted xsmall">Папка проекта: <code className="selectable">{dir}</code></div>
       </div>
       <div className="row gap6 end"><button className="btn ghost sm" onClick={() => setState({ dialog: null })}>Отмена</button><button className="btn primary sm" onClick={save}>Сохранить</button></div>
+    </div>
+  );
+}
+
+function VoiceSettings({ s, setS }: { s: Settings; setS: (s: Settings) => void }) {
+  const [voices, setVoices] = useState<Voice[] | null>(null);
+  const [models, setModels] = useState<{ id: string; name: string }[]>([]);
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const hasKey = (s as any).hasElevenlabsKey || (s.elevenlabsKey && !s.elevenlabsKey.startsWith('••••'));
+  const load = async (refresh = false) => {
+    setLoading(true); setErr('');
+    try {
+      if (s.elevenlabsKey && !s.elevenlabsKey.startsWith('••••')) await api('PATCH', '/api/settings', { elevenlabsKey: s.elevenlabsKey });
+      const r = await fetch('/api/voice/voices' + (refresh ? '?refresh=1' : ''));
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error);
+      setVoices(j.voices); setModels(j.models);
+    } catch (e) { setErr((e as Error).message); } finally { setLoading(false); }
+  };
+  useEffect(() => { if (hasKey) load(); }, []);
+  const preview = (v?: Voice) => { audio.current?.pause(); if (v?.preview) { audio.current = new Audio(v.preview); audio.current.play().catch(() => {}); } };
+  const voice = voices?.find((v) => v.id === s.elevenlabsVoiceId);
+  return (
+    <div className="card col gap10">
+      <div className="row between"><span className="strong">Озвучка · ElevenLabs</span>{voices && <span className="muted xsmall">{voices.length} голосов</span>}</div>
+      <div className="row gap6">
+        <input className="input grow" type="password" placeholder="API-ключ ElevenLabs (xi-api-key)" value={s.elevenlabsKey || ''} onChange={(e) => setS({ ...s, elevenlabsKey: e.target.value })} autoComplete="off" />
+        <button className="btn sm" disabled={loading} onClick={() => load(true)}>{loading ? <span className="spinner sm" /> : 'Проверить'}</button>
+      </div>
+      {err && <div className="error-box">{err}</div>}
+      {voices && (
+        <div className="grid2">
+          <label className="field"><span>Голос по умолчанию</span>
+            <div className="row gap6">
+              <select className="input grow" value={s.elevenlabsVoiceId || ''} onChange={(e) => setS({ ...s, elevenlabsVoiceId: e.target.value })}>
+                <option value="">— выберите —</option>
+                {voices.map((v) => <option key={v.id} value={v.id}>{v.name}{v.labels?.gender ? ` · ${v.labels.gender}` : ''}{v.labels?.accent ? ` · ${v.labels.accent}` : ''}</option>)}
+              </select>
+              <button className="icon-btn" title="Прослушать" disabled={!voice?.preview} onClick={() => preview(voice)}><Icon name="play" size={12} /></button>
+            </div>
+          </label>
+          <label className="field"><span>Модель</span>
+            <select className="input" value={s.elevenlabsModel || 'eleven_multilingual_v2'} onChange={(e) => setS({ ...s, elevenlabsModel: e.target.value })}>
+              {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </label>
+        </div>
+      )}
+      <div className="muted xsmall">Ключ хранится только локально (~/.agent-videostudio). Озвучка ложится на аудиодорожку, а тайминги слов сразу работают для субтитров.</div>
     </div>
   );
 }

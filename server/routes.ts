@@ -21,6 +21,7 @@ import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus } from 
 import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
+import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
 
@@ -46,7 +47,7 @@ function defaultDuration(kind: Item['kind'], ref: string): number {
 }
 
 export function state() {
-  if (!hasProject()) return { project: null, recents: getRecents(), projectsDir: PROJECTS_DIR, settings: getSettings() };
+  if (!hasProject()) return { project: null, recents: getRecents(), projectsDir: PROJECTS_DIR, settings: { ...getSettings(), elevenlabsKey: '' } };
   const store = cur();
   return {
     dir: store.dir,
@@ -56,7 +57,7 @@ export function state() {
     music: store.listMusic(),
     media: store.listMedia(),
     tasks: listTasks(),
-    settings: getSettings(),
+    settings: (() => { const st = getSettings(); return { ...st, elevenlabsKey: st.elevenlabsKey ? '••••' + st.elevenlabsKey.slice(-4) : '', hasElevenlabsKey: !!apiKey() }; })(),
     skills: listSkills(),
     jobs: getJobs(),
     permissions: permissions.list(),
@@ -457,6 +458,46 @@ export async function registerRoutes(app: FastifyInstance) {
     return { ok: true };
   });
 
+  // ---------- voice-over (ElevenLabs) ----------
+  app.get<{ Querystring: { refresh?: string } }>('/api/voice/voices', async (req) => ({ voices: await listVoices(!!req.query.refresh), models: MODELS }));
+  /** generate speech; optionally place it on the timeline (at a scene start or a time) */
+  app.post<{ Body: any }>('/api/voice/tts', async (req) => {
+    const store = need();
+    const b = (req.body || {}) as any;
+    const tid = taskOf(req);
+    let text: string = b.text || '';
+    let start: number | undefined = b.start;
+    let name: string | undefined = b.name;
+    const script = getScript();
+    const sc = b.sceneId ? script.scenes.find((x) => x.id === b.sceneId) : undefined;
+    if (b.sceneId && !sc) throw Object.assign(new Error('scene not found'), { statusCode: 404 });
+    if (sc) { text = text || sc.voiceover || ''; start = start ?? sc.start; name = name || `scene-${script.scenes.indexOf(sc) + 1}`; if (tid) setFocus(tid, { kind: 'script', id: sc.id, at: Date.now() }); }
+    const i = sc ? script.scenes.indexOf(sc) : -1;
+    const r = await tts({ text, voiceId: b.voiceId, modelId: b.modelId, name, speed: b.speed, stability: b.stability, style: b.style,
+      previousText: i > 0 ? script.scenes[i - 1].voiceover : undefined, nextText: i >= 0 && i < script.scenes.length - 1 ? script.scenes[i + 1].voiceover : undefined });
+    await probeMedia(r.file, true);
+    let item: Item | undefined;
+    if (b.place !== false && start != null) {
+      // one voice-over per scene: replace a previous VO item at that scene
+      const p = store.project;
+      let track = p.tracks.find((t) => t.kind === 'audio' && /озвуч|voice|vo/i.test(t.name)) || p.tracks.find((t) => t.kind === 'audio');
+      if (!track) { track = { id: 'vo', kind: 'audio', name: 'Озвучка' }; }
+      const tr = track;
+      const iid = 'i' + nid();
+      await store.update((pp) => {
+        if (!pp.tracks.some((t) => t.id === tr.id)) pp.tracks.push(tr);
+        if (sc) pp.items = pp.items.filter((x) => !(x.track === tr.id && x.kind === 'media' && x.label === `VO: ${sc.title}`));
+        pp.items.push({ id: iid, kind: 'media', ref: r.file, track: tr.id, start: +start!.toFixed(3), duration: +(r.duration + 0.05).toFixed(3), in: 0, label: sc ? `VO: ${sc.title}` : 'VO', volume: 1 });
+        pp.duration = Math.max(pp.duration, Math.ceil(start! + r.duration));
+      });
+      item = store.project.items.find((x) => x.id === iid);
+      if (sc) await patchScene(sc.id, { itemIds: [...new Set([...(sc.itemIds || []), iid])] });
+      recomputeTiming();
+    }
+    const overflow = sc ? +(r.duration - sc.duration).toFixed(2) : 0;
+    return { file: r.file, duration: r.duration, words: r.words.length, cached: r.cached, voiceId: r.voiceId, modelId: r.modelId, item, sceneDuration: sc?.duration, overflow: overflow > 0 ? overflow : 0 };
+  });
+
   // ---------- design system ----------
   app.get('/api/design', async () => (hasProject() ? getDesign() : { colors: [], type: [], motion: [], spacing: [] }));
   app.put<{ Body: any }>('/api/design', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'design', at: Date.now() }); return saveDesign(req.body as any); });
@@ -506,8 +547,14 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get('/api/exports', async () => listExports());
 
   // ---------- settings ----------
-  app.get('/api/settings', async () => getSettings());
-  app.patch<{ Body: Record<string, unknown> }>('/api/settings', async (req) => saveSettings(req.body as any));
+  const publicSettings = () => { const s = getSettings(); const k = s.elevenlabsKey || ''; return { ...s, elevenlabsKey: k ? '••••' + k.slice(-4) : '', hasElevenlabsKey: !!apiKey() }; };
+  app.get('/api/settings', async () => publicSettings());
+  app.patch<{ Body: Record<string, unknown> }>('/api/settings', async (req) => {
+    const b = { ...(req.body as any) };
+    if (typeof b.elevenlabsKey === 'string' && b.elevenlabsKey.startsWith('••••')) delete b.elevenlabsKey;
+    saveSettings(b);
+    return publicSettings();
+  });
 
   // ---------- agent (MCP bridge) ----------
   app.get('/api/agent/overview', async () => { need(); return overview(); });
