@@ -1,6 +1,7 @@
 {
   "name": "agent-videostudio",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "Local-first agentic motion graphics & video editor",
   "type": "module",
   "keywords": [
@@ -25,7 +26,8 @@
     "skills/",
     "server/mcp/",
     "server/skeletons/",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "dev": "concurrently -k -n server,web -c blue,magenta \"tsx watch --clear-screen=false server/index.ts\" \"vite\"",
