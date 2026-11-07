@@ -42,7 +42,7 @@ export interface State {
   recordJobs: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string }[];
   // ui
   libraryOpen: boolean;
-  libraryTab: 'templates' | 'media' | 'project';
+  libraryTab: 'inspiration' | 'templates' | 'media' | 'project';
   selectedItemId: string | null;
   selectedCommentId: string | null;
   selectedTaskId: string | null;

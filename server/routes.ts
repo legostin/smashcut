@@ -25,6 +25,7 @@ import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
 import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
 import { voiceScene, cleanupTakes, voicePace } from './voice/voiceover.ts';
+import { listInspiration, getInspiration, inspirationThumb } from './inspiration.ts';
 import { paceReport } from './voice/speech.ts';
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
 import { recordWeb, defaultWebActions, recordJobs, emitJob, type RecordJob } from './record/web.ts';
@@ -402,6 +403,16 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- gallery & library ----------
   app.get('/api/gallery', async () => listGallery());
+  // ---------- inspiration (curated real-world motion: link + breakdown) ----------
+  app.get('/api/inspiration', async () => listInspiration().map(({ breakdown, ...x }) => ({ ...x, breakdown: breakdown.slice(0, 280) })));
+  app.get<{ Params: { id: string } }>('/api/inspiration/:id', async (req) => { const x = getInspiration(req.params.id); if (!x) throw uerr('Not found', {}, 404); return x; });
+  app.get<{ Params: { id: string } }>('/api/inspiration/:id/thumb', async (req, reply) => {
+    const f = await inspirationThumb(req.params.id);
+    if (!f) return reply.code(404).send({ error: 'no preview' });
+    reply.header('cache-control', 'max-age=604800');
+    return reply.sendFile(path.basename(f), path.dirname(f));
+  });
+
   /** looping preview video for the live gallery; 202 while it is being rendered (the UI shows the still meanwhile) */
   app.get<{ Params: { origin: 'builtin' | 'library'; id: string } }>('/api/gallery/preview/:origin/:id', async (req, reply) => {
     const f = previewPath(req.params.origin, req.params.id);
@@ -615,7 +626,8 @@ export async function registerRoutes(app: FastifyInstance) {
       id: r.id, kind: r.kind, title: r.title, note: r.note || undefined,
       scenes: (r.sceneIds || []).map((id) => { const i = scenes.findIndex((s) => s.id === id); return i >= 0 ? `${i + 1}:${scenes[i].title} (${id})` : id; }),
       appliesTo: r.sceneIds?.length ? 'listed scenes' : 'the whole video',
-      howToRead: r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? `Read media/${r.ref} (look at it; for video, extract_frames via run_media_tool)` : `WebFetch ${r.ref}`,
+      ...(r.kind === 'inspiration' ? (() => { const x = getInspiration(r.ref); return x ? { by: x.by, year: x.year, url: x.url, techniques: x.techniques, breakdown: x.breakdown } : {}; })() : {}),
+      howToRead: r.kind === 'inspiration' ? 'The breakdown above describes the piece and its techniques — apply the techniques in the project style (never copy the brand/assets). The URL is for the user; you cannot watch the video.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? `Read media/${r.ref} (look at it; for video, extract_frames via run_media_tool)` : `WebFetch ${r.ref}`,
     }));
   });
 

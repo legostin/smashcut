@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { GalleryItem } from '../../../shared/types';
+import type { Inspiration, GalleryItem } from '../../../shared/types';
 import { useStore, setState, getState, actions, time, api, notify, refreshGallery, projectBase } from '../store';
 import { Icon } from './Icon';
 import { TransitionsGrid, EffectsGrid, MasksGrid } from './FxLibrary';
@@ -16,7 +16,7 @@ const CATEGORY: Record<string, string> = {
 };
 const catLabel = (c?: string) => { const k = CATEGORY[c || 'other']; return k ? t(k) : c ? c[0].toUpperCase() + c.slice(1) : t('Other'); };
 
-type Section = { kind: 'graphics'; cat: string } | { kind: 'music' } | { kind: 'mine' } | { kind: 'media' } | { kind: 'project' } | { kind: 'transitions' } | { kind: 'effects' } | { kind: 'masks' };
+type Section = { kind: 'graphics'; cat: string } | { kind: 'inspiration'; cat: string } | { kind: 'music' } | { kind: 'mine' } | { kind: 'media' } | { kind: 'project' } | { kind: 'transitions' } | { kind: 'effects' } | { kind: 'masks' };
 const same = (a: Section, b: Section) => a.kind === b.kind && (a.kind !== 'graphics' || a.cat === (b as any).cat);
 
 /** Big modal library: categories on the left, a roomy grid of live previews on the right. */
@@ -26,6 +26,12 @@ export function Library() {
   const [mounted, setMounted] = useState(open);
   const [section, setSection] = useState<Section>({ kind: 'graphics', cat: 'all' });
   const [q, setQ] = useState('');
+  const tab = useStore((s) => s.libraryTab);
+  // the rail button decides which section opens
+  useEffect(() => {
+    if (!open) return;
+    setSection(tab === 'inspiration' ? { kind: 'inspiration', cat: 'all' } : tab === 'media' ? { kind: 'media' } : tab === 'project' ? { kind: 'transitions' } : { kind: 'graphics', cat: 'all' });
+  }, [open, tab]);
   useEffect(() => { if (open) setMounted(true); else { const t = setTimeout(() => setMounted(false), 200); return () => clearTimeout(t); } }, [open]);
   useEffect(() => {
     if (!open) return;
@@ -41,6 +47,8 @@ export function Library() {
     return [...m.entries()].sort((a, b) => b[1] - a[1]);
   }, [clips]);
   const mineCount = gallery.filter((g) => g.origin === 'library').length;
+  const [inspo, setInspo] = useState<Inspiration[]>([]);
+  useEffect(() => { if (open && !inspo.length) api<Inspiration[]>('GET', '/api/inspiration').then(setInspo).catch(() => {}); }, [open]);
   const musicCount = gallery.filter((g) => g.kind === 'music').length;
   const mediaCount = useStore((s) => s.media.length);
   const projectCount = useStore((s) => s.clips.length + s.music.length);
@@ -51,13 +59,14 @@ export function Library() {
       {icon && <Icon name={icon} size={14} />}<span className="grow ellipsis">{label}</span>{count != null && <span className="lib-count">{count}</span>}
     </button>
   );
-  const searchable = ['graphics', 'music', 'mine', 'transitions', 'effects'].includes(section.kind);
+  const searchable = ['inspiration', 'graphics', 'music', 'mine', 'transitions', 'effects'].includes(section.kind);
 
   return (
     <div className={'modal-back lib-back' + (open ? ' open' : '')} onPointerDown={(e) => e.target === e.currentTarget && close()}>
       <div className="lib-modal">
         <nav className="lib-nav">
           <div className="lib-nav-title">{t('Graphics')}</div>
+          {nav({ kind: 'inspiration', cat: section.kind === 'inspiration' ? section.cat : 'all' }, t('Inspiration'), inspo.length || undefined, 'star')}
           {nav({ kind: 'graphics', cat: section.kind === 'graphics' ? section.cat : 'all' }, t('Techniques'), clips.length, 'sparkle')}
           <div className="lib-nav-title">{t('Edit')}</div>
           {nav({ kind: 'transitions' }, t('Transitions'), TRANSITIONS.length, 'layers')}
@@ -78,6 +87,7 @@ export function Library() {
             <button className="icon-btn" onClick={close} title={t('Close (Esc)')}><Icon name="x" size={15} /></button>
           </header>
           <div className="lib-scroll">
+            {section.kind === 'inspiration' && <InspirationWall items={inspo} cat={section.cat} q={q} onCat={(c) => setSection({ kind: 'inspiration', cat: c })} />}
             {section.kind === 'graphics' && (
               <>
                 <div className="wall-cats">
@@ -95,7 +105,7 @@ export function Library() {
             {section.kind === 'effects' && <EffectsGrid q={q} />}
             {section.kind === 'masks' && <MasksGrid />}
           </div>
-          <footer className="lib-foot">{['transitions', 'effects', 'masks'].includes(section.kind) ? t('Click — apply to the selected clip · a transition can be dragged onto a clip edge') : t('Click — add at the playhead ({time})', { time: fmt(time.get()) })}</footer>
+          <footer className="lib-foot">{['transitions', 'effects', 'masks'].includes(section.kind) ? t('Click — apply to the selected clip · a transition can be dragged onto a clip edge') : ['inspiration', 'graphics'].includes(section.kind) ? t('Click — add to the project references (bound to the selected scenes) · ↗ opens the original') : t('Click — add at the playhead ({time})', { time: fmt(time.get()) })}</footer>
         </section>
       </div>
     </div>
@@ -221,6 +231,45 @@ function Tile({ g, i, big }: { g: GalleryItem; i: number; big: boolean }) {
         {isRef && <span className="tile-ref-on"><Icon name="check" size={12} /> {t('In references')}</span>}
         {!isRef && <span className="tile-cta"><Icon name="star" size={12} /> {t('Add to references')}</span>}
         <button className="tile-insert" title={t('Insert the reference clip as-is (quick draft)')} onClick={(e) => { e.stopPropagation(); addTemplate(g); }}><Icon name="plus" size={13} /></button>
+      </div>
+    </div>
+  );
+}
+
+const INSPO_CATS: Record<string, string> = { 'product-launch': 'Product launches', 'ui-motion': 'UI motion', 'kinetic-type': 'Kinetic type', 'brand-identity': 'Brand identity', 'logo-animation': 'Logo animation', explainer: 'Explainers', 'data-viz': 'Data viz', 'social-short': 'Social shorts', '3d-motion': '3D-look motion', transitions: 'Transitions', titles: 'Title sequences', abstract: 'Abstract' };
+
+/** real-world motion pieces (link + our breakdown); click adds one to the project references */
+function InspirationWall({ items, cat, q, onCat }: { items: Inspiration[]; cat: string; q: string; onCat: (c: string) => void }) {
+  const cats = useMemo(() => { const m = new Map<string, number>(); for (const x of items) m.set(x.category, (m.get(x.category) || 0) + 1); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [items]);
+  const list = items.filter((x) => (cat === 'all' || x.category === cat) && (!q || `${x.title} ${x.by} ${x.category} ${(x.tags || []).join(' ')} ${(x.techniques || []).join(' ')}`.toLowerCase().includes(q.toLowerCase())));
+  if (!items.length) return <div className="lib-empty">{t('The inspiration library is being collected — come back in a few minutes.')}</div>;
+  return (
+    <>
+      <div className="wall-cats">
+        <button className={'wall-cat' + (cat === 'all' ? ' on' : '')} onClick={() => onCat('all')}>{t('All')} <span>{items.length}</span></button>
+        {cats.map(([c, n]) => <button key={c} className={'wall-cat' + (cat === c ? ' on' : '')} onClick={() => onCat(c)}>{t(INSPO_CATS[c] || c)} <span>{n}</span></button>)}
+      </div>
+      <div className="inspo-wall">{list.map((x, i) => <InspoTile key={x.id} x={x} i={i} />)}</div>
+    </>
+  );
+}
+
+function InspoTile({ x, i }: { x: Inspiration; i: number }) {
+  const isRef = useStore((s) => s.references.some((r) => r.kind === 'inspiration' && r.ref === x.id));
+  const [ok, setOk] = useState(true);
+  const add = () => actions.addReference({ kind: 'inspiration', ref: x.id, title: x.title, thumb: `/api/inspiration/${x.id}/thumb`, note: (x.techniques || []).slice(0, 3).join(', ') });
+  return (
+    <div className={'inspo' + (isRef ? ' isref' : '')} style={{ animationDelay: `${Math.min(i, 16) * 25}ms` }} role="button" tabIndex={0} onClick={add} onKeyDown={(e) => e.key === 'Enter' && add()}>
+      <div className="inspo-img">
+        {ok ? <img src={`/api/inspiration/${x.id}/thumb`} alt="" loading="lazy" onError={() => setOk(false)} /> : <div className="inspo-noimg"><Icon name="star" size={20} /></div>}
+        <span className="tile-cat">{t(INSPO_CATS[x.category] || x.category)}</span>
+        <a className="inspo-open" href={x.url} target="_blank" rel="noreferrer" title={t('Open the original')} onClick={(e) => e.stopPropagation()}><Icon name="external" size={13} /></a>
+        <span className={isRef ? 'tile-ref-on' : 'tile-cta'}>{isRef ? <><Icon name="check" size={12} /> {t('In references')}</> : <><Icon name="star" size={12} /> {t('Add to references')}</>}</span>
+      </div>
+      <div className="inspo-meta">
+        <div className="inspo-title ellipsis">{x.title}</div>
+        <div className="inspo-by ellipsis">{x.by}{x.year ? ` · ${x.year}` : ''}</div>
+        {x.techniques?.length ? <div className="inspo-tech">{x.techniques.slice(0, 3).map((tq) => <span key={tq}>{tq}</span>)}</div> : null}
       </div>
     </div>
   );

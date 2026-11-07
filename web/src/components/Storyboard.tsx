@@ -154,7 +154,7 @@ function ReferencesStrip() {
           <button className="ref-x" aria-label={t('Remove reference')} onClick={(e) => { e.stopPropagation(); actions.removeReference(r.id); }}><Icon name="x" size={10} /></button>
         </div>
       ))}
-      <button className="ref-add" onClick={() => setState({ libraryOpen: true, libraryTab: 'templates' })}><Icon name="plus" size={12} /> {refs.length ? t('Add') : t('Add references: techniques, images, links')}</button>
+      <button className="ref-add" onClick={() => setState({ libraryOpen: true, libraryTab: 'inspiration' })}><Icon name="plus" size={12} /> {refs.length ? t('Add') : t('Add references: techniques, images, links')}</button>
     </div>
   );
 }

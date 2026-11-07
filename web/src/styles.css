@@ -945,3 +945,21 @@ button.chip:hover { filter: brightness(1.25); }
 .ref-add { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; border: 1px dashed #2c2c33; color: var(--fg3); font-size: 12px; transition: color var(--t), border-color var(--t); }
 .ref-add:hover { color: var(--fg); border-color: var(--line3); }
 .scene-refs { position: absolute; left: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 7px; border-radius: 999px; background: rgba(10, 10, 11, .78); color: var(--accent); font-size: 11px; font-weight: 600; }
+
+/* ---------- inspiration wall ---------- */
+.inspo-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.inspo { display: flex; flex-direction: column; gap: 9px; cursor: pointer; outline: none; animation: fade-up 320ms var(--ease) both; }
+.inspo-img { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #111114; }
+.inspo-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 600ms var(--ease); }
+.inspo:hover .inspo-img img { transform: scale(1.04); }
+.inspo.isref .inspo-img { outline: 2px solid var(--accent); outline-offset: -2px; }
+.inspo-noimg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--fg3); }
+.inspo-img .tile-cta, .inspo-img .tile-ref-on { position: absolute; right: 10px; bottom: 10px; opacity: 0; transform: translateY(6px); transition: opacity 220ms var(--ease), transform 220ms var(--ease); }
+.inspo:hover .inspo-img .tile-cta, .inspo:hover .inspo-img .tile-ref-on, .inspo.isref .inspo-img .tile-ref-on { opacity: 1; transform: none; }
+.inspo-open { position: absolute; right: 10px; top: 10px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgba(10, 10, 11, .6); backdrop-filter: blur(10px); color: #fff; opacity: 0; transition: opacity 220ms var(--ease); }
+.inspo:hover .inspo-open { opacity: 1; }
+.inspo-meta { display: flex; flex-direction: column; gap: 2px; padding: 0 2px; min-width: 0; }
+.inspo-title { font-weight: 600; font-size: 13.5px; }
+.inspo-by { font-size: 12px; color: var(--fg3); }
+.inspo-tech { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.inspo-tech span { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--raise); color: var(--fg2); }

@@ -306,10 +306,16 @@ export interface ExportJob {
   to: number;
 }
 
+/** a curated real-world motion piece (link + our breakdown of the technique); see gallery/inspiration.json */
+export interface Inspiration {
+  id: string; title: string; by: string; year?: number; url: string; platform: string; license?: string;
+  thumb?: string; category: string; tags?: string[]; techniques?: string[]; breakdown: string; durationHint?: string;
+}
+
 /** a reference attached to the project: a technique from the library, an image/video from media, or a link */
 export interface Reference {
   id: string;
-  kind: 'technique' | 'music-technique' | 'media' | 'link';
+  kind: 'technique' | 'music-technique' | 'media' | 'link' | 'inspiration';
   /** technique id (gallery/library), media file name, or URL */
   ref: string;
   origin?: 'builtin' | 'library';

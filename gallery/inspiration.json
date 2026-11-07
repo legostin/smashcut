@@ -1,0 +1,2881 @@
+[
+ {
+  "id": "apple-ios26-liquid-glass",
+  "title": "iOS 26: Introducing Liquid Glass",
+  "by": "Apple",
+  "year": 2025,
+  "url": "https://www.youtube.com/watch?v=jGztGfRujSE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/jGztGfRujSE/maxresdefault.jpg",
+  "category": "ui-motion",
+  "tags": [
+   "apple",
+   "wwdc",
+   "design-system",
+   "glassmorphism",
+   "ui-reveal"
+  ],
+  "techniques": [
+   "refraction lens",
+   "shape morph",
+   "spring overshoot",
+   "floating device orbit",
+   "presenter intercut",
+   "material macro shots"
+  ],
+  "breakdown": "It opens on an aerial of Apple Park's curved glass roof, so the \"glass\" metaphor is set before any UI appears. Talking-head segments from the design lead alternate with macro shots of a blue refractive glass ribbon. The material demos all sit on a seamless white void, one idea per shot. A slider thumb swells into a lens-like droplet that magnifies the track beneath it. The lock-screen clock is set in thick refracting glass over the wallpaper. Tab bars collapse into floating capsules as content scrolls. Control Center tiles lift and refract the wallpaper. Devices drift in slow 3D orbits with soft contact shadows. Every transition is a spring with slight overshoot, and nothing cuts hard. It works because the material is the hero, isolated on neutral space and given 2–3 second holds. To rebuild it, use backdrop-filter blur plus an SVG feDisplacementMap driven by a radial normal-map image for refraction. Add an inset white box-shadow for the specular rim. Morph capsules by tweening width, height and border-radius with GSAP elastic.out(1,0.6). Keep one element centered per shot in a 1920×1080 frame.",
+  "durationHint": "4:34"
+ },
+ {
+  "id": "apple-airpods-pro-3",
+  "title": "AirPods Pro 3",
+  "by": "Apple",
+  "year": 2025,
+  "url": "https://www.youtube.com/watch?v=EMmKs8vMKhU",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/EMmKs8vMKhU/maxresdefault.jpg",
+  "category": "product-launch",
+  "tags": [
+   "apple",
+   "product-film",
+   "silhouette",
+   "feature-callouts"
+  ],
+  "techniques": [
+   "silhouette vs product render",
+   "concentric ring ripples",
+   "gradient text",
+   "sequence line-up",
+   "side callout typography",
+   "logo glow end card"
+  ],
+  "breakdown": "The film opens on a plain title card, \"AirPods Pro 3\", set in thin grotesk on white. Black-silhouetted dancers then move against a white seamless while translucent glass rings orbit their bodies, a stand-in for noise cancellation. Between dance beats, hero renders of the earbud float and rotate with macro lighting. Each feature gets a hard cut and one small right-aligned caption, such as \"Heart rate sensing during workouts\". Five ear-tip sizes slide into a neat horizontal line-up to show fit. A profile silhouette gets a glowing gradient ring pulsing around the ear while \"clinical-grade Hearing Aid feature\" types in beside it. For Live Translation, the word \"Hello\" appears in a purple-blue gradient. It ends on the case and an Apple logo with a chromatic glow. The grammar is strict: monochrome people, white product, color reserved for the feature being explained. To rebuild it, use CSS radial rings whose scale and opacity tween from 0.6 to 1.4 with staggered delays. Animate text gradients with background-clip:text and a moving background-position. Keep captions at about 28px on the right third, and cut every 3 seconds on the music.",
+  "durationHint": "0:48"
+ },
+ {
+  "id": "microsoft-windows-11-reveal",
+  "title": "Introducing Windows 11",
+  "by": "Microsoft",
+  "year": 2021,
+  "url": "https://www.youtube.com/watch?v=Uh9643c2P6k",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/Uh9643c2P6k/maxresdefault.jpg",
+  "category": "product-launch",
+  "tags": [
+   "os-launch",
+   "fluent",
+   "3d-icons",
+   "glassmorphism",
+   "kinetic-type"
+  ],
+  "techniques": [
+   "floating 3D icons",
+   "frosted glass panels",
+   "word-by-word kinetic type",
+   "whip blur transition",
+   "abstract silk backgrounds",
+   "UI assembly"
+  ],
+  "breakdown": "The film opens in darkness on glass slabs with pixel-like extrusions, a nod to the old logo grid. It moves into a soft-blue void where glossy 3D app icons (calculator, folder, magnifier) tumble in slow motion. A frosted glass pane resolves into the new centered taskbar, then \"Introducing Windows 11\" lands over a laptop showing the Bloom wallpaper. The middle section alternates UI demos with kinetic type. The Start menu and search build up panel by panel, and Snap Layouts are shown as glass tiles snapping into a grid. Single words (\"one\", \"feed\", \"the way\") appear one at a time on flowing silk-like Bloom gradients, cut to the voice-over. \"Between your tasks\" whips sideways with heavy motion blur. Later beats cover Xbox in green smoke, Android apps inside a window, and lifestyle footage. It works because every UI element behaves like a physical material with depth, blur and light. To rebuild it, give the icons perspective and rotateX/rotateY drift. Build panels with backdrop-filter blur(30px) and 1px translucent borders. Swap one word per beat on a GSAP timeline, and fake the whip with filter blur plus translateX at 0.25s.",
+  "durationHint": "2:43"
+ },
+ {
+  "id": "google-material-3-expressive",
+  "title": "Introducing: Material 3 Expressive",
+  "by": "Google Design",
+  "year": 2025,
+  "url": "https://www.youtube.com/watch?v=n17dnMChX14",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/n17dnMChX14/maxresdefault.jpg",
+  "category": "ui-motion",
+  "tags": [
+   "google",
+   "material",
+   "design-system",
+   "shape-morph",
+   "springs"
+  ],
+  "techniques": [
+   "shape morphing",
+   "squash and stretch buttons",
+   "neighbor-aware layout reflow",
+   "spring physics",
+   "type weight contrast",
+   "motion blur push"
+  ],
+  "breakdown": "A heavy \"Material 3\" wordmark sits on lilac, then cuts to a purple blob that morphs between rounded polygon \"cookie\" shapes. A dark-purple bento of components follows: chips, toolbars and a progress ring with a wavy edge. A floating toolbar of icons bounces, and the pink close button squashes on press. A row of media buttons shows the key behavior: when \"Play\" expands, its neighbors compress, and the whole group springs back. Cards for an event RSVP and a plant-care note slide on pastel color fields. A row of photo avatars cycles through shape masks (labelled None, Simple, Earth, Palma, Dark). Then come a color-scheme grid, a typescale card comparing regular and \"emphasized\" Display weights, and a blurred cyan squircle that pushes off screen into the four-color G. It works because every element has a believable mass and responds to its siblings. To rebuild it, morph shapes in SVG with GSAP MorphSVG or flubber, use flex-grow tweens for button groups, and use spring eases with damping around 0.6. Keep 1080p framing with large, flat UI on solid backgrounds.",
+  "durationHint": "0:38"
+ },
+ {
+  "id": "google-io-2024-opening-film",
+  "title": "Google I/O 2024: Opening Film",
+  "by": "Google",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=mQ8k4T5wVgE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/mQ8k4T5wVgE/maxresdefault.jpg",
+  "category": "product-launch",
+  "tags": [
+   "keynote-opener",
+   "ai",
+   "type-in-footage",
+   "montage"
+  ],
+  "techniques": [
+   "type composited into footage",
+   "prompt typewriter",
+   "UI chip overlays",
+   "gradient letterforms",
+   "beat-cut montage",
+   "logo resolve"
+  ],
+  "breakdown": "The opener recaps a year of AI launches by mixing documentary footage with interface graphics and kinetic type. A calendar-scrub UI opens it. A phone shows a Gemini greeting with \"Hello, Elisa\" in gradient type. Live-action shots then carry large lowercase words placed inside the scene, such as \"my moving company\" across a truck and \"workout routine\" over a running track. The words are set in perspective and partly occluded, so they read as part of the space. A prompt field types \"create an image of a treehouse\" with a blinking caret. MusicFX appears as a dark card with pill chips (\"High-pitched bongos with ringing tones\"). A serif title, \"Smashing Context Window Limits\", sits inside a circular tunnel. Near the climax, huge rainbow-gradient letters \"AI\" are seen through a tree canopy. Everything resolves to the Google wordmark on white. It works because the type joins the footage instead of sitting on top of it. To rebuild it, place text in a CSS 3D layer with perspective and match the background's slow push using scale and translate. Mask the text with a hand-drawn clip-path for occlusion, and run a typewriter with steps() on the caret.",
+  "durationHint": "1:35"
+ },
+ {
+  "id": "google-pixel-feature-drop-dec-2022",
+  "title": "Google Pixel – Feature Drop December 2022",
+  "by": "Buff Motion for Google (via 1st Avenue Machine)",
+  "year": 2022,
+  "url": "https://vimeo.com/834756388",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1681782275-f89dc5de9e0e706f27938c1c31a5057795d3681365b0a0f1d89f5efbeac3bb95-d_1280x720?region=us",
+  "category": "explainer",
+  "tags": [
+   "google",
+   "pixel",
+   "feature-announcement",
+   "kinetic-type",
+   "brand-shapes"
+  ],
+  "techniques": [
+   "kinetic headline stacks",
+   "brand-shape collage",
+   "phone mockup choreography",
+   "footage windows",
+   "multicolor type",
+   "icon badges"
+  ],
+  "breakdown": "Buff Motion's description says this feature-update film \"seamlessly combines kinetic type, animation of the brand elements and sourced footage\". It was the third Feature Drop video they made for Google, and the poster frame shows the system. A Pixel 7 sits beside a stacked headline, \"Pixel / Feature / Drop\", with each line in its own pastel-to-saturated color (orange, purple, green). The phone wallpaper is a patchwork of soft organic blobs, each carrying a feature icon. In the film, every feature gets a short block: a phone or watch mockup slides in, a two- or three-word headline builds line by line, and the blob shapes rearrange around the device like a living sticker sheet. Sourced footage plays inside rounded windows. The Pixel Watch and Buds get their own beats in the same grammar. It works as a reusable template for recurring announcements: one hero device, one colored headline and one set of shapes, with clear pacing per feature. To rebuild it, draw the blobs as SVG paths with an icon each and float them with small yoyo tweens. Reveal headlines line by line from overflow-hidden masks, slide the mockup in with power3.out, and hold each feature for about 4 seconds.",
+  "durationHint": "1:25"
+ },
+ {
+  "id": "linear-insights-launch",
+  "title": "Linear Insights",
+  "by": "Linear",
+  "year": 2023,
+  "url": "https://www.youtube.com/watch?v=fdyVP02X3l0",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/fdyVP02X3l0/maxresdefault.jpg",
+  "category": "data-viz",
+  "tags": [
+   "saas",
+   "feature-launch",
+   "dark-ui",
+   "analytics",
+   "dof"
+  ],
+  "techniques": [
+   "shallow depth of field",
+   "perspective-tilted UI",
+   "staggered bar growth",
+   "heat-map gradient bars",
+   "particle scatter plot",
+   "low camera glide"
+  ],
+  "breakdown": "The film opens on \"Linear Insights\" in white over near-black, surrounded by small out-of-focus colored dots like bokeh. The camera drops low and glides across UI panels tilted steeply in perspective, with heavy depth of field. Only a narrow band of the interface is ever sharp. A histogram grows bar by bar with a red-to-yellow-to-green heat-map gradient, like an audio equalizer. Then a scatter plot fills with hundreds of green particles, and a cool purple bar chart sweeps through focus. Small luminous capsules fly past in the foreground. The music drops to near-silence, and the line \"Instant analytics for any stream of work\" fades in, followed by the Linear logo and \"linear.app\". It works because a dry analytics feature becomes cinematic: steep camera angles, glow and focus pulls stand in for \"deep visibility\". To rebuild it, put the chart in a container with perspective:1200px and rotateX(55deg). Animate bars with scaleY from 0, staggered 0.02s with expo.out. Use canvas for the particles. Duplicate the foreground layers with filter:blur(8px) to fake depth of field, and pan the container slowly along X.",
+  "durationHint": "0:37"
+ },
+ {
+  "id": "linear-releases-launch",
+  "title": "Introducing Linear Releases",
+  "by": "Linear",
+  "year": 2026,
+  "url": "https://www.youtube.com/watch?v=6dIwFoQ0eVg",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/6dIwFoQ0eVg/maxresdefault.jpg",
+  "category": "product-launch",
+  "tags": [
+   "saas",
+   "monochrome",
+   "line-graph",
+   "devtools"
+  ],
+  "techniques": [
+   "path drawing",
+   "labels riding motion paths",
+   "branch-merge graph",
+   "monospace typewriter",
+   "tilted panel stack",
+   "block cursor"
+  ],
+  "breakdown": "This 30-second piece is strictly monochrome. Thin white curves flow from the left like a river delta, issue IDs (MOB-9124, ENG-1833) ride along them as small labels, and the camera tracks the merge. All strands converge on a single \"LAUNCH v1.5\" node at the right edge. A spaced monospace line, \"PLAN AND TRACK RELEASES\", fades up in grey. Three dark panels (Mobile App, SDK, Production) tilt in 3D one behind another, each with its own branching graph. The camera dives into one panel and glides along the converging lines again. The ending is a black screen where a white block cursor types \"AVAILABLE NOW\", then the Linear logo. It works because one visual metaphor, many work streams merging into a release, carries the whole feature. The strict palette makes motion the only accent. To rebuild it, draw cubic-bezier paths in SVG that converge on one point and reveal them with stroke-dashoffset. Attach labels with GSAP MotionPathPlugin at staggered progress values. Add slow perspective camera moves on the parent, and type the end card with steps(12) plus a blinking block caret.",
+  "durationHint": "0:30"
+ },
+ {
+  "id": "vercel-v0-generative-ui",
+  "title": "Introducing v0: Generative UI",
+  "by": "Vercel",
+  "year": 2023,
+  "url": "https://www.youtube.com/watch?v=By9wCB9IZp0",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/By9wCB9IZp0/maxresdefault.jpg",
+  "category": "ui-motion",
+  "tags": [
+   "ai",
+   "devtools",
+   "prompt-to-ui",
+   "minimal"
+  ],
+  "techniques": [
+   "placeholder text roll",
+   "prompt typewriter",
+   "cursor-driven demo",
+   "zoom-out to grid",
+   "inline edit popover",
+   "logo lockup sequence"
+  ],
+  "breakdown": "The film is minimal and white. It opens on a fading placeholder question, \"What will you ...\". A black pill-shaped prompt bar appears, and a prompt types out (\"A sleek pri...\"). Other example prompts (\"A flower shop\", \"A SaaS dashboard layout\") roll vertically above and below it like a slot machine. The selected prompt generates a full dashboard UI, and the camera eases from a wide view to a close crop. A cursor clicks the logo area, and a small popover takes the instruction \"Make the company logo...\". Alternate versions slide in as cards to the side. A \"Stealth Mode\" privacy popover demos the public/private toggle. The camera pulls back to a grid of a dozen generated interfaces before resolving to the v0 mark and the Vercel lockup. It works because it is a real product loop (prompt, result, refine) told with almost no decoration. Restraint signals confidence. To rebuild it, use an overflow-hidden column of prompts animated with translateY in 1.2s steps and a typewriter on the active line. Move a cursor sprite along a GSAP motionPath, and use a FLIP transition to zoom from a single UI to a CSS grid of thumbnails.",
+  "durationHint": "0:48"
+ },
+ {
+  "id": "figma-config-2024-launch-recap",
+  "title": "All the Launches at Config 2024",
+  "by": "Figma",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=0wCIP2Ox-EQ",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/0wCIP2Ox-EQ/maxresdefault.jpg",
+  "category": "social-short",
+  "tags": [
+   "figma",
+   "feature-recap",
+   "color-fields",
+   "cursor-as-character"
+  ],
+  "techniques": [
+   "hard color-field cuts",
+   "oversized cursor character",
+   "UI cards on solid backgrounds",
+   "highlight-box type",
+   "rapid feature montage",
+   "logo build"
+  ],
+  "breakdown": "This 80-second launch recap moves through UI3, Slides, Dev Mode and Figma AI as a run of quick vignettes. Each sits on a different saturated background (orange, purple, green, electric blue). A slides agenda card sits on orange, and a template picker gets clicked by a huge white Figma cursor. That cursor is the recurring \"character\": it clicks, drags and points throughout. \"Dev Mode\" types out in white on black, and a pixelated green highlight box chases the last letters. \"Figma AI\" appears beside an empty rounded pill outline, as if the prompt is about to be typed. UI fragments (cards, a recipe app, component inspectors) slide in on the color fields with a slight scale-up, and design comments pop as bubbles. It ends with the multicolor Figma mark assembling from its dot shapes. It works because every launch gets the same treatment (one color, one UI crop, one cursor gesture), so a long list stays easy to scan. To rebuild it, use an oversized SVG cursor moved with motionPath and given a click squash of scale 0.85. Hard-cut background colors every 3 seconds. Scale UI cards from 0.92 to 1 with back.out(1.4), and draw highlight bars with scaleX from the left.",
+  "durationHint": "1:20"
+ },
+ {
+  "id": "figma-config-2026-refreshed",
+  "title": "Config 2026, refreshed",
+  "by": "Figma",
+  "year": 2026,
+  "url": "https://www.youtube.com/watch?v=SROdrbZ8A8Q",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/SROdrbZ8A8Q/maxresdefault.jpg",
+  "category": "kinetic-type",
+  "tags": [
+   "conference-identity",
+   "glyph-cycling",
+   "dither",
+   "stickers"
+  ],
+  "techniques": [
+   "glyph alternate cycling",
+   "stipple/dither particle textures",
+   "sticker pop-ons",
+   "hard color flashes",
+   "stat cards",
+   "persistent lockup mutation"
+  ],
+  "breakdown": "It opens in black, then cyan blobs and a cloud of stippled particles burst across the frame. Chunky, pixel-meets-blob letters assemble into the CONFIG wordmark. Each glyph keeps cycling through alternate shapes (a spiral G, a stencil C, a blobby N), so the logo never sits still. A clean grotesk line, \"Figma's annual conference\", slides in below, and flat rectangles (an orange one with a white squiggle pattern, green, yellow) slap over the text like stickers. Full-bleed color cards flash stats in black grotesk (\"125+\", \"10k+\", \"100k+ virtual attendees\") over grainy dithered blob textures. The final lockup, \"JUNE 23–25 · CONFIG.FIGMA.COM / Live from SF and virtual worldwide\", holds while the wordmark's letters keep mutating. It works because a static layout gets constant life from glyph substitution alone, and the dithered texture adds tactility. To rebuild it, render each letter as an absolutely positioned span that swaps between three or four SVG alternates every 3 frames, with a random offset per letter. Make the stipple texture on canvas with thresholded noise. Pop the stickers with scale 0 to 1 at steps(3) for a stop-motion feel.",
+  "durationHint": "0:30"
+ },
+ {
+  "id": "notion-ai-new-launch",
+  "title": "Introducing the new Notion AI",
+  "by": "Notion",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=S92KX8-Hmlc",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/S92KX8-Hmlc/maxresdefault.jpg",
+  "category": "product-launch",
+  "tags": [
+   "saas",
+   "ai",
+   "split-screen",
+   "line-art-mascot"
+  ],
+  "techniques": [
+   "hand-drawn underline stroke",
+   "statement cards",
+   "color-panel split wipes",
+   "icon pop stagger",
+   "UI card glide",
+   "line-art mascot"
+  ],
+  "breakdown": "The Notion logo sits on warm off-white, then \"Meet the new Notion AI\" appears in black grotesk. A hand-drawn underline scribbles itself under \"new\". Short statement cards follow at a steady rhythm: \"One AI tool to do it all.\", \"Find answers from all your apps\" with Notion, Slack, Google Drive and Sheets icons popping in one after another, and \"Analyze PDFs and images\". Between statements, the frame splits. A saturated color panel (cobalt, red, or mustard) wipes in from one side, and a floating Notion window glides across the seam showing the chat UI scanning Slack or a podcast-release page. The line-art Notion AI face appears large in a circle as a recurring character. A phone with a keyboard demos the mobile app. The end is the face, then the Notion logo. It works because the copy-first structure keeps it readable, and the bold color panels add energy without leaving the monochrome brand. To rebuild it, draw the underline as an SVG path with stroke-dashoffset over 0.5s. Wipe color panels with clip-path inset() transitions, stagger icons with back.out(2) at 0.08s intervals, and glide UI cards on x with power2.inOut.",
+  "durationHint": "0:57"
+ },
+ {
+  "id": "framer-thats-framer",
+  "title": "That's Framer: The pro site builder loved by designers",
+  "by": "Framer",
+  "year": 2025,
+  "url": "https://www.youtube.com/watch?v=8AHPXm9Y6mI",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/8AHPXm9Y6mI/maxresdefault.jpg",
+  "category": "ui-motion",
+  "tags": [
+   "no-code",
+   "editor-ui",
+   "selection-handles",
+   "zoom-transitions"
+  ],
+  "techniques": [
+   "selection box with handles",
+   "zoom from artifact to tool",
+   "glowing 3D hero object",
+   "text-frame reveal",
+   "multi-breakpoint canvas",
+   "button click end beat"
+  ],
+  "breakdown": "A glowing, grainy blue 3D tube loops through black space. Concentric rings and a red-blue gradient capsule float over it, and a selection bounding box with corner handles snaps around the capsule. That turns the abstract hero into a design object being edited. The headline \"The Internet Canvas\" is selected and set in large type, then the camera pulls back to show it as a finished website hero, cursor and all. Pulling back further reveals the Framer editor around it, with the layers panel on the left and properties on the right. Quick vignettes follow: a portfolio page, stacked image cards, a text frame that shows the outline first and then fills with \"Imagine it & publish it\", and components like a contact form and map. A wide canvas shows desktop, tablet and phone breakpoints side by side. The finale zooms into the \"Invite / Publish\" buttons, a cursor clicks Publish, and the Framer logo lands. It works because the zoom-out chain (object, page, tool) explains the product without words. To rebuild it, draw selection boxes as absolutely positioned divs with 8px handle squares. Animate a single scale/translate camera wrapper with transform-origin at the target element, and use one radial-gradient hero blob with SVG noise.",
+  "durationHint": "0:38"
+ },
+ {
+  "id": "arc-1-0-everything-or-nothing",
+  "title": "Arc 1.0 | Everything or nothing",
+  "by": "The Browser Company",
+  "year": 2023,
+  "url": "https://www.youtube.com/watch?v=n5Vwrj1gEWs",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/n5Vwrj1gEWs/maxresdefault.jpg",
+  "category": "product-launch",
+  "tags": [
+   "archival",
+   "humor",
+   "serif-type",
+   "film-frame"
+  ],
+  "techniques": [
+   "archival footage montage",
+   "rounded film-frame window",
+   "editorial captions",
+   "serif title cards",
+   "comedic hard cuts",
+   "color-field CTA"
+  ],
+  "breakdown": "The launch film is an archival joke about version 1.0s. Black-and-white footage shows a plane taking off from a scaffold tower, and a white serif \"1.0s\" title lands over it. A rapid montage follows, each clip framed inside a rounded CRT or film-gate window on black, with tiny \"v1.0\" tags in the corners and a lowercase caption beneath: \"twitter bird\", \"video game\" (an oscilloscope tennis game), \"pixar\" (lamps), \"segway\", \"massage helmet\", \"jetpack\". The point is that some 1.0s change everything and some go nowhere. It cuts back to the tower for the punchline, then a black card with the serif \"Arc\" wordmark, a quick glimpse of the colorful Arc UI, \"Available to all\", and an electric-blue end card (\"download now\", \"arc.net\"). It works because humor and editorial restraint replace feature lists, and the consistent frame turns borrowed footage into a branded system. To rebuild it, put a <video> or image inside a rounded-rect frame with a 2px white border and an SVG feTurbulence grain overlay. Use a monospace caption bar, hard cuts every 2 seconds, and a centered serif title card at 160px.",
+  "durationHint": "0:34"
+ },
+ {
+  "id": "raycast-new-raycast-2026",
+  "title": "New Raycast. Coming 2026",
+  "by": "Raycast",
+  "year": 2025,
+  "url": "https://www.youtube.com/watch?v=Mi173xGb0ZA",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/Mi173xGb0ZA/maxresdefault.jpg",
+  "category": "ui-motion",
+  "tags": [
+   "devtools",
+   "dark-glass",
+   "teaser",
+   "command-palette"
+  ],
+  "techniques": [
+   "dark glass UI on satin abstract",
+   "macro UI close-ups",
+   "caret blink",
+   "waveform pill",
+   "spaced micro-typography",
+   "rapid feature cuts"
+  ],
+  "breakdown": "The background is a moody abstract of glossy black satin folds lit by soft key lights. Against it, Raycast UI elements appear as dark glass objects shot in macro. A large search pill with the Raycast mark and a blinking caret (\"Search\") comes first, then a command list with a highlighted row and hotkey keycaps (⌥ ⌘ V). Clipboard history follows, with color swatches (#FF6363, #56C2FF) and file names, then an emoji grid with a focus ring jumping between cells, a microphone tile, and a voice-input pill whose waveform ripples. Next come AI presets (\"Ask Anything\", \"React Expert\") and an agent log streaming tool calls (\"Getting active Linear issues\"). A \"Checking for updates...\" spinner sets up the teaser. The type sequence is tiny monospace words spaced to opposite sides of a black frame (\"NEW / AI CHAT\", \"NEW / RAYCAST\"), then \"NEW RAYCAST COMING 2026\", then the logo. It works through contrast: lush lighting against crisp UI, and huge negative space with micro type. To rebuild it, animate radial-gradient satin backgrounds slowly. Build glass panels with rgba(255,255,255,.06) and backdrop blur. Scale shots to 2–3x for macro crops, and drive the waveform with sin-based bar heights.",
+  "durationHint": "0:39"
+ },
+ {
+  "id": "nothing-phone-1-launch",
+  "title": "Nothing Phone (1)",
+  "by": "Nothing",
+  "year": 2022,
+  "url": "https://www.youtube.com/watch?v=YWV2XjoRKhk",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/YWV2XjoRKhk/maxresdefault.jpg",
+  "category": "product-launch",
+  "tags": [
+   "hardware",
+   "teaser",
+   "glyph-lights",
+   "dot-matrix"
+  ],
+  "techniques": [
+   "product turntable snaps",
+   "edge-on profile reveal",
+   "LED strip light-up sync",
+   "macro texture pans",
+   "dot-matrix typography",
+   "fade-to-black end card"
+  ],
+  "breakdown": "This 23-second teaser runs on a white seamless. The transparent phone spins in from a steep angle and snaps through rotations: back panel, then a razor-thin edge-on profile, then the dark variant. Macro pans cross the back's concentric texture and internal screws. The Glyph LED strips light up in short pulses timed to the electronic soundtrack. The phone turns to show the screen with a dot-matrix clock (\"20 25\") over a purple wallpaper, then the camera pushes into the dual camera module. A fade to black leaves only small dot-matrix type, \"NOTHING (R)\" and then \"phone (1)\". It works because the hardware's own design language (transparency, light strips, dot-matrix font) is the motion vocabulary. The rhythm is snappy rotation followed by a quiet hold. To rebuild it with an illustrated or abstract device, render a dot-matrix font as a CSS grid of 6px circles toggled per character. Fake LED strips with rounded divs whose box-shadow glow pulses on beat markers. Do rotation snaps with rotateY at 0.4s power4.inOut on a 3D card, and end with tiny centered type on black.",
+  "durationHint": "0:23"
+ },
+ {
+  "id": "nothing-os-3-ui",
+  "title": "Nothing OS 3.0: Effortlessly Intuitive",
+  "by": "Nothing",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=TUh39r2Bjcw",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/TUh39r2Bjcw/maxresdefault.jpg",
+  "category": "ui-motion",
+  "tags": [
+   "android",
+   "widgets",
+   "monochrome-red",
+   "dot-matrix"
+  ],
+  "techniques": [
+   "widget choreography",
+   "dot-matrix numerals",
+   "radial array rotation",
+   "serif + mono type pairing",
+   "FLIP grid rearrange",
+   "red accent"
+  ],
+  "breakdown": "This OS walkthrough runs in an almost colorless world of warm greys with a single red accent. It opens on a dot-matrix \"10:20\" whose digits resolve and multiply around an analog clock widget. Section titles appear in an elegant serif (\"Nothing Gallery\", \"Typography\"), and each feature gets one tiny monospaced caption, for example \"Let AI auto-sort your apps for instant access\". A phone shows the photo grid, then widgets (weather, flight, a big numeral, a battery indicator) fly out around it in a loose orbit and settle. The countdown widget fills with red like a liquid gauge. An app drawer toggles from Default to \"Smart (Beta)\", and quick-settings tiles animate state. In the typography section, pill labels for Inter and Roboto spin in a radial flower array. A final grid of widgets (clocks, emoji stickers, the red flower) rearranges itself. It works because the restraint lets small motions read, and the dot-matrix and serif type give strong brand texture. To rebuild it, use the FLIP technique for widget rearranging. Build the radial array with rotate(i*45deg) translateX(220px) inside a container that rotates slowly. Use a red-only accent and clip-path fill for gauges.",
+  "durationHint": "1:56"
+ },
+ {
+  "id": "pitch-product-intro",
+  "title": "Introduction to Pitch",
+  "by": "Pitch",
+  "year": 2022,
+  "url": "https://www.youtube.com/watch?v=S_Dxwo5F_cE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/S_Dxwo5F_cE/maxresdefault.jpg",
+  "category": "explainer",
+  "tags": [
+   "saas",
+   "presentation",
+   "collaboration",
+   "gradient-bg"
+  ],
+  "techniques": [
+   "3D-tilted UI",
+   "magnifier loupe zoom",
+   "multiplayer cursors",
+   "animated charts",
+   "template gallery scroll",
+   "glossy 3D end shapes"
+  ],
+  "breakdown": "This is a full SaaS walkthrough on a soft blue-to-violet gradient. It starts with a glowing empty slide outline and a cursor clicking \"+ New presentation\". A template gallery scrolls past, with dark pitch-deck tiles and a purple \"Sales Proposal\". The UI often tilts in perspective so the canvas feels physical. A magnifying-glass loupe slides over the editor to enlarge small controls instead of cutting to a close-up. Slide building is shown step by step: a \"The Problem\" title gets styled, pie charts animate with orange and purple wedges, and stats (\"$40M\") count up. Collaborator avatars and named cursors move around the slide at the same time to sell multiplayer editing, and comment threads pop open. The deck ends on a \"Thank you\" slide, then glossy 3D primitives (rings, spheres) frame the Pitch logo. It works because it is patient and legible: each feature is shown as a real action with the cursor, and the brand gradient and 3D accents keep it lively. To rebuild it, use CSS perspective with rotateX(12deg) rotateY(-10deg) on the UI. Build the loupe as a circular clip-path over a 2x scaled duplicate. Move cursors along motion paths with name tags, and draw pie wedges with conic-gradient angle tweens.",
+  "durationHint": "1:57"
+ },
+ {
+  "id": "netflix-n-logo-animation-2019",
+  "title": "Netflix New Logo Animation (2019)",
+  "by": "Netflix",
+  "year": 2019,
+  "url": "https://www.youtube.com/watch?v=GV3HUDMQ-F8",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/GV3HUDMQ-F8/maxresdefault.jpg",
+  "category": "logo-animation",
+  "tags": [
+   "sonic-logo",
+   "ident",
+   "ribbon",
+   "spectrum"
+  ],
+  "techniques": [
+   "push-in through logo",
+   "ribbon split into strands",
+   "spectrum color reveal",
+   "sonic sync",
+   "depth layering"
+  ],
+  "breakdown": "This four-second ident, paired with the \"ta-dum\" sound, replaced the old flat red N. The red N sits on black. On the sonic hit, the camera pushes into the N's left stroke, and as it enters, the solid ribbon is revealed to be made of hundreds of thin vertical strands in a full color spectrum (reds, magentas, blues, greens). The strands rush past the lens in layered depth like light ribbons. The reveal turns a single brand color into a symbol of all the stories inside. Timing is everything: a short hold, a hard ease-in push synced to the second sound beat, and a streaking dissolve into the content. To rebuild it in HTML, draw the N as three SVG rects on black. Scale the parent from 1 to 40 with transform-origin on the left stroke and power4.in over 1.2s. Inside that stroke, reveal 120 thin absolutely positioned divs with HSL hues, random widths of 2–10px and staggered translateY/scaleY so they parallax as the zoom accelerates. Add a slight blur and brightness boost in the last 10 frames, and trigger it on an audio cue.",
+  "durationHint": "0:04"
+ },
+ {
+  "id": "airbnb-experiences-buck",
+  "title": "Airbnb Experiences",
+  "by": "BUCK for Airbnb",
+  "year": 2025,
+  "url": "https://www.youtube.com/watch?v=5c-e84MY6T8",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/5c-e84MY6T8/maxresdefault.jpg",
+  "category": "3d-motion",
+  "tags": [
+   "travel",
+   "diorama",
+   "tilt-shift",
+   "stylized-3d",
+   "continuous-camera"
+  ],
+  "techniques": [
+   "tilt-shift miniature DOF",
+   "map-to-diorama transition",
+   "continuous camera travel",
+   "golden-hour lighting",
+   "stylized 3D characters",
+   "app end card"
+  ],
+  "breakdown": "BUCK's minute-long film for the 2025 Airbnb Experiences launch starts on an old illustrated treasure map on a wooden table. The camera dives into it, and the map becomes a living miniature world. A vintage stagecoach crosses a flower meadow, a steamship sails into a sunset bay, and tourists crowd an open-top bus. Each scene is shot with extreme tilt-shift depth of field, so everything reads like a handcrafted model. The camera sweeps over a patchwork island of landmarks with hot-air balloons, then a night vista with Mt. Fuji. It then drops to stylized 3D characters: chefs at a ramen counter, horse riders on mountain terraces, a jazz trio under red spotlights, a couple at Notre-Dame. A final aerial of a Paris diorama hands off to the Airbnb app on a white phone screen and the Bélo logo. It works because the miniature look makes travel feel collectible and warm, and the unbroken camera ties dozens of experiences into one journey. To rebuild a 2D take, stack 4–6 parallax illustration layers. Blur the foreground and background layers with filter:blur and a vertical gradient mask, push a camera wrapper continuously with GSAP, and warm-grade with overlay gradients.",
+  "durationHint": "1:00"
+ },
+ {
+  "id": "duolingo-duocon-2021-teaser",
+  "title": "Duocon 2021: Coming Soon",
+  "by": "Duolingo",
+  "year": 2021,
+  "url": "https://www.youtube.com/watch?v=PzomGOEZFqo",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/PzomGOEZFqo/maxresdefault.jpg",
+  "category": "brand-identity",
+  "tags": [
+   "character-animation",
+   "flat-vector",
+   "event-teaser",
+   "match-cuts"
+  ],
+  "techniques": [
+   "object-to-scene match cuts",
+   "phone-frame transitions",
+   "flat vector characters",
+   "card fan",
+   "bouncy overshoot",
+   "logo end card"
+  ],
+  "breakdown": "This 30-second teaser in Duolingo's flat, chunky illustration style moves through one transition after another. A character holds a phone, the phone fills the frame to show a lesson with a green check, and phones line up like doors that swing open onto new scenes. A boat bobs on stylized waves, a winding road ribbon curves into a bowl of noodles lifted by chopsticks, and a night city with a bullet train slides through. A wall of app screens shuffles and highlights, card shapes fan out (one shows the hiragana あ), and the frame zooms into a single app tile before cutting to the green \"duocon\" logo. Nearly every cut is a match cut: a shape in one scene (phone, door, card, road) becomes the container for the next. Motion has rubbery overshoot and quick anticipation, in line with the character animation the brand is known for. It works because bright, simple vectors and constant transforms make 30 seconds feel like a joyful ride with no dead frames. To rebuild it, build scenes as SVG groups. Do each transition by scaling a shape until it covers the frame and then revealing the next scene inside it as a mask. Use back.out(1.7) or elastic for pops, and ramp 0.15s anticipation squashes before big moves.",
+  "durationHint": "0:30"
+ },
+ {
+  "id": "dia-squarespace-kinetic-identity",
+  "title": "Squarespace Kinetic Identity System",
+  "by": "DIA",
+  "year": 2018,
+  "url": "https://vimeo.com/304351587",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/748120295-29efd479f705ba4481699409de774192502e2b49ba924a9812609b37444d91d2-d_1280x720?region=us",
+  "category": "kinetic-type",
+  "tags": [
+   "kinetic-identity",
+   "grid-system",
+   "repetition",
+   "monochrome"
+  ],
+  "techniques": [
+   "stacked repeating type",
+   "offset echo lines",
+   "grid tile swaps",
+   "logomark rotation",
+   "type-image alternation",
+   "rhythmic step timing"
+  ],
+  "breakdown": "DIA is the studio most associated with the term \"kinetic identity\", and this Squarespace system is one of its best-known reference pieces. The 12-second loop is built on a strict grid. Tiles of photography, product shots and black-and-white type swap on a fast, metronomic rhythm. Phrases like \"BUILD IT\" and \"MAKE IT\" repeat in stacked lines, each line offset or truncated against the frame edge, so the words seem to move through the grid rather than sit in it. The Squarespace logomark rotates within its tile, and \"SQSP\" stamps appear as punctuation. Motion is binary and precise, mostly hard swaps and linear slides with almost no easing, which matches the brand's modernist black-and-white palette. It works because repetition plus a grid turns a short phrase into pattern and rhythm, and the system scales to any format by changing the tile count. To rebuild it, make a 6×4 CSS grid whose cells cycle content on a 0.25s interval. Fill some cells with a repeated word set in a heavy grotesk, using white-space:nowrap and overflow:hidden. Animate those word lines with translateX in steps() to create the echo effect. Keep it black, white and one photo.",
+  "durationHint": "0:12"
+ },
+ {
+  "id": "dia-mailchimp-website-motion",
+  "title": "Mailchimp Website",
+  "by": "DIA (identity by Collins)",
+  "year": 2021,
+  "url": "https://vimeo.com/586805971",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1214057346-6924190743ab6a2ae664de2ad61014655c713359e9506c0644198e3da843a95c-d_1280x720?region=us",
+  "category": "ui-motion",
+  "tags": [
+   "web-motion",
+   "kinetic-identity",
+   "yellow",
+   "serif",
+   "illustration"
+  ],
+  "techniques": [
+   "scroll-linked reveals",
+   "logo-derived outline shapes",
+   "bouncy easing",
+   "framing devices",
+   "illustration line motion",
+   "serif headline builds"
+  ],
+  "breakdown": "DIA extended Mailchimp's Collins-designed identity into a kinetic system and a toolkit. Press coverage describes shapes and linework drawn from the Freddie logo and from the curves of the bespoke Means typeface. Outlines, framing devices and transitions tie every movement back to the logo, with a bouncy, \"biomechanical swagger\" feel. This one-minute capture shows the system on the redesigned website. It opens on a Cavendish-yellow hero, \"Marketing Smarts for Big Ideas\", set in Means serif with a short Graphik paragraph and a green CTA, while a loose black line illustration animates along the bottom of the hero. Scrolling down, sections reveal with outlined frames that draw themselves, product UI drops in with a little overshoot, and illustrations move with playful but restrained timing. It is an important reference because it shows brand motion inside product and marketing pages, not only in a sizzle reel. To rebuild it, set up GSAP ScrollTrigger reveals (y:40 to 0, opacity, back.out(1.2)) and outline frames drawn with stroke-dashoffset. Animate line illustrations on SVG paths. Use a yellow #FFE01B-style field with a black serif headline, keeping motion short (0.4–0.6s) with tiny overshoot.",
+  "durationHint": "1:00"
+ },
+ {
+  "id": "andor-sf-symphony-motion-branding",
+  "title": "San Francisco Symphony — Motion Branding",
+  "by": "And/Or (identity by Collins)",
+  "year": 2021,
+  "url": "https://vimeo.com/510772939",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1057411622-3f8ffb578adbccb8eb079130dfec4ef558fba455eeeb11b0ca6b52ec1755d371-d_1280x720?region=us",
+  "category": "kinetic-type",
+  "tags": [
+   "audio-reactive",
+   "orchestra",
+   "wordmark",
+   "toolkit"
+  ],
+  "techniques": [
+   "audio-reactive letter scaling",
+   "vertical stretch/compress",
+   "wordmark breathing",
+   "bold single-color field",
+   "motion toolkit"
+  ],
+  "breakdown": "And/Or built the motion strategy, style guide and toolkit for the San Francisco Symphony's identity by Collins, aimed at the Symphony's streaming series (CURRENTS) during the virtual-performance period. The signature idea is a condensed serif wordmark, \"SF SYMPHONY\", whose letters stretch and compress vertically as if played by the music. Each letter's height responds independently to rhythm and dynamics, so the logo reads like a typographic waveform. The film shows this on saturated red-orange fields with white type, cycling through title cards, program slates and URL end cards (sfsymphony.org/currents). The motion stays elastic but controlled, with no flips, spins or particles, only the type breathing. It works because the motion is the brand idea, music made visible through the logo, and it adapts to any piece by feeding in different audio. To rebuild it, split the wordmark into per-letter spans with transform-origin at the bottom. Drive scaleY (0.6–1.8) from a Web Audio AnalyserNode frequency band, or from a precomputed amplitude array baked into a GSAP timeline for a deterministic render. Smooth each value with lerp (0.2) and keep the baseline fixed.",
+  "durationHint": "0:48"
+ },
+ {
+  "id": "coinbase-brand-film",
+  "title": "Coinbase Brand Film",
+  "by": "Never Sit Still with Moniker",
+  "year": 2021,
+  "url": "https://vimeo.com/553216699",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1299958224-e1c25e4da90cb4be8248a0cd4d37855b06f9016224c964cd8_1280?region=us",
+  "category": "brand-identity",
+  "tags": [
+   "fintech",
+   "rebrand",
+   "motion-principles",
+   "geometric"
+  ],
+  "techniques": [
+   "radial text arrays",
+   "arrow primitive motion",
+   "hyper-energetic cutting",
+   "monochrome + accent blue",
+   "orbiting labels",
+   "system demo reel"
+  ],
+  "breakdown": "Never Sit Still worked with Moniker on the motion system for Coinbase's 2021 rebrand. After an exploration phase to define core motion principles, they made this 60-second, \"hyper energetic\" brand reel to show the system's range. The poster frame shows the vocabulary: on pure black, a bold white arrow points at a single blue dot, while crypto tickers (ETH, ADA, DOT, XRP, UNI, LTC, BCH, XLM) are set radially around an invisible circle like a clock face. The reel builds on primitives like this: circles, arrows, dots and tickers that orbit, snap into alignment and fly out. Black, white and Coinbase blue alternate in quick hard cuts, with type in the brand sans. The pacing follows the music, with dense sections of rapid geometry broken by single-frame holds on one clean shape. It works because a tiny set of shapes plus strict motion rules gives huge variety while staying recognizable, which is exactly what a system reel is meant to prove. To rebuild it, place labels at rotate(i*360/n deg) translateX(r) inside a container and spin it with power2.inOut. Have the arrow overshoot with back.out(2). Cut between black, white and blue every 8–12 frames in high-energy sections, then hold for 1 second.",
+  "durationHint": "1:03"
+ },
+ {
+  "id": "koto-deezer-rebrand",
+  "title": "Deezer — Studio Koto",
+  "by": "Koto for Deezer",
+  "year": 2023,
+  "url": "https://vimeo.com/882820948",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1751049591-cab3d1c3de7b57d104be0cf3751ae55a024daebdfa67c4d6e09fb3b70438d314-d_1280x720?region=us",
+  "category": "brand-identity",
+  "tags": [
+   "music-streaming",
+   "rebrand",
+   "bento-grid",
+   "pulsing-logo"
+  ],
+  "techniques": [
+   "waveform-edged logo",
+   "heartbeat pulse",
+   "bento grid reveal",
+   "bold editorial type stacks",
+   "purple monochrome system",
+   "sticker character"
+  ],
+  "breakdown": "Koto's 2023 rebrand of Deezer is built around a heart symbol whose edge vibrates like a sound wave, and this 20-second edit (shared by visuelle) sums up the system. On a dark canvas, a bento grid of brand applications fills in. There is a purple tile with the black wavy-edged heart, an artist card for Billie Eilish, a \"The Beat Goes On\" player pill, a tall tile where the heart compresses into a thin vertical oval, and a genre stack set in heavy condensed type (\"Pop / Metal / Rock / Opera / Jazz / Ska\"). Witty lines like \"Fans are our people\" and \"More moods than a sulky ex\" sit beside a fluffy purple character sticker and a horizontal waveform band. The heart keeps pulsing and squashing between states, so the logo acts as a visualizer. It works because one living symbol plus a single purple keeps a chaotic grid coherent. To rebuild it, draw the heart as an SVG path whose outline points are offset by sin(angle*k + t) noise each frame, either through a canvas redraw or by tweening between pre-baked paths. Build the grid with CSS grid-template-areas, fill cells with a 0.06s stagger and scale from 0.9, and keep the palette to purple, black and white.",
+  "durationHint": "0:20"
+ },
+ {
+  "id": "koto-logo-behaviours",
+  "title": "Koto OFF Brand — Motion — Logo Behaviours",
+  "by": "Koto",
+  "year": 2025,
+  "url": "https://vimeo.com/1056825891",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1982649374-6322d86aad3cff4d9c9832f4975a53ac938f0e3cca06834456065fe7704a9375-d_1280x720?region=us",
+  "category": "logo-animation",
+  "tags": [
+   "logo-states",
+   "motion-guidelines",
+   "brand-system",
+   "loop"
+  ],
+  "techniques": [
+   "named logo behaviours",
+   "side-by-side state matrix",
+   "edge wobble",
+   "beat-synced pulse",
+   "loopable states"
+  ],
+  "breakdown": "This six-second loop from Koto's \"OFF Brand\" motion series is a lesson in treating a logo as a set of named behaviours rather than one animation. A purple board is divided into a 3×2 matrix of panels, each with a small label tag in the corner. Every panel shows the same black heart symbol (the Deezer mark Koto designed) running a different behaviour at the same time: a slow idle breathe, a pulse locked \"to the beat\", a nervous edge wobble, a squash, and more. Seeing them side by side shows how amplitude, frequency and easing alone change the emotion of a mark. All of them loop seamlessly, so any one can be used as an idle, loading or reaction state. It works as a guideline artifact: a designer can choose a behaviour by context the way they would choose a color. To rebuild it, write one parametric function (amplitude, frequency, noise, squash) that deforms an SVG path's vertices over time. Render six instances in a CSS grid with different parameter sets, label each with a monospace tag, and make loop length an integer multiple of every frequency so all six loop together in 6 seconds.",
+  "durationHint": "0:06"
+ },
+ {
+  "id": "buck-expressive-brand-montage",
+  "title": "BUCK – Expressive Brand Montage",
+  "by": "BUCK (animation by phibs)",
+  "year": 2020,
+  "url": "https://vimeo.com/387066089",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/849876412-2500c9596fccefec6edf390068926dcc9413578c2cbd993cb7fde7db6430ccf2-d_1280x720?region=us",
+  "category": "3d-motion",
+  "tags": [
+   "studio-rebrand",
+   "3d-primitives",
+   "physics",
+   "montage"
+  ],
+  "techniques": [
+   "3D primitive choreography",
+   "squash and stretch on rigid shapes",
+   "collision timing",
+   "wireframe vs solid contrast",
+   "music-led editing"
+  ],
+  "breakdown": "This 30-second montage was made for the launch of BUCK's new website and brand identity, with music by Antfood. In it, a cast of simple 3D primitives performs the brand's personality: a four-point star, cones, cylinders, matte spheres in salmon and pink, a white cube, and a hollow wireframe cube. They tumble, bounce, collide and stack on a dark ground, lit softly with a slightly toy-like matte finish. The poster frame shows the palette: deep teal-black, pale blue, salmon, white and a dark-green cylinder. Timing is the real subject. Shapes anticipate, overshoot and settle with squash and stretch even though they are rigid, which makes geometry feel like characters. Edits land on hits in the music. It works because the abstraction leaves room for pure animation craft, the thing the studio is known for, and the primitives can grow into an endless library. To rebuild it, use three.js for real 3D, or fake it in 2D with radial-gradient spheres and CSS 3D cubes. Choreograph with GSAP using anticipation (scale 1.1, 0.9, 1.05, 1), keep ground contact with a shadow ellipse that scales with height, and cut on audio beat markers.",
+  "durationHint": "0:30"
+ },
+ {
+  "id": "pentagram-moving-work-archive",
+  "title": "Moving Work Pentagram",
+  "by": "SQUA (animations for Pentagram)",
+  "year": 2025,
+  "url": "https://vimeo.com/1114901756",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/2053874571-1240e01937737e69a474050f165c3782f40bccc5eab73bcb44e809691efadb9a-d_1280x720?region=us",
+  "category": "logo-animation",
+  "tags": [
+   "logo-reveals",
+   "compilation",
+   "identity",
+   "typography"
+  ],
+  "techniques": [
+   "logo builds",
+   "mask reveals",
+   "stroke draw-on",
+   "type assembly",
+   "appear/disappear choreography",
+   "condensed type title cards"
+  ],
+  "breakdown": "In the uploader's words, this is a two-minute \"collection of logo and typographic animations I have done for Pentagram over the last 15 years\". It is about \"making logos and messages appear and disappear\", set to a score by Iain Grant. It opens with a condensed-type title card in orange and white: \"MOVING LOGOS SKETCHES / PENTAGRAM WORK ARCHIVE 2010 – NOW\". It then moves through dozens of identities, each given a short life: marks built from strokes, letters sliding out of masks, geometric parts snapping together, wordmarks that dissolve back into their components. It is a rare reference library because each reveal is short, clean and tied to the logic of its own logo. The motion grows out of the geometry instead of being a generic fade-and-scale. Study it for the range of appear/disappear patterns: wipe, draw, split, stack, rotate-in, and letter-by-letter. To rebuild these patterns, use SVG logos split into groups. Reveal through clip-path rects (mask wipes), stroke-dasharray draw-ons, and per-letter translateY from overflow-hidden lines with a 0.03s stagger. Always design the exit as carefully as the entrance and keep each lockup to about 2 seconds.",
+  "durationHint": "2:00"
+ },
+ {
+  "id": "ordinary-folk-google-marketing-live-countdown",
+  "title": "Google – Marketing Live 2019 Countdown",
+  "by": "Ordinary Folk for Google",
+  "year": 2019,
+  "url": "https://vimeo.com/336164070",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1030774867-9b6cfd01181e3b0fd96443e8844654ce890af3a7260bb0c525af606f2e972b92-d_1280x720?region=us",
+  "category": "titles",
+  "tags": [
+   "event-countdown",
+   "2d-shape-animation",
+   "google",
+   "ad-formats"
+  ],
+  "techniques": [
+   "countdown numerals",
+   "shape morph transitions",
+   "flat 2D design",
+   "ad-UI motifs",
+   "continuous transformation"
+  ],
+  "breakdown": "Ordinary Folk, the Vancouver studio led by Jorge R. Canedo E. and known for some of the most fluid 2D shape animation around, made this countdown to open Google Marketing Live 2019 for Google's Events and Experience team. By the studio's description, it \"takes the viewer through some classic ads in motion\". The countdown uses the history of ad formats as its visual material, rendered in Google's clean flat style: white space, Google Sans and the four-color palette. In the studio's typical way, each segment flows into the next through continuous shape transformation rather than cuts. A circle becomes a button, a button becomes a banner, and layout blocks fold into the next numeral, so there is never a static frame. Credits list a six-person animation team plus custom music and sound, and the sound is tightly synced to every pop and snap. It works because a countdown, normally dead time, becomes a showcase that pays off on the final number. To rebuild it, chain GSAP timelines where each scene's last shape is the next scene's first shape (MorphSVG or matching border-radius and size tweens). Draw numerals from rounded rects and circles, and land every key change on a sound effect.",
+  "durationHint": "1:07"
+ },
+ {
+  "id": "vucko-spotify-wrapped-2022",
+  "title": "Wrapped 2022 / Spotify",
+  "by": "Vucko for Spotify",
+  "year": 2022,
+  "url": "https://vimeo.com/795658286",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1732423470-e1462297015027e136c1af45d6e7df3ba77f7aa0c3b3076afc9184b0d703fe35-d_1280x720?region=us",
+  "category": "data-viz",
+  "tags": [
+   "year-in-review",
+   "personalized-data",
+   "starbursts",
+   "collage"
+  ],
+  "techniques": [
+   "starburst shape pops",
+   "layered collage stacks",
+   "color clash fields",
+   "wordmark integration",
+   "rhythmic scale bursts",
+   "story-format systems"
+  ],
+  "breakdown": "Vucko is a motion partner on Spotify Wrapped, and this one-minute reel shows the 2022 motion system. The poster frame sets the language: a hot-pink field with a black blob, a jagged neon-green starburst and a yellow sunburst stacked behind a big \"22\", with the \"Wrapped\" wordmark punched over the top. Spotify's own design writing on the 2022 campaign describes a toolkit that broke down the character of the shapes and how monograms form. In the reel, listening data (top artists, genres, minutes, and the year's \"listening personality\") is revealed by layering these shapes rhythmically. Each burst pops in with a fast scale overshoot, rotates slightly, and gets covered by the next layer like stickers piling up, with numbers and type landing on the beat. Colors clash on purpose (pink, green, yellow, black), and the vertical story format is used throughout. It works because a personal stat becomes a celebratory reveal. To rebuild it, build starbursts as SVG polygons generated with alternating radii. Pop each with scale 0 to 1.15 to 1 (back.out(3)) plus a ±8deg rotation, stack layers with a z-index increment every 0.3s, and count numbers up with a snapping ease in a 1080×1920 frame.",
+  "durationHint": "1:01"
+ },
+ {
+  "id": "vucko-spotify-wrapped-2020",
+  "title": "Wrapped 2020 / Spotify",
+  "by": "Vucko for Spotify",
+  "year": 2020,
+  "url": "https://vimeo.com/582167887",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1204889864-b28d8c684d3369f7d388c97eeccf2f2d68c52751c9e5d9f374b30cdecfc41e3b-d_1280x720?region=us",
+  "category": "kinetic-type",
+  "tags": [
+   "year-in-review",
+   "mirrored-type",
+   "gradient",
+   "neon"
+  ],
+  "techniques": [
+   "mirrored/reflected numerals",
+   "banded gradient backgrounds",
+   "neon-on-gradient type",
+   "data card reveals",
+   "vertical story pacing"
+  ],
+  "breakdown": "Vucko's motion work for Spotify Wrapped 2020 is a strong example of numerals and type as the whole show. The key art pairs a neon-lime \"2020\" with a mirrored copy, the bottom \"20\" flipped upside down, set above a \"WRAPPED\" wordmark. Behind it are horizontal gradient bands that run from orange through red to black and then deep blue, like a stylized sunset. In motion, the mirrored digits slide and flip along their shared axis. The background bands scroll and recolor between stories, and the personal data cards (top songs, genres, minutes listened) build in with bold type in the same neon. The cutting follows the rhythm of a tap-through story, holding each card long enough to read. It works because one typographic trick (reflection) and one background system (banded gradients) give a strong, flexible look that recolors per user and per platform. To rebuild it, duplicate a text node with transform:scaleY(-1) and animate the pair with rotateX flips around the shared baseline. Animate a multi-stop linear-gradient by tweening the stop colors through CSS custom properties (@property). Set 1080×1920 cards with a 2.5s hold and a 0.4s slide-up for each stat.",
+  "durationHint": "0:58"
+ },
+ {
+  "id": "manvsmachine-nike-air-max",
+  "title": "Nike ~ Air Max (Go Lighter, Go Longer)",
+  "by": "ManvsMachine for Nike",
+  "year": 2016,
+  "url": "https://vimeo.com/192130017",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/603393463-36c0123de8bfef1e12a1be940cda8c0e19f6f35b7050689514141aa510523d59-d_1280x720?region=us",
+  "category": "3d-motion",
+  "tags": [
+   "sneaker",
+   "cgi",
+   "visual-metaphor",
+   "soft-body"
+  ],
+  "techniques": [
+   "visual metaphor sequencing",
+   "soft-body simulation",
+   "negative-space framing",
+   "material contrast",
+   "macro product hero",
+   "rhythmic cut-to-sound"
+  ],
+  "breakdown": "ManvsMachine's Air Max work for Nike is the standard reference for abstract CG product storytelling. The studio describes this film as \"a metaphorical exploration of air and the negative space it occupies\". The Air Max 2017's ultralight support and comfort are shown \"through a series of visual metaphors inspired by scenarios encountered on an everyday run\". Each scene is a small physics poem built from clean CG: soft, inflated forms cushioning impacts, objects floating and resisting, pressure and release. These alternate with macro hero shots of the shoe and its air unit on minimal colored sets. Audio design by Zelig turns each squash and bounce into a tactile sound hit, and the edit moves from one metaphor to the next on those beats. It works because the product benefit is never stated. It is felt through material behavior, and the simple sets keep each metaphor legible in a second or two. To rebuild a 2D version, build \"soft\" blobs as SVG paths with spring-driven vertices (Verlet points) that squash on impact. Use plain pastel backgrounds, add a sound hit for every contact, and cut between three or four metaphors before a product or end-card hold.",
+  "durationHint": "0:32"
+ },
+ {
+  "id": "animography-chubs-animated-typeface",
+  "title": "Chubs – Animated Typeface",
+  "by": "Animography",
+  "year": 2023,
+  "url": "https://vimeo.com/835356719",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1682781956-55befa309e4eb70b4d63fbcdede0666261c7dd96158022b9610c661747d96960-d_1280x720?region=us",
+  "category": "kinetic-type",
+  "tags": [
+   "animated-typeface",
+   "graffiti",
+   "bubble-letters",
+   "type-specimen"
+  ],
+  "techniques": [
+   "per-glyph animated letters",
+   "inflate/bounce on entry",
+   "outline and offset strokes",
+   "sloppy stroke jitter",
+   "light and shadow layers",
+   "specimen pacing"
+  ],
+  "breakdown": "Animography is a type foundry that makes animated typefaces for After Effects, and Chubs (2023) merges \"graffiti throw-up style with bubbly motion\". The specimen film opens on electric blue with a small \"Get ready for\" line, then the word \"CHUBS\" in quotes inflates into place. It shows fat bubble letters with a white fill, black outline and an offset shadow. As the film goes on, the letters bounce, wobble and settle with soft-body overshoot, and the optional styles are shown: \"sloppy strokes\" make the outline jitter as if hand-drawn, \"outer strokes\" add extra rings, and light and shadow features add depth. The pacing works like a type specimen, with words and alphabets on bold color fields and toggles between static and animated versions. It is a compact lesson in building motion into the glyph itself, so any word inherits the personality. To rebuild it, draw each letter as an SVG group (fill, stroke, offset shadow). Animate entry with scale 0 to 1.2 to 0.95 to 1 using elastic.out(1,0.4), staggered 0.05s. Add per-frame jitter with an feTurbulence/feDisplacementMap at a low scale for the sloppy stroke, then step its seed at 12fps.",
+  "durationHint": "0:57"
+ },
+ {
+  "id": "studio-dumbar-amsterdam-sinfonietta",
+  "title": "Amsterdam Sinfonietta Visual Identity in Motion",
+  "by": "Studio Dumbar/DEPT",
+  "year": 2018,
+  "url": "https://vimeo.com/289255843",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/724859763-5cbc5a74604224a8e21d6b74af79e2eca8a6bbf4c4b38c34f0ac2432841a237e-d_1280x720?region=us",
+  "category": "kinetic-type",
+  "tags": [
+   "generative",
+   "audio-driven",
+   "orchestra",
+   "text-pattern"
+  ],
+  "techniques": [
+   "music-driven generative patterns",
+   "repeated acronym fields",
+   "wave displacement of text",
+   "two-color contrast",
+   "code-based identity"
+  ],
+  "breakdown": "Studio Dumbar built a custom code tool for the string orchestra Amsterdam Sinfonietta. In the studio's words, it \"transforms music into dynamic patterns (still and motion), made by repeating the brand's AS acronym in an endless variety of configurations\". The identity film shows fields of repeated type, such as a dense block of the word \"CONTEMPORARY\" in magenta on deep olive. The rows bend, compress and ripple in waves that follow the music, so the text block behaves like a membrane hit by sound. Spacing and offsets change with intensity, and quiet passages let the grid relax into straight rows. Because the patterns are generated from a specific piece, every poster and video is tied to real music, which makes this a reference for code-driven, data-faithful identity. It works because typography becomes texture without losing legibility at the macro level, and one rule (repeat the letters, displace them by audio) yields unlimited variety. To rebuild it, use canvas: lay out a monospace text grid and, per character, offset y by amplitude × sin(x·freq + t) with amplitude from an audio envelope. Vary letter-spacing with a second band, and render two colors only at 1920×1080.",
+  "durationHint": "0:37"
+ },
+ {
+  "id": "vit-zemcik-identity-motion-language",
+  "title": "Identity — Motion Language",
+  "by": "Vit Zemcik for Studio Mowshe",
+  "year": 2026,
+  "url": "https://vimeo.com/1165944611",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/2123415438-9473291153a043896ef67c7dbb222fb3c155a9e529ff65c1dbd95ffa9180a31d-d_1280x720?region=us",
+  "category": "kinetic-type",
+  "tags": [
+   "broadcast-package",
+   "graphic-design-history",
+   "type-specimen",
+   "system"
+  ],
+  "techniques": [
+   "animated classic posters",
+   "narrative kinetic typography",
+   "construction-grid reveals",
+   "vector reinterpretation",
+   "broadcast package system"
+  ],
+  "breakdown": "This piece is the motion layer for \"Identity: The Story of Czech Graphic Design\", a project that spans a TV series, a feature documentary, a book, an exhibition, a façade projection and DOOH. Vit Zemcik was commissioned by Studio Mowshe to \"bring classic graphic design works to life through animation\" and to build one coherent motion layer across every format. The reel mixes vector-based reconstructions and interpretive studies of historic Czech posters and logos with narrative kinetic typography that keeps a continuous flow. The poster frame shows the tone: an \"AaBb\" specimen in a clean grotesk on white, with thin yellow construction guides and a short yellow underline, as if the type is being drafted live. In motion, letters are built from their construction grids, shapes from vintage works break apart and recombine, and title sequences, promos and social assets all share the same timing logic. It works because it respects the source material, letting the original geometry drive the motion, while unifying many formats. To rebuild it, draw construction lines first with stroke-dashoffset, then fade or clip the glyph fill in. Reconstruct poster shapes as SVG and tween each into position, and keep a two-color palette with generous white space.",
+  "durationHint": "1:38"
+ },
+ {
+  "id": "gsap-splittext-masked-lines",
+  "title": "Masked Lines with SplitText",
+  "by": "GSAP (GreenSock)",
+  "year": 2025,
+  "url": "https://codepen.io/GreenSock/pen/LEYqezo",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/GreenSock/pen/LEYqezo/image/large.png",
+  "category": "kinetic-type",
+  "tags": [
+   "gsap",
+   "splittext",
+   "line-reveal",
+   "mask",
+   "editorial",
+   "gsap-demos"
+  ],
+  "techniques": [
+   "SplitText lines+words",
+   "mask: 'lines' overflow clip",
+   "yPercent 100 -> 0 rise",
+   "stagger 0.1",
+   "expo.out"
+  ],
+  "breakdown": "The canonical editorial headline reveal from the official GSAP demo set. A paragraph is split with SplitText.create(type: 'words,lines', mask: 'lines', autoSplit: true): every line gets wrapped in an overflow-hidden mask, so each line can slide up from below its own baseline instead of fading in place. The tween is gsap.from(self.lines, { yPercent: 100, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'expo.out' }). Beat by beat: line 1 snaps up almost instantly (expo.out front-loads the movement), each subsequent line starts 100 ms later, and the block settles in roughly 0.6 + 0.1 x (lines - 1) seconds. It works because the mask hides the motion's origin, so text appears to be printed by the edge of the line box rather than floating in, and the hard deceleration reads as confident and premium. autoSplit plus document.fonts.ready re-splits after font load so line breaks are correct. To reproduce as a clip: wait for fonts, split once, build gsap.timeline({ paused: true }) with the same from-tween at position 0, then call tl.seek(t) per frame. Avoid autoSplit re-splitting mid-render (pin the layout width), and keep the stagger as a fixed number, not 'random'. Combine with a word-level variant (type 'words', stagger 0.03) for subtitles.",
+  "durationHint": "1.0-1.5s per paragraph"
+ },
+ {
+  "id": "gsap-drawsvg-stroke-draw",
+  "title": "DrawSVG",
+  "by": "GSAP (GreenSock)",
+  "year": 2024,
+  "url": "https://codepen.io/GreenSock/pen/OJeOewJ",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/GreenSock/pen/OJeOewJ/image/large.png",
+  "category": "logo-animation",
+  "tags": [
+   "gsap",
+   "drawsvg",
+   "svg",
+   "line-drawing",
+   "stroke",
+   "gsap-demos"
+  ],
+  "techniques": [
+   "DrawSVG '0% 0%' -> '0% 100%'",
+   "travelling stroke segment '100% 100%'",
+   "power1.inOut",
+   "timeline defaults"
+  ],
+  "breakdown": "The reference demo for SVG line drawing. All paths in an SVG stage are animated with DrawSVGPlugin inside one looping timeline: timeline({ defaults: { duration: 3, ease: 'power1.inOut' } }).from('path', { drawSVG: '0% 0%' }).to('path', { drawSVG: '100% 100%' }). Beat 1: every stroke grows from its start point to full length over 3 s. Beat 2: the tail chases the head, so the line erases itself in the same direction, which reads as a pen passing through the drawing rather than a simple reverse. Under the hood DrawSVG writes stroke-dasharray and stroke-dashoffset from getTotalLength(), so it works on any path, line, circle or polyline, and allows segment values like '40% 60%' for a moving dash. Why it works: the draw-on/draw-off pair gives a complete in and out in one gesture, perfect for logo reveals, signatures and diagram connectors. To reproduce deterministically: build the same timeline with paused: true and repeat: 0, place the draw-off at a label after a hold, and seek(t). Without the plugin, set strokeDasharray = L and tween strokeDashoffset from L to 0, then from 0 to -L. Stagger multi-path logos at 0.05-0.15 s and set stroke-linecap: round so the leading edge looks like a nib.",
+  "durationHint": "3s draw + 3s erase"
+ },
+ {
+  "id": "gsap-morphsvg-shapeindex",
+  "title": "MorphSVG: shapeIndex",
+  "by": "GSAP (GreenSock)",
+  "year": 2024,
+  "url": "https://codepen.io/GreenSock/pen/NWZMKXv",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/GreenSock/pen/NWZMKXv/image/large.png",
+  "category": "brand-identity",
+  "tags": [
+   "gsap",
+   "morphsvg",
+   "svg",
+   "shape-morph",
+   "gsap-demos"
+  ],
+  "techniques": [
+   "MorphSVG shape morph",
+   "shapeIndex point mapping",
+   "power3.inOut yoyo",
+   "staggered delay 0.25"
+  ],
+  "breakdown": "A side-by-side lesson in why shape morphs sometimes twist and how to fix it. The same source shape is cloned four times and each copy morphs to the same target (#shapeNew) with morphSVG: { shape, shapeIndex } where shapeIndex is default, 3, 6 or 9. Each tween is duration 2, ease 'power3.inOut', yoyo: true, repeat: -1, with delay i * 0.25 so the four variants ripple left to right. Watching them together shows the effect of shapeIndex: it rotates which point on the start path maps to point 0 on the end path, so a bad value makes the shape fold through itself and a good value makes it bloom cleanly. power3.inOut gives a slow start, a fast middle where the topology change hides, and a soft landing. For logo-to-icon transitions, blob identity systems or a play-to-pause glyph, pick shapeIndex once (MorphSVG's findShapeIndex helper shows candidates) and hard-code it. Deterministic clip recipe: one paused timeline, morph tweens at explicit positions, repeat counts expanded into explicit to/from pairs instead of repeat: -1, then tl.seek(t). Without the plugin, flubber or a fixed-point-count path interpolation driven by eased progress also works.",
+  "durationHint": "2s per morph"
+ },
+ {
+  "id": "gsap-flip-card-stack",
+  "title": "Flip Cards",
+  "by": "GSAP (GreenSock)",
+  "year": 2023,
+  "url": "https://codepen.io/GreenSock/pen/Yzdzxem",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/GreenSock/pen/Yzdzxem/image/large.png",
+  "category": "ui-motion",
+  "tags": [
+   "gsap",
+   "flip",
+   "cards",
+   "stack",
+   "layout-animation",
+   "gsap-demos"
+  ],
+  "techniques": [
+   "Flip.getState / Flip.from",
+   "absolute: true",
+   "onEnter yPercent 20 fade",
+   "onLeave corner drop",
+   "sine.inOut + expo.out"
+  ],
+  "breakdown": "A stacked card deck that cycles on click, built entirely with FLIP. Each click captures Flip.getState('.item'), then mutates the DOM: the last card is hidden and a clone is inserted at the front of the stack. Flip.from(state, { targets: '.item', ease: 'sine.inOut', absolute: true }) then animates every card from its old box to its new box, so the whole deck shuffles down one slot. Two callbacks give it character: onEnter returns gsap.from(el, { yPercent: 20, opacity: 0, duration: 0.3, ease: 'expo.out' }) for the new card rising in, and onLeave returns a 0.3 s tween to yPercent 5, xPercent -5 with transformOrigin 'bottom left' and opacity 0, so the departing card tips off the corner. Why it works: layout is defined in CSS (an offset stack), the motion is derived, and enter/leave get distinct personalities. To reproduce as a time-driven clip: precompute N layout states (class or DOM order per step), and for each step create the Flip tween with Flip.from(...) and add it to a master paused timeline at step * interval; Flip tweens are normal tweens, so tl.seek(t) scrubs them. Avoid removing nodes in onComplete while seeking backwards; toggle visibility instead.",
+  "durationHint": "0.6-0.8s per shuffle"
+ },
+ {
+  "id": "gsap-scrubbed-bento-flip",
+  "title": "Scrubbed Bento Gallery",
+  "by": "GSAP (GreenSock)",
+  "year": 2024,
+  "url": "https://codepen.io/GreenSock/pen/vYMzKZx",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/GreenSock/pen/vYMzKZx/image/large.png",
+  "category": "transitions",
+  "tags": [
+   "gsap",
+   "flip",
+   "scrolltrigger",
+   "bento-grid",
+   "gallery",
+   "gsap-demos"
+  ],
+  "techniques": [
+   "Flip.to with captured end state",
+   "class-toggle final layout",
+   "expoScale(1, 5) ease",
+   "ScrollTrigger scrub + pin"
+  ],
+  "breakdown": "A bento grid that expands into a full-bleed gallery as you scroll. The trick: temporarily add 'gallery--final' to the grid, capture Flip.getState(items), remove the class, then build Flip.to(state, { simple: true, ease: 'expoScale(1, 5)' }). That single Flip tween interpolates every tile's position and size between the compact bento layout and the final layout (one hero tile filling the viewport, the others pushed out). It is added to a timeline whose ScrollTrigger has start 'center center', end '+=100%', scrub: true and pins the parent, so scroll progress becomes layout progress. expoScale(1, 5) compensates for the perceived speed of a 5x scale, so the zoom feels linear to the eye instead of rushing at the end. Why it works: CSS defines both layouts, Flip does the math, and the zoom into one tile is a natural chapter transition. For a deterministic clip: drop ScrollTrigger, keep Flip.to inside gsap.timeline({ paused: true }) and drive it with tl.progress(t / duration) or seek(t). Recompute (revert context, recapture) only when the stage size changes, never per frame. Great for product-feature grids zooming into a single screenshot.",
+  "durationHint": "1.5-2.5s"
+ },
+ {
+  "id": "gsap-observer-continuous-sections",
+  "title": "Animated Continuous Sections with GSAP Observer",
+  "by": "GSAP (GreenSock), after Brian Cross",
+  "year": 2022,
+  "url": "https://codepen.io/GreenSock/pen/XWzRraJ",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/GreenSock/pen/XWzRraJ/image/large.png",
+  "category": "transitions",
+  "tags": [
+   "gsap",
+   "observer",
+   "splittext",
+   "section-transition",
+   "slideshow",
+   "parallax"
+  ],
+  "techniques": [
+   "outer/inner counter-translate wipe",
+   "background yPercent 15 parallax",
+   "SplitText chars stagger from random",
+   "power1.inOut 1.25s"
+  ],
+  "breakdown": "Full-screen slides that wipe in with a counter-translated mask, the most-copied section transition on CodePen. Each section has an .outer and .inner wrapper; the outer enters from yPercent 100 while the inner starts at yPercent -100, so both move to 0 together and the content stays visually still while the mask edge sweeps across it. Simultaneously the incoming background image moves from yPercent 15 to 0 and the outgoing one drifts to -15, giving parallax depth. At 0.2 s the heading, split into chars with SplitText, rises from yPercent 150 with autoAlpha 0 -> 1, duration 1, ease 'power2', stagger { each: 0.02, from: 'random' }. Timeline defaults are duration 1.25, ease 'power1.inOut'. Observer just maps wheel/touch to next/previous. Why it works: the counter-translate wipe feels like a page being uncovered rather than a slide pushed in, and random char order adds sparkle without chaos. Clip recipe: build one paused timeline that chains gotoSection(i) segments at fixed times; replace from: 'random' with a precomputed shuffled index order from a seeded PRNG (or stagger from 'start'), then seek(t). Works as a 3-5 scene title sequence.",
+  "durationHint": "1.25s per section"
+ },
+ {
+  "id": "gsap-advanced-grid-stagger",
+  "title": "Advanced staggers in GSAP 3",
+  "by": "GSAP (GreenSock)",
+  "year": 2019,
+  "url": "https://codepen.io/GreenSock/pen/jdawKx",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/GreenSock/pen/jdawKx/image/large.png",
+  "category": "abstract",
+  "tags": [
+   "gsap",
+   "stagger",
+   "grid",
+   "ripple",
+   "pattern"
+  ],
+  "techniques": [
+   "stagger grid [rows, cols]",
+   "from: 'center' / edges / index",
+   "axis x|y",
+   "stagger ease",
+   "yoyo repeat 1"
+  ],
+  "breakdown": "The definitive grid-ripple demo. A 7 x 15 grid of boxes is animated with one tween: to('.box', { scale: 0.1, y: 60, yoyo: true, repeat: 1, duration: 1, ease: 'power1.inOut', stagger: { amount: 1.5, grid: [7, 15], from: 'center', axis: null, ease } }). With grid set, GSAP computes each element's distance from the origin cell, so delays radiate outward like a drop in water. 'amount: 1.5' spreads total delay over 1.5 s regardless of count; 'axis' limits the distance to rows or columns for sweeping bars; 'from' can be 'center', 'edges', 'random', 'end' or a numeric index; and stagger.ease warps the delay distribution, so power2.in clusters the start and accelerates the wave outward. Why it works: one line of code produces organic, physical-looking waves that are ideal for backgrounds, transitions between scenes (cover the frame with tiles, then uncover), loading states and data-dot intros. Deterministic clip: put the tween in a paused timeline and seek; avoid from: 'random' or replace it with a seeded shuffle and stagger as a function (i) => delays[i]. Use an explicit grid array instead of 'auto' so layout measurement cannot change timings between renders.",
+  "durationHint": "2.5-3.5s per wave"
+ },
+ {
+  "id": "cassie-svg-text-line-draw",
+  "title": "SVG text animation",
+  "by": "Cassie Evans",
+  "year": 2017,
+  "url": "https://codepen.io/cassie-codes/pen/GEaZVm",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/cassie-codes/pen/GEaZVm/image/large.png",
+  "category": "titles",
+  "tags": [
+   "svg",
+   "stroke-dashoffset",
+   "lettering",
+   "neon",
+   "anime.js",
+   "retro"
+  ],
+  "techniques": [
+   "stroke-dashoffset line draw",
+   "3 offset stroke layers",
+   "elastic bounce-in per letter",
+   "layer delay 0.2s"
+  ],
+  "breakdown": "Hand-built monoline letters drawn as SVG paths, each letter duplicated into three stacked strokes: white (8px), mint #05ffa1 (6px) and cyan #01cdfe (8px), the coloured layers nudged 2px with translate3d to create a retro offset-print look. Beat 1 (t = 1.0 s): every letter part drops 30px into place with an elastic ease while fading in over 0.3 s. Beat 2: the strokes draw themselves via strokeDashoffset from the path length to 0, the white layer first, mint at +0.2 s, cyan at +0.4 s, each over 4 s with an elastic curve, so the colours chase each other along the letterforms like misregistered neon tubes. The original uses anime.js (setDashoffset), but the idea is library-agnostic. Why it works: the staggered colour passes make a single stroke feel dimensional and musical, and the elastic overshoot gives hand-lettering bounce. GSAP clip recipe: for each layer set strokeDasharray = getTotalLength(), then tl.from(layer, { strokeDashoffset: len, duration: 1.6, ease: 'elastic.out(1, 0.5)' }, 1 + layerIndex * 0.2) inside a paused timeline, plus a from({ y: -30, opacity: 0, stagger: 0.05 }) on letter groups; seek(t) per frame. Shorten the 4 s draw for social cuts.",
+  "durationHint": "2-5s"
+ },
+ {
+  "id": "creativeocean-svg-text-mask-parallax",
+  "title": "ScrollTrigger: SVG Text Mask",
+  "by": "Tom Miller",
+  "year": 2020,
+  "url": "https://codepen.io/creativeocean/pen/qBbBLyB",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/creativeocean/pen/qBbBLyB/image/large.png",
+  "category": "titles",
+  "tags": [
+   "svg-mask",
+   "parallax",
+   "scrolltrigger",
+   "landscape",
+   "title-card"
+  ],
+  "techniques": [
+   "layered parallax y offsets",
+   "SVG <mask> with moving cloud image",
+   "text swap through mask",
+   "scrub: 1"
+  ],
+  "breakdown": "A recreation of an Unfold Dribbble shot: a mountain landscape built from stacked SVG images (sky, three mountain planes, three cloud layers) with the title EXPLORE. On scroll, one timeline with scrub: 1 moves every layer by a different amount at position 0: sky -200, back mountains -10 to -100, mid -30 to -250, foreground -50 to -600, clouds from +100 to -800. The payoff is the mask: an SVG <mask> contains a white rect plus a cloud-shaped image that travels with cloud1, and a white panel with dark text FURTHER is rendered through that mask. As the cloud bank rises, it literally wipes the scene to white and the headline changes from EXPLORE to FURTHER, so the transition is carried by an in-world element. Why it works: depth from differential speeds, and a diegetic wipe that doubles as a title change. Deterministic clip: replace the ScrollTrigger with a paused timeline of the same fromTo tweens (ease 'none' or power1.inOut) and seek(t); the mask needs no extra code because the masked group just follows the cloud transform. Swap photos for flat vector layers to build any parallax title card or chapter break.",
+  "durationHint": "3-4s"
+ },
+ {
+  "id": "chrisgannon-i-design-with-code",
+  "title": "I DESIGN WITH CODE",
+  "by": "Chris Gannon",
+  "year": 2016,
+  "url": "https://codepen.io/chrisgannon/pen/VjWWeO",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/chrisgannon/pen/VjWWeO/image/large.png",
+  "category": "kinetic-type",
+  "tags": [
+   "gsap",
+   "drawsvg",
+   "morphsvg",
+   "pen-tool",
+   "bezier",
+   "explainer-style"
+  ],
+  "techniques": [
+   "pen-nib follows anchor coordinates",
+   "elastic anchor pop",
+   "DrawSVG bezier handles",
+   "MorphSVG line bend",
+   "timeScale 2.13 loop"
+  ],
+  "breakdown": "A tiny explainer that animates the vector pen tool itself. A pen nib glides to an anchor point (x then y with overlapping tweens), the anchor pops in from scale 0 with Elastic.easeOut.config(0.5, 0.4), and the nib then drags out bezier handles: handle lines draw with DrawSVG from '0% 0%' while handle dots grow via attr r from 0. The same happens on the right anchor, and as handles extend the main line morphs from straight to curved (MorphSVG), so you watch a path being designed, before the headline resolves. The whole TimelineMax runs at timeScale(2.13) with Sine.easeInOut default, which keeps the many small moves snappy. Why it works: it narrates a process with UI vocabulary designers recognise (anchors, handles, cursor), and each micro-move has a clear cause and effect. To rebuild in modern GSAP: gsap.timeline({ paused: true, defaults: { ease: 'sine.inOut' } }), read anchor coordinates from the SVG, tween the nib with x/y, use 'elastic.out(0.5, 0.4)' for pops and drawSVG or strokeDashoffset for handles, morph the curve d attribute, and use tl.timeScale() only before seeking. Ideal pattern for 'how it works' tool demos and design-tool product videos.",
+  "durationHint": "4-6s"
+ },
+ {
+  "id": "lbebber-gooey-menu",
+  "title": "Gooey Menu",
+  "by": "Lucas Bebber",
+  "year": 2015,
+  "url": "https://codepen.io/lbebber/pen/LELBEo",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/lbebber/pen/LELBEo/image/large.png",
+  "category": "ui-motion",
+  "tags": [
+   "gooey",
+   "metaballs",
+   "svg-filter",
+   "menu",
+   "css"
+  ],
+  "techniques": [
+   "feGaussianBlur + feColorMatrix alpha threshold",
+   "metaball merge",
+   "staggered transition-duration",
+   "overshoot cubic-bezier"
+  ],
+  "breakdown": "The piece that popularised the 'goo' effect. Round menu items sit under a container with filter: url(#shadowed-goo). The filter blurs the source (feGaussianBlur stdDeviation 10) and then applies an alpha-contrast feColorMatrix ('0 0 0 18 -7' in the alpha row), which turns soft overlapping blur into hard edges, so nearby circles fuse into one liquid shape and stretch apart like metaballs. A second blur and color matrix make a soft drop shadow, blended back under the goo. On open, the hamburger morphs to an X and the items fly out along an arc with cubic-bezier(0.935, 0, 0.34, 1.33), each with its own transition-duration (160 ms, 220 ms, 280 ms and so on), so they peel off the main button one by one, stretching a neck of goo before snapping free. Why it works: the threshold filter turns simple translate animation into organic surface tension at zero extra cost. Clip recipe: keep the SVG filter, replace CSS transitions with a paused GSAP timeline that tweens x/y of each blob with stagger 0.06 and ease 'back.out(1.6)', then seek(t). The same filter makes liquid text merges, blob loaders and lava-lamp backgrounds; keep blur radius proportional to element size.",
+  "durationHint": "0.4-0.8s"
+ },
+ {
+  "id": "lbebber-css-glitch-text",
+  "title": "CSS Glitched Text",
+  "by": "Lucas Bebber",
+  "year": 2014,
+  "url": "https://codepen.io/lbebber/pen/nqwBKK",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/lbebber/pen/nqwBKK/image/large.png",
+  "category": "titles",
+  "tags": [
+   "glitch",
+   "rgb-split",
+   "css",
+   "clip",
+   "cyber"
+  ],
+  "techniques": [
+   "pseudo-element duplicates via attr(data-text)",
+   "clip rect keyframe slices",
+   "red/blue text-shadow offset",
+   "alternate-reverse loop"
+  ],
+  "breakdown": "The classic pure-CSS glitch title. The heading carries data-text='GLITCH'; ::before and ::after render copies of the same word, offset by +/-2 px, with a coloured text-shadow (red on one, blue on the other) and the page background colour behind them so they hide what's underneath. Each copy runs its own 20-step keyframe animation that changes clip: rect(top, 9999px, bottom, 0) to random horizontal bands, every 5% of a 2-3 s loop, using alternate-reverse, so thin slices of the shifted copies flicker across the word and produce tearing and chromatic aberration. Why it works: only horizontal bands move, which mimics broken scan lines, and two independent band patterns never visibly repeat. Modern rebuild: use clip-path: inset(top 0 bottom 0) instead of the deprecated clip, and generate the band keyframes from a seeded PRNG (mulberry32 with a fixed seed) so every render is identical. For a time-driven clip, compute the band index as Math.floor(t * 20) and look up precomputed insets; add a 2-3 frame burst of larger x offsets on beat hits rather than glitching constantly. Pairs well with tech product launches and hacker or error states.",
+  "durationHint": "0.3-1s bursts"
+ },
+ {
+  "id": "hyperplexed-hacked-text",
+  "title": "Hacked Text Effect",
+  "by": "Hyperplexed",
+  "year": 2023,
+  "url": "https://codepen.io/Hyperplexed/pen/rNrJgrd",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/Hyperplexed/pen/rNrJgrd/image/large.png",
+  "category": "kinetic-type",
+  "tags": [
+   "text-scramble",
+   "decode",
+   "monospace",
+   "hover",
+   "cyber"
+  ],
+  "techniques": [
+   "character scramble",
+   "left-to-right resolve",
+   "iteration += 1/3 per 30ms tick",
+   "data-value target string"
+  ],
+  "breakdown": "A viral text-decode effect in about 20 lines. The h1 stores its real value in data-value. On hover, an interval fires every 30 ms and rebuilds the string: characters at index < iteration show the real letter, the rest show a random A-Z glyph. iteration increases by 1/3 each tick, so every position flickers through about three random letters before locking, and the word resolves left to right in roughly length x 90 ms. Why it works: the constant churn reads as computation, the steady lock-in front gives a clear progress direction, and a monospace font keeps the width rock-steady so nothing jitters. For a deterministic clip, remove setInterval and Math.random: compute tick = Math.floor(t / 0.03) and resolved = tick / 3, then for each char i < resolved show the target, otherwise pick glyph = pool[hash(i, tick, seed) % pool.length] with a small integer hash (or a seeded mulberry32 per tick). Drive t from a paused GSAP timeline via an onUpdate on a dummy object, or tween a 'progress' value from 0 to length and derive the string from it. Variations: resolve from the centre outward, scramble from a custom glyph pool (0-9, symbols), or stagger multiple lines by 0.15 s for terminal-style headlines.",
+  "durationHint": "0.6-1.2s per word"
+ },
+ {
+  "id": "akm2-noise-abstraction",
+  "title": "Noise Abstraction",
+  "by": "Akimitsu Hamamuro",
+  "year": 2012,
+  "url": "https://codepen.io/akm2/pen/AxGzJb",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/akm2/pen/AxGzJb/image/large.png",
+  "category": "abstract",
+  "tags": [
+   "canvas",
+   "simplex-noise",
+   "flow-field",
+   "generative",
+   "particles"
+  ],
+  "techniques": [
+   "simplex noise flow field",
+   "1000 particle trails",
+   "fractal octaves (4, falloff 0.5)",
+   "slow z-offset evolution",
+   "low-alpha accumulation"
+  ],
+  "breakdown": "A generative drawing where 1000 particles walk through a simplex-noise flow field on a 2D canvas and leave hairline trails (lineWidth 0.3, round caps). Each frame, every particle samples 4-octave fractal noise at (x / base, y / base, z) with base 1000; the value becomes an angle, and the particle steps 'step' pixels (default 5) in that direction, drawing a segment from old to new position. z advances by 0.001 per frame so the field slowly morphs, and hue drifts with a shared hueBase, which builds layered silk-like ribbons as strokes accumulate without clearing. Clicking veils the canvas with 80% background and reseeds the noise. Why it works: noise fields give coherent, natural flow, and additive accumulation turns simple steps into rich texture. Deterministic clip recipe: use a seedable noise (simplex-noise createNoise3D(alea(seed))) and seeded initial positions; since the drawing accumulates, render frame N by simulating from step 0 to N with a fixed step (cache the canvas between consecutive frames, and resimulate from 0 when seeking backwards). Never use rAF timing for motion; use frame index. For backgrounds, clear each frame with low-alpha fill to get fading trails instead of infinite accumulation.",
+  "durationHint": "loopable background"
+ },
+ {
+  "id": "mamboleoo-text-to-particles",
+  "title": "Text to particles",
+  "by": "Louis Hoebregts",
+  "year": 2016,
+  "url": "https://codepen.io/Mamboleoo/pen/obWGYr",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/Mamboleoo/pen/obWGYr/image/large.png",
+  "category": "kinetic-type",
+  "tags": [
+   "canvas",
+   "particles",
+   "text-sampling",
+   "getImageData",
+   "interactive"
+  ],
+  "techniques": [
+   "rasterise text then sample pixels",
+   "particle seek-to-destination",
+   "friction 0.94-0.99",
+   "mouse repulsion"
+  ],
+  "breakdown": "Typing in an input turns the word into hundreds of coloured dots that swarm into its letterforms. The text is first drawn on the canvas with fillText, read back with getImageData, and every Nth opaque pixel becomes a particle destination. Each particle starts at a random position with a random velocity, then each frame accelerates toward its destination by (dest - pos) / 1000, multiplies velocity by a per-particle friction between 0.94 and 0.99, and moves, so dots overshoot, spiral and gently settle. Radii 2-7 px and a five-colour palette make the word look like confetti. Near the cursor (radius 70 px) particles are pushed away, then drift back. Why it works: the viewer sees chaos resolve into meaning, a satisfying reveal for logos and keywords. Deterministic clip: seed the start positions, sizes and palette picks with a PRNG, drop mouse input, and replace the spring sim with an analytic path: pos(t) = start + (dest - start) * ease(t_i) with per-particle delays and an overshoot ease like back.out or elastic.out, all inside a paused GSAP timeline (one tween per particle or a single tween of a progress value used in a draw function). If you keep the physics, step it at a fixed dt from frame 0.",
+  "durationHint": "1.5-3s"
+ },
+ {
+  "id": "ksenia-neuro-noise-shader",
+  "title": "Neuro Noise (GLSL Shader)",
+  "by": "Ksenia Kondrashova",
+  "year": 2024,
+  "url": "https://codepen.io/ksenia-k/pen/vYwgrWv",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/ksenia-k/pen/vYwgrWv/image/large.png",
+  "category": "abstract",
+  "tags": [
+   "webgl",
+   "glsl",
+   "shader",
+   "neural",
+   "background",
+   "scroll-reactive"
+  ],
+  "techniques": [
+   "full-screen fragment shader",
+   "iterated rotated sine noise",
+   "u_time + u_scroll + pointer uniforms",
+   "glowing filament palette"
+  ],
+  "breakdown": "A full-screen WebGL fragment shader, based on an artwork by @zozuar, that renders glowing, branching filaments that look like neurons or electric veins over a dark background, with large serif type scrolling on top. The JS is minimal: compile a vertex/fragment pair, draw one full-screen quad, and feed uniforms for time, resolution, pointer position (eased towards the target each frame) and scroll progress. The fragment shader iterates a small loop that rotates and offsets the coordinate space and accumulates sin/cos terms, which produces the filament pattern; the result is raised to a power for contrast and mixed into a palette whose hue shifts with scroll. Why it works: one cheap shader gives living, organic texture behind static typography, ideal for AI and tech intros. Clip recipe: use only u_time as input and drive it from the clip's time: u_time = t (seconds) set inside a GSAP onUpdate or the frame render callback, never from performance.now(). Replace pointer easing with a keyframed uniform tween, keep devicePixelRatio fixed, and call gl.drawArrays once per seeked frame. Where WebGL is not allowed, approximate with a low-res canvas plus CSS blur and mix-blend-mode: screen.",
+  "durationHint": "loopable background"
+ },
+ {
+  "id": "jhey-tuggable-light-bulb",
+  "title": "Tuggable Light Bulb! (GSAP Draggable && MorphSVG)",
+  "by": "Jhey Tompkins",
+  "year": 2020,
+  "url": "https://codepen.io/jh3y/pen/VwjgdLj",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/jh3y/pen/VwjgdLj/image/large.png",
+  "category": "ui-motion",
+  "tags": [
+   "gsap",
+   "morphsvg",
+   "draggable",
+   "toggle",
+   "illustration",
+   "css-variables"
+  ],
+  "techniques": [
+   "cord morph sequence (MorphSVG through keyframe paths)",
+   "CSS custom property --on drives theme",
+   "0.1s per morph step",
+   "pull-and-release"
+  ],
+  "breakdown": "A dark/light toggle disguised as a pull-cord lamp. While dragging, a dummy line follows the pointer; on release a paused timeline plays: onStart flips STATE.ON, sets the CSS variable --on to 1 or 0 on the root, swaps the dummy for the real cord and plays a click sound. Then the cord morphs through a series of hand-drawn SVG cord shapes (CORDS[1..n]) with MorphSVG, CORD_DURATION 0.1 s each, producing a springy wobble that settles back to straight. Because colours of the bulb, glow and background are all written as calc() or color-mix-style expressions of --on, a single variable change re-themes the whole scene. Why it works: physical metaphor plus immediate whole-scene feedback; the frame-by-frame morph gives hand-animated bounce that a generic spring cannot. Deterministic clip: drop Draggable and author the pull as a tween of the cord end point, then chain the morph steps in the same paused master timeline, and tween --on (0 to 1) with gsap.to(document.documentElement, { '--on': 1, duration: 0.15 }) at the click moment; seek(t). Use the pattern for any toggle, theme switch, or 'lights on' reveal in a product video.",
+  "durationHint": "0.8-1.2s"
+ },
+ {
+  "id": "aaroniker-download-button",
+  "title": "Download Button Animation",
+  "by": "Aaron Iker",
+  "year": 2019,
+  "url": "https://codepen.io/aaroniker/pen/MWgNKGr",
+  "platform": "codepen",
+  "license": "MIT (CodePen)",
+  "thumb": "https://codepen.io/aaroniker/pen/MWgNKGr/image/large.png",
+  "category": "ui-motion",
+  "tags": [
+   "gsap",
+   "micro-interaction",
+   "button",
+   "svg-path",
+   "progress",
+   "checkmark"
+  ],
+  "techniques": [
+   "procedural SVG path from tweened params",
+   "Proxy setter re-renders path",
+   "elastic.out(1.12, 0.4) line drop",
+   "smoothing 0 -> 0.3",
+   "swap to checkmark at 50%"
+  ],
+  "breakdown": "A download button whose arrow line liquefies into a progress wave and ends as a checkmark. Instead of morphing between fixed paths, Aaron generates the SVG path every update: a Proxy object holds y and smoothing, and its setter calls getPath(y, smoothing), which builds a smoothed polyline with computed bezier control points (line length and angle between neighbours). On click, smoothing tweens 0 -> 0.3 over 6.5% of the 3 s duration and y tweens 20 -> 12 with Elastic.easeOut.config(1.12, 0.4), so the straight line sags and wobbles like a rope; CSS keyed to a --duration variable runs the arrow drop and progress fill; at 50% the path is replaced by three checkmark points [3,14], [8,19], [21,6]. Why it works: procedural paths let a few numbers produce rich organic motion, and the arrow-to-wave-to-check narrative explains the state change. Deterministic clip: keep getPath, tween a plain object with a paused GSAP timeline and render the path in onUpdate; schedule the checkmark swap with tl.call at a fixed time (or tween a 0-1 morph between wave and check points), replacing setTimeout. Reuse for app-demo micro-interactions such as send, save, sync.",
+  "durationHint": "3s"
+ },
+ {
+  "id": "csstricks-grainy-gradients",
+  "title": "Grainy Gradients",
+  "by": "Jimmy Chion (CSS-Tricks)",
+  "year": 2021,
+  "url": "https://css-tricks.com/grainy-gradients/",
+  "platform": "web",
+  "license": "see source",
+  "thumb": "https://css-tricks.com/wp-content/uploads/2021/09/noisy-gradient-1024x512.png",
+  "category": "abstract",
+  "tags": [
+   "grain",
+   "noise",
+   "feTurbulence",
+   "gradient",
+   "texture",
+   "svg-filter"
+  ],
+  "techniques": [
+   "SVG feTurbulence fractalNoise",
+   "gradient + noise layered",
+   "contrast/brightness filter to crush noise",
+   "mix-blend-mode"
+  ],
+  "breakdown": "The go-to reference for the Dribbble-style grainy gradient. Grain comes from an SVG filter: <feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'> applied to a full rect, saved as an SVG and used as a background-image layered under (or over) a CSS gradient. A CSS filter like contrast(170%) brightness(1000%) is then applied to the stack, which pushes the smooth noise into crisp speckles that appear only in the gradient's mid-tones, so the grain looks like it belongs to the light rather than sitting on top. The article also shows mix-blend-mode variants for compositing over existing artwork, and notes that results differ slightly between browsers. Why it works: noise breaks up gradient banding, adds print-like tactility and makes flat vector scenes feel filmic. Clip recipe: generate the noise once (feTurbulence or a seeded canvas noise tile), then animate deterministically by shifting the tile's background-position in whole pixels per frame (frame index x a fixed offset table) or by changing the seed attribute every 2 frames (seed = Math.floor(t * 12)). Animate the gradient itself (angle, colour stops via CSS variables) with GSAP. Keep grain opacity 8-15% for video so compression doesn't smear it.",
+  "durationHint": "texture layer"
+ },
+ {
+  "id": "codrops-scroll-based-layout-flip",
+  "title": "Scroll-Based Layout Animations",
+  "by": "Manoela Ilic (Codrops)",
+  "year": 2023,
+  "url": "https://tympanus.net/codrops/2023/07/20/scroll-based-layout-animations/",
+  "platform": "codrops",
+  "license": "see source",
+  "thumb": "https://tympanus.net/codrops/wp-content/uploads/2023/07/scrollbased.jpg",
+  "category": "transitions",
+  "tags": [
+   "gsap",
+   "flip",
+   "scrolltrigger",
+   "grid",
+   "layout-switch",
+   "lenis"
+  ],
+  "techniques": [
+   "class-based end state + Flip",
+   "Flip props 'filter, opacity'",
+   "scale: true, simple: true",
+   "pin + scrub +=300%",
+   "inner image counter-animation"
+  ],
+  "breakdown": "A compilation of pinned sections whose image grids rearrange into new layouts as you scroll: grid to fullscreen image, irregular grid to stacked deck with a title, row to column, and so on. The method is deliberately simple and reusable: style the start layout, style the end layout behind a modifier class, temporarily add the class to capture Flip.getState, remove it, and let Flip.to interpolate. Defaults in the repo: flip { absolute: false, scale: true, simple: true, props: 'filter, opacity' } so blur or brightness changes travel with the layout, ScrollTrigger { start: 'center center', end: '+=300%' }, stagger 0 and ease 'none' because scroll provides the easing; the inner image elements get an additional tween so the picture inside each tile scales differently from its frame. Lenis smooth scrolling is synced through gsap.ticker. Why it works: designers iterate on two static CSS states, and the motion between them comes for free and always stays consistent. Clip recipe: identical Flip setup, but wrap it in gsap.timeline({ paused: true }) with an ease like 'power2.inOut', and seek(t). Chain several layout states as consecutive Flip tweens for a product-feature montage that morphs between UI arrangements.",
+  "durationHint": "1.5-3s per layout switch"
+ },
+ {
+  "id": "codrops-svg-clip-path-text",
+  "title": "Experimental On-Scroll Text Animations with SVG Clip-Path",
+  "by": "Manoela Ilic (Codrops)",
+  "year": 2024,
+  "url": "https://tympanus.net/codrops/2024/01/10/experimental-on-scroll-text-animations-with-svg-clip-path/",
+  "platform": "codrops",
+  "license": "see source",
+  "thumb": "https://tympanus.net/codrops/wp-content/uploads/2024/01/clippathtext.jpg",
+  "category": "kinetic-type",
+  "tags": [
+   "svg",
+   "clip-path",
+   "knockout-text",
+   "gsap",
+   "scrolltrigger",
+   "typography"
+  ],
+  "techniques": [
+   "SVG <clipPath> made of <text>",
+   "image revealed through letters",
+   "scaleY 0 -> 1 letter stagger 0.01",
+   "scale 2.7 -> 1 zoom",
+   "transformOrigin top/bottom alternation"
+  ],
+  "breakdown": "Knockout typography where giant letters act as windows onto an image, animated on scroll. Each section has an SVG with a <clipPath> containing <text> elements, and an image (or poster) clipped by it. The GSAP timelines (ScrollTrigger, scrub: true) animate the clipPath itself and its text children: one variant zooms the whole clip from scale 2.7 to 1 so the image starts filling the screen and shrinks into the word; another grows each letter from scaleX 0.8, scaleY 0 to 1 with stagger 0.01 (reversed with -0.01 for the second line) and transformOrigin '50% 0%' or '50% 100%', so letters rise from opposite edges like shutters; a third translates the text across the frame while the poster behind stays fixed. Ease 'none' for scrub segments, 'sine' for secondary moves. The author flags it as experimental, with some font-specific hard-coding. Why it works: the type is the mask, so every letter move is also an image reveal, delivering title and visual in one gesture. Clip recipe: same SVG structure, paused timeline, seek(t); keep text as SVG <text> with a loaded webfont (or outline to paths for deterministic metrics) and animate with transforms only.",
+  "durationHint": "2-4s"
+ },
+ {
+  "id": "awwwards-more-nutrition-frame-sequence",
+  "title": "More Nutrition: You deserve More (scroll-driven frame sequence)",
+  "by": "FUTURE THREE (design: Jason Harvey / Somefolk)",
+  "year": 2025,
+  "url": "https://www.awwwards.com/more-nutrition-you-deserve-more.html",
+  "platform": "awwwards",
+  "license": "n/a",
+  "thumb": "https://assets.awwwards.com/awards/images/2026/01/mn-cs-thumb.jpg",
+  "category": "product-launch",
+  "tags": [
+   "awwwards-sotd",
+   "product-staging",
+   "image-sequence",
+   "canvas",
+   "gsap",
+   "lenis"
+  ],
+  "techniques": [
+   "pre-rendered 3D frames drawn to canvas",
+   "scroll/time -> frame index",
+   "tight 2-colour palette",
+   "GSAP + Lenis staging"
+  ],
+  "breakdown": "Awwwards Site of the Day (Nov 3, 2025), a self-initiated product page for an iced matcha drink. The technique worth stealing is the hero: instead of a video or real-time 3D, the studio rendered the product animation as individual frames and tied them to scroll with GSAP. Swapping an <img> src per frame stuttered on fast scrolls, so they draw the current frame onto a <canvas> with drawImage, which stays smooth. Around it: a restrained palette, editorial type, Lenis smooth scroll, Swiper carousels and canvas effects, so the 3D-looking product rotation feels tangible without WebGL. Why it works: pre-rendered frames give film-quality lighting and liquid detail at any scrub speed, and scroll control makes the product feel touchable. Recipe for a deterministic clip: preload the frame images (await decode() on each), then in the render function compute frame = Math.min(N - 1, Math.floor(progress * N)) where progress comes from a paused GSAP timeline (tween an object {f: 0} to {f: N - 1} with ease 'none' or power2.inOut and snap to integers) and drawImage the frame, covering the canvas with object-fit math. Layer GSAP SplitText headlines and spec callouts on top for a premium product launch spot.",
+  "durationHint": "3-6s product turn"
+ },
+ {
+  "id": "awwwards-igloo-inc-case-study",
+  "title": "Igloo Inc: Case Study",
+  "by": "abeto (with Bureaux)",
+  "year": 2024,
+  "url": "https://www.awwwards.com/igloo-inc-case-study.html",
+  "platform": "awwwards",
+  "license": "n/a",
+  "thumb": "https://assets.awwwards.com/awards/images/2024/09/igloo-thumbnail.jpg",
+  "category": "3d-motion",
+  "tags": [
+   "awwwards-site-of-the-year-2024",
+   "webgl",
+   "chromatic-aberration",
+   "particles",
+   "scene-transition",
+   "case-study"
+  ],
+  "techniques": [
+   "chromatic aberration + displacement + frost transition",
+   "real-time intro sequence",
+   "particles forming shapes from volume data",
+   "speed-based particle colour and glow"
+  ],
+  "breakdown": "Igloo Inc (Site of the Day Jul 23, 2024; Awwwards Site of the Year 2024) is a three-section landing page that stays engaging through real-time 3D. The case study details the motion ideas: an intro animation rendered in-engine with code and shaders that flows straight into the scrollable scene; ice blocks grown by a procedural crystal algorithm; scene transitions that mix chromatic aberration, a 'tech' displacement and a frost effect; and a links section where particles swirl and re-form into different models, coloured by speed and glowing as they settle, synced to sound design. Techniques for 2D clips: (1) RGB-split transition - render the scene three times with mix-blend-mode: screen in R, G, B tints (or SVG feColorMatrix channel isolation plus feOffset), tween the channel offsets out and back while a displacement (feTurbulence + feDisplacementMap scale 0 -> 40 -> 0) peaks mid-cut; (2) particle morph - sample target shapes to point lists, assign each particle a target, tween positions with a seeded per-particle delay, and colour by |velocity| computed from the eased curve's derivative. All values come from a paused GSAP timeline seeked by time, never rAF.",
+  "durationHint": "0.6-1s transitions"
+ },
+ {
+  "id": "lottie-navigation-bar-selection",
+  "title": "Navigation Bar Selection",
+  "by": "Sanjib Paul (LottieFiles)",
+  "year": 2026,
+  "url": "https://lottiefiles.com/free-animation/navigation-bar-selection-3ZvXV3sKs8",
+  "platform": "lottie",
+  "license": "Lottie Simple License (see source)",
+  "thumb": "https://assets-v2.lottiefiles.com/a/f072fddf-9cb9-4929-8d1c-acfc099c94b5/Rzro2skmoe.png",
+  "category": "ui-motion",
+  "tags": [
+   "lottie",
+   "state-machine",
+   "menu",
+   "hover",
+   "bold-color",
+   "featured"
+  ],
+  "techniques": [
+   "hover state machine",
+   "row slide-out offset",
+   "colour-fill inversion",
+   "chip + label block layout"
+  ],
+  "breakdown": "A featured LottieFiles micro-interaction: a vertical menu (Chat, Question, Articles, Communities) where each row is a coloured square chip with a dot plus a white label block on a near-black background. Driven by a dotLottie state machine, hovering a row slides it right by roughly a chip width, darkens the chip, turns the dot to the accent colour and floods the label block with the row's colour while the text flips to white, so the selection reads instantly. Why it works: bold flat colour coding, a single lateral nudge and full colour inversion make state changes legible even at thumbnail size, which is what UI motion in social demo videos needs. Rebuild in HTML/CSS + GSAP: each row is a flex group; the selection is a timeline: to(row, { x: 18, duration: 0.25, ease: 'power3.out' }), to(label, { backgroundColor: rowColor, color: '#fff', duration: 0.2 }, '<'), to(chip, { filter: 'brightness(0.45)' }, '<'). For a clip, schedule select and deselect of successive rows at fixed times on one paused timeline to simulate a cursor walking down the menu (add a fake cursor tween), then seek(t). Use it for nav or feature-list beats in app promos.",
+  "durationHint": "0.3s per state"
+ },
+ {
+  "id": "rive-level-complete-menu",
+  "title": "Level Complete Menu",
+  "by": "xandercorp (Rive Community)",
+  "year": 2023,
+  "url": "https://rive.app/community/files/4048-8439-level-complete-menu/",
+  "platform": "rive",
+  "license": "CC BY (see source)",
+  "thumb": "https://public.rive.app/community/video-thumbnails/4048-8439-level-complete-menu-watermark.png",
+  "category": "ui-motion",
+  "tags": [
+   "rive",
+   "game-ui",
+   "reward-screen",
+   "counter",
+   "state-machine",
+   "celebration"
+  ],
+  "techniques": [
+   "stars fly-in and settle",
+   "ribbon + title pop",
+   "rolling number counter",
+   "sequential panel build",
+   "button hover/press states"
+  ],
+  "breakdown": "Picked by the Rive team as one of the best community files of 2023: a mobile-game 'Level Complete' reward card. Beat by beat (observed in the live preview): three stars fly in and settle above an orange ribbon while the COMPLETE lettering pops in; the cream card builds downward; the SCORE field counts up with rolling digits to 42,000; the COLLECTED row appears with a gem icon and its count rolls to 69; finally the teal OKAY button springs in with a glossy shine. The state machine exposes inputs for button hover/press and star hover, so the file stays interactive after the intro. Why it works: it's a choreographed sequence of small rewards, each element arriving with overshoot, with numbers that count rather than appear, which is exactly the dopamine pattern of achievement screens and 'Wrapped'-style stat reveals. HTML/GSAP rebuild: stars from scale 0, rotation -30 with ease 'back.out(2.5)' and stagger 0.12; card scaleY from 0.6 with 'elastic.out(1, 0.6)'; counters via a tweened object { v: 0 } -> 42000 with snap: 1 and toLocaleString in onUpdate (or a per-digit vertical strip with yPercent for odometer rolls); button pop at the end. One paused timeline, seek(t).",
+  "durationHint": "2-3s"
+ },
+ {
+  "id": "apple-dont-blink-kinetic-recap",
+  "title": "Apple – Don't Blink (iPhone 7 event in 107 seconds)",
+  "by": "Apple (analysis: Justin Cone, Motionographer)",
+  "year": 2016,
+  "url": "https://motionographer.com/2016/09/14/4-ways-dont-blink-is-a-masterclass-of-type-and-rhythm/",
+  "platform": "web",
+  "license": "n/a",
+  "thumb": "https://i0.wp.com/motionographer.com/wp-content/uploads/2016/09/dontblink.jpg?fit=1200%2C675&ssl=1",
+  "category": "product-launch",
+  "tags": [
+   "apple",
+   "fast-cut",
+   "kinetic-type",
+   "event-recap",
+   "rhythm",
+   "cannes-lions"
+  ],
+  "techniques": [
+   "one- and two-syllable word cards",
+   "cuts on percussion hits",
+   "flat XY-plane layout",
+   "single z-space surprise",
+   "tempo variation"
+  ],
+  "breakdown": "Apple condensed a two-hour keynote into a 107-second, type-driven speed-read built for social; Cannes Lions credits it with over 53 million views in its first week, and it was widely spoofed. Motionographer's breakdown names the levers: on-screen words are almost all one or two syllables, so each can be read in a few frames; type and product shots alternate on a percussion-heavy track, with cuts landing on hits; nearly everything happens on a flat XY plane (slides, pushes, scale pops, split-screen grids), so the one moment that drops into z-space lands as a joke; and the pace is not constant: the edit breathes between bursts, because a piece at full throttle for 107 seconds would get boring. Why it works: maximum information density with near-zero reading cost, and rhythm doing the storytelling. Clip recipe: build a beat map (array of times at e.g. 140 BPM), then one paused GSAP timeline where each word card is a set() at its beat (hard cut) or a 3-6 frame scale/slide with expo.out; use a 2-3 colour palette, heavy grotesk type at 15-25% of frame height, and insert a slower 1-2 s product hero every 8-12 cards. Seek by time for exact frame alignment.",
+  "durationHint": "15-107s"
+ },
+ {
+  "id": "spotify-wrapped-2023-animation-pipeline",
+  "title": "Exploring the Animation Landscape of 2023 Wrapped",
+  "by": "Spotify Engineering (Zela Taino)",
+  "year": 2024,
+  "url": "https://engineering.atspotify.com/2024/1/exploring-the-animation-landscape-of-2023-wrapped",
+  "platform": "web",
+  "license": "n/a",
+  "thumb": "https://images.ctfassets.net/p762jor363g1/70c90a992ac0f704584ad5057007928f/6d1ec1a072cfa75301d88b8f8984ecec/EN213_1200_x_630.png___LOGO",
+  "category": "data-viz",
+  "tags": [
+   "spotify-wrapped",
+   "vertical-stories",
+   "lottie",
+   "data-stories",
+   "personalization"
+  ],
+  "techniques": [
+   "Lottie for generic brand motion",
+   "native/parameterized animation for data viz",
+   "data mapped to colour/position",
+   "story-card sequencing"
+  ],
+  "breakdown": "Spotify's engineering write-up on how Wrapped's vertical story cards are animated, the template every 'year in review' copies. It splits motion into two kinds. Generic brand visuals (2020's kaleidoscope, 2021's ribbons, 2022's morphing shapes, 2023's solitaire card cascade) are identical for every user, so since 2022 they ship as Lottie files authored by motion designers in After Effects and served to iOS, Android and web. Data visualizations are parameterized and built in code because user data drives their look: 2021's Audio Aura mapped genre listening frequency to colour intensity; 2023's Sound Town lands the camera on a map coordinate representing the listener's taste. Why it works: each story is one stat, one big number or name, one bold full-bleed colour field and one motion idea, tappable and screenshot-ready for Instagram Stories. Clip recipe for agents: 1080x1920 cards, 4-6 s each; a brand-motion background loop (SVG shapes on a paused timeline) plus a data layer whose values come from props (counter with snap, bar heights, colour from a data-to-hue mapping); hard cut or shape-wipe between cards; everything seeded and seeked by time so one template renders thousands of personalized stories.",
+  "durationHint": "4-6s per card"
+ },
+ {
+  "id": "spotify-wrapped-2025-rive",
+  "title": "Spotify used Rive for Spotify Wrapped 2025",
+  "by": "Rive (Valerie Veteto) / Spotify",
+  "year": 2026,
+  "url": "https://rive.app/blog/spotify-used-rive-for-spotify-wrapped-2025",
+  "platform": "rive",
+  "license": "n/a",
+  "thumb": "https://framerusercontent.com/images/LTEBx13SWYsiWyHYPVdv8bwgw.png?width=1920&height=1080",
+  "category": "social-short",
+  "tags": [
+   "spotify-wrapped",
+   "rive",
+   "data-driven-motion",
+   "share-cards",
+   "vertical-stories"
+  ],
+  "techniques": [
+   "design-authored motion driven by runtime data",
+   "reusable story-card components",
+   "dummy-data prototyping",
+   "text-length and localization resilience"
+  ],
+  "breakdown": "Rive's write-up on Wrapped 2025, which Spotify framed as a 'visual mixtape': a highly graphic system meant to travel across in-app stories and share cards. The workflow: prototype each story with dummy data to nail the motion, build the final animation in Rive, then let engineering feed real user data into it, so the same asset survives long names, localization, device sizes and late changes. Interactive moments like the 'Top Artist Sprint' animate how a user's top artists shifted month by month. Spotify's Q4 2025 earnings quote cited in the post: 300M+ engaged users (up 20%) and 630M+ shares (up 42%). Why it works: recaps behave like product UI, not video, so motion must be a reusable component system (layouts, transitions, badges, charts, share cards) instantiated with data. Lesson for an HTML/GSAP clip engine: build one story-card component with slots (headline, big stat, ranked list, background motif) and timeline factories that accept data; animate rankings with Flip or y-position tweens between month states (a bar-chart race), size type with fitText-style measuring done before the timeline is built, and render each card as a paused timeline seeked by time.",
+  "durationHint": "5-8s per story"
+ },
+ {
+  "id": "github-unwrapped-remotion",
+  "title": "GitHub Unwrapped (personalized year-in-review video)",
+  "by": "Remotion",
+  "year": 2025,
+  "url": "https://github.com/remotion-dev/github-unwrapped",
+  "platform": "web",
+  "license": "see source",
+  "thumb": "https://www.githubunwrapped.com/og_image.jpg",
+  "category": "data-viz",
+  "tags": [
+   "remotion",
+   "react",
+   "code-generated-video",
+   "year-in-review",
+   "ig-story",
+   "personalization"
+  ],
+  "techniques": [
+   "frame-driven React components",
+   "data-to-scene templating",
+   "seven-segment counters",
+   "noise/gradient backgrounds",
+   "IG Story vertical variant"
+  ],
+  "breakdown": "An annual campaign (since 2021) that renders a personalized video of each developer's GitHub year, built entirely in code with Remotion and rendered at scale on AWS Lambda; the repo is open as a template. Its scene folders read like a Wrapped storyboard: Opening, Contributions, Issues, PullRequests, StarsGiven, TopLanguages, Productivity, Sponsorships and EndScene, plus an IGStory composition for a vertical share version and helpers such as SevenSegment (digital counter digits), Noise, Gradients, ShineEffect, PaneEffect, Spaceship and move-along-line for path animation. Every visual is a pure function of the frame number (useCurrentFrame plus interpolate/spring), which is exactly the determinism a GSAP-seeked clip needs. A companion YouTube video, 'The creative process of GitHub Unwrapped 2023', walks through the design. Why it works: each scene is one stat, one metaphor (space travel, planets for languages), and one satisfying motion, with the user's own data as the hook, so people share it. Recipe: write each scene as a function render(t, data); derive tween progress as clamp((t - start) / dur) through an ease; generate counters, contribution grids (stagger from grid coordinates) and language bars from data; export 16:9 and 9:16 variants from the same scene code.",
+  "durationHint": "30-60s"
+ },
+ {
+  "id": "hormozi-word-by-word-captions",
+  "title": "Hormozi Style Captions",
+  "by": "Alex Hormozi style (template: Kapwing; breakdown: Choppity)",
+  "year": 2024,
+  "url": "https://www.kapwing.com/explore/hormozi-style-captions-template",
+  "platform": "web",
+  "license": "n/a",
+  "thumb": "https://cdn-useast1.kapwing.com/static/templates/hormozi-style-captions-template-3nMJLyrWTF2GgG-5-regular.jpg",
+  "category": "social-short",
+  "tags": [
+   "captions",
+   "word-by-word",
+   "tiktok",
+   "reels",
+   "shorts",
+   "talking-head"
+  ],
+  "techniques": [
+   "word-by-word pop-in",
+   "active word highlight (yellow)",
+   "ALL-CAPS heavy sans with thick stroke",
+   "2-4 words on screen",
+   "10-20% punch-in zooms on jump cuts"
+  ],
+  "breakdown": "The most imitated caption style in short-form. Per the Kapwing template and Choppity's style breakdown: bold all-caps sans (Montserrat Black-like) in the lower-middle third, white fill with a thick black stroke and slight shadow; words appear one at a time on the spoken syllable with a small scale bounce; the active word turns yellow (sometimes green or red for key terms) while previous words stay white; only 2-4 words are visible, then the group clears. Editing around it: jump cuts every 1-3 s alternating medium and tight framing with 10-20% digital punch-ins, zero dead air, dark crushed-black background so captions pop. Why it works: sound-off viewers read along at speech speed, the highlight acts as a karaoke cursor that holds the eye on screen centre, and chunking keeps every frame legible. Note that commentators now call the full package overused; keep the word timing, vary the styling. Clip recipe: input word timestamps [{w, start, end}]; group into chunks of 3; for each word tl.fromTo(el, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.12, ease: 'back.out(3)' }, start) and tl.set(el, { color: '#FFE600' }, start), tl.set(el, { color: '#fff' }, end); clear chunk at last end. Seek by time.",
+  "durationHint": "whole video"
+ },
+ {
+  "id": "ali-abdaal-phrase-captions",
+  "title": "Ali Abdaal Video Editing Style (Shorts)",
+  "by": "Ali Abdaal style (breakdown: Choppity)",
+  "year": 2026,
+  "url": "https://www.choppity.com/tools/recreate-video-editing-style/ali-abdaal/",
+  "platform": "web",
+  "license": "n/a",
+  "thumb": "https://www.choppity.com/images/choppity-og.jpg",
+  "category": "social-short",
+  "tags": [
+   "captions",
+   "phrase-reveal",
+   "selective-colour",
+   "shorts",
+   "editorial",
+   "talking-head"
+  ],
+  "techniques": [
+   "phrase-by-phrase caption reveal",
+   "handwritten/script font beside speaker",
+   "black-and-white grade with selective yellow",
+   "2-5 s shots",
+   "curiosity-question hook"
+  ],
+  "breakdown": "A calm counterpoint to Hormozi captions, documented shot by shot by Choppity. Captions are phrase-by-phrase, not word-by-word, set in a handwritten/script face in sentence case, stacked as multi-line text beside the speaker (who sits slightly off-centre), never over the face. The grade is black-and-white with selective colour: only yellow accents (headphones, highlighted keywords) keep their colour, which makes the frame recognisable in a fraction of a second. Shots last 2-5 s with cuts on thought transitions, framing is a medium 9:16 showing hands, music is low-energy ambient, and the hook is an intellectual question or reframe rather than shock. Why it works: brand recognition through one consistent grade, plus a reading-alongside-listening rhythm that suits reflective, educational content. Clip recipe: apply filter: grayscale(1) to the video layer and re-add colour with a masked duplicate or a yellow keyword span; captions are lines revealed with a soft clip-path inset wipe (left to right, 0.35 s, power2.out) or a mask fade per phrase, positioned in a side column; key words get a yellow highlighter bar that scaleX-draws from 0 to 1 behind the text. Drive everything from phrase timestamps on a paused timeline.",
+  "durationHint": "30-60s"
+ },
+ {
+  "id": "tiktok-creative-codes",
+  "title": "TikTok Creative Codes: 6 Principles for Creating Effective Ads",
+  "by": "TikTok for Business",
+  "year": 2022,
+  "url": "https://ads.tiktok.com/business/en/creative-codes",
+  "platform": "tiktok",
+  "license": "n/a",
+  "thumb": "https://lf-tt4b.tiktokcdn.com/obj/i18nblog/tt4b_cms/en-US/tipdilz7wysq-7jR1lAaOhc300FpSyxta1N.png",
+  "category": "social-short",
+  "tags": [
+   "tiktok",
+   "ads",
+   "hook",
+   "structure",
+   "editing-pace",
+   "9:16"
+  ],
+  "techniques": [
+   "hook / body / close structure",
+   "hook inside first 6 s",
+   "fast scene changes early",
+   "text overlay + emoji + transitions",
+   "safe-zone aware 9:16"
+  ],
+  "breakdown": "TikTok's official, research-backed framework (Kantar/Ipsos studies of thousands of ads) for what performs on the platform: TikTok-first, Trends, Production, Structure, Stimulation and Sound. The editing-relevant parts: shoot and deliver 9:16, high resolution, with key content kept clear of the UI overlays; structure every ad as hook, body, close, because most ad-recall impact is captured in the first 6 seconds; stimulate attention with music, transitions, movement, text overlays, emojis and branding, and use faster scene changes early since they draw viewers in; design for sound-on with voiceover or trending audio. Why it matters for an agent: it turns 'make it TikTok-native' into checkable rules. Clip recipe: a 15-30 s 1080x1920 timeline with 0-1.5 s a pattern-interrupt hook (big text slam: scale 1.4 -> 1 in 4 frames plus a hard cut), 1.5-6 s problem statement with 0.6-1.2 s cuts, body with demo shots and captions kept inside a safe area (avoid roughly the bottom 20% and right 15% where TikTok UI sits), close with CTA card and logo in the last 2-3 s. Encode cut times as a beat array and seek the paused timeline by time.",
+  "durationHint": "9-30s"
+ },
+ {
+  "id": "youtube-abcd-framework",
+  "title": "YouTube ABCDs: Video ad best practices",
+  "by": "Think with Google",
+  "year": 2022,
+  "url": "https://business.google.com/us/think/future-of-marketing/youtube-video-ad-creative/",
+  "platform": "youtube",
+  "license": "n/a",
+  "thumb": "https://www.gstatic.com/marketing-cms/assets/images/ads/2c/3a/e03f11854304b91041df4704fd8d/twg-content-images-abcds-cwgarticles-coreabcd-thumbnail-1209x680-width-1200.png=n-w1200-h674-fcrop64=1,00000000ffffffff-rw",
+  "category": "social-short",
+  "tags": [
+   "youtube",
+   "shorts",
+   "intro",
+   "branding",
+   "cta",
+   "framework"
+  ],
+  "techniques": [
+   "attract from frame 1",
+   "brand early, often, richly",
+   "connect (humanise, educate)",
+   "direct (clear CTA)",
+   "vertical variants for Shorts"
+  ],
+  "breakdown": "Google's ABCD framework, derived from a review of thousands of YouTube ads: Attention (grab viewers from the very start and keep them), Branding (show the brand early, often and richly, not only at the end), Connection (humanise the story, educate, inspire or entertain rather than treating viewers as passive) and Direction (ask for a specific action). Google reports average lifts in short-term sales likelihood and long-term brand contribution for ads that follow it, and extends the guidance to vertical Shorts creative. For motion design, it reframes the YouTube intro: no slow logo sting; the first second must already contain motion, a face or the product, and the brand appears inside the action (logo on the product, brand colour in the frame, audio mnemonic) within the first 5 s. Clip recipe: open on a tight, moving product or UI close-up with an immediate camera push (scale 1.15 -> 1 over 1 s, power2.out) and a 2-4 word headline; insert a small persistent logo bug or brand-colour frame in the first 5 s; vary scene length; finish with a CTA end card (button-shaped, pulsing scale 1 -> 1.05 yoyo twice). Produce 16:9 and 9:16 by reflowing the same timeline layout.",
+  "durationHint": "6-30s"
+ },
+ {
+  "id": "mrbeast-hooks",
+  "title": "How MrBeast builds amazing social hooks",
+  "by": "Jack Appleby (Marketing Brew)",
+  "year": 2022,
+  "url": "https://www.marketingbrew.com/stories/2022/11/02/how-mrbeast-builds-amazing-social-media-hooks",
+  "platform": "web",
+  "license": "n/a",
+  "thumb": "https://cdn.sanity.io/images/bl383u0v/production/6ed2a3beccf1701aaecfb09e236b0f251c586248-2544x1427.png?rect=0,45,2544,1336&w=1200&h=630&q=70&fit=crop&auto=format",
+  "category": "social-short",
+  "tags": [
+   "youtube",
+   "hook",
+   "thumbnail",
+   "intro",
+   "retention",
+   "mrbeast"
+  ],
+  "techniques": [
+   "hook = thumbnail + title + first frames",
+   "promise-matching opening shot",
+   "stakes stated in seconds",
+   "expressive face close-ups",
+   "no slow intro"
+  ],
+  "breakdown": "Marketing Brew's breakdown of MrBeast's hook craft, framed by Meta's oft-cited stat that users spend about 1.7 seconds on a piece of mobile content before deciding to swipe. Appleby widens 'hook' to every immediately visible element: thumbnail (the 'YouTube face', eyes wide and mouth open, over-the-top reaction), title copy, and the first frames of video. MrBeast reportedly will not publish a video if he cannot find its hook and even shelved an expensive video over a missing thumbnail. The video opening matches the thumbnail's promise immediately (if the thumbnail shows a coffin, the video opens in the coffin), states the stakes in a sentence, and cuts fast. Why it works: the viewer's click is a contract; fulfilling it in the first seconds removes the reason to leave. Clip recipe for intros: frame 0 already shows the thumbnail moment (same composition, slight scale-in 1.08 -> 1); a bold 3-6 word stakes caption slams in at 0.2 s; a counter or timer graphic (e.g., '$0 -> $1,000,000' with snap and a ticking scale pulse) establishes the challenge; cuts every 1-2 s for the first 10 s; then a re-hook card around 45-60 s. All timing from a beat list on a paused timeline.",
+  "durationHint": "first 5-15s"
+ },
+ {
+  "id": "revenuecat-ugc-app-ad-formats",
+  "title": "UGC Ads for Apps: Which Formats Drive Conversion",
+  "by": "RevenueCat",
+  "year": 2025,
+  "url": "https://www.revenuecat.com/blog/growth/ugc-ads-apps",
+  "platform": "web",
+  "license": "n/a",
+  "thumb": "https://cdn.sanity.io/images/c3qnx9b0/production/c4b198cfc315fc0930c68b0f37ec41ad9b2da27d-1600x800.png?w=1200&fit=max",
+  "category": "social-short",
+  "tags": [
+   "ugc",
+   "app-demo",
+   "app-install",
+   "skits",
+   "pattern-interrupt",
+   "subscription-apps"
+  ],
+  "techniques": [
+   "expert 'podcast clip' commentary",
+   "problem-first skit",
+   "pattern-interrupt opener",
+   "street-interview hook",
+   "screen recording inset"
+  ],
+  "breakdown": "RevenueCat's growth team argues that scripted ring-light testimonials have stopped converting for subscription apps (citing AppsFlyer data in which tutorials and app-review creatives beat testimonials on installs per mille and day-7 retention) and names four UGC-style formats that now move metrics: (1) expert commentary cut like a podcast clip, (2) scenario-based skits that sell the problem, not the feature, (3) viral 'pattern interrupt' videos that surprise first and reveal the app second, and (4) street interviews as a credibility hook. The rule: value-first, feed-native content that doesn't announce itself as an ad, adapted per platform. Why it matters for motion: the app UI should appear as a native element of the format, a phone screen recording dropped in as an inset or full-screen cutaway, not a polished product film. Clip recipe: 9:16 base layer (creator or skit footage, or a placeholder gradient), a rounded-corner phone frame that slides up from below (y 110% -> 0, 0.45 s, expo.out) showing a screen recording with tap ripples (circle scale 0 -> 1.6 and fade, 0.35 s), podcast-style lower-third with speaker name, word-level captions, and a podcast waveform made of bars driven by a precomputed amplitude array. Seek by time.",
+  "durationHint": "15-45s"
+ },
+ {
+  "id": "duolingo-tiktok-formula",
+  "title": "Deconstructing Duolingo's secrets to success on TikTok",
+  "by": "Brendan Gahan (Sprout Social)",
+  "year": 2021,
+  "url": "https://sproutsocial.com/insights/duolingo-tiktok-success/",
+  "platform": "web",
+  "license": "n/a",
+  "thumb": "https://media.sproutsocial.com/uploads/2021/12/duolingo-tiktok-optim.gif",
+  "category": "social-short",
+  "tags": [
+   "duolingo",
+   "tiktok",
+   "mascot",
+   "unhinged",
+   "trends",
+   "brand-character"
+  ],
+  "techniques": [
+   "mascot-as-character",
+   "trend audio formats",
+   "menacing/funny tone",
+   "entertainment first, message second",
+   "iterate on winners"
+  ],
+  "breakdown": "Sprout Social's teardown of how Duolingo's TikTok exploded: the team found that its earlier tutorial-style videos stalled, while Duo the owl acting out trends in a funny, slightly menacing persona took off. The formula in the article reads Duo + trends + funny/menacing tone = success; they increased that format's frequency, phased out tutorials and leaned into entertainment first, with education as the candy-coated payload. Other coverage notes the account takes in-character replies to comments and community memes. Why it works: a consistent character gives every trend a recognisable twist, the brand is literally in every frame (the mascot), and the content matches native TikTok language rather than ad language. For motion templates: a mascot-driven short needs a character rig (SVG parts with transform-origin pivots) and a library of reaction poses, meme-format layouts (green-screen background, text-on-top captions, POV labels), and punchy timing on trending audio beats. Clip recipe: SVG mascot whose head/eyes/wings are separate groups; squash-and-stretch on landing (scaleY 0.85 -> 1.05 -> 1 in 6 frames), a menacing slow push-in (scale 1 -> 1.3 over 2 s, power1.in) with a caption like 'you missed your lesson', and hard cuts on beat. Seed all random blinks.",
+  "durationHint": "7-20s"
+ },
+ {
+  "id": "youtube-end-screens",
+  "title": "End Screens for your Videos",
+  "by": "YouTube Creators",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=2Te4-B1wHAI",
+  "platform": "youtube",
+  "license": "n/a",
+  "thumb": "https://i.ytimg.com/vi/2Te4-B1wHAI/hqdefault.jpg",
+  "category": "titles",
+  "tags": [
+   "youtube",
+   "outro",
+   "end-screen",
+   "subscribe",
+   "layout-safe-zones"
+  ],
+  "techniques": [
+   "reserve last 5-20 s",
+   "up to 4 element slots (16:9)",
+   "animated placeholder boxes",
+   "subscribe/next-video prompt",
+   "minimum 25 s video"
+  ],
+  "breakdown": "YouTube's official explainer (backed by the Help Center article) for end screens, the interactive outro layer: elements can occupy the last 5-20 seconds of a video, up to four elements on 16:9 (fewer on other aspect ratios), to promote another video or playlist, a subscribe button, a channel or a link, and the video must be at least 25 seconds long. YouTube advises leaving space and time at the end of the edit for them. This defines the outro as a layout problem: the motion designer builds an animated background with clearly reserved, empty slots where YouTube overlays its clickable elements. Why it works: a designed outro with pointers (arrows, 'watch next' labels, the creator glancing at a slot) channels viewers into the next video instead of letting them leave. Clip recipe: a 12-20 s 1920x1080 outro; animated gradient or brand pattern background loop; two video-slot rectangles (16:9, about 30% frame width) and one circular subscribe slot drawn as outlined placeholders with DrawSVG-style stroke-on (0.6 s, power2.out) and a gentle scale breathe; headline 'Watch next' with SplitText chars stagger 0.03; keep music bed and a 0.5 s fade to black at the end. Everything on a paused timeline seeked by time.",
+  "durationHint": "5-20s"
+ },
+ {
+  "id": "oddfellows-works-with-nest",
+  "title": "Works With Nest",
+  "by": "Oddfellows",
+  "year": 2015,
+  "url": "https://vimeo.com/141931019",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/800167797-0bf514ebb46adfa9414e943a73ca0f4789d388980e75c8765368bb3fe46fbe89-d_1280?region=us",
+  "category": "explainer",
+  "tags": [
+   "motionographer",
+   "flat-design",
+   "iot",
+   "icons",
+   "blue"
+  ],
+  "techniques": [
+   "icon system animation",
+   "line-draw reveals",
+   "connector lines",
+   "shape morph",
+   "graphic transitions"
+  ],
+  "breakdown": "A product-ecosystem explainer for the Nest smart-home platform built almost entirely from graphic iconography: a cobalt-blue field filled with thin-stroke line icons, circles, sliders, signal squiggles and dashed boxes, with a pink 'home' tile as the hero element. Devices are represented as simple glyphs that pop on, connect via drawn lines and trigger each other, so the idea of 'works with' is literally shown as wires of light travelling between icons. Elements constantly morph from one meaning to another (a dial becomes a thermostat, a square becomes a phone), which keeps the frame busy without cuts. Motion is snappy with strong ease-outs and tight staggers; the palette stays limited (blue, white, pink, yellow) so complexity never gets noisy. Featured on Motionographer. Recreate in HTML/SVG: design a 24px-grid icon set as SVG paths, reveal strokes with stroke-dashoffset, connect icons with animated paths whose dash travels along them, stagger icon pop-ins (scale 0→1.1→1, 0.04s stagger), and morph between icons with GSAP MorphSVG or flubber. Keep one persistent hero tile to anchor each scene and pan the whole icon field with a slow parallax.",
+  "durationHint": "2:03"
+ },
+ {
+  "id": "oddfellows-envoy-future-of-work",
+  "title": "Envoy — The Future of Work",
+  "by": "Oddfellows",
+  "year": 2019,
+  "url": "https://vimeo.com/313865338",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/799422238-14fc89ad26bac5d33eb87c8ee7f91b7b970e8f95a12d1ce4aa8a6807e15e83ba-d_1280?region=us",
+  "category": "explainer",
+  "tags": [
+   "illustration",
+   "architecture",
+   "pastel",
+   "brand-film",
+   "camera-move"
+  ],
+  "techniques": [
+   "illustrated parallax",
+   "continuous camera",
+   "layered depth",
+   "warm pastel palette",
+   "cutaway reveals"
+  ],
+  "breakdown": "An evergreen brand film that follows one employee through her first day in a 'smarter workplace'. The world is a richly illustrated city in warm pastels — coral buildings, lilac shadows, rounded trees, a little self-driving car — and the camera glides through it in long, continuous moves that pass from street to lobby to desks without hard cuts. Technology is shown as subtle UI moments embedded in the architecture rather than screens, keeping the story human. Depth comes from many flat layers moving at different speeds, plus foreground objects that wipe past the lens to hide scene changes. Easing is gentle and cinematic (long in-out curves), with secondary loops (people walking, leaves swaying) so frames never feel static. Reproduce: author each scene as layered SVG/PNG planes in a 1920x1080 stage; animate a virtual camera by translating layers with depth-proportional factors (x * 1/z); use a large foreground element (wall, tree) to wipe between scenes; add looped micro-animations with CSS keyframes; and drive the whole move on one GSAP timeline with 'sine.inOut' so the film reads as a single take.",
+  "durationHint": "1:28"
+ },
+ {
+  "id": "giant-ant-what-is-slack",
+  "title": "Slack — What Is Slack?",
+  "by": "Giant Ant",
+  "year": 2015,
+  "url": "https://vimeo.com/143282979",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/540821248-63a6e2e84dcf0dc6b56cf928b873c7c47e048ed73aa7ec91e183e25b987f31af-d_1280?region=us",
+  "category": "explainer",
+  "tags": [
+   "saas",
+   "product-explainer",
+   "flat",
+   "voiceover",
+   "motionographer"
+  ],
+  "techniques": [
+   "chaos-to-order narrative",
+   "icon grid",
+   "character + graphic mix",
+   "snappy timing",
+   "logo resolve"
+  ],
+  "breakdown": "The canonical SaaS explainer: narrated by Roman Mars, it opens on the chaos of modern communication — email, IM, texts, cc and bcc — visualised as overlapping message bubbles, icons and frantic characters, then introduces Slack as the thing that sorts it into channels. The key visual device is order emerging from noise: scattered colourful glyphs (dots, crosses, triangles, squiggles in Slack's palette) settle into a neat grid, mirroring the product promise. Animation is quick and comedic with crisp overshoots, tight cuts on the voiceover beats and plenty of white space. Characters are simple and expressive but always secondary to the graphic metaphor. Reproduce: split the script into beats and build one scene per beat; for the chaos section spawn 40–80 SVG glyphs with random positions/rotations and jittery yoyo tweens; for the 'Slack' beat tween each glyph to a computed grid cell with a staggered 'back.out(1.7)' ease (stagger from 'center'); then collapse the grid into a logo-like mark. Time cuts to word timestamps from the VO so every reveal lands on a stressed syllable.",
+  "durationHint": "1:46"
+ },
+ {
+  "id": "giant-ant-fitc-toronto-2016-titles",
+  "title": "FITC Toronto 2016 Titles — Level Up",
+  "by": "Giant Ant",
+  "year": 2016,
+  "url": "https://vimeo.com/163284811",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/566526657-4b3c8eaa8299a1ec3a327e70f51e33dea4939e80bcbad6217e846e67924021ae-d_1280?region=us",
+  "category": "titles",
+  "tags": [
+   "conference-titles",
+   "pixel-art",
+   "video-games",
+   "speaker-names",
+   "style-evolution"
+  ],
+  "techniques": [
+   "style evolution",
+   "speaker name cards",
+   "pixel-art to 3D",
+   "HUD typography",
+   "continuous world"
+  ],
+  "breakdown": "Conference opening titles on the theme LEVEL UP: one continuous world that evolves through the history of video games — from Tennis for Two's oscilloscope dot, through 8-bit sprites and arcade fighters with health bars and 'VS' typography, to modern 3D — referencing about 30 games while introducing 75 speakers. Each era changes the rendering style (vector glow, chunky pixels, 16-bit parallax, shaded 3D), so the progression itself is the storytelling. Speaker names arrive as in-game UI: score counters, character-select cards, HUD banners. Timing borrows game logic — hard steps, pixel snapping, hit-stop pauses on impacts. Reproduce: drive a canvas at a low internal resolution (e.g. 320x180) and upscale with image-rendering: pixelated for the 8-bit sections, then swap to full-res SVG/Three.js for later eras; render speaker names as HUD components (health bars, 'PLAYER 2' cards) animated with steps() easing; use 'era wipes' (scanline or pixel-dissolve shader) between sections. A data array of names can feed the cards so dozens of credits stay consistent.",
+  "durationHint": "2:55"
+ },
+ {
+  "id": "giant-ant-npr-invisibilia-alien-hand",
+  "title": "NPR Invisibilia — Alien Hand",
+  "by": "Giant Ant",
+  "year": 2018,
+  "url": "https://vimeo.com/254344520",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/681468014-05d803db5ffd246aa57385c23231076e4f6f53a25e33efb143891fa989a9aa8d-d_1280?region=us",
+  "category": "explainer",
+  "tags": [
+   "editorial",
+   "podcast",
+   "expressive-line",
+   "pink",
+   "science-story"
+  ],
+  "techniques": [
+   "loose line animation",
+   "shape-to-shape morph",
+   "limited palette",
+   "metaphor transitions",
+   "boiling textures"
+  ],
+  "breakdown": "NPR's first animated piece for its Invisibilia podcast tells the story of a woman whose hand acts on its own. Giant Ant matched the unpredictability of the story with an unpredictable visual style: a flat pink field, loose hand-drawn contour lines, blobs of colour that don't quite register with the linework, and floating marks that drift in and out. Forms constantly transform — a hand becomes a glass, a flame, a figure — so transitions carry meaning instead of cutting. The palette is restrained (pinks, reds, a few accent blues and yellows) and the line weight is thin, giving it an editorial-illustration feel that suits audio storytelling. Reproduce: keep a single solid background and animate thin SVG strokes drawing on with stroke-dashoffset; offset fill shapes a few pixels from their outlines for a misregistered print look; morph silhouettes with MorphSVG or flubber on narrative beats; add 'boil' by cycling 3 slightly jittered versions of each path every 3 frames (steps easing). Sync major morphs to key phrases in the audio rather than to a fixed tempo.",
+  "durationHint": "2:47"
+ },
+ {
+  "id": "giant-ant-tako-faito",
+  "title": "Tako Faito!",
+  "by": "Giant Ant",
+  "year": 2015,
+  "url": "https://vimeo.com/136740927",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/531366129-e4a80080adce45803c168fcf78b2e1b7453b94c07481525df2aa5b63590213df-d_1280?region=us",
+  "category": "social-short",
+  "tags": [
+   "cel-animation",
+   "fx",
+   "action",
+   "red",
+   "motionographer"
+  ],
+  "techniques": [
+   "cel FX",
+   "smear frames",
+   "impact frames",
+   "ink splatter",
+   "held poses"
+  ],
+  "breakdown": "An in-house short where a modern samurai battles a giant tentacle — a dreamer fighting his lunch. It was Giant Ant's experiment in relying entirely on cel animation, and it is a compact library of hand-drawn action FX: smear frames, speed lines, ink splatters, impact frames, and graphic red-and-black backgrounds that flip on hits. The timing is the lesson: long anticipation holds, then 2–4 frames of violent motion, then a held pose so the eye can read the silhouette. Colour is limited to red, white, black and a skin tone, giving every frame poster-like graphic punch. Reproduce in a web clip without copying characters: build abstract 'impacts' with SVG — a held shape, then 2–3 frames of a stretched smear path (a tapered polygon in the motion direction), then an impact frame where the background inverts for one frame and radial speed lines (rotated thin triangles) burst out. Use GSAP with steps(n) or manual frame-by-frame tweens at 12fps for the cel feel, plus random ink-blot SVGs that scale in with 'expo.out'.",
+  "durationHint": "0:55"
+ },
+ {
+  "id": "gunner-blend-2019-titles",
+  "title": "Blend 2019 Opening Titles",
+  "by": "Gunner",
+  "year": 2019,
+  "url": "https://vimeo.com/361860295",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/952049426-3d29717d8a71785d5a0327295cbecc9d5448c8b7af0bdc8e280961f2b3fad606-d_1280?region=us",
+  "category": "titles",
+  "tags": [
+   "festival-titles",
+   "3d",
+   "cel",
+   "mixed-technique",
+   "motionographer"
+  ],
+  "techniques": [
+   "3D + cel hybrid",
+   "soft pearlescent shading",
+   "surreal character design",
+   "title cards",
+   "technique handoffs"
+  ],
+  "breakdown": "Opening titles for the Blend motion-design festival in which Gunner deliberately 'blends' techniques: soft, pearlescent 3D sculptures (like a white, iridescent mask-face with deep eye sockets), cel-animated characters and FX, and graphic 2D design trade places, sometimes inside the same shot. The piece works as a showcase of how hand-drawn energy can ride on top of CG forms — cel splashes on 3D surfaces, 2D smears transitioning into rendered objects — while typographic cards carry the festival identity. Lighting is soft studio lighting on dark navy space; materials are glossy with subtle colour shifts, which gives the 3D a toy-like premium feel. Reproduce on the web: use Three.js with MeshPhysicalMaterial (iridescence, clearcoat) for one hero object on a dark gradient; overlay an SVG/canvas layer with cel FX (hand-keyed path frames swapped at 12fps) that reacts to the 3D object's projected screen position; hand off between layers by masking one with the other's silhouette. Keep 3D motion smooth (60fps, sine eases) and 2D motion on 2s to make the contrast deliberate.",
+  "durationHint": "4:26"
+ },
+ {
+  "id": "golden-wolf-weetabix-three-little-pigs",
+  "title": "Weetabix — Three Little Pigs",
+  "by": "Golden Wolf",
+  "year": 2022,
+  "url": "https://vimeo.com/710889465",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1433695529-4226051dce0f5b186248d6ed98c766c8ce0988a2cfcd32f5fc840de833da19fa-d_1280?region=us",
+  "category": "social-short",
+  "tags": [
+   "rubber-hose",
+   "1930s",
+   "frame-by-frame",
+   "commercial",
+   "vintage"
+  ],
+  "techniques": [
+   "rubber-hose animation",
+   "painted backgrounds",
+   "boiling line",
+   "vintage grading",
+   "on-twos timing"
+  ],
+  "breakdown": "A 30-second spot channeling early Disney and Fleischer cartoons: the big bad wolf, fuelled by cereal, finally conquers the brick house. Golden Wolf combined traditional frame-by-frame animation with modern compositing to faithfully recreate the era's visual language — painted watercolour-style backgrounds with soft perspective, rubbery limbs that bend without joints, bouncing idle cycles, and a slightly desaturated, warm, film-printed grade. The value for a motion library is the period-pastiche toolkit rather than the characters: timing on twos, exaggerated anticipation, everything 'breathing' to the music, and subtle frame weave and grain. Reproduce a vintage-cartoon look in HTML/canvas without the characters: animate simple objects (a house, a sign, a cereal box shape) with squash-and-stretch on 12fps steps easing, add an idle bounce loop synced to a 120bpm beat, overlay a canvas grain layer plus a 1–2px random translate per frame (gate weave), apply a sepia-shifted CSS filter and a vignette, and use an iris-out (circle clip-path shrinking) as the ending transition.",
+  "durationHint": "0:30"
+ },
+ {
+  "id": "animade-chronemics",
+  "title": "Chronemics",
+  "by": "Animade",
+  "year": 2015,
+  "url": "https://vimeo.com/118801020",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/508471261-63d2002ddd9609fbe533cc09405ba87794fdf2a55cfa6f20396fdd70b943a553-d_1280?region=us",
+  "category": "abstract",
+  "tags": [
+   "vimeo-staff-pick",
+   "monochrome",
+   "geometry",
+   "light-vs-dark",
+   "short-film"
+  ],
+  "techniques": [
+   "black-and-white geometry",
+   "extruded planes",
+   "shape choreography",
+   "negative space",
+   "sound-led timing"
+  ],
+  "breakdown": "Animade's first whole-studio short, a Vimeo Staff Pick: an abstract duel between Light and Dark told with pure geometry on a paper-white ground. Thin-outlined slabs, wedges and black triangles rise, fold, cast shadows and push each other across the frame; borders shift and territory is gained and lost, so the 'story' is entirely in how shapes occupy space. Everything is black ink on off-white with tiny particulate details, which makes the extrusions read like architectural drawings in motion. Timing is driven by the sound design — slow, weighty pushes followed by sudden snaps. Reproduce: work in strict two-tone (#111 on #f2efe8); build forms as SVG polygons whose vertices are animated individually so slabs appear to fold and extrude (fake 3D via offset duplicate polygons connected by side faces); animate 'territory' by tweening a clip-path polygon that splits the frame into light and dark regions; add a few hundred tiny dust particles on canvas that scatter on impacts. Use slow 'power3.inOut' for pushes and 0.1s 'expo.out' snaps, and let silence and holds do the dramatic work.",
+  "durationHint": "6:17"
+ },
+ {
+  "id": "ordinary-folk-school-of-motion-manifesto",
+  "title": "School of Motion — Join the Movement (Manifesto)",
+  "by": "Ordinary Folk",
+  "year": 2019,
+  "url": "https://www.youtube.com/watch?v=Er04BDbtSIg",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/Er04BDbtSIg/hqdefault.jpg",
+  "category": "brand-identity",
+  "tags": [
+   "motion-awards-winner",
+   "manifesto",
+   "rich-2d",
+   "purple",
+   "brand-film"
+  ],
+  "techniques": [
+   "manifesto pacing",
+   "rich 2D shading",
+   "metaphor transitions",
+   "seamless morphs",
+   "kinetic VO sync"
+  ],
+  "breakdown": "A brand manifesto commissioned by School of Motion and later a Motion Awards winner (Infographics — Commercial, 2020). Ordinary Folk builds a dreamlike sequence of metaphors about learning and craft in deep purples and blues: a figure seated among tools and objects floating in space, grain-shaded 2D forms with gradient lighting that make flat illustration feel volumetric. The craft is in the transitions — every scene morphs, zooms or folds into the next so the film feels like one continuous thought, mirroring a manifesto's cadence. Accents of orange and warm light pull the eye to the subject in each beat. Reproduce: create illustrations as layered SVG with gradient fills and a subtle noise texture (SVG feTurbulence blended at low opacity); move between scenes with 'zoom-through' transitions (scale a shape to fill the frame and reveal the next scene inside it via clip-path) or object morphs (MorphSVG); keep a constant slow camera push (scale 1→1.06 per scene) so nothing feels static; sync key reveals to manifesto lines with a VO-timestamp-driven GSAP timeline.",
+  "durationHint": "1:53"
+ },
+ {
+  "id": "ordinary-folk-signals-patterns-waves",
+  "title": "Signals, Patterns & Waves (Director's Cut)",
+  "by": "Ordinary Folk",
+  "year": 2020,
+  "url": "https://vimeo.com/475176561",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/987681532-56af89f2e4bad1a4b40fb41ed4621bde2488b7d09a43ab4082cdf3d042d2b969-d_1280?region=us",
+  "category": "abstract",
+  "tags": [
+   "particles",
+   "waveform",
+   "black-and-white",
+   "glow",
+   "liquid"
+  ],
+  "techniques": [
+   "particle funnels",
+   "waveform lines",
+   "concentric rings",
+   "glow bloom",
+   "liquid morph"
+  ],
+  "breakdown": "A one-minute process montage of illustrations and animations Ordinary Folk made for a series of blog posts on signals and patterns. Monochrome and luminous: white particle streams spiral into a bright vortex and exit as a single oscillating waveform; concentric rings ripple outward; dot grids, sine curves and fluid blobs morph from one abstract system to another. It's a great reference for character-free 'concept' motion — visualising data, communication or AI without literal icons. Motion is smooth and continuous with eases that feel physical (slow in, accelerating into the vortex), plus soft bloom so lines glow. Reproduce with canvas 2D or WebGL: emit particles along a logarithmic spiral toward a focal point, then map their exit to a sine wave whose amplitude decays over x; draw with additive blending ('lighter') and a blur pass for bloom; add expanding rings by animating circle radius with fading stroke alpha; morph liquid blobs via SVG paths generated from noise-displaced circles (simplex noise on angle). Keep the palette black, white and one cool grey for an elegant scientific look.",
+  "durationHint": "1:00"
+ },
+ {
+  "id": "ordinary-folk-bibleproject-blessing-curse",
+  "title": "BibleProject — Blessing & Curse",
+  "by": "Ordinary Folk",
+  "year": 2022,
+  "url": "https://vimeo.com/723829682",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1486475591-1955d2963f91466a1dfe006f5428c1a87a0057d9c3bd61d9bc5211ce83858348-d_1280?region=us",
+  "category": "explainer",
+  "tags": [
+   "painterly",
+   "explainer",
+   "long-form",
+   "brush-texture",
+   "narration"
+  ],
+  "techniques": [
+   "painterly brush reveals",
+   "texture-mapped shapes",
+   "landscape transitions",
+   "color-coded concepts",
+   "long-form pacing"
+  ],
+  "breakdown": "A six-minute narrated explainer where Ordinary Folk left their usual vector minimalism for a vivid, painterly look. The concept system is colour-coded: 'blessing' is visualised with lush, colourful paint strokes (greens, yellows, flowing hills and trees), while 'curse' uses rigid, dark brushes. Scenes flow as landscapes that grow, wilt and repaint themselves, and simple silhouetted figures carry the narrative without needing detailed acting. Long-form pacing is held by constant gentle motion — strokes painting on, foliage swaying, camera drifting — rather than frequent cuts. Reproduce: paint-on reveals using SVG masks made of brush-stroke paths animated with stroke-dashoffset (a thick stroke with a textured pattern fill), or canvas drawing along recorded stroke paths with a brush stamp texture; map abstract concepts to two distinct texture/colour systems and transition between them by repainting the same shapes; animate foliage with low-frequency sine sway on path points; hold each idea for 6–10 seconds with a slow push so viewers can absorb narration.",
+  "durationHint": "6:04"
+ },
+ {
+  "id": "ordinary-folk-google-search-on-2020",
+  "title": "Google — Search On 2020 (OF Montage)",
+  "by": "Ordinary Folk",
+  "year": 2020,
+  "url": "https://vimeo.com/498126087",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1030787538-4c074e75061bbe09467926a963e398a2fc9e0ed00e51938240ea8cc46fc0b01a-d_1280?region=us",
+  "category": "data-viz",
+  "tags": [
+   "google",
+   "event-graphics",
+   "dots",
+   "infographic",
+   "clean"
+  ],
+  "techniques": [
+   "dot-particle formations",
+   "point-to-shape morph",
+   "label reveals",
+   "pastel UI palette",
+   "event graphics"
+  ],
+  "breakdown": "A montage of Ordinary Folk's motion graphics for Google's first Search On event. The signature look is a pale blue-grey canvas on which clusters of blue dots, linked by thin lines like a network graph, assemble into icons and silhouettes (for instance a human figure labelled 'People'), then dissolve and regroup into the next concept. It is a clean, Google-palette way to visualise abstract ideas like data, search and connections with almost no illustration. Motion is gentle with staggered, organic point travel. Reproduce: sample N target points from each SVG silhouette (getPointAtLength or rasterise to canvas and pick filled pixels), keep a pool of the same N dots, and tween each dot to its new target with a random 0–0.4s delay and 'power3.inOut'; draw short connecting lines between nearest neighbours each frame (k-nearest within a radius) at low opacity; fade in a small label in Google Sans-like type under each formation. Vary dot sizes and blues for depth, and add slight idle drift (noise) so formations breathe.",
+  "durationHint": "0:35"
+ },
+ {
+  "id": "buck-asana-brand-film",
+  "title": "Asana Brand Film",
+  "by": "BUCK",
+  "year": 2020,
+  "url": "https://buck.co/work/asana-brand-film",
+  "platform": "web",
+  "thumb": "https://cdn.sanity.io/images/uk7b627p/production/1f105dace350ca2e17ffcc0dd95513f194a26d99-2880x1800.png?w=1200&q=95&auto=format",
+  "category": "brand-identity",
+  "tags": [
+   "saas",
+   "photo-collage",
+   "ui-icons",
+   "minimal",
+   "brand-film"
+  ],
+  "techniques": [
+   "photo-cutout hands",
+   "UI tile interactions",
+   "minimal white space",
+   "dry humour pacing",
+   "graphic metaphor"
+  ],
+  "breakdown": "BUCK's brand film for Asana deliberately avoided the 'quirky' illustration style that dominated project-management marketing. The approach pairs monochrome photographic cut-outs (real hands, objects) with crisp, colourful app-icon tiles and UI elements on a pale grey, mostly empty canvas: a greyscale finger presses a bright blue tile, things snap into order, work 'just flows'. The contrast — tactile photo elements versus flat digital UI — makes the software feel physical and simple. Pacing is dry and confident with lots of negative space, so each interaction lands like a gag. Reproduce: use greyscale PNG cut-outs (your own or generic stock hands) with a soft drop shadow, and a flat UI tile (rounded rect, icon glyph) as the hero; on 'press', scale the tile 1→0.94→1 with a quick elastic and push a ripple ring out; build sequences where tiles slide into a list with 0.06s stagger, then check marks draw on. Keep the background #eef0f2, a single accent colour per scene, and hold shots slightly longer than feels necessary for comic timing.",
+  "durationHint": "~1:00"
+ },
+ {
+  "id": "buck-nothing-playground",
+  "title": "Nothing — Playground Launch Film",
+  "by": "BUCK (Amsterdam)",
+  "year": 2025,
+  "url": "https://buck.co/work/nothing-playground",
+  "platform": "web",
+  "thumb": "https://cdn.sanity.io/images/uk7b627p/production/7046f41fc8e6125fbfc6eda05e6214975debd4e6-3826x2160.png?w=1200&q=95&auto=format",
+  "category": "product-launch",
+  "tags": [
+   "ai-product",
+   "halftone",
+   "duotone",
+   "grid",
+   "typography",
+   "2025"
+  ],
+  "techniques": [
+   "duotone halftone collage",
+   "modular grid",
+   "keyword typography",
+   "orbit line drawing",
+   "photo + graphic layering"
+  ],
+  "breakdown": "A 2025 launch film for Nothing's AI app-building Playground that avoids product demos entirely. BUCK built a modular system that layers footage and imagery of people and nature, treated in a duotone navy/yellow halftone, over Nothing's precise grids, pixels, dot-matrix type and transparency. Thin orbital lines sweep around a central burst while monospaced keywords ('Different', 'Positive', 'Creative') pop into the corners and small red/yellow blocks snap into grid cells. The result reads as warm, human and slightly lo-fi while staying on-brand. Reproduce on the web: apply a duotone to images with an SVG feColorMatrix plus a halftone pattern (canvas: sample luminance per cell, draw dots sized by brightness); lay a 12-column grid and animate rectangular blocks snapping to cells with steps() or 'expo.out'; draw orbit ellipses with stroke-dashoffset while rotating them slowly; type keywords in a dot-matrix/monospace font with a per-character random reveal; cut on the beat between image tiles to keep rhythm.",
+  "durationHint": "~1:00"
+ },
+ {
+  "id": "dia-pinterest-motion-system",
+  "title": "Pinterest Motion System",
+  "by": "DIA Studio",
+  "year": 2022,
+  "url": "https://www.dia.studio/work/pinterest",
+  "platform": "web",
+  "thumb": "https://dia.imgix.net/media/1302/Pinterest-Type-Flip.mp4?video-thumbnail=0&w=1200&h=630&fit=clamp&auto=compress,format",
+  "category": "brand-identity",
+  "tags": [
+   "kinetic-identity",
+   "motion-system",
+   "typography",
+   "toolkit",
+   "brand"
+  ],
+  "techniques": [
+   "kinetic identity",
+   "type flips",
+   "push-pin physics",
+   "modular toolkit",
+   "pin-grid layouts"
+  ],
+  "breakdown": "DIA, the studio known for 'kinetic identity', was brought in by Pinterest in 2022 to turn an expressive but unsystematic 2021 identity into a motion behaviour system usable by any team. The core gesture is the 'Pinterest Push', inspired by the physics of a pin: elements are pushed into place, bounce, and stick. Toolkits cover pin-grids (masonry image layouts), push-pins, collage, typography, transitions and lower thirds; a 3D push-pin resolves into the logo. Typography flips and swaps lines ('Do your thing' in a soft italic serif on pink, flanked by red pins), with generative scripts so less experienced editors stay on-system. Reproduce: define 3–4 named motion behaviours as reusable GSAP functions (push: translateZ-like scale 1.15→1 with 'back.out(3)'; flip: rotateX 90°→0 per line with perspective; stick: tiny settle wobble) and apply them to every element; build masonry grids whose columns slide at different speeds; let pins drop with a short squash on contact. The lesson is consistency: the same 3 eases and durations everywhere define the brand.",
+  "durationHint": "system loops (~0:10 each)"
+ },
+ {
+  "id": "cub-studio-spike-the-red-triangle",
+  "title": "Spike The Red Triangle",
+  "by": "Cub Studio (Fraser Davidson)",
+  "year": 2023,
+  "url": "https://vimeo.com/827938239",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/1671571666-5c4822a71fb5dc661457ebd3e85d8db083c54f9be973573b25e6dc1c06328d12-d_1280?region=us",
+  "category": "explainer",
+  "tags": [
+   "flat-geometric",
+   "shapes-as-characters",
+   "diversity",
+   "short-film",
+   "pastel"
+  ],
+  "techniques": [
+   "geometric shape characters",
+   "flat textured backgrounds",
+   "rigged limbs",
+   "simple-shape storytelling",
+   "pastel palette"
+  ],
+  "breakdown": "A short from Cub Studio and Fraser Davidson about a proud red triangle who learns about diversity and inclusion by meeting other shapes. It's a masterclass in minimal geometric storytelling: characters are pure primitives (triangle, circle, square) with tiny eyes, a mouth and stick limbs, set against soft, paper-textured pastel landscapes with flat clouds and rounded mushrooms. Because the cast is literally shapes, the theme maps directly onto design — difference is form and colour — and every gag comes from what a shape can and can't do (roll, stack, tip over). Motion is bouncy, readable and cleanly rigged. Reproduce without characters by animating primitives as actors: SVG polygons/circles with simple line limbs (two-segment IK or just rotated lines), walk cycles faked by alternating leg rotation and a 2-frame body bob; give each shape a personality via its easing (triangle snaps with 'back.out', circle rolls with 'sine.inOut', square thuds with 'bounce.out'). Use a cream textured background (noise PNG overlay) and a 4-colour palette.",
+  "durationHint": "3:40"
+ },
+ {
+  "id": "kurzgesagt-fermi-paradox",
+  "title": "The Fermi Paradox — Where Are All The Aliens?",
+  "by": "Kurzgesagt – In a Nutshell",
+  "year": 2015,
+  "url": "https://www.youtube.com/watch?v=sNhhvQGsMEc",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/sNhhvQGsMEc/hqdefault.jpg",
+  "category": "explainer",
+  "tags": [
+   "science",
+   "flat-vector",
+   "space",
+   "scale",
+   "youtube"
+  ],
+  "techniques": [
+   "flat vector with long shadows",
+   "scale zoom-outs",
+   "number counters",
+   "vibrant gradients",
+   "loopable idle motion"
+  ],
+  "breakdown": "Kurzgesagt's house style at its most influential: bold flat vector illustration with soft gradients, rim-lit planets and saturated purple/teal/orange palettes. The video walks through the scale of the galaxy, the Drake-style estimates of Earth-like planets, and the Kardashev scale, using huge zoom-outs (planet → solar system → galaxy), counters ticking up to enormous numbers, and grids of tiny planets that multiply to visualise probability. Every element has idle motion (orbits, twinkling stars, bobbing creatures) so even holds feel alive, and cuts are hidden in zooms. Reproduce: illustrate objects as SVG circles with radial gradients and a subtle inner highlight; create infinite-zoom transitions by nesting scenes and scaling the parent by 10–20x with 'power2.inOut' while cross-fading the next level in; animate big numbers with a GSAP counter on textContent using an exponential ease and number formatting; duplicate small glyphs into grids with staggered pop-ins ('back.out', stagger from 'random') to show 'billions'. Keep a 2–3 hue palette per section and always loop background motion.",
+  "durationHint": "6:20"
+ },
+ {
+  "id": "kurzgesagt-optimistic-nihilism",
+  "title": "Optimistic Nihilism",
+  "by": "Kurzgesagt – In a Nutshell",
+  "year": 2017,
+  "url": "https://www.youtube.com/watch?v=MBRqu0YOH14",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/MBRqu0YOH14/hqdefault.jpg",
+  "category": "explainer",
+  "tags": [
+   "philosophy",
+   "neon-palette",
+   "cosmic-scale",
+   "typography",
+   "emotional"
+  ],
+  "techniques": [
+   "neon flat palette",
+   "cosmic zoom",
+   "type-led title cards",
+   "particle universes",
+   "mood-driven color shifts"
+  ],
+  "breakdown": "A philosophical essay told in Kurzgesagt's flat-vector style, but with a more emotional arc: it starts small and personal, zooms out to the scale of the universe (galaxies, the heat death, particles drifting apart), then returns to an optimistic close. The palette swings from cold, dark cosmic blues to explosive neon (magenta coral shapes around bold white title type), so colour does much of the emotional storytelling. Typography is chunky and centred, used as punctuation at chapter turns. Particles and sweeping camera moves carry the cosmic sections while tiny human-scale vignettes anchor the narration. Reproduce: build a colour-script array per chapter and tween CSS custom properties (--bg, --accent) on the root so the whole scene recolours smoothly; create cosmic sections with a canvas particle field whose density and speed change by chapter; use giant bold sans-serif title cards that scale from 1.2→1 with letter-spacing tightening; transition between micro and macro with a radial zoom (scale + blur via CSS filter) to hide scene swaps.",
+  "durationHint": "7:26"
+ },
+ {
+  "id": "ted-ed-benefits-of-bilingual-brain",
+  "title": "The Benefits of a Bilingual Brain",
+  "by": "TED-Ed (Mia Nacamulli)",
+  "year": 2015,
+  "url": "https://www.youtube.com/watch?v=MMmOLN5zBLY",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/MMmOLN5zBLY/hqdefault.jpg",
+  "category": "explainer",
+  "tags": [
+   "education",
+   "newspaper-collage",
+   "2d-explainer",
+   "brain",
+   "texture"
+  ],
+  "techniques": [
+   "newsprint collage",
+   "cut-paper shapes",
+   "typewriter title type",
+   "stop-motion feel",
+   "diagram builds"
+  ],
+  "breakdown": "One of TED-Ed's most-watched lessons, explaining how learning a second language shapes the brain. Its visual identity is cut-paper collage: brains, speech bubbles and heads are made of torn newsprint and dictionary pages on a warm off-white ground, with a typewriter-style serif for titles. The paper textures literally embody 'words', so the style supports the subject. Diagrams (brain hemispheres, age timelines, compound vs coordinate bilinguals) build piece by piece like paper being laid down, with slight jitter that evokes stop-motion. Reproduce: mask text-texture images (generate them by rendering paragraphs of text to canvas) inside SVG shapes using clipPath, then add a torn-edge filter (feTurbulence + feDisplacementMap on the mask edge) and a soft drop shadow; animate pieces sliding in with a tiny rotation overshoot and a step-based jitter (2–3px random offset every 2 frames) for stop-motion texture; title type in a typewriter font revealed character by character with steps(). Keep the palette mostly paper tones with one red accent.",
+  "durationHint": "5:04"
+ },
+ {
+  "id": "vox-why-us-elections-two-choices",
+  "title": "Why US elections only give you two choices",
+  "by": "Vox",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=bqWwV3xk9Qk",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/bqWwV3xk9Qk/hqdefault.jpg",
+  "category": "explainer",
+  "tags": [
+   "motion-awards-2025",
+   "politics",
+   "collage",
+   "election-math",
+   "vox"
+  ],
+  "techniques": [
+   "photo-collage figures",
+   "newspaper label type",
+   "grid repetition",
+   "vote-share diagrams",
+   "paper texture"
+  ],
+  "breakdown": "A Vox explainer on how winner-take-all, first-past-the-post voting forces a two-party system, and how ranked-choice and proportional systems change outcomes — recognised at the Motion Awards 2025 ('Two Parties'). Its style is editorial collage: grids of black-and-white cut-out politicians whose heads are tinted blue or red, torn paper scraps, and bold condensed serif labels on black bars (e.g. 'WINNER TAKE ALL') laid over off-white paper. Election mechanics are shown with repetition: rows of identical figures that recolour, disappear or regroup as the rules change, so the viewer sees vote math rather than hearing it. Reproduce: use a grid of cut-out figure PNGs (generic silhouettes are fine) and recolour heads via CSS mix-blend-mode or SVG feColorMatrix; animate rule changes by staggering colour flips across the grid (stagger by row/column or by computed result); slap labels in with a 2-frame scale overshoot and slight rotation, like stickers; overlay a paper texture with multiply blending. Build bar/seat diagrams from the same figure tiles to keep visual continuity.",
+  "durationHint": "9:47"
+ },
+ {
+  "id": "blinkmybrain-nyt-the-interpreter",
+  "title": "The Interpreter (The New York Times) — Animation Reel",
+  "by": "Ariel Costa / BlinkMyBrain",
+  "year": 2018,
+  "url": "https://vimeo.com/253006957",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/685862676-390d4bab009052bc036d95c10b142d0f73a30dbf3d5be1fe7c7941d1880c210a-d_1280?region=us",
+  "category": "explainer",
+  "tags": [
+   "collage",
+   "editorial",
+   "nyt",
+   "politics",
+   "motionographer"
+  ],
+  "techniques": [
+   "photo collage",
+   "cut-out compositing",
+   "paper frame",
+   "stop-motion jitter",
+   "surreal assemblage"
+  ],
+  "breakdown": "Ariel Costa's collage animations for The New York Times' 'The Interpreter' series on democratic backsliding. Black-and-white photographic fragments — the Capitol dome, the White House, columns, landscapes — are cut out and assembled into floating islands and surreal architectures inside a paper-white frame on a dark border, with small stars and debris drifting around. Heavy political subjects are lightened by playful, slightly absurd assemblage and stop-motion-like movement. The lesson is building meaning by combining found images: each composite is a visual sentence. Reproduce: prepare PNG cut-outs (public-domain archive photos) with hard edges; composite them in layered divs/SVG with mix-blend-mode multiply on a paper texture; animate with low frame-rate stepped tweens (steps(6) per second-ish) and tiny random rotations for a handmade cut-paper feel; reveal pieces with clip-path wipes shaped like torn edges; frame the whole stage inside an inset paper rectangle with a drop shadow so it reads as an object.",
+  "durationHint": "1:18"
+ },
+ {
+  "id": "neil-halloran-fallen-of-ww2",
+  "title": "The Fallen of World War II",
+  "by": "Neil Halloran",
+  "year": 2015,
+  "url": "https://www.youtube.com/watch?v=DwKPFT-RioU",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/DwKPFT-RioU/hqdefault.jpg",
+  "category": "data-viz",
+  "tags": [
+   "data-documentary",
+   "vimeo-staff-pick",
+   "information-is-beautiful-gold",
+   "3d-data",
+   "history"
+  ],
+  "techniques": [
+   "unit-chart soldiers",
+   "3D camera along bars",
+   "scale reveals",
+   "time-axis narration",
+   "restrained palette"
+  ],
+  "breakdown": "A landmark data-driven documentary (Information is Beautiful Gold, SXSW winner, Vimeo Best of 2015) about the human cost of WWII and the decline of battle deaths since. Deaths are drawn as stacks of tiny soldier figures forming 3D bar charts on a black ground, with country flags as labels. The famous beat: the camera tracks along the Soviet bar, which keeps rising off-screen until the camera must climb with it — scale is felt, not read. Narration paces each reveal, numbers count up, and colour is reserved (white units, red accents for civilians/Holocaust segments). Later, a timeline compresses decades into a falling line. Reproduce in Three.js or canvas: render units as instanced sprites arranged in columns; animate bar growth by revealing instances over time; script a camera dolly that pans along the axis and then tilts upward with the bar's height (long 'sine.inOut' moves, 4–8s); pin labels in screen space; count numbers with formatted tweens. The core move — make the camera physically travel the data — transfers to any comparison of extreme magnitudes.",
+  "durationHint": "18:31"
+ },
+ {
+  "id": "hans-rosling-200-countries-200-years",
+  "title": "200 Countries, 200 Years, 4 Minutes — The Joy of Stats",
+  "by": "Hans Rosling / BBC (Gapminder)",
+  "year": 2010,
+  "url": "https://www.youtube.com/watch?v=jbkSRLYSojo",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/jbkSRLYSojo/hqdefault.jpg",
+  "category": "data-viz",
+  "tags": [
+   "bubble-chart",
+   "gapminder",
+   "bbc",
+   "augmented-reality",
+   "classic"
+  ],
+  "techniques": [
+   "animated bubble chart",
+   "year counter",
+   "presenter + AR data",
+   "trail highlighting",
+   "annotated narration"
+  ],
+  "breakdown": "The most famous animated chart ever broadcast: Hans Rosling stands inside an augmented-reality Gapminder bubble chart — income per person on a log x-axis, life expectancy on y, bubble size by population, colour by continent — and narrates 200 years of world history as the bubbles move year by year from 1810 to 2009. A big year counter ticks in the background; the 'story' is the cloud migrating from poor/sick (bottom-left) to rich/healthy (top-right), with pauses to point out wars, the 1918 flu and China/India's rise. It works because one encoding is held constant and time is the only variable. Reproduce with D3 or GSAP + SVG: log-scale x, linear y, sqrt-scaled radius; interpolate each country's values between yearly keyframes on a single timeline (linear ease so time feels uniform); show a large translucent year label behind the chart; slow the timeline (timeScale 0.3) at narrative events and highlight a country with a trail of past positions. Pre-age the data offline; the clip should only tween.",
+  "durationHint": "4:47"
+ },
+ {
+  "id": "vox-how-coronavirus-charts-can-mislead",
+  "title": "How coronavirus charts can mislead us",
+  "by": "Vox",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=O-3Mlj3MQ_Q",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/O-3Mlj3MQ_Q/hqdefault.jpg",
+  "category": "data-viz",
+  "tags": [
+   "log-scale",
+   "chart-literacy",
+   "covid",
+   "our-world-in-data",
+   "annotation"
+  ],
+  "techniques": [
+   "chart build-up",
+   "numbered annotations",
+   "log-scale explanation",
+   "line drawing",
+   "highlight & dim"
+  ],
+  "breakdown": "A chart-literacy explainer built on Our World in Data's famous trajectory chart (cumulative cases since the 100th case, on a log y-axis). Vox deconstructs the chart piece by piece: axes draw on first, the log scale is explained by stretching gridlines, country lines draw themselves, and numbered circle markers (1–4) call out each caveat — testing differences, population size, time alignment — with dimming of irrelevant lines to focus attention. The background is a dark teal with a subtle paper texture and the lines are white with pastel marker colours, giving a friendly but serious tone. Reproduce with D3 + GSAP: draw axes then gridlines with stroke-dashoffset; animate a linear→log transition by tweening a scale's domain interpolation (redraw paths per tick); reveal each country's path with stroke-dashoffset in sequence; drop numbered markers with 'back.out' and dim all non-focal lines to 20% opacity while thickening the focus line. Keep labels attached to line ends and update them per frame so they ride the line.",
+  "durationHint": "4:58"
+ },
+ {
+  "id": "pudding-human-terrain",
+  "title": "Human Terrain",
+  "by": "The Pudding (Matt Daniels)",
+  "year": 2018,
+  "url": "https://pudding.cool/2018/10/city_3d/",
+  "platform": "web",
+  "thumb": "https://pudding.cool/2018/10/city_3d/assets/social/social_facebook.png",
+  "category": "data-viz",
+  "tags": [
+   "population-density",
+   "3d-map",
+   "scrollytelling",
+   "webgl",
+   "cities"
+  ],
+  "techniques": [
+   "3D extruded density map",
+   "camera fly-throughs",
+   "scroll-driven narrative",
+   "spike charts",
+   "comparative zoom"
+  ],
+  "breakdown": "A Pudding visual essay that renders world population density as 3D terrain: every grid cell of population becomes a vertical spike, so cities rise as green crystalline towers from a pale map. As you scroll, the camera flies between cities, tilts from top-down to oblique, and compares skylines of population (New York vs. Philadelphia vs. Washington along the Northeast corridor, then cities worldwide) to show that density, not city limits, defines urban form. The aesthetic — white land, thin coastlines, saturated green spikes — keeps the data legible and beautiful. Reproduce as a video in Three.js: load a gridded density raster, build an InstancedMesh of thin boxes with height = sqrt(density) and colour by height; script camera keyframes (position + lookAt) for each 'scroll step' and tween them with 'power2.inOut' over 3–4s; animate spike growth from zero on scene entry with a staggered delay by distance from city centre; overlay HTML labels projected into screen space. Hold each comparison for a beat before flying on.",
+  "durationHint": "scroll (~5:00)"
+ },
+ {
+  "id": "aott-stranger-things-main-title",
+  "title": "Stranger Things — Main Title",
+  "by": "Imaginary Forces (Michelle Dougherty)",
+  "year": 2016,
+  "url": "https://www.artofthetitle.com/title/stranger-things/",
+  "platform": "web",
+  "thumb": "https://www.artofthetitle.com/assets/sm/upload/4m/y6/kt/t8/st_t.jpg?k=d4fa40a880",
+  "category": "kinetic-type",
+  "tags": [
+   "emmy",
+   "80s",
+   "benguiat",
+   "red-glow",
+   "typographic"
+  ],
+  "techniques": [
+   "letterform fragments sliding",
+   "extreme close-up type",
+   "red glow / optical bloom",
+   "film grain",
+   "slow lock-up"
+  ],
+  "breakdown": "An Emmy-winning, purely typographic main title (Art of the Title feature) modelled on 1980s Stephen King paperback covers and optical-printer titles. Fragments of the red ITC Benguiat logotype — serifs, crossbars, the long rules above and below — slide slowly through black space in extreme close-up, overlapping and passing each other, before locking into the full STRANGER THINGS logo and pulling back. The unease comes from the disjointed lettering and glacial timing set against the pulsing synth score; glow, slight softness and grain sell the analogue-optical look. Reproduce with HTML/CSS: set the title in a Benguiat-style serif as SVG text or outlined paths; split into per-letter (and rule) elements; start the camera at scale 6–10 on individual glyphs and tween each letter along x/y on long linear or 'sine.inOut' moves (6–12s) so they drift into place; apply red fill with a layered text-shadow/feGaussianBlur glow and a hollow-stroke variant for the outline pass; overlay animated film grain (canvas noise at 20% opacity) and a gentle vignette; finish with a slow pull-out to the full lock-up.",
+  "durationHint": "~0:50"
+ },
+ {
+  "id": "aott-westworld-main-title",
+  "title": "Westworld — Main Title",
+  "by": "Elastic (Patrick Clair)",
+  "year": 2016,
+  "url": "https://www.artofthetitle.com/title/westworld/",
+  "platform": "web",
+  "thumb": "https://www.artofthetitle.com/assets/sm/upload/uu/l9/nt/3h/ww_t.jpg?k=92cd831370",
+  "category": "titles",
+  "tags": [
+   "cg",
+   "white-on-white",
+   "3d-printing",
+   "emmy-nominated",
+   "elastic"
+  ],
+  "techniques": [
+   "monochrome CG",
+   "macro slow-motion",
+   "fabrication reveals",
+   "player-piano mechanics",
+   "minimal logo lock-up"
+  ],
+  "breakdown": "Elastic's title for HBO's Westworld renders the show's themes — artificial life, manufacture, Americana — in near-monochrome white CG: robotic arms 'print' tendons and a horse, a skeletal hand plays a player piano whose punched roll scrolls by, a Vitruvian figure is dipped in milky fluid, an eye forms in macro. Everything is slow, deliberate and lit with soft studio light on white or black, so the mood is clinical and uncanny. Each shot is a single elegant motion with shallow depth of field; the sequence ends on the minimal W in a circle logo. Reproduce the technique (not the imagery) with Three.js: white MeshStandardMaterial objects on a white or near-black background, a single soft area light, slow 6–10s camera dollies, and a 'print' reveal via a clipping plane moving up through the mesh (or an SVG path drawing on layer by layer for a 2D version). Add strand/thread drawing with tube geometry growing along a curve. Close with a thin circular stroke drawing around a geometric monogram and generous letter-spaced caps.",
+  "durationHint": "~1:45"
+ },
+ {
+  "id": "aott-halt-and-catch-fire-main-title",
+  "title": "Halt and Catch Fire — Main Title",
+  "by": "Elastic (Patrick Clair, Raoul Marks)",
+  "year": 2014,
+  "url": "https://www.artofthetitle.com/title/halt-and-catch-fire/",
+  "platform": "web",
+  "thumb": "https://www.artofthetitle.com/assets/sm/upload/ng/f5/1j/pw/hacf_t.jpg?k=37e27dc5fe",
+  "category": "titles",
+  "tags": [
+   "red",
+   "circuit",
+   "glitch",
+   "80s-computing",
+   "abstract"
+  ],
+  "techniques": [
+   "red light circuitry",
+   "pixel grid abstraction",
+   "signal pulses",
+   "CRT glow",
+   "fast cutting to synth"
+  ],
+  "breakdown": "A short, abstract title for AMC's 1980s-computing drama: red light pulses race along circuit-like lines, pixels flicker and grow into blocky structures, and everything glows like a CRT or LED against black, ending on the spaced, small-caps HALT AND CATCH FIRE wordmark with a solid square on a red sun-like disc. The idea of data moving through hardware is shown entirely with light and lines — no props, no faces — and the cutting is fast, matching the pulsing synth score. Reproduce in canvas or SVG: draw a Manhattan-style circuit (orthogonal polylines) and animate short bright 'packets' along the paths with stroke-dasharray offsets; add bloom with additive blending and blur; generate pixel blocks that light up in a grid following cellular-automaton rules; occasionally offset RGB channels for a glitch. Cut every 8–12 frames to the beat, then resolve on a large blurred red circle (radial gradient) with a small, letter-spaced title in the centre.",
+  "durationHint": "~0:40"
+ },
+ {
+  "id": "aott-severance-main-title",
+  "title": "Severance — Main Title",
+  "by": "Oliver Latta / Extraweg (design: Teddy Blanks)",
+  "year": 2022,
+  "url": "https://www.artofthetitle.com/title/severance/",
+  "platform": "web",
+  "thumb": "https://www.artofthetitle.com/assets/sm/upload/mp/fn/id/9l/s_t.png?k=37cdd235ba",
+  "category": "3d-motion",
+  "tags": [
+   "emmy",
+   "surreal-cg",
+   "office",
+   "blue-grade",
+   "apple-tv"
+  ],
+  "techniques": [
+   "surreal CG character duplication",
+   "liquid/goo simulation",
+   "volumetric light",
+   "cold blue grade",
+   "clean sans title type"
+  ],
+  "breakdown": "An Emmy-winning title in which a CG likeness of the protagonist is trapped in a surreal corporate dreamscape: he slips through a floor of goo, is chased and duplicated by his 'innie', melts into puddles, and drifts through an office lit by volumetric shafts of cold light. The palette is restrained desaturated blues and greys with occasional warm highlights; every shot is a slow, dreamy single move, and the score's piano drives the editing. Type is a clean, thin sans (Teddy Blanks/Chips) set small and generously spaced, contrasting with the surreal imagery. For a library, the technique is the mood: slow camera, soft-body deformation, duplication as a metaphor. Reproduce with Three.js: a simple abstract figure or primitive with vertex-shader noise displacement that increases over time to 'melt'; instanced duplicates that follow the original with time offsets; a fog/volumetric cone (additive transparent cone mesh) for light shafts; post-process with a blue LUT and grain. Typography: thin sans, small, lower-left, fading in over 1s.",
+  "durationHint": "~1:20"
+ },
+ {
+  "id": "aott-the-last-of-us-main-title",
+  "title": "The Last of Us — Main Title",
+  "by": "Elastic (Nadia Tzuo, Andy Hall)",
+  "year": 2023,
+  "url": "https://www.artofthetitle.com/title/the-last-of-us-2023/",
+  "platform": "web",
+  "thumb": "https://www.artofthetitle.com/assets/sm/upload/j8/x7/yw/ap/tlou_t.png?k=1c70033cd6",
+  "category": "titles",
+  "tags": [
+   "generative-growth",
+   "fungus",
+   "hbo",
+   "dark-teal",
+   "elastic"
+  ],
+  "techniques": [
+   "generative branching growth",
+   "silhouette reveal",
+   "macro textures",
+   "map-like landscapes",
+   "slow time-lapse"
+  ],
+  "breakdown": "Building on the game's macro fungus imagery, Elastic's title shows cordyceps-like growth spreading in frenetic time-lapse: rust-orange branching tendrils crawl across a dark teal ground, and as they expand the patterns resolve into silhouettes — landscapes, buildings, figures — before ending on the stacked, eroded THE LAST OF US title with tendrils growing around it. The camera moves slowly while the growth itself provides all the energy, set to Santaolalla's guitar theme. It's an outstanding reference for generative organic motion. Reproduce on canvas: implement a space-colonisation or diffusion-limited aggregation algorithm whose attractor points are sampled from a hidden target silhouette (rasterise an SVG shape or text to an offscreen canvas and use filled pixels as attractors), so branches grow toward and eventually 'draw' the shape; render segments with tapered width and a warm-to-dark gradient over age; precompute growth so the clip is deterministic; add slow camera drift (scale 1→1.1) and a textured, grainy dark background. The same method can grow any logo or title.",
+  "durationHint": "~1:00"
+ },
+ {
+  "id": "max-cooper-order-from-chaos",
+  "title": "Max Cooper — Order From Chaos",
+  "by": "Maxime Causeret (for Max Cooper)",
+  "year": 2016,
+  "url": "https://www.youtube.com/watch?v=_7wKjTf_RlI",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/_7wKjTf_RlI/hqdefault.jpg",
+  "category": "abstract",
+  "tags": [
+   "generative",
+   "emergence",
+   "music-video",
+   "organic",
+   "self-organisation"
+  ],
+  "techniques": [
+   "emergent patterns",
+   "reaction-diffusion textures",
+   "audio-synced growth",
+   "organic 3D forms",
+   "rhythmic order"
+  ],
+  "breakdown": "Part of Max Cooper's Emergence project, this video by Maxime Causeret illustrates how order arises from randomness: the track begins from field recordings of raindrops, and the visuals likewise start with scattered, chaotic events that gradually self-organise into intricate organic structures — coral-like rings, labyrinthine reaction-diffusion patterns in teal and magenta, cellular textures — that pulse with the beat as it emerges. The narrative is purely structural: randomness → rhythm → complex form. Reproduce with WebGL/canvas: implement a Gray-Scott reaction-diffusion shader (ping-pong framebuffers) seeded with random 'raindrop' impulses placed on audio onsets; progressively quantise the impulses onto a beat grid so the pattern becomes regular; map the two chemical concentrations to a teal/magenta palette; use a radial mask so the pattern grows in a ring; slowly orbit or zoom the camera. Drive feed/kill parameters over time to morph between spots, stripes and mazes, which gives a sense of evolution without any literal imagery.",
+  "durationHint": "4:18"
+ },
+ {
+  "id": "max-cooper-waves-kevin-mcgloughlin",
+  "title": "Max Cooper — Waves",
+  "by": "Kevin McGloughlin (for Max Cooper)",
+  "year": 2016,
+  "url": "https://vimeo.com/178612704",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/586532286-25eda77e906ed9059cc30be7c144e600933727d6178271a155d579b7b691b36b-d_1280?region=us",
+  "category": "abstract",
+  "tags": [
+   "graphic",
+   "yellow-black",
+   "waveform",
+   "repetition",
+   "music-video"
+  ],
+  "techniques": [
+   "bar-field waveforms",
+   "phase-shifted repetition",
+   "hard two-colour graphics",
+   "audio-reactive amplitude",
+   "interference patterns"
+  ],
+  "breakdown": "Kevin McGloughlin's video for the 'Waves' chapter of Emergence, about the most basic natural phenomena. It is pure graphic design in motion: bold black spikes and bars on saturated yellow form waveforms that ripple, phase-shift, interfere and fold, so the image itself becomes an oscilloscope of the music. Repetition is the key device — hundreds of identical elements, each slightly offset in time, produce travelling waves and moiré-like interference. The hard two-colour palette makes it read instantly at any size. Reproduce with SVG or canvas: lay out 60–200 vertical bars across a 1920x1080 frame; set each bar's height (or tip y) to A·sin(kx − ωt + φ) and sum two or three waves to create interference; map A to audio amplitude (precomputed RMS per frame) and ω to tempo; switch between bar shapes (spikes as tapered triangles, rounded pills) at section changes; occasionally flip colours (black on yellow ↔ yellow on black) on downbeats. Keep it strictly two colours for maximum graphic punch.",
+  "durationHint": "4:04"
+ },
+ {
+  "id": "chemical-brothers-wide-open",
+  "title": "The Chemical Brothers — Wide Open ft. Beck",
+  "by": "Dom & Nic / The Mill",
+  "year": 2016,
+  "url": "https://www.youtube.com/watch?v=BC2dRkm8ATU",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/BC2dRkm8ATU/hqdefault.jpg",
+  "category": "3d-motion",
+  "tags": [
+   "vfx",
+   "one-take",
+   "3d-lattice",
+   "dance",
+   "music-video"
+  ],
+  "techniques": [
+   "progressive 3D replacement",
+   "voronoi lattice mesh",
+   "single continuous take",
+   "matchmoved body",
+   "gradual reveal"
+  ],
+  "breakdown": "A single, unbroken take of a dancer (Sonoya Mizuno) performing in an empty warehouse while, over five minutes, parts of her body are gradually replaced by an open 3D-printed-style Voronoi lattice, until she is almost entirely mesh. The transformation is so gradual you notice it only in retrospect — a lesson in patience and continuity. The latticework is white, catching light, and you can see the room through it; the camera drifts with her, never cutting. For a motion library the transferable ideas are progressive replacement and a lattice/Voronoi aesthetic. Reproduce in Three.js with abstract forms instead of a person: take any mesh (a sphere, logo extrusion) and generate a Voronoi-cell wireframe version (e.g. via a shader that discards fragments inside cell interiors using 3D cellular noise); blend between the solid and lattice materials with a spatial mask that advances slowly over the clip (a moving plane or noise threshold); keep the camera in one continuous orbit with gentle 'sine.inOut' easing; use a neutral concrete backdrop and soft daylight lighting.",
+  "durationHint": "5:31"
+ },
+ {
+  "id": "bonobo-cirrus-cyriak",
+  "title": "Bonobo — Cirrus",
+  "by": "Cyriak (for Bonobo / Ninja Tune)",
+  "year": 2013,
+  "url": "https://www.youtube.com/watch?v=WF34N4gJAKE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/WF34N4gJAKE/hqdefault.jpg",
+  "category": "abstract",
+  "tags": [
+   "collage",
+   "archival-footage",
+   "loops",
+   "kaleidoscope",
+   "music-video"
+  ],
+  "techniques": [
+   "looping footage collage",
+   "kaleidoscopic tiling",
+   "rhythmic repetition",
+   "mechanical radial assemblies",
+   "archive treatment"
+  ],
+  "breakdown": "Cyriak turns 1950s/60s public-domain footage of American consumer life into hypnotic machines: tiny looping clips of people, kitchens, vehicles and fairground rides are duplicated and tiled into rings, towers and kaleidoscopic mandalas that spin in time with the track, inspired partly by Rybczynski's 'Tango'. Every loop is short and perfectly cyclical, so the whole frame becomes a polyrhythmic mechanism; complexity grows by adding more rings and layers as the song builds. Reproduce in canvas/WebGL with your own or public-domain clips: cut 1–2 second seamless loops; draw them into a ring by rotating copies around a centre (N copies at 360/N degrees) and rotate the whole ring at a speed locked to BPM; stack several rings with opposite directions and different N; mirror segments for kaleidoscope symmetry; add a new layer every 8 bars. Apply a slightly faded archival colour grade and keep loops on-beat so the machine feels musical.",
+  "durationHint": "3:22"
+ },
+ {
+  "id": "blinkmybrain-green-day-bang-bang",
+  "title": "Green Day — Bang Bang (Official Lyric Video)",
+  "by": "Ariel Costa / BlinkMyBrain",
+  "year": 2016,
+  "url": "https://vimeo.com/178037309",
+  "platform": "vimeo",
+  "thumb": "https://i.vimeocdn.com/video/585874792-6d21b58a6da3a3912493e0cd0154e93b9c31ee27d08dd122e9945a0710583a9a-d_1280?region=us",
+  "category": "kinetic-type",
+  "tags": [
+   "lyric-video",
+   "collage",
+   "hand-lettering",
+   "punk",
+   "motionographer"
+  ],
+  "techniques": [
+   "collage lyric typography",
+   "organic blob mattes",
+   "hand-lettered words",
+   "stop-motion jitter",
+   "black-and-white with spot colour"
+  ],
+  "breakdown": "Ariel Costa's lyric video for Green Day's 'Bang Bang' merges punk zine collage with kinetic type: cut-out vintage photographs, hand-lettered and stencil words ('DADDY'S LITTLE PSYCHO'), and lyric lines appear inside organic black-and-white blob mattes that pulse and swallow each other. The look is xerox-punk — high-contrast monochrome with selective spot colour — and everything moves with a slightly crude, cut-paper stop-motion jitter that matches the song's aggression. Words are designed as images, so each lyric gets its own typographic treatment. Reproduce: build lyric cards where each line uses a different display face or hand-drawn SVG lettering; place them inside animated blob masks (SVG paths generated from noise-displaced circles, morphing each beat); apply a threshold/high-contrast filter (CSS contrast(300%) grayscale) to photo cut-outs; hold frames on twos or threes (steps easing) and add 1–3px random position jitter; time each word reveal to lyric timestamps, with harder scale punches on stressed syllables.",
+  "durationHint": "3:31"
+ }
+]

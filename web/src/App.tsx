@@ -183,7 +183,7 @@ function Rail() {
   const view = useStore((s) => s.view);
   const libraryOpen = useStore((s) => s.libraryOpen);
   const libraryTab = useStore((s) => s.libraryTab);
-  const lib = (tab: 'templates' | 'media' | 'project') => setState({ libraryOpen: !(libraryOpen && libraryTab === tab), libraryTab: tab });
+  const lib = (tab: 'inspiration' | 'templates' | 'media' | 'project') => setState({ libraryOpen: !(libraryOpen && libraryTab === tab), libraryTab: tab });
   const V = ({ v, icon, label }: { v: View; icon: string; label: string }) => (
     <button className={'rail-btn' + (view === v ? ' on' : '')} onClick={() => actions.setView(v)} aria-label={label} data-tip={label}><Icon name={icon} size={19} /></button>
   );
@@ -193,6 +193,7 @@ function Rail() {
       <V v="edit" icon="edit" label={t('Edit')} />
       <V v="board" icon="canvas" label={t('Canvas')} />
       <span className="rail-sep" />
+      <button className={'rail-btn' + (libraryOpen && libraryTab === 'inspiration' ? ' on' : '')} onClick={() => lib('inspiration')} aria-label={t('Inspiration')} data-tip={t('Inspiration')}><Icon name="star" size={18} /></button>
       <button className={'rail-btn' + (libraryOpen && libraryTab === 'templates' ? ' on' : '')} onClick={() => lib('templates')} aria-label={t('Techniques')} data-tip={t('Techniques')}><Icon name="sparkle" size={18} /></button>
       <button className={'rail-btn' + (libraryOpen && libraryTab === 'media' ? ' on' : '')} onClick={() => lib('media')} aria-label={t('Media')} data-tip={t('Media')}><Icon name="image" size={19} /></button>
       <button className={'rail-btn' + (libraryOpen && libraryTab === 'project' ? ' on' : '')} onClick={() => lib('project')} aria-label={t('Edit library')} data-tip={t('Transitions, effects, masks')}><Icon name="wand" size={19} /></button>

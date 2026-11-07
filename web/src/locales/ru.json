@@ -719,5 +719,20 @@
   "Click to bind to / unbind from the selected scenes": "Клик — привязать к выделенным сценам или отвязать",
   "Select scenes, then click to bind this reference to them": "Выделите сцены и кликните, чтобы привязать к ним референс",
   "Remove reference": "Убрать референс",
-  "Add references: techniques, images, links": "Добавьте референсы: приёмы, картинки, ссылки"
+  "Add references: techniques, images, links": "Добавьте референсы: приёмы, картинки, ссылки",
+  "Inspiration": "Вдохновение",
+  "The inspiration library is being collected — come back in a few minutes.": "Библиотека вдохновения собирается — загляните через несколько минут.",
+  "Open the original": "Открыть оригинал",
+  "Product launches": "Запуски продуктов",
+  "UI motion": "Анимация интерфейсов",
+  "Kinetic type": "Кинетическая типографика",
+  "Brand identity": "Айдентика",
+  "Logo animation": "Анимация логотипов",
+  "Explainers": "Объяснялки",
+  "Data viz": "Визуализация данных",
+  "Social shorts": "Короткие видео",
+  "3D-look motion": "3D-моушн",
+  "Title sequences": "Титры и заставки",
+  "Abstract": "Абстракция",
+  "Click — add to the project references (bound to the selected scenes) · ↗ opens the original": "Клик — в референсы проекта (к выделенным сценам) · ↗ открывает оригинал"
 }
