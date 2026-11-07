@@ -1,0 +1,5 @@
+/* Agent Video Studio — clip base styles */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; width: var(--w, 1920px); height: var(--h, 1080px); overflow: hidden; background: transparent; }
+body { font-family: 'Inter', system-ui, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+#stage { position: absolute; inset: 0; overflow: hidden; }

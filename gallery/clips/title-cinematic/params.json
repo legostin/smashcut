@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "kicker": { "type": "text", "label": "Kicker (above)", "default": "Глава первая" },
+    "title": { "type": "text", "label": "Title", "default": "Последний рассвет" },
+    "subtitle": { "type": "text", "label": "Subtitle (below)", "default": "Скоро на экранах · 2026" },
+    "size": { "type": "number", "label": "Title size (px)", "min": 60, "max": 240, "step": 2, "default": 150 },
+    "weight": { "type": "select", "label": "Title weight", "options": ["400", "700", "900"], "default": "400" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#f3ead8" },
+    "accent": { "type": "color", "label": "Accent (line, light leak)", "default": "#d9a55b" },
+    "bgCenter": { "type": "color", "label": "Background centre", "default": "#1b1d26" },
+    "bgEdge": { "type": "color", "label": "Background edge", "default": "#050507" },
+    "breathe": { "type": "number", "label": "Letter-spacing breathe (em)", "min": 0, "max": 1, "step": 0.02, "default": 0.32 },
+    "grain": { "type": "number", "label": "Film grain", "min": 0, "max": 1, "step": 0.05, "default": 0.35 },
+    "fadeBlack": { "type": "boolean", "label": "Fade from / to black", "default": true }
+  }
+}

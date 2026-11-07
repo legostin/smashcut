@@ -1,0 +1,8 @@
+.gl { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; }
+.gl .stack { position: relative; display: inline-block; line-height: 1; white-space: nowrap; }
+.gl .layer { position: relative; display: block; }
+.gl .layer.abs { position: absolute; left: 0; top: 0; width: 100%; }
+.gl .a, .gl .b { mix-blend-mode: screen; }
+.gl .sub { margin-top: 34px; font: 500 34px/1 'JetBrains Mono', monospace; letter-spacing: 0.08em; white-space: pre; }
+.gl .bars { position: absolute; inset: -60px -200px; pointer-events: none; }
+.gl .bars i { position: absolute; left: 0; height: 6px; display: block; }

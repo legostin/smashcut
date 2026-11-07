@@ -1,0 +1,226 @@
+import { useEffect, useRef, useState } from 'react';
+import { useStore, setState, api, notify, time, refresh, getState } from './store';
+import { Viewer } from './components/Viewer';
+import { Timeline } from './components/Timeline';
+import { LeftPanel } from './components/LeftPanel';
+import { RightPanel } from './components/RightPanel';
+import { Icon } from './components/Icon';
+import type { Settings } from '../../shared/types';
+
+export function App() {
+  const project = useStore((s) => s.project);
+  const connected = useStore((s) => s.connected);
+  const dialog = useStore((s) => s.dialog);
+  const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 300));
+  if (!project) return (
+    <div className="app empty-app">
+      {!connected ? <div className="empty">Подключение к серверу… <code>npm run server</code></div> : <ProjectsDialog inline />}
+      <Notices />
+    </div>
+  );
+  return (
+    <div className="app" style={{ gridTemplateRows: `44px 1fr 6px ${tlHeight}px` }}>
+      <TopBar />
+      <div className="main">
+        <LeftPanel />
+        <Viewer project={project} />
+        <RightPanel project={project} />
+      </div>
+      <div className="resizer" onPointerDown={(e) => {
+        const y0 = e.clientY, h0 = tlHeight;
+        const mv = (ev: PointerEvent) => { const h = Math.min(window.innerHeight - 260, Math.max(140, h0 - (ev.clientY - y0))); setTlHeight(h); localStorage.setItem('tlh', String(h)); };
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', () => window.removeEventListener('pointermove', mv), { once: true });
+      }} />
+      <Timeline project={project} />
+      {dialog === 'projects' && <Modal onClose={() => setState({ dialog: null })}><ProjectsDialog /></Modal>}
+      {dialog === 'settings' && <Modal onClose={() => setState({ dialog: null })}><SettingsDialog /></Modal>}
+      {dialog === 'export' && <Modal onClose={() => setState({ dialog: null })}><ExportDialog /></Modal>}
+      {dialog && typeof dialog === 'object' && 'compare' in dialog && <Modal wide onClose={() => setState({ dialog: null })}><CompareDialog clipId={dialog.compare.clipId} sha={dialog.compare.sha} /></Modal>}
+      <Notices />
+    </div>
+  );
+}
+
+function TopBar() {
+  const project = useStore((s) => s.project)!;
+  const connected = useStore((s) => s.connected);
+  const jobs = useStore((s) => s.jobs);
+  const running = jobs.find((j) => j.status === 'running');
+  return (
+    <div className="topbar">
+      <div className="row gap10">
+        <div className="logo"><Icon name="play" size={12} /></div>
+        <button className="btn ghost sm" onClick={() => setState({ dialog: 'projects' })}><Icon name="folder" size={14} /> <b>{project.name}</b></button>
+        <span className={'conn ' + (connected ? 'ok' : 'bad')} title={connected ? 'Сервер подключён' : 'Нет связи с сервером'} />
+      </div>
+      <div className="row gap8">
+        {running && <div className="progress-pill"><div className="bar" style={{ width: `${Math.round(running.progress * 100)}%` }} /><span>{running.stage} · {Math.round(running.progress * 100)}%</span></div>}
+        <button className="icon-btn" title="Настройки" onClick={() => setState({ dialog: 'settings' })}><Icon name="gear" /></button>
+        <button className="btn primary sm" onClick={() => setState({ dialog: 'export' })}><Icon name="download" size={14} /> Экспорт</button>
+      </div>
+    </div>
+  );
+}
+
+function Modal({ children, onClose, wide }: { children: React.ReactNode; onClose: () => void; wide?: boolean }) {
+  useEffect(() => { const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [onClose]);
+  return <div className="modal-back" onPointerDown={(e) => e.target === e.currentTarget && onClose()}><div className={'modal' + (wide ? ' wide' : '')}>{children}</div></div>;
+}
+
+function ProjectsDialog({ inline }: { inline?: boolean }) {
+  const [data, setData] = useState<{ current: string | null; projects: string[]; projectsDir: string } | null>(null);
+  const [name, setName] = useState('');
+  const [size, setSize] = useState('1920x1080');
+  const [openPath, setOpenPath] = useState('');
+  useEffect(() => { api('GET', '/api/projects').then(setData); }, []);
+  const open = async (p: string) => { await api('POST', '/api/projects/open', { path: p }); await refresh(); setState({ dialog: null, selectedItemId: null, selectedTaskId: null }); time.set(0); };
+  const create = async () => {
+    const [w, h] = size.split('x').map(Number);
+    await api('POST', '/api/projects/create', { name: name || 'Новый проект', width: w, height: h });
+    await refresh(); setState({ dialog: null, selectedItemId: null, selectedTaskId: null }); time.set(0);
+  };
+  return (
+    <div className={'col gap12 ' + (inline ? 'card projects-inline' : '')}>
+      <h2>Проекты</h2>
+      <div className="col gap6">
+        {data?.projects.map((p) => (
+          <button key={p} className={'project-row' + (p === data.current ? ' current' : '')} onClick={() => open(p)}>
+            <Icon name="folder" size={14} /> <span className="strong">{p.split('/').pop()}</span> <span className="muted xsmall ellipsis">{p}</span>
+          </button>
+        ))}
+      </div>
+      <div className="card col gap8">
+        <div className="strong small">Новый проект</div>
+        <div className="row gap6">
+          <input className="input grow" placeholder="Название" value={name} onChange={(e) => setName(e.target.value)} />
+          <select className="input" value={size} onChange={(e) => setSize(e.target.value)}>
+            <option value="1920x1080">16:9 · 1920×1080</option><option value="1080x1920">9:16 · 1080×1920</option><option value="1080x1080">1:1 · 1080×1080</option><option value="1080x1350">4:5 · 1080×1350</option><option value="3840x2160">4K</option>
+          </select>
+          <button className="btn primary sm" onClick={create}>Создать</button>
+        </div>
+        <div className="muted xsmall">Создаётся в {data?.projectsDir}. Проект — обычная папка с git-историей.</div>
+      </div>
+      <div className="row gap6">
+        <input className="input grow" placeholder="/путь/к/папке/проекта" value={openPath} onChange={(e) => setOpenPath(e.target.value)} />
+        <button className="btn sm" onClick={() => openPath && open(openPath)}>Открыть</button>
+      </div>
+    </div>
+  );
+}
+
+function SettingsDialog() {
+  const settings = useStore((s) => s.settings);
+  const agents = useStore((s) => s.agents);
+  const dir = useStore((s) => s.dir);
+  const repo = useStore((s) => (s as any).repo as string | undefined);
+  const [s, setS] = useState<Settings | undefined>(settings);
+  if (!s) return null;
+  const save = async () => { const next = await api('PATCH', '/api/settings', s); setState({ settings: next, agent: next.defaultAgent, dialog: null }); notify('info', 'Сохранено'); };
+  const mcpCmd = `claude mcp add studio -e STUDIO_URL=${location.protocol}//${location.hostname}:4317 -- node ${repo || '<repo>'}/server/mcp/stdio.mjs`;
+  return (
+    <div className="col gap12">
+      <h2>Настройки</h2>
+      <div className="grid2">
+        <label className="field"><span>Агент по умолчанию</span><select className="input" value={s.defaultAgent} onChange={(e) => setS({ ...s, defaultAgent: e.target.value as any })}><option value="claude">Claude Code</option><option value="codex">Codex</option></select></label>
+        <label className="field"><span>Права Claude</span><select className="input" value={s.permissionMode} onChange={(e) => setS({ ...s, permissionMode: e.target.value as any })}><option value="acceptEdits">acceptEdits (файлы проекта)</option><option value="bypassPermissions">bypassPermissions (всё)</option><option value="default">default</option></select></label>
+        <label className="field"><span>Модель Claude (пусто = по умолчанию)</span><input className="input" value={s.claudeModel || ''} onChange={(e) => setS({ ...s, claudeModel: e.target.value || undefined })} placeholder="напр. opus / sonnet" /></label>
+        <label className="field"><span>Модель Codex</span><input className="input" value={s.codexModel || ''} onChange={(e) => setS({ ...s, codexModel: e.target.value || undefined })} /></label>
+        <label className="field"><span>Параллельных агентов</span><input className="input" type="number" min={1} max={8} value={s.parallelTasks} onChange={(e) => setS({ ...s, parallelTasks: Number(e.target.value) })} /></label>
+        <label className="field"><span>Воркеров рендера</span><input className="input" type="number" min={1} max={12} value={s.renderWorkers} onChange={(e) => setS({ ...s, renderWorkers: Number(e.target.value) })} /></label>
+        <label className="field"><span>Модель транскрипции</span><select className="input" value={s.transcribeModel} onChange={(e) => setS({ ...s, transcribeModel: e.target.value })}><option value="Xenova/whisper-tiny">whisper-tiny (быстро)</option><option value="Xenova/whisper-base">whisper-base</option><option value="Xenova/whisper-small">whisper-small (точнее)</option></select></label>
+      </div>
+      <div className="card small col gap4">
+        <div><b>Claude Code:</b> {agents?.claude || 'не найден'}</div>
+        <div><b>Codex:</b> {agents?.codex || 'не найден'}</div>
+        <div className="muted xsmall">Подключить MCP редактора к агенту в своём терминале:</div>
+        <code className="xsmall selectable">{mcpCmd}</code>
+        <div className="muted xsmall">Папка проекта: <code className="selectable">{dir}</code></div>
+      </div>
+      <div className="row gap6 end"><button className="btn ghost sm" onClick={() => setState({ dialog: null })}>Отмена</button><button className="btn primary sm" onClick={save}>Сохранить</button></div>
+    </div>
+  );
+}
+
+function ExportDialog() {
+  const project = useStore((s) => s.project)!;
+  const jobs = useStore((s) => s.jobs);
+  const exportsList = useStore((s) => s.exports);
+  const end = Math.max(1, ...project.items.map((i) => i.start + i.duration));
+  const [from, setFrom] = useState(0);
+  const [to, setTo] = useState(+end.toFixed(2));
+  const job = [...jobs].reverse()[0];
+  return (
+    <div className="col gap12">
+      <h2>Экспорт MP4</h2>
+      <div className="small muted">H.264 + AAC, {project.width}×{project.height}, {project.fps} fps. Клипы рендерятся покадрово в headless Chromium (кэш по хэшу), затем ffmpeg собирает слои и сводит звук.</div>
+      <div className="grid3">
+        <label className="field"><span>С, s</span><input className="input" type="number" step={0.1} value={from} onChange={(e) => setFrom(Number(e.target.value))} /></label>
+        <label className="field"><span>По, s</span><input className="input" type="number" step={0.1} value={to} onChange={(e) => setTo(Number(e.target.value))} /></label>
+        <label className="field"><span>&nbsp;</span><button className="btn primary" disabled={job?.status === 'running'} onClick={() => api('POST', '/api/export', { from, to })}><Icon name="download" size={14} /> Рендер</button></label>
+      </div>
+      {job && (
+        <div className="card col gap6">
+          <div className="row between small"><span>{job.status === 'done' ? 'Готово' : job.status === 'error' ? 'Ошибка' : job.stage}</span><span>{Math.round(job.progress * 100)}%</span></div>
+          <div className="progress"><div style={{ width: `${job.progress * 100}%` }} /></div>
+          {job.error && <pre className="error-box xsmall">{job.error}</pre>}
+          {job.output && <video className="export-preview" src={`/p/${job.output}`} controls />}
+        </div>
+      )}
+      {exportsList.length > 0 && (
+        <div className="col gap4">
+          <div className="section-title">Файлы</div>
+          {exportsList.slice(0, 8).map((e) => (
+            <div key={e.file} className="row gap8 small">
+              <a href={`/p/${e.file}`} target="_blank" rel="noreferrer" className="ellipsis grow">{e.file.split('/').pop()}</a>
+              <span className="muted xsmall">{(e.size / 1e6).toFixed(1)} MB</span>
+              <a className="btn xs" href={`/p/${e.file}`} download>Скачать</a>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CompareDialog({ clipId, sha }: { clipId: string; sha: string }) {
+  const project = useStore((s) => s.project)!;
+  const [base, setBase] = useState<string | null>(null);
+  const [t, setT] = useState(() => {
+    const it = project.items.find((i) => i.kind === 'clip' && i.ref === clipId);
+    return it ? Math.max(0, time.get() - it.start + it.in) : 1;
+  });
+  const item = project.items.find((i) => i.kind === 'clip' && i.ref === clipId);
+  const dur = item ? item.duration + item.in : getState().clips.find((c) => c.id === clipId)?.duration || 5;
+  const a = useRef<HTMLIFrameElement>(null), b = useRef<HTMLIFrameElement>(null);
+  useEffect(() => { api('POST', '/api/versions/materialize', { sha, clipId }).then((r) => setBase(r.base)); }, [sha, clipId]);
+  useEffect(() => { for (const f of [a.current, b.current]) f?.contentWindow?.postMessage({ __studio: true, type: 'seek', t }, '*'); }, [t, base]);
+  const input = encodeURIComponent(JSON.stringify(item ? { params: item.params || {}, offset: item.start - item.in, duration: dur, width: project.width, height: project.height, fps: project.fps } : { width: project.width, height: project.height, fps: project.fps, duration: dur }));
+  const scale = 0.3;
+  const frame = (src: string, ref: React.RefObject<HTMLIFrameElement | null>, label: string) => (
+    <div className="col gap4">
+      <div className="small strong">{label}</div>
+      <div className="compare-frame" style={{ width: project.width * scale, height: project.height * scale }}>
+        <iframe ref={ref} src={src} style={{ width: project.width, height: project.height, transform: `scale(${scale})` }} onLoad={() => setTimeout(() => ref.current?.contentWindow?.postMessage({ __studio: true, type: 'seek', t }, '*'), 300)} />
+      </div>
+    </div>
+  );
+  return (
+    <div className="col gap12">
+      <h2>Сравнение версий · {clipId}</h2>
+      <div className="row gap12 wrap">
+        {base && frame(`${base}/${clipId}/index.html#${input}`, a, `Версия ${sha}`)}
+        {frame(`/p/clips/${clipId}/index.html#${input}`, b, 'Текущая')}
+      </div>
+      <input type="range" min={0} max={dur} step={1 / project.fps} value={t} onChange={(e) => setT(Number(e.target.value))} />
+      <div className="row between small"><span className="muted">t = {t.toFixed(2)}s (время клипа)</span>
+        <button className="btn sm" onClick={async () => { if (confirm('Вернуть эту версию?')) { await api('POST', '/api/versions/restore', { sha, path: `clips/${clipId}` }); setState({ dialog: null }); notify('info', 'Восстановлено'); } }}>↺ Вернуть версию {sha}</button>
+      </div>
+    </div>
+  );
+}
+
+function Notices() {
+  const notices = useStore((s) => s.notices);
+  return <div className="notices">{notices.map((n) => <div key={n.id} className={'notice ' + n.level}>{n.text}</div>)}</div>;
+}

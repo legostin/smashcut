@@ -1,0 +1,8 @@
+.cd { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.cd .disc { position: absolute; width: 640px; height: 640px; margin: -320px; border-radius: 50%; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+.cd .flash { position: absolute; width: 640px; height: 640px; margin: -320px; border-radius: 50%; }
+.cd svg { position: absolute; left: -400px; top: -400px; overflow: visible; }
+.cd .n { position: absolute; left: -600px; width: 1200px; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cd .final { position: absolute; left: -900px; width: 1800px; text-align: center; line-height: 1; white-space: nowrap; text-transform: uppercase; }
+.cd .ray { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.cd .ray i { position: absolute; left: 0; top: -5px; width: 140px; height: 10px; border-radius: 5px; transform-origin: left center; }

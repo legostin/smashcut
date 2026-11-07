@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "quote": { "type": "textarea", "label": "Quote (wrap *words* to highlight)", "default": "Простота — это *высшая степень* изощрённости." },
+    "author": { "type": "text", "label": "Author", "default": "Леонардо да Винчи" },
+    "role": { "type": "text", "label": "Author role / source", "default": "художник, учёный, изобретатель" },
+    "font": { "type": "select", "label": "Quote font", "options": ["Playfair Display", "Manrope", "Unbounded", "Inter"], "default": "Playfair Display" },
+    "size": { "type": "number", "label": "Quote size (0 = auto)", "min": 0, "max": 160, "step": 2, "default": 0 },
+    "align": { "type": "select", "label": "Align", "options": ["left", "center"], "default": "left" },
+    "bg": { "type": "color", "label": "Background", "default": "#121016" },
+    "bg2": { "type": "color", "label": "Background glow", "default": "#2a2130" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#f5efe6" },
+    "accent": { "type": "color", "label": "Accent", "default": "#f0b44c" },
+    "wordStagger": { "type": "number", "label": "Word stagger (s)", "min": 0.01, "max": 0.3, "step": 0.01, "default": 0.07 }
+  }
+}

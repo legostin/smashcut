@@ -1,0 +1,17 @@
+{
+  "schema": {
+    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "Каждое слово подсвечивается ровно тогда, когда оно звучит. Добавьте транскрипт — и субтитры синхронизируются сами." },
+    "font": { "type": "select", "label": "Font", "options": ["Manrope", "Inter", "Unbounded", "JetBrains Mono"], "default": "Manrope" },
+    "size": { "type": "number", "label": "Font size (px)", "min": 32, "max": 140, "step": 2, "default": 72 },
+    "uppercase": { "type": "boolean", "label": "Uppercase", "default": false },
+    "style": { "type": "select", "label": "Highlight style", "options": ["box", "color", "underline"], "default": "box" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "upcomingOpacity": { "type": "number", "label": "Upcoming words opacity", "min": 0, "max": 1, "step": 0.05, "default": 0.55 },
+    "highlight": { "type": "color", "label": "Highlight colour", "default": "#ffd426" },
+    "highlightText": { "type": "color", "label": "Text on highlight", "default": "#111111" },
+    "position": { "type": "select", "label": "Position", "options": ["bottom", "center", "top"], "default": "bottom" },
+    "maxWords": { "type": "number", "label": "Max words per phrase", "min": 1, "max": 12, "step": 1, "default": 5 },
+    "maxChars": { "type": "number", "label": "Max characters per phrase", "min": 8, "max": 80, "step": 1, "default": 32 },
+    "shadow": { "type": "boolean", "label": "Outline shadow for readability", "default": true }
+  }
+}

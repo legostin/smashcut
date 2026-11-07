@@ -1,0 +1,9 @@
+{
+  "id": "social-subscribe",
+  "kind": "clip",
+  "name": "Subscribe + like call-to-action",
+  "description": "Channel card pops in, an animated cursor clicks Subscribe (button flips to subscribed), then Like and the notification bell with bursts and wiggles; use as a call-to-action overlay in video content.",
+  "category": "social",
+  "tags": ["subscribe", "like", "bell", "cta", "youtube", "cursor", "social", "overlay"],
+  "duration": 5
+}

@@ -1,0 +1,17 @@
+.ltm { position: absolute; bottom: 130px; display: flex; flex-direction: column; }
+.ltm.left { left: 130px; align-items: flex-start; }
+.ltm.right { right: 130px; align-items: flex-end; text-align: right; }
+.ltm.center { left: 50%; transform: translateX(-50%); align-items: center; text-align: center; }
+.ltm .mask { overflow: hidden; }
+.ltm .mask.top { padding: 10px 6px 14px; margin: -10px -6px 0; }
+.ltm .mask.bot { padding: 14px 6px 10px; margin: 0 -6px -10px; }
+.ltm .name { font-family: 'Manrope', sans-serif; font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; white-space: nowrap; }
+.ltm .role { font: 400 28px/1.2 'Inter', sans-serif; letter-spacing: 0.01em; white-space: nowrap; }
+.ltm .rule { position: relative; align-self: stretch; }
+.ltm .rule .ln { position: absolute; left: 0; right: 0; top: 0; }
+.ltm .rule .dot { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; margin-top: -6px; }
+.ltm.left .rule .dot { left: -22px; }
+.ltm.right .rule .dot { right: -22px; }
+.ltm.center .rule .dot { left: 50%; margin-left: -6px; }
+.ltm.shadow .name, .ltm.shadow .role { text-shadow: 0 2px 24px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.35); }
+.ltm.shadow .ln { box-shadow: 0 1px 8px rgba(0,0,0,.3); }

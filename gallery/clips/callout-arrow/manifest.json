@@ -1,0 +1,9 @@
+{
+  "id": "callout-arrow",
+  "kind": "clip",
+  "name": "Arrow callout",
+  "description": "Pulsing target marker at a configurable point with a curved arrow drawing on from a label card; use to point at a detail in footage, a UI element or a product feature.",
+  "category": "callouts",
+  "tags": ["callout", "arrow", "annotation", "pointer", "tutorial", "label"],
+  "duration": 5
+}

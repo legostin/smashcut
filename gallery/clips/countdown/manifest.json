@@ -1,0 +1,9 @@
+{
+  "id": "countdown",
+  "kind": "clip",
+  "name": "Countdown 3-2-1",
+  "description": "Big 3-2-1 countdown: each number punches in inside a ring that drains over its step, with a flash pulse per tick and a final word burst; steps divide the clip duration evenly. Use before reveals, launches and live starts.",
+  "category": "titles",
+  "tags": ["countdown", "timer", "321", "intro", "launch", "ring"],
+  "duration": 4
+}

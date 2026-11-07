@@ -1,0 +1,17 @@
+{
+  "schema": {
+    "logo": { "type": "text", "label": "Wordmark", "default": "NORTHWIND" },
+    "tagline": { "type": "text", "label": "Tagline", "default": "Design · Motion · Code" },
+    "markLetter": { "type": "text", "label": "Mark letter (empty = first letter)", "default": "" },
+    "mark": { "type": "select", "label": "Mark shape", "options": ["hexagon", "circle", "square", "diamond", "none"], "default": "hexagon" },
+    "font": { "type": "select", "label": "Wordmark font", "options": ["Unbounded", "Manrope", "Space Grotesk", "Bebas Neue", "Playfair Display"], "default": "Unbounded" },
+    "size": { "type": "number", "label": "Wordmark size (px)", "min": 50, "max": 260, "step": 2, "default": 124 },
+    "bg": { "type": "color", "label": "Background edge", "default": "#07080d" },
+    "bg2": { "type": "color", "label": "Background centre", "default": "#1a1d33" },
+    "accent": { "type": "color", "label": "Accent", "default": "#ffb02e" },
+    "accent2": { "type": "color", "label": "Accent 2 (particles)", "default": "#ff4f7b" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "particles": { "type": "number", "label": "Particles", "min": 0, "max": 80, "step": 1, "default": 36 },
+    "fadeOut": { "type": "boolean", "label": "Fade out at the end", "default": true }
+  }
+}

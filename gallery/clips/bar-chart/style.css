@@ -1,0 +1,14 @@
+.bc { position: absolute; left: 50%; top: 50%; width: 1440px; height: 820px; margin: -410px 0 0 -720px; }
+.bc .card { position: absolute; inset: 0; border-radius: 32px; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+.bc .head { position: absolute; left: 72px; top: 60px; right: 72px; }
+.bc .title { font: 700 52px/1.1 'Manrope', sans-serif; letter-spacing: -0.02em; }
+.bc .sub { margin-top: 10px; font: 400 28px/1.2 'Inter', sans-serif; opacity: .55; }
+.bc .plot { position: absolute; left: 140px; right: 72px; top: 230px; bottom: 110px; }
+.bc .grid { position: absolute; left: 0; right: 0; height: 2px; }
+.bc .grid .gl { position: absolute; inset: 0; opacity: .12; transform-origin: left; }
+.bc .grid .gv { position: absolute; right: 100%; margin-right: 22px; top: -14px; font: 500 22px/28px 'Inter', sans-serif; opacity: .45; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bc .grid.base .gl { opacity: .35; }
+.bc .col { position: absolute; bottom: 0; top: 0; }
+.bc .bar { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 12px 12px 3px 3px; transform-origin: bottom; }
+.bc .val { position: absolute; left: -20px; right: -20px; text-align: center; font: 700 32px/1 'Inter', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bc .cat { position: absolute; left: -30px; right: -30px; top: 100%; margin-top: 22px; text-align: center; font: 500 26px/1.1 'Inter', sans-serif; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

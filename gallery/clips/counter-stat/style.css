@@ -1,0 +1,12 @@
+.cs { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; }
+.cs .row { display: flex; align-items: baseline; line-height: 1; white-space: nowrap; }
+.cs .num { font-variant-numeric: tabular-nums; letter-spacing: -0.04em; text-align: right; }
+.cs .pre, .cs .suf { font-size: 0.42em; font-weight: 700; letter-spacing: -0.01em; }
+.cs .pre { margin-right: 0.12em; }
+.cs .suf { margin-left: 0.18em; }
+.cs .ul { position: relative; height: 12px; margin-top: 26px; border-radius: 6px; overflow: hidden; }
+.cs .ul .track { position: absolute; inset: 0; opacity: 0.18; }
+.cs .ul .fill { position: absolute; inset: 0; transform-origin: left center; border-radius: 6px; }
+.cs .label { margin-top: 34px; font: 600 50px/1.15 'Manrope', sans-serif; letter-spacing: -0.01em; text-align: center; max-width: 1500px; }
+.cs .cap { margin-top: 18px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 22px; border-radius: 999px; font: 600 32px/1 'Inter', sans-serif; }
+.cs.shadow .row, .cs.shadow .label { text-shadow: 0 8px 40px rgba(0,0,0,.35); }

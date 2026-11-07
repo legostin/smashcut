@@ -1,0 +1,9 @@
+{
+  "id": "progress-ring",
+  "kind": "clip",
+  "name": "Progress ring",
+  "description": "Circular gauge that fills to a percentage with a gradient arc, glowing head, lit tick marks and a counting number, plus label text stacked or to the side; use for completion rates, scores and goals.",
+  "category": "infographics",
+  "tags": ["progress", "ring", "gauge", "percent", "kpi", "donut"],
+  "duration": 5
+}

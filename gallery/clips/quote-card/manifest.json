@@ -1,0 +1,9 @@
+{
+  "id": "quote-card",
+  "kind": "clip",
+  "name": "Quote card",
+  "description": "Full-frame typographic quote: an oversized quotation mark lands, the quote resolves word by word with *highlighted* phrases, then a rule draws and the author fades in; use for testimonials, citations and social quote posts.",
+  "category": "titles",
+  "tags": ["quote", "testimonial", "typography", "citation", "fullframe", "social"],
+  "duration": 7
+}

@@ -1,0 +1,9 @@
+{
+  "id": "title-glitch",
+  "kind": "clip",
+  "name": "Glitch title",
+  "description": "RGB-split digital glitch title with scrambled characters, sliced displacement and deterministic jitter bursts; use for tech, gaming or hard-cut intros.",
+  "category": "titles",
+  "tags": ["glitch", "rgb", "tech", "cyber", "title", "scramble"],
+  "duration": 4
+}

@@ -1,0 +1,9 @@
+{
+  "id": "counter-stat",
+  "kind": "clip",
+  "name": "Counter stat",
+  "description": "Big headline number that counts up from/to any value with prefix, suffix and decimals, plus an underline that fills with the count and a label; use for key metrics, results and fun facts.",
+  "category": "infographics",
+  "tags": ["counter", "number", "stat", "kpi", "metric", "infographic"],
+  "duration": 5
+}

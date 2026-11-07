@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "text": { "type": "text", "label": "Title", "default": "SYSTEM ONLINE" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "// boot sequence 04.7 complete" },
+    "font": { "type": "select", "label": "Font", "options": ["Unbounded", "Space Grotesk", "JetBrains Mono", "Bebas Neue"], "default": "Unbounded" },
+    "size": { "type": "number", "label": "Font size (px)", "min": 60, "max": 260, "step": 2, "default": 160 },
+    "color": { "type": "color", "label": "Text colour", "default": "#f4f6ff" },
+    "colorA": { "type": "color", "label": "Split colour A", "default": "#ff2a6d" },
+    "colorB": { "type": "color", "label": "Split colour B", "default": "#05d9e8" },
+    "intensity": { "type": "number", "label": "Glitch intensity", "min": 0, "max": 2, "step": 0.1, "default": 1 },
+    "bursts": { "type": "number", "label": "Bursts per second during hold", "min": 0, "max": 4, "step": 0.1, "default": 1.2 },
+    "scramble": { "type": "boolean", "label": "Scramble characters in/out", "default": true },
+    "seed": { "type": "number", "label": "Random seed", "min": 1, "max": 9999, "step": 1, "default": 7 }
+  }
+}

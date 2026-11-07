@@ -1,0 +1,15 @@
+.kt { position: absolute; left: 140px; right: 140px; top: 50%; transform: translateY(-50%); }
+.kt.center { text-align: center; }
+.kt .eyebrow { display: inline-flex; align-items: center; gap: 22px; margin-bottom: 34px; font: 600 30px/1 'Manrope', sans-serif; letter-spacing: 0.32em; text-transform: uppercase; overflow: hidden; }
+.kt .eyebrow i { display: block; width: 72px; height: 4px; background: var(--accent); transform-origin: left; }
+.kt .eyebrow span { display: block; }
+.kt .lines { font-weight: 900; line-height: 1.06; letter-spacing: -0.035em; color: var(--color); }
+.kt.font-Manrope .lines, .kt.font-Inter .lines { font-weight: 800; letter-spacing: -0.045em; }
+.kt.upper .lines { text-transform: uppercase; }
+.kt .line { white-space: nowrap; }
+.kt .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.06em 0.04em 0.1em; margin: -0.06em -0.04em -0.1em; position: relative; }
+.kt .wi { display: inline-block; position: relative; will-change: transform; }
+.kt .w.hl .wi { color: var(--accentText); padding: 0 0.12em; }
+.kt .w.hl .bg { position: absolute; inset: 0.02em 0 0.04em; background: var(--accent); transform-origin: left center; border-radius: 0.06em; }
+.kt.shadow .lines .w:not(.hl) .wi, .kt.shadow .eyebrow span { text-shadow: 0 6px 40px rgba(0,0,0,.35); }
+.kt .gap { display: inline-block; width: 0.28em; }

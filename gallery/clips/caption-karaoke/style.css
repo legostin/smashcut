@@ -1,0 +1,13 @@
+.kar { position: absolute; left: 160px; right: 160px; display: flex; justify-content: center; }
+.kar.bottom { bottom: 150px; }
+.kar.center { top: 50%; transform: translateY(-50%); }
+.kar.top { top: 130px; }
+.kar .cap { position: absolute; bottom: 0; max-width: 1600px; text-align: center; line-height: 1.22; letter-spacing: -0.015em; opacity: 0; }
+.kar.top .cap { top: 0; bottom: auto; }
+.kar.center .cap { top: 50%; bottom: auto; }
+.kar .w { position: relative; display: inline-block; padding: 0 0.13em; z-index: 1; transform-origin: 50% 60%; }
+.kar .pill { position: absolute; left: 0; top: 0; border-radius: 0.18em; z-index: 0; }
+.kar.uline .pill { border-radius: 0.06em; }
+.kar.shadow .w { text-shadow: 0 0 2px rgba(0,0,0,.55), 0 3px 14px rgba(0,0,0,.55), 0 2px 0 rgba(0,0,0,.35); }
+.kar.shadow .w.on.boxed { text-shadow: none; }
+.kar.shadow .pill { box-shadow: 0 6px 24px rgba(0,0,0,.3); }

@@ -1,0 +1,19 @@
+{
+  "schema": {
+    "data": { "type": "textarea", "label": "Data (one \"Label: value\" per line)", "default": "Jan: 12\nFeb: 18\nMar: 16\nApr: 27\nMay: 34\nJun: 31\nJul: 46\nAug: 58" },
+    "title": { "type": "text", "label": "Title", "default": "Monthly active users" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "thousands, 2026" },
+    "unit": { "type": "text", "label": "Value suffix", "default": "k" },
+    "decimals": { "type": "number", "label": "Value decimals", "min": 0, "max": 3, "step": 1, "default": 0 },
+    "lineColor": { "type": "color", "label": "Line colour", "default": "#7c5cff" },
+    "accent": { "type": "color", "label": "Last-point accent", "default": "#ff6bd6" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "area": { "type": "boolean", "label": "Gradient area under line", "default": true },
+    "showValues": { "type": "boolean", "label": "Value labels on points", "default": true },
+    "zeroBase": { "type": "boolean", "label": "Start Y axis at zero", "default": true },
+    "drawTime": { "type": "number", "label": "Draw duration (s)", "min": 0.5, "max": 8, "step": 0.1, "default": 2.2 },
+    "card": { "type": "boolean", "label": "Card background", "default": true },
+    "cardColor": { "type": "color", "label": "Card colour", "default": "#10111a" },
+    "cardOpacity": { "type": "number", "label": "Card opacity", "min": 0, "max": 1, "step": 0.05, "default": 0.92 }
+  }
+}

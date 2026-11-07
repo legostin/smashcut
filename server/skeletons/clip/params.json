@@ -1,0 +1,6 @@
+{
+  "schema": {
+    "text": { "type": "text", "label": "Text", "default": "New clip" },
+    "color": { "type": "color", "label": "Color", "default": "#ffffff" }
+  }
+}

@@ -1,0 +1,12 @@
+.qc { position: absolute; inset: 0; overflow: hidden; }
+.qc .bg { position: absolute; inset: 0; }
+.qc .glyph { position: absolute; font: 900 900px/1 'Playfair Display', serif; opacity: .06; pointer-events: none; }
+.qc .wrap { position: absolute; left: 230px; right: 230px; top: 50%; transform: translateY(-50%); }
+.qc.center .wrap { text-align: center; }
+.qc .mark { font: 900 260px/0.6 'Playfair Display', serif; height: 120px; margin-bottom: 30px; }
+.qc .q { line-height: 1.18; letter-spacing: -0.01em; }
+.qc .q .w { display: inline-block; white-space: pre; }
+.qc .rule { width: 110px; height: 5px; border-radius: 3px; margin: 56px 0 30px; transform-origin: left; }
+.qc.center .rule { margin-left: auto; margin-right: auto; transform-origin: center; }
+.qc .author { font: 700 42px/1.1 'Manrope', sans-serif; letter-spacing: -0.01em; }
+.qc .role { margin-top: 10px; font: 400 28px/1.3 'Inter', sans-serif; opacity: .6; }

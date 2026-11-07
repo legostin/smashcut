@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "angle": { "type": "number", "label": "Angle (deg, 0 = left→right)", "min": -180, "max": 180, "step": 1, "default": 25 },
+    "bands": { "type": "number", "label": "Bands", "min": 1, "max": 3, "step": 1, "default": 3 },
+    "color1": { "type": "color", "label": "Band 1 (first in)", "default": "#ffb02e" },
+    "color2": { "type": "color", "label": "Band 2", "default": "#ff3d6e" },
+    "color3": { "type": "color", "label": "Band 3 (covers the cut)", "default": "#14121f" },
+    "stagger": { "type": "number", "label": "Band stagger (s)", "min": 0, "max": 0.3, "step": 0.01, "default": 0.08 },
+    "hold": { "type": "number", "label": "Fully covered hold (s)", "min": 0, "max": 2, "step": 0.05, "default": 0.08 },
+    "label": { "type": "text", "label": "Optional text during cover", "default": "" },
+    "labelColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "continueOut": { "type": "boolean", "label": "Exit in the same direction (off = retract back)", "default": true }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "lower-third-minimal",
+  "kind": "clip",
+  "name": "Lower third — minimal line",
+  "description": "Clean name/role lower third: a thin line draws on and the name rises above it while the role drops below it, then everything retracts into the line; use for interviews and speaker IDs.",
+  "category": "lower-thirds",
+  "tags": ["overlay", "name", "minimal", "line", "interview", "clean"],
+  "duration": 5
+}

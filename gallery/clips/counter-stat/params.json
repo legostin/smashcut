@@ -1,0 +1,20 @@
+{
+  "schema": {
+    "from": { "type": "number", "label": "From", "min": -1000000000, "max": 1000000000, "step": 1, "default": 0 },
+    "to": { "type": "number", "label": "To", "min": -1000000000, "max": 1000000000, "step": 0.1, "default": 2.4 },
+    "decimals": { "type": "number", "label": "Decimals", "min": 0, "max": 4, "step": 1, "default": 1 },
+    "prefix": { "type": "text", "label": "Prefix", "default": "" },
+    "suffix": { "type": "text", "label": "Suffix", "default": "млн" },
+    "label": { "type": "text", "label": "Label", "default": "активных пользователей" },
+    "caption": { "type": "text", "label": "Caption (small, optional)", "default": "+38% за год" },
+    "thousands": { "type": "select", "label": "Thousands separator", "options": ["space", "comma", "dot", "none"], "default": "space" },
+    "decimalMark": { "type": "select", "label": "Decimal mark", "options": [",", "."], "default": "," },
+    "countTime": { "type": "number", "label": "Count duration (s)", "min": 0.3, "max": 10, "step": 0.1, "default": 1.8 },
+    "font": { "type": "select", "label": "Number font", "options": ["Inter", "Manrope", "Unbounded", "JetBrains Mono"], "default": "Inter" },
+    "size": { "type": "number", "label": "Number size (px)", "min": 80, "max": 400, "step": 4, "default": 240 },
+    "color": { "type": "color", "label": "Number colour", "default": "#ffffff" },
+    "accent": { "type": "color", "label": "Accent", "default": "#5b7cff" },
+    "labelColor": { "type": "color", "label": "Label colour", "default": "#e7e9f0" },
+    "shadow": { "type": "boolean", "label": "Soft shadow", "default": true }
+  }
+}

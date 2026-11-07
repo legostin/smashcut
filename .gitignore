@@ -1,0 +1,5 @@
+node_modules/
+web/dist/
+gallery/**/preview.png
+gallery/**/preview.wav
+.DS_Store

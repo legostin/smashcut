@@ -1,0 +1,8 @@
+.lt { position: absolute; bottom: 120px; display: flex; align-items: stretch; gap: 0; }
+.lt.left { left: 120px; }
+.lt.right { right: 120px; flex-direction: row-reverse; }
+.bar { width: 12px; background: var(--accent); transform-origin: bottom; }
+.plate { background: var(--plate); padding: 26px 40px 28px; overflow: hidden; clip-path: inset(0 100% 0 0); }
+.right .plate { clip-path: inset(0 0 0 100%); }
+.name { font: 700 64px/1.05 'Manrope', sans-serif; letter-spacing: -0.02em; white-space: nowrap; }
+.role { margin-top: 10px; font: 500 30px/1.2 'Inter', sans-serif; color: rgba(255,255,255,.72); white-space: nowrap; }

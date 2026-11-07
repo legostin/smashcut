@@ -1,0 +1,9 @@
+{
+  "id": "lower-third-slide",
+  "kind": "clip",
+  "name": "Lower third — slide",
+  "description": "Name + role plate that slides in with an accent bar, holds, and wipes out. Overlay on talking-head footage.",
+  "category": "lower-thirds",
+  "tags": ["overlay", "name", "title", "corporate"],
+  "duration": 5
+}

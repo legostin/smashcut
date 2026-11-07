@@ -1,0 +1,9 @@
+{
+  "id": "line-chart",
+  "kind": "clip",
+  "name": "Animated line chart",
+  "description": "Smooth line chart on an optional card: the line and gradient area draw on left to right with a glowing head, points pop with value labels and the last value is called out; use for growth, trends and time series.",
+  "category": "infographics",
+  "tags": ["chart", "line", "trend", "growth", "data", "infographic"],
+  "duration": 6
+}

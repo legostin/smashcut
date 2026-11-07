@@ -1,0 +1,9 @@
+{
+  "id": "caption-karaoke",
+  "kind": "clip",
+  "name": "Karaoke captions",
+  "description": "Social-style captions that show the transcript phrase by phrase and highlight each word exactly when it is spoken (uses studio.words; falls back to the Text param spread over the clip); place over talking-head or voice-over footage.",
+  "category": "captions",
+  "tags": ["captions", "subtitles", "karaoke", "transcript", "social", "reels", "shorts"],
+  "duration": 8
+}

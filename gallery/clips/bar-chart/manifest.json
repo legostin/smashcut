@@ -1,0 +1,9 @@
+{
+  "id": "bar-chart",
+  "kind": "clip",
+  "name": "Animated bar chart",
+  "description": "Vertical bar chart on an optional card: gridlines draw on, bars grow in sequence with counting value labels and the top bar highlighted; use to present simple data series like monthly revenue or survey results.",
+  "category": "infographics",
+  "tags": ["chart", "bars", "data", "infographic", "statistics", "business"],
+  "duration": 6
+}

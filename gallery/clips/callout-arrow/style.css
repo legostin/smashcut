@@ -1,0 +1,6 @@
+.co { position: absolute; inset: 0; }
+.co svg { position: absolute; inset: 0; overflow: visible; filter: drop-shadow(0 3px 10px rgba(0,0,0,.35)); }
+.co .card { position: absolute; padding: 22px 30px 24px; border-radius: 18px; box-shadow: 0 18px 50px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.2); white-space: nowrap; }
+.co .card .l { font: 700 40px/1.1 'Manrope', sans-serif; letter-spacing: -0.015em; }
+.co .card .s { margin-top: 8px; font: 500 26px/1.2 'Inter', sans-serif; opacity: .62; }
+.co .card .bar { position: absolute; left: 0; top: 18px; bottom: 18px; width: 6px; border-radius: 0 4px 4px 0; }

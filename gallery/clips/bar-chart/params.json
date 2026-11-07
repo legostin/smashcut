@@ -1,0 +1,17 @@
+{
+  "schema": {
+    "data": { "type": "textarea", "label": "Data (one \"Label: value\" per line)", "default": "Янв: 42\nФев: 58\nМар: 51\nАпр: 76\nМай: 89\nИюн: 104" },
+    "title": { "type": "text", "label": "Title", "default": "Выручка по месяцам" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "млн ₽, первое полугодие 2026" },
+    "unit": { "type": "text", "label": "Value suffix", "default": "" },
+    "decimals": { "type": "number", "label": "Value decimals", "min": 0, "max": 3, "step": 1, "default": 0 },
+    "highlight": { "type": "select", "label": "Highlight bar", "options": ["max", "last", "none"], "default": "max" },
+    "barColor": { "type": "color", "label": "Bar colour", "default": "#3a4256" },
+    "accent": { "type": "color", "label": "Highlight colour", "default": "#2ee6a6" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "card": { "type": "boolean", "label": "Card background", "default": true },
+    "cardColor": { "type": "color", "label": "Card colour", "default": "#11141b" },
+    "cardOpacity": { "type": "number", "label": "Card opacity", "min": 0, "max": 1, "step": 0.05, "default": 0.92 },
+    "stagger": { "type": "number", "label": "Bar stagger (s)", "min": 0, "max": 0.5, "step": 0.01, "default": 0.1 }
+  }
+}

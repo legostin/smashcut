@@ -1,0 +1,9 @@
+{
+  "id": "title-cinematic",
+  "kind": "clip",
+  "name": "Cinematic serif title",
+  "description": "Full-frame film title card: elegant serif title that fades in from blur while its letter-spacing slowly breathes, over a dark graded background with light leak and grain; use for trailers, film openers and chapter cards.",
+  "category": "titles",
+  "tags": ["cinematic", "serif", "film", "trailer", "elegant", "fullframe"],
+  "duration": 6
+}

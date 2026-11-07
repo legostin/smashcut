@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "text": { "type": "textarea", "label": "Text (one line per row, wrap *words* to highlight)", "default": "Делай видео\n*кодом,*\nа не мышкой" },
+    "eyebrow": { "type": "text", "label": "Eyebrow (small line above)", "default": "Agent Video Studio" },
+    "font": { "type": "select", "label": "Font", "options": ["Unbounded", "Manrope", "Inter"], "default": "Unbounded" },
+    "uppercase": { "type": "boolean", "label": "Uppercase", "default": true },
+    "size": { "type": "number", "label": "Font size (px)", "min": 60, "max": 260, "step": 2, "default": 150 },
+    "align": { "type": "select", "label": "Align", "options": ["left", "center"], "default": "left" },
+    "color": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "accent": { "type": "color", "label": "Highlight colour", "default": "#c6ff3d" },
+    "accentText": { "type": "color", "label": "Highlighted text colour", "default": "#0d0f12" },
+    "stagger": { "type": "number", "label": "Word stagger (s)", "min": 0.02, "max": 0.4, "step": 0.01, "default": 0.11 },
+    "shadow": { "type": "boolean", "label": "Soft shadow (for busy footage)", "default": true }
+  }
+}

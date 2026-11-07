@@ -1,0 +1,17 @@
+{
+  "schema": {
+    "percent": { "type": "number", "label": "Percent", "min": 0, "max": 100, "step": 0.1, "default": 87 },
+    "decimals": { "type": "number", "label": "Decimals", "min": 0, "max": 2, "step": 1, "default": 0 },
+    "label": { "type": "text", "label": "Label", "default": "Customer satisfaction" },
+    "sublabel": { "type": "text", "label": "Sub-label", "default": "Based on 12,400 reviews in Q3" },
+    "layout": { "type": "select", "label": "Layout", "options": ["stacked", "side"], "default": "side" },
+    "color": { "type": "color", "label": "Arc colour (start)", "default": "#00d4ff" },
+    "color2": { "type": "color", "label": "Arc colour (end)", "default": "#7a5cff" },
+    "track": { "type": "color", "label": "Track colour", "default": "#ffffff" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "thickness": { "type": "number", "label": "Ring thickness (px)", "min": 8, "max": 80, "step": 1, "default": 34 },
+    "size": { "type": "number", "label": "Ring diameter (px)", "min": 240, "max": 900, "step": 10, "default": 560 },
+    "fillTime": { "type": "number", "label": "Fill duration (s)", "min": 0.3, "max": 8, "step": 0.1, "default": 2 },
+    "ticks": { "type": "boolean", "label": "Tick marks", "default": true }
+  }
+}

@@ -1,0 +1,13 @@
+.cin { position: absolute; inset: 0; overflow: hidden; }
+.cin .bg { position: absolute; inset: 0; }
+.cin .leak { position: absolute; width: 1400px; height: 900px; left: 50%; top: 50%; margin: -450px 0 0 -700px; border-radius: 50%; filter: blur(120px); opacity: 0.22; mix-blend-mode: screen; }
+.cin .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.65) 100%); }
+.cin .grain { position: absolute; inset: -128px; mix-blend-mode: overlay; pointer-events: none; }
+.cin .content { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; }
+.cin .kicker, .cin .sub { font: 500 24px/1 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.55em; padding-left: 0.55em; opacity: 0.8; }
+.cin .kicker { margin-bottom: 44px; }
+.cin .sub { margin-top: 30px; font-weight: 400; font-size: 22px; letter-spacing: 0.4em; padding-left: 0.4em; opacity: 0.65; }
+.cin .title { --ls: 0.05em; font-family: 'Playfair Display', serif; line-height: 1.1; letter-spacing: var(--ls); padding-left: var(--ls); white-space: nowrap; }
+.cin .title span { display: inline-block; white-space: pre; }
+.cin .line { width: 520px; height: 1px; margin: 40px auto 0; }
+.cin .black { position: absolute; inset: 0; background: #000; }

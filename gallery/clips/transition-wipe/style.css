@@ -1,0 +1,5 @@
+.tw { position: absolute; inset: 0; overflow: hidden; }
+.tw .rot { position: absolute; left: 50%; top: 50%; }
+.tw .band { position: absolute; inset: 0; will-change: transform; }
+.tw .band.lead::before { content: ''; position: absolute; top: 0; bottom: 0; right: -1px; width: 2px; background: rgba(255,255,255,.0); }
+.tw .label { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font: 900 120px/1 'Unbounded', sans-serif; letter-spacing: -0.02em; text-transform: uppercase; white-space: nowrap; }

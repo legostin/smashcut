@@ -1,0 +1,10 @@
+{
+  "schema": {
+    "name": { "type": "text", "label": "Name", "default": "Алексей Смирнов" },
+    "role": { "type": "text", "label": "Role", "default": "Head of Motion · Agent Studio" },
+    "accent": { "type": "color", "label": "Accent", "default": "#ff4d2e" },
+    "plate": { "type": "color", "label": "Plate", "default": "#111216" },
+    "position": { "type": "select", "label": "Position", "options": ["left", "right"], "default": "left" },
+    "outAt": { "type": "number", "label": "Exit at (s from end)", "min": 0.3, "max": 3, "step": 0.1, "default": 0.9 }
+  }
+}

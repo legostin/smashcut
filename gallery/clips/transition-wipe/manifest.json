@@ -1,0 +1,9 @@
+{
+  "id": "transition-wipe",
+  "kind": "clip",
+  "name": "Diagonal band wipe",
+  "description": "Full-frame transition: staggered diagonal colour bands sweep in until the frame is fully covered at the midpoint, then sweep out; transparent at both ends, so place it centred across a cut.",
+  "category": "transitions",
+  "tags": ["transition", "wipe", "cut", "bands", "diagonal", "fullframe"],
+  "duration": 1.4
+}

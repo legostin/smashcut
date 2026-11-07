@@ -1,0 +1,14 @@
+.lr { position: absolute; inset: 0; overflow: hidden; }
+.lr .bg { position: absolute; inset: 0; }
+.lr .fx { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.lr .ring { position: absolute; width: 600px; height: 600px; margin: -300px; border-radius: 50%; }
+.lr .ray { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.lr .ray i { position: absolute; left: 0; top: -4px; width: 200px; height: 8px; border-radius: 4px; transform-origin: left center; }
+.lr .pt { position: absolute; left: 0; top: 0; }
+.lr .group { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }
+.lr .row { display: flex; align-items: center; gap: 44px; }
+.lr .mark { position: relative; flex: none; z-index: 2; }
+.lr .mark svg { display: block; overflow: visible; }
+.lr .word { overflow: hidden; padding: 0.08em 0.02em 0.06em; line-height: 1; white-space: nowrap; }
+.lr .word span { display: inline-block; }
+.lr .tag { margin-top: 38px; font: 500 30px/1 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.5em; padding-left: 0.5em; white-space: nowrap; }

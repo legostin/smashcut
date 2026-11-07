@@ -1,0 +1,9 @@
+{
+  "id": "beat-pulse-shapes",
+  "kind": "clip",
+  "name": "Beat-pulse geometric background",
+  "description": "Full-frame abstract background of drifting geometric shapes that pulse in a ripple on every beat, with ring shockwaves on each bar (uses studio.beats / studio.bars, falls back to a 120 bpm grid); use behind titles, music videos and promos.",
+  "category": "backgrounds",
+  "tags": ["background", "beat", "music", "geometric", "abstract", "loop", "fullframe"],
+  "duration": 8
+}
