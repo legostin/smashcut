@@ -214,6 +214,20 @@ export async function waitSubagents(parentId: string, ids?: string[], timeoutMs 
   return pick().map((x) => ({ id: x.id, title: x.title, status: x.status, report: busy(x) ? '' : lastReport(x), version: x.commitAfter }));
 }
 
+/**
+ * Isolation: by default spawned agents get only the studio MCP + the project's skills — not the user's global
+ * MCP servers (mail, calendars, browsers…), hooks or plugins. Faster start, cleaner context, no access to unrelated accounts.
+ */
+function codexIsolation(): string[] {
+  const file = path.join(process.env.CODEX_HOME || path.join(process.env.HOME || '', '.codex'), 'config.toml');
+  let toml = '';
+  try { toml = fs.readFileSync(file, 'utf8'); } catch { return []; }
+  const out: string[] = [];
+  for (const m of toml.matchAll(/^\[mcp_servers\.([A-Za-z0-9_-]+)\]/gm)) if (m[1] !== 'studio') out.push('-c', `mcp_servers.${m[1]}.enabled=false`);
+  for (const m of toml.matchAll(/^\[plugins\."([^"]+)"\]/gm)) out.push('-c', `plugins."${m[1]}".enabled=false`);
+  return out;
+}
+
 function systemPromptFor(t: Task) {
   const st = getSettings();
   const role = t.parentId ? SUBAGENT_ROLE(tasks.get(t.parentId)?.title || '') : st.subagents ? SUBAGENTS_PROMPT : '';
@@ -250,6 +264,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)',
       '--add-dir', GALLERY_DIR, LIBRARY_DIR,
       '--disallowedTools', 'Task',
+      ...(settings.agentUserConfig ? [] : ['--strict-mcp-config', '--setting-sources', 'project,local']),
       '--append-system-prompt', systemPromptFor(t)];
     if (settings.claudeModel) args.push('--model', settings.claudeModel);
     if (t.sessionId) args.push('--resume', t.sessionId);
@@ -266,6 +281,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '-c', 'mcp_servers.studio.startup_timeout_sec=30',
       '-c', 'mcp_servers.studio.tool_timeout_sec=600',
       '-c', 'mcp_servers.studio.default_tools_approval_mode="approve"',
+      ...(settings.agentUserConfig ? [] : codexIsolation()),
       '-c', `sandbox_workspace_write.writable_roots=[${JSON.stringify(store.dir)}]`];
     if (settings.codexModel) common.push('-m', settings.codexModel);
     for (const img of images) common.push('-i', img);

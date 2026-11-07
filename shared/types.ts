@@ -260,6 +260,8 @@ export interface Settings {
   subagents: boolean;
   /** max sub-agents one task may run at the same time (they don't use the parallelTasks slots) */
   maxSubagents: number;
+  /** spawned agents load the user's own Claude Code / Codex setup (global MCP servers, hooks, plugins). Off = only the studio tools */
+  agentUserConfig?: boolean;
   /** the user's standing instructions for every project: visual style, direction, colours */
   houseStyle?: { style?: string; direction?: string; colors?: string };
   renderWorkers: number;

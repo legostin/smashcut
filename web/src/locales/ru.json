@@ -644,5 +644,7 @@
   "Not your sub-agent: {id}": "Это не ваш сабагент: {id}",
   "Unknown task": "Неизвестная задача",
   "title and prompt are required": "нужны title и prompt",
-  "A sub-agent cannot start its own sub-agents — do the work yourself.": "Сабагент не может запускать своих сабагентов — сделай работу сам."
+  "A sub-agent cannot start its own sub-agents — do the work yourself.": "Сабагент не может запускать своих сабагентов — сделай работу сам.",
+  "Use my Claude Code / Codex setup": "Использовать мою конфигурацию Claude Code / Codex",
+  "Off (recommended): agents get only the editor tools and the project skills — faster start, cleaner context, no access to your other MCP servers (mail, calendars, browsers), hooks or plugins. On: agents load your global configuration.": "Выключено (рекомендуется): агенты получают только инструменты редактора и скиллы проекта — быстрее старт, чище контекст, нет доступа к другим вашим MCP-серверам (почта, календари, браузеры), хукам и плагинам. Включено: агенты загружают вашу глобальную конфигурацию."
 }

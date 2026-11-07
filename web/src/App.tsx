@@ -294,6 +294,13 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
         </div>
         <input type="checkbox" className="toggle" checked={sub} onChange={(e) => setS({ ...s, subagents: e.target.checked })} />
       </div>
+      <div className="set-row">
+        <div className="col gap2 grow">
+          <span className="small">{t('Use my Claude Code / Codex setup')}</span>
+          <span className="muted xsmall">{t('Off (recommended): agents get only the editor tools and the project skills — faster start, cleaner context, no access to your other MCP servers (mail, calendars, browsers), hooks or plugins. On: agents load your global configuration.')}</span>
+        </div>
+        <input type="checkbox" className="toggle" checked={!!s.agentUserConfig} onChange={(e) => setS({ ...s, agentUserConfig: e.target.checked })} />
+      </div>
       {sub && (
         <div className="set-row">
           <div className="col gap2 grow">
