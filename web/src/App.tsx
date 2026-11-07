@@ -1,74 +1,98 @@
 import { useEffect, useRef, useState } from 'react';
-import { useStore, setState, api, notify, time, refresh, getState } from './store';
+import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem } from './store';
 import { Viewer } from './components/Viewer';
 import { Timeline } from './components/Timeline';
-import { LeftPanel } from './components/LeftPanel';
-import { RightPanel } from './components/RightPanel';
+import { Library } from './components/Library';
+import { Chat } from './components/Chat';
+import { ItemPanel } from './components/ItemPanel';
 import { Icon } from './components/Icon';
-import type { Settings } from '../../shared/types';
+import type { Project, Settings } from '../../shared/types';
 
 export function App() {
   const project = useStore((s) => s.project);
   const connected = useStore((s) => s.connected);
   const dialog = useStore((s) => s.dialog);
-  const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 300));
+  const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 240));
   if (!project) return (
-    <div className="app empty-app">
-      {!connected ? <div className="empty">Подключение к серверу… <code>npm run server</code></div> : <ProjectsDialog inline />}
+    <div className="app-empty">
+      {!connected ? <div className="muted">Подключение к серверу…</div> : <div className="sheet"><ProjectsDialog /></div>}
       <Notices />
     </div>
   );
   return (
-    <div className="app" style={{ gridTemplateRows: `44px 1fr 6px ${tlHeight}px` }}>
+    <div className="app" style={{ gridTemplateRows: `48px minmax(0, 1fr) ${tlHeight}px` }}>
       <TopBar />
       <div className="main">
-        <LeftPanel />
         <Viewer project={project} />
-        <RightPanel project={project} />
+        <Side project={project} />
+        <Library />
       </div>
-      <div className="resizer" onPointerDown={(e) => {
-        const y0 = e.clientY, h0 = tlHeight;
-        const mv = (ev: PointerEvent) => { const h = Math.min(window.innerHeight - 260, Math.max(140, h0 - (ev.clientY - y0))); setTlHeight(h); localStorage.setItem('tlh', String(h)); };
-        window.addEventListener('pointermove', mv);
-        window.addEventListener('pointerup', () => window.removeEventListener('pointermove', mv), { once: true });
-      }} />
-      <Timeline project={project} />
-      {dialog === 'projects' && <Modal onClose={() => setState({ dialog: null })}><ProjectsDialog /></Modal>}
-      {dialog === 'settings' && <Modal onClose={() => setState({ dialog: null })}><SettingsDialog /></Modal>}
-      {dialog === 'export' && <Modal onClose={() => setState({ dialog: null })}><ExportDialog /></Modal>}
-      {dialog && typeof dialog === 'object' && 'compare' in dialog && <Modal wide onClose={() => setState({ dialog: null })}><CompareDialog clipId={dialog.compare.clipId} sha={dialog.compare.sha} /></Modal>}
+      <div className="bottom">
+        <div className="resizer" onPointerDown={(e) => {
+          const y0 = e.clientY, h0 = tlHeight;
+          const mv = (ev: PointerEvent) => { const h = Math.min(window.innerHeight - 300, Math.max(120, h0 - (ev.clientY - y0))); setTlHeight(h); localStorage.setItem('tlh', String(h)); };
+          window.addEventListener('pointermove', mv);
+          window.addEventListener('pointerup', () => window.removeEventListener('pointermove', mv), { once: true });
+        }} />
+        <Timeline project={project} />
+      </div>
+      <Modal open={dialog === 'projects'}><ProjectsDialog /></Modal>
+      <Modal open={dialog === 'settings'}><SettingsDialog /></Modal>
+      <Modal open={dialog === 'export'}><ExportDialog /></Modal>
+      <Modal open={!!dialog && typeof dialog === 'object'} wide>{dialog && typeof dialog === 'object' && 'compare' in dialog ? <CompareDialog clipId={dialog.compare.clipId} sha={dialog.compare.sha} /> : null}</Modal>
       <Notices />
     </div>
+  );
+}
+
+/** Right column: the agent conversation, or the selected item's panel (cross-faded). */
+function Side({ project }: { project: Project }) {
+  const item = useSelectedItem();
+  return (
+    <aside className="side">
+      <div className={'side-layer' + (item ? ' hidden' : '')}><Chat /></div>
+      <div className={'side-layer' + (item ? '' : ' hidden')}>{item && <ItemPanel key={item.id} item={item} project={project} />}</div>
+    </aside>
   );
 }
 
 function TopBar() {
   const project = useStore((s) => s.project)!;
   const connected = useStore((s) => s.connected);
-  const jobs = useStore((s) => s.jobs);
-  const running = jobs.find((j) => j.status === 'running');
+  const job = useStore((s) => s.jobs.find((j) => j.status === 'running'));
+  const libraryOpen = useStore((s) => s.libraryOpen);
   return (
-    <div className="topbar">
-      <div className="row gap10">
-        <div className="logo"><Icon name="play" size={12} /></div>
-        <button className="btn ghost sm" onClick={() => setState({ dialog: 'projects' })}><Icon name="folder" size={14} /> <b>{project.name}</b></button>
-        <span className={'conn ' + (connected ? 'ok' : 'bad')} title={connected ? 'Сервер подключён' : 'Нет связи с сервером'} />
-      </div>
+    <header className="topbar">
       <div className="row gap8">
-        {running && <div className="progress-pill"><div className="bar" style={{ width: `${Math.round(running.progress * 100)}%` }} /><span>{running.stage} · {Math.round(running.progress * 100)}%</span></div>}
-        <button className="icon-btn" title="Настройки" onClick={() => setState({ dialog: 'settings' })}><Icon name="gear" /></button>
-        <button className="btn primary sm" onClick={() => setState({ dialog: 'export' })}><Icon name="download" size={14} /> Экспорт</button>
+        <button className={'tb-btn' + (libraryOpen ? ' on' : '')} onClick={() => setState({ libraryOpen: !libraryOpen })} title="Шаблоны, медиа, ассеты">
+          <Icon name="plus" size={14} /> Добавить
+        </button>
       </div>
+      <button className="project-name" onClick={() => setState({ dialog: 'projects' })} title="Проекты">
+        <span className={'conn' + (connected ? '' : ' off')} />{project.name}<Icon name="chevron" size={12} />
+      </button>
+      <div className="row gap8 end">
+        {job && <div className="tb-progress"><div style={{ width: `${Math.round(job.progress * 100)}%` }} /><span>Экспорт {Math.round(job.progress * 100)}%</span></div>}
+        <button className="icon-btn" title="Настройки" onClick={() => setState({ dialog: 'settings' })}><Icon name="gear" size={15} /></button>
+        <button className="btn sm primary" onClick={() => setState({ dialog: 'export' })}>Экспорт</button>
+      </div>
+    </header>
+  );
+}
+
+function Modal({ children, open, wide }: { children: React.ReactNode; open: boolean; wide?: boolean }) {
+  const [mounted, setMounted] = useState(open);
+  useEffect(() => { if (open) setMounted(true); else { const t = setTimeout(() => setMounted(false), 200); return () => clearTimeout(t); } }, [open]);
+  useEffect(() => { if (!open) return; const k = (e: KeyboardEvent) => e.key === 'Escape' && setState({ dialog: null }); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [open]);
+  if (!mounted) return null;
+  return (
+    <div className={'modal-back' + (open ? ' open' : '')} onPointerDown={(e) => e.target === e.currentTarget && setState({ dialog: null })}>
+      <div className={'modal' + (wide ? ' wide' : '')}>{children}</div>
     </div>
   );
 }
 
-function Modal({ children, onClose, wide }: { children: React.ReactNode; onClose: () => void; wide?: boolean }) {
-  useEffect(() => { const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [onClose]);
-  return <div className="modal-back" onPointerDown={(e) => e.target === e.currentTarget && onClose()}><div className={'modal' + (wide ? ' wide' : '')}>{children}</div></div>;
-}
-
-function ProjectsDialog({ inline }: { inline?: boolean }) {
+function ProjectsDialog() {
   const [data, setData] = useState<{ current: string | null; projects: string[]; projectsDir: string } | null>(null);
   const [name, setName] = useState('');
   const [size, setSize] = useState('1920x1080');
@@ -81,7 +105,7 @@ function ProjectsDialog({ inline }: { inline?: boolean }) {
     await refresh(); setState({ dialog: null, selectedItemId: null, selectedTaskId: null }); time.set(0);
   };
   return (
-    <div className={'col gap12 ' + (inline ? 'card projects-inline' : '')}>
+    <div className="col gap16">
       <h2>Проекты</h2>
       <div className="col gap6">
         {data?.projects.map((p) => (
@@ -123,7 +147,7 @@ function SettingsDialog() {
       <h2>Настройки</h2>
       <div className="grid2">
         <label className="field"><span>Агент по умолчанию</span><select className="input" value={s.defaultAgent} onChange={(e) => setS({ ...s, defaultAgent: e.target.value as any })}><option value="claude">Claude Code</option><option value="codex">Codex</option></select></label>
-        <label className="field"><span>Права Claude</span><select className="input" value={s.permissionMode} onChange={(e) => setS({ ...s, permissionMode: e.target.value as any })}><option value="acceptEdits">acceptEdits (файлы проекта)</option><option value="bypassPermissions">bypassPermissions (всё)</option><option value="default">default</option></select></label>
+        <label className="field"><span>Права агентов</span><select className="input" value={s.permissionMode} onChange={(e) => setS({ ...s, permissionMode: e.target.value as any })}><option value="auto">Авто — спорное спрашивать здесь</option><option value="acceptEdits">Только правки файлов — остальное спрашивать</option><option value="bypassPermissions">Всё без вопросов</option></select></label>
         <label className="field"><span>Модель Claude (пусто = по умолчанию)</span><input className="input" value={s.claudeModel || ''} onChange={(e) => setS({ ...s, claudeModel: e.target.value || undefined })} placeholder="напр. opus / sonnet" /></label>
         <label className="field"><span>Модель Codex</span><input className="input" value={s.codexModel || ''} onChange={(e) => setS({ ...s, codexModel: e.target.value || undefined })} /></label>
         <label className="field"><span>Параллельных агентов</span><input className="input" type="number" min={1} max={8} value={s.parallelTasks} onChange={(e) => setS({ ...s, parallelTasks: Number(e.target.value) })} /></label>

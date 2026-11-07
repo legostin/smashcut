@@ -3,8 +3,8 @@ import type { Item, Project, Track } from '../../../shared/types';
 import { useStore, usePlayhead, setState, getState, actions, seek, time, projectEnd, api, fmtTime } from '../store';
 import { Icon } from './Icon';
 
-const HEADER_W = 150;
-const ROW_H: Record<string, number> = { graphics: 46, video: 54, audio: 46, music: 46 };
+const HEADER_W = 132;
+const ROW_H: Record<string, number> = { graphics: 40, video: 48, audio: 40, music: 40 };
 const COMPAT: Record<string, string[]> = { clip: ['graphics', 'video'], media: ['video', 'graphics', 'audio'], music: ['music', 'audio'], generated: ['video', 'graphics'] };
 
 type DragState = { id: string; mode: 'move' | 'left' | 'right'; x0: number; orig: Item; track: string; start: number; duration: number; in: number } | null;
@@ -148,36 +148,24 @@ export function Timeline({ project }: { project: Project }) {
 
   return (
     <div className="timeline">
-      <div className="tl-toolbar">
-        <div className="row gap8">
-          <button className={'btn sm ' + (snap ? 'accent-soft' : 'ghost')} onClick={() => setState({ snap: !snap })} title="Прилипание к битам, краям и плейхеду (Alt — временно выключить)"><Icon name="magnet" /> Snap</button>
-          <button className="btn sm ghost" disabled={!selectedItemId} onClick={() => selectedItemId && actions.split(selectedItemId, time.get())} title="Разрезать по плейхеду (S)"><Icon name="scissors" /> Split</button>
-          <span className="muted small">{timing.bpm ? `${Math.round(timing.bpm)} BPM` : ''}{timing.words.length ? ` · ${timing.words.length} слов в транскрипте` : ''}</span>
-        </div>
-        <div className="row gap8">
-          <select className="input sm" value="" onChange={(e) => { if (e.target.value) addTrack(e.target.value as Track['kind']); }}>
-            <option value="">+ Дорожка</option><option value="graphics">Графика</option><option value="video">Видео</option><option value="audio">Аудио</option><option value="music">Музыка</option>
-          </select>
-          <span className="muted small">Zoom</span>
-          <input type="range" min={8} max={400} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} />
-        </div>
-      </div>
       <div className="tl-scroll" ref={scroller} onWheel={onWheel}>
         <div className="tl-inner" style={{ width: width + HEADER_W }}>
           <div className="tl-ruler-row">
-            <div className="tl-corner" style={{ width: HEADER_W }}>{fmtTime(0)}</div>
+            <div className="tl-corner" style={{ width: HEADER_W }}>
+              <AddTrack onAdd={addTrack} />
+              <input className="tl-zoom" type="range" min={8} max={400} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} title="Масштаб (⌘ + колесо)" />
+            </div>
             <div className="tl-ruler" style={{ width }} onPointerDown={scrub}>
               {timing.sections.map((s, i) => <div key={i} className="tl-section" style={{ left: s.start * zoom, width: (s.end - s.start) * zoom }}>{s.name}</div>)}
               {zoom > 25 && timing.beats.map((b, i) => <div key={i} className={'tl-beat' + (timing.bars.includes(b) ? ' bar' : '')} style={{ left: b * zoom }} />)}
               {ticks.map((t) => <div key={t} className="tl-tick" style={{ left: t * zoom }}><span>{t % 1 === 0 ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}` : ''}</span></div>)}
               {timing.markers.map((m, i) => <div key={i} className="tl-marker" style={{ left: m.time * zoom }} title={m.name}>◆ {m.name}</div>)}
-              {comments.map((c) => <div key={c.id} className={`tl-comment status-${c.status}`} style={{ left: c.time * zoom }} title={c.text} onPointerDown={(e) => { e.stopPropagation(); seek(c.time); setState({ selectedCommentId: c.id, rightTab: 'comments' }); }} />)}
+              {comments.map((c) => <div key={c.id} className={`tl-comment status-${c.status}`} style={{ left: c.time * zoom }} title={c.text} onPointerDown={(e) => { e.stopPropagation(); seek(c.time); setState({ selectedCommentId: c.id }); }} />)}
             </div>
           </div>
           {project.tracks.map((tr) => (
             <div key={tr.id} className={`tl-row kind-${tr.kind}`} style={{ height: ROW_H[tr.kind] }}>
               <div className="tl-head" style={{ width: HEADER_W }}>
-                <span className={`tl-kind kind-${tr.kind}`} />
                 <input className="tl-name" value={tr.name} onChange={(e) => actions.patchProject({ tracks: project.tracks.map((t) => (t.id === tr.id ? { ...t, name: e.target.value } : t)) })} />
                 {tr.kind === 'graphics' || tr.kind === 'video'
                   ? <button className="icon-btn xs" title="Скрыть" onClick={() => toggleTrack(tr.id, 'hidden')}><Icon name={tr.hidden ? 'eyeOff' : 'eye'} size={14} /></button>
@@ -192,7 +180,7 @@ export function Timeline({ project }: { project: Project }) {
                   const d = drag?.id === it.id ? drag : null;
                   const view = d ? { ...it, start: d.start, duration: d.duration, in: d.in } : it;
                   return <TlItem key={it.id} item={view} zoom={zoom} selected={it.id === selectedItemId} dragging={!!d}
-                    onDown={(e, mode) => { e.stopPropagation(); setState({ selectedItemId: it.id, rightTab: getState().rightTab === 'comments' ? 'comments' : 'inspector' }); setDrag({ id: it.id, mode, x0: e.clientX, orig: it, track: it.track, start: it.start, duration: it.duration, in: it.in }); }} />;
+                    onDown={(e, mode) => { e.stopPropagation(); setState({ selectedItemId: it.id }); setDrag({ id: it.id, mode, x0: e.clientX, orig: it, track: it.track, start: it.start, duration: it.duration, in: it.in }); }} />;
                 })}
               </div>
             </div>
@@ -233,18 +221,16 @@ function TlItem({ item, zoom, selected, dragging, onDown }: { item: Item; zoom: 
   }
   const w = Math.max(4, item.duration * zoom);
   return (
-    <div className={`tl-item kind-${item.kind}${selected ? ' selected' : ''}${dragging ? ' dragging' : ''}${errors?.length ? ' has-error' : ''}`}
+    <div className={`tl-item kind-${item.kind}${thumb ? ' has-thumb' : ''}${selected ? ' selected' : ''}${dragging ? ' dragging' : ''}${errors?.length ? ' has-error' : ''}`}
       style={{ left: item.start * zoom, width: w, backgroundImage: thumb ? `url(${thumb})` : undefined }}
       onPointerDown={(e) => onDown(e, 'move')}
       title={`${label}\n${item.start.toFixed(2)}s → ${(item.start + item.duration).toFixed(2)}s${errors?.length ? '\n⚠ ' + errors.join('\n') : ''}`}>
       {peaksUrl && <Wave url={peaksUrl} k={peaksKey} item={item} zoom={zoom} />}
       <div className="tl-item-label">
-        {item.kind === 'clip' && <span className="badge">HTML</span>}
-        {item.kind === 'music' && <span className="badge">♫</span>}
-        {running && <span className="badge pulse">агент</span>}
-        {openComments > 0 && <span className="badge red">{openComments}</span>}
-        {errors?.length ? <span className="badge red">!</span> : null}
+        {running && <span className="tl-dot live" title="Агент работает" />}
+        {errors?.length ? <span className="tl-dot err" title="Ошибка в клипе" /> : null}
         <span className="ellipsis">{label}</span>
+        {openComments > 0 && <span className="tl-count">{openComments}</span>}
       </div>
       <div className="tl-handle left" onPointerDown={(e) => onDown(e, 'left')} />
       <div className="tl-handle right" onPointerDown={(e) => onDown(e, 'right')} />
@@ -279,4 +265,26 @@ function Wave({ url, k, item, zoom }: { url: string; k: string; item: Item; zoom
     }
   }, [peaks, item.in, item.duration, zoom]);
   return <canvas ref={ref} className="tl-wave" />;
+}
+
+function AddTrack({ onAdd }: { onAdd: (k: Track['kind']) => void }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const c = () => setOpen(false);
+    window.addEventListener('pointerdown', c);
+    return () => window.removeEventListener('pointerdown', c);
+  }, [open]);
+  return (
+    <div className="rel" onPointerDown={(e) => e.stopPropagation()}>
+      <button className="icon-btn sm" title="Добавить дорожку" onClick={() => setOpen(!open)}><Icon name="plus" size={12} /></button>
+      {open && (
+        <div className="menu">
+          {([['graphics', 'Графика'], ['video', 'Видео'], ['audio', 'Аудио'], ['music', 'Музыка']] as const).map(([k, l]) => (
+            <button key={k} className="menu-item" onClick={() => { onAdd(k); setOpen(false); }}>{l}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

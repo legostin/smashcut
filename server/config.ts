@@ -23,13 +23,17 @@ for (const d of [HOME_DIR, LIBRARY_DIR, path.join(LIBRARY_DIR, 'clips'), path.jo
 const SETTINGS_FILE = path.join(HOME_DIR, 'settings.json');
 const DEFAULT_SETTINGS: Settings = {
   defaultAgent: 'claude',
-  permissionMode: 'acceptEdits',
+  permissionMode: 'auto',
   parallelTasks: 3,
   renderWorkers: Math.max(2, Math.min(6, os.cpus().length - 2)),
   transcribeModel: 'Xenova/whisper-base',
 };
 export function getSettings(): Settings {
-  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) }; } catch { return { ...DEFAULT_SETTINGS }; }
+  try {
+    const s = { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) };
+    if (!['auto', 'acceptEdits', 'bypassPermissions'].includes(s.permissionMode)) s.permissionMode = 'auto';
+    return s;
+  } catch { return { ...DEFAULT_SETTINGS }; }
 }
 export function saveSettings(s: Partial<Settings>) {
   const next = { ...getSettings(), ...s };

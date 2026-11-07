@@ -6,12 +6,12 @@ const P: Record<string, string> = {
   stepFwd: 'M6 5v14l10-7zM16 5h2v14h-2z',
   comment: 'M4 4h16v12H8l-4 4z',
   send: 'M3 20l18-8L3 4v6l12 2-12 2z',
-  plus: 'M11 5h2v14h-2zM5 11h14v2H5z',
+  plus: 'M12 5v14M5 12h14',
   film: 'M4 4h16v16H4zM7 4v16M17 4v16M4 8h3M4 12h3M4 16h3M17 8h3M17 12h3M17 16h3',
   music: 'M9 18V6l10-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM19 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
   sparkle: 'M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z',
   folder: 'M3 6h7l2 2h9v11H3z',
-  gear: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1',
+  gear: 'M4 7h9M17 7h3M15 5v4M4 17h3M11 17h9M9 15v4',
   download: 'M12 3v12M7 10l5 5 5-5M4 20h16',
   eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
   eyeOff: 'M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c6 0 10 6 10 6a17 17 0 0 1-3.2 3.7M6.6 6.6C3.8 8.4 2 12 2 12s4 6 10 6c1.6 0 3-.4 4.3-1',
@@ -31,11 +31,16 @@ const P: Record<string, string> = {
   book: 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11',
   wand: 'M4 20L16 8M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1zM19 11l.5 1 1 .5-1 .5-.5 1-.5-1-1-.5 1-.5z',
   refresh: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5',
+  chevron: 'M6 9l6 6 6-6',
+  arrowUp: 'M12 19V5M6 11l6-6 6 6',
+  back: 'M15 18l-6-6 6-6',
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
+  grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
 };
 export function Icon({ name, size = 16 }: { name: string; size?: number }) {
-  const filled = ['play', 'pause', 'skipBack', 'stepBack', 'stepFwd', 'send', 'plus', 'sparkle', 'stop'].includes(name);
+  const filled = ['play', 'pause', 'skipBack', 'stepBack', 'stepFwd', 'send', 'sparkle', 'stop'].includes(name);
   return (
-    <svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke={filled ? 'none' : 'currentColor'} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke={filled ? 'none' : 'currentColor'} strokeWidth={name === 'more' ? 3 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d={P[name] || P.sparkle} />
     </svg>
   );

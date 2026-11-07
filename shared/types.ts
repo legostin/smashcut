@@ -180,10 +180,18 @@ export interface Settings {
   claudeModel?: string;
   codexModel?: string;
   /** claude permission mode for spawned sessions */
-  permissionMode: 'acceptEdits' | 'bypassPermissions' | 'default';
+  permissionMode: 'auto' | 'acceptEdits' | 'bypassPermissions';
   parallelTasks: number;
   renderWorkers: number;
   transcribeModel: string;
+}
+
+export interface PermissionRequest {
+  id: string;
+  taskId: string;
+  tool: string;
+  input: unknown;
+  createdAt: string;
 }
 
 export interface ExportJob {
@@ -206,4 +214,5 @@ export type ServerEvent =
   | { type: 'export'; job: ExportJob }
   | { type: 'music'; music: MusicInfo }
   | { type: 'media'; media: MediaInfo }
+  | { type: 'permissions'; permissions: PermissionRequest[] }
   | { type: 'notice'; level: 'info' | 'error'; text: string };

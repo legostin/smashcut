@@ -125,4 +125,22 @@ server.registerTool('get_timing', {
   inputSchema: { from: z.number().optional(), to: z.number().optional() },
 }, safe(async ({ from, to }) => text(await api('GET', `/api/agent/timing?from=${from ?? ''}&to=${to ?? ''}`))));
 
+server.registerTool('approve_permission', {
+  description: 'Internal: permission prompt bridge. Claude Code calls this (via --permission-prompt-tool) when an action needs approval; the user approves or denies it in the editor UI.',
+  inputSchema: { tool_name: z.string(), input: z.record(z.string(), z.any()), tool_use_id: z.string().optional() },
+}, async ({ tool_name, input }) => {
+  const reply = (d) => text(d.allow ? { behavior: 'allow', updatedInput: input } : { behavior: 'deny', message: d.message || 'Denied by the user.' });
+  try {
+    const r = await api('POST', '/api/agent/permission', { taskId: TASK, tool: tool_name, input });
+    if (r.decision) return reply(r.decision);
+    for (;;) {
+      await new Promise((res) => setTimeout(res, 800));
+      const p = await api('GET', `/api/agent/permission/${r.id}`);
+      if (p.decision) return reply(p.decision);
+    }
+  } catch (e) {
+    return reply({ allow: false, message: 'Editor unreachable, permission denied: ' + e.message });
+  }
+});
+
 await server.connect(new StdioServerTransport());

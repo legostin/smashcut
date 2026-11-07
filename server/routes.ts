@@ -19,6 +19,7 @@ import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
 import { startTask, followUp, cancelTask, listTasks } from './agents/runner.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
+import * as permissions from './permissions.ts';
 
 const SKELETONS = path.join(ROOT, 'server', 'skeletons');
 
@@ -55,6 +56,7 @@ export function state() {
     settings: getSettings(),
     skills: listSkills(),
     jobs: getJobs(),
+    permissions: permissions.list(),
     exports: listExports(),
     recents: getRecents(),
     projectsDir: PROJECTS_DIR,
@@ -433,6 +435,18 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get('/api/agents/check', async () => {
     const check = async (cmd: string) => { try { const r = await run(cmd, ['--version']); return r.code === 0 ? r.stdout.trim().split('\n')[0] : null; } catch { return null; } };
     return { claude: await check('claude'), codex: await check('codex') };
+  });
+
+  // ---------- permission prompts (forwarded from agents) ----------
+  app.post<{ Body: { taskId?: string; tool: string; input: unknown } }>('/api/agent/permission', async (req) => {
+    const taskId = req.body.taskId || String(req.headers['x-studio-task'] || '');
+    return permissions.request(taskId, req.body.tool, req.body.input);
+  });
+  app.get<{ Params: { id: string } }>('/api/agent/permission/:id', async (req) => ({ decision: permissions.poll(req.params.id) }));
+  app.get('/api/permissions', async () => permissions.list());
+  app.post<{ Params: { id: string }; Body: { allow: boolean; always?: boolean; message?: string } }>('/api/permissions/:id', async (req) => {
+    if (!permissions.decide(req.params.id, !!req.body.allow, { always: req.body.always, message: req.body.message })) throw Object.assign(new Error('permission request not found'), { statusCode: 404 });
+    return { ok: true };
   });
 
   // ---------- versions ----------

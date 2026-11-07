@@ -9,6 +9,7 @@ import { bus } from '../bus.ts';
 import { nid, readJson, writeJson } from '../util.ts';
 import { commit } from '../git.ts';
 import { SYSTEM_PROMPT } from './prompts.ts';
+import { denyTask } from '../permissions.ts';
 
 const tasks = new Map<string, Task>();
 const procs = new Map<string, ChildProcess>();
@@ -78,6 +79,7 @@ export function cancelTask(id: string) {
   if (p) { p.kill('SIGTERM'); setTimeout(() => p.kill('SIGKILL'), 3000); }
   t.status = 'cancelled';
   t.endedAt = new Date().toISOString();
+  denyTask(id);
   pushEvent(t, { kind: 'status', text: 'cancelled' });
   emitTask(t);
 }
@@ -110,13 +112,15 @@ async function runTask(t: Task, prompt: string, images: string[]) {
   emitTask(t);
 
   let cmd: string, args: string[];
-  const env = { ...process.env, STUDIO_URL: BASE_URL, STUDIO_TASK: t.id };
+  // MCP_TOOL_TIMEOUT: permission prompts wait for a human in the editor
+  const env = { ...process.env, STUDIO_URL: BASE_URL, STUDIO_TASK: t.id, MCP_TOOL_TIMEOUT: '3600000' };
   if (t.agent === 'claude') {
     cmd = 'claude';
     args = ['-p', prompt, '--output-format', 'stream-json', '--verbose',
       '--mcp-config', mcpConfigFile(t.id),
       '--permission-mode', settings.permissionMode,
-      '--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(ffprobe:*)', 'Bash(git log:*)', 'Bash(git diff:*)',
+      '--permission-prompt-tool', 'mcp__studio__approve_permission',
+      '--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)',
       '--add-dir', GALLERY_DIR, LIBRARY_DIR,
       '--append-system-prompt', SYSTEM_PROMPT];
     if (settings.claudeModel) args.push('--model', settings.claudeModel);
@@ -124,7 +128,10 @@ async function runTask(t: Task, prompt: string, images: string[]) {
     if (images.length) args[1] = prompt + '\n\nAttached images (Read them): ' + images.join(', ');
   } else {
     cmd = 'codex';
-    const common = ['--json', '--skip-git-repo-check', '-s', 'workspace-write',
+    const access = settings.permissionMode === 'bypassPermissions'
+      ? ['--dangerously-bypass-approvals-and-sandbox']
+      : ['--approve-for-me', '-c', 'sandbox_workspace_write.network_access=true'];
+    const common = ['--json', '--skip-git-repo-check', ...access,
       '-c', `mcp_servers.studio.command=${JSON.stringify(process.execPath)}`,
       '-c', `mcp_servers.studio.args=[${JSON.stringify(MCP_STDIO)}]`,
       '-c', `mcp_servers.studio.env={STUDIO_URL=${JSON.stringify(BASE_URL)},STUDIO_TASK=${JSON.stringify(t.id)}}`,
@@ -146,6 +153,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
     return finish(t, 'error', (e as Error).message);
   }
   procs.set(t.id, proc);
+  proc.on('close', () => denyTask(t.id));
   let stderr = '';
   proc.stderr!.on('data', (d) => { stderr += d; if (stderr.length > 20000) stderr = stderr.slice(-20000); });
   const rl = readline.createInterface({ input: proc.stdout! });

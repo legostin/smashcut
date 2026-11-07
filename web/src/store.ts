@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind } from '../../shared/types';
+import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest } from '../../shared/types';
 
 export interface SkillInfo { name: string; description: string; origin: string; path: string }
 export interface State {
@@ -21,7 +21,11 @@ export interface State {
   timing: Timing;
   notices: { id: number; level: 'info' | 'error'; text: string }[];
   agents: { claude: string | null; codex: string | null } | null;
+  permissions: PermissionRequest[];
+  repo?: string;
   // ui
+  libraryOpen: boolean;
+  libraryTab: 'templates' | 'media' | 'project';
   selectedItemId: string | null;
   selectedCommentId: string | null;
   selectedTaskId: string | null;
@@ -40,7 +44,7 @@ export interface State {
 
 const initial: State = {
   connected: false, project: null, comments: [], clips: [], music: [], media: [], tasks: [], skills: [], jobs: [], exports: [], gallery: [], recents: [],
-  timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null,
+  timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -173,6 +177,13 @@ function onEvent(ev: ServerEvent) {
       break;
     }
     case 'notice': notify(ev.level, ev.text); break;
+    case 'permissions': {
+      const prev = new Set(getState().permissions.map((p) => p.id));
+      setState({ permissions: ev.permissions });
+      const fresh = ev.permissions.find((p) => !prev.has(p.id));
+      if (fresh) { notify('info', `Агент просит разрешение: ${fresh.tool}`); setState({ selectedTaskId: fresh.taskId, selectedItemId: null }); }
+      break;
+    }
   }
 }
 
@@ -187,7 +198,7 @@ export async function boot() {
 export const actions = {
   async addItem(body: Partial<Item> & { kind: Item['kind']; ref: string }) {
     const it = await api<Item>('POST', '/api/items', body);
-    setState({ selectedItemId: it.id, rightTab: 'inspector' });
+    setState({ selectedItemId: it.id });
     return it;
   },
   updateItem(id: string, patch: Partial<Item>) {
@@ -206,7 +217,7 @@ export const actions = {
   },
   async useTemplate(g: GalleryItem, start: number, track?: string) {
     const r = await api<{ id: string; item?: Item }>('POST', '/api/gallery/use', { origin: g.origin, kind: g.kind, id: g.id, place: { start, track } });
-    if (r.item) setState({ selectedItemId: r.item.id, rightTab: 'inspector' });
+    if (r.item) setState({ selectedItemId: r.item.id });
     return r;
   },
   async upload(files: FileList | File[]) {
@@ -229,15 +240,16 @@ export const actions = {
   async sendComments(ids?: string[]) {
     notify('info', 'Готовлю снапшоты кадров и запускаю агентов…');
     const tasks = await api<Task[]>('POST', '/api/comments/send', { ids, agent: getState().agent });
-    setState({ rightTab: 'agent', selectedTaskId: tasks[0]?.id || null });
+    setState({ selectedItemId: null, selectedTaskId: tasks[0]?.id || null });
   },
   async startTask(prompt: string, ctx: { itemId?: string | null; clipId?: string } = {}) {
     const t = await api<Task>('POST', '/api/tasks', { prompt, agent: getState().agent, itemId: ctx.itemId || undefined, clipId: ctx.clipId, playhead: time.get() });
-    setState({ selectedTaskId: t.id, rightTab: 'agent' });
+    setState({ selectedTaskId: t.id, selectedItemId: null });
     return t;
   },
   followUp(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/message`, { prompt }); },
   cancelTask(taskId: string) { return api('POST', `/api/tasks/${taskId}/cancel`); },
+  decidePermission(id: string, allow: boolean, always = false) { return api('POST', `/api/permissions/${id}`, { allow, always }); },
 };
 
 export function useSelectedItem() {
