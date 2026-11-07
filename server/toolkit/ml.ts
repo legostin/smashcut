@@ -41,3 +41,27 @@ export async function matte(file: string, model: BgModel): Promise<{ mask: Uint8
     return { mask, width, height };
   });
 }
+
+/** open-vocabulary detector: find objects by words ("red car", "logo on the mug", "face") */
+export const DETECT_MODEL = { repo: 'Xenova/owlvit-base-patch32', size: '≈ 600 MB' };
+async function detectPipe() {
+  let p = pipes.get('detect');
+  if (!p) {
+    p = (async () => {
+      const tf = await import('@huggingface/transformers');
+      tf.env.cacheDir = MODELS_DIR;
+      return tf.pipeline('zero-shot-object-detection', DETECT_MODEL.repo, { dtype: 'fp32' } as any);
+    })();
+    p.catch(() => pipes.delete('detect'));
+    pipes.set('detect', p);
+  }
+  return p;
+}
+/** detect `labels` in an image file; boxes in source pixels, best first */
+export async function detectObjects(file: string, labels: string[], threshold = 0.05): Promise<{ label: string; score: number; box: { xmin: number; ymin: number; xmax: number; ymax: number } }[]> {
+  const pipe = await detectPipe();
+  return lock.run(async () => {
+    const out = await pipe(file, labels, { threshold, percentage: false });
+    return (out as any[]).sort((a, b) => b.score - a.score);
+  });
+}

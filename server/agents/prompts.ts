@@ -11,6 +11,7 @@ Non-negotiable:
 - Clips are pure functions of time (GSAP on ctx.tl / CSS animations / render(t)); no Date.now, rAF loops, timers, network or unseeded randomness.
 - After each meaningful edit: render_clip (and render_frame for the composite over footage) and actually LOOK at the images. Fix what looks off — spacing, contrast, cut-off text, timing — before you finish.
 - Keep edits scoped to what was asked. Never modify media/ or .studio/.
+- Footage-integrated graphics: track first (camera_track / planar_track / track_object via run_media_tool), then read the track in the clip (studio.follow / studio.plane / studio.track) — never hand-animate positions to match moving footage.
 - 3D: when a scene needs 3D (product shots, logos in space, depth), build it as a Blender scene (studio-blender-3d skill: create_3d_scene → render_3d mock stills → mock animation → look → final on approval).
 - References: call list_references before designing or making scenes; study the ones that apply (get_technique / Read the image) and follow them in the project's design system — learn from them, don't paste them.
 - Voice-over is its own process (studio-voiceover skill): first write each scene's speech text (update_scene {speech}: numbers/dates as words, {display|spoken}, stress marks, [pause]), then generate_voiceover {sceneId}, then fix anything voice_report flags. Never feed raw copy with digits to the voice.

@@ -86,6 +86,48 @@
   let params = {};
   let schema = {};
   let timing = { beats: [], bars: [], sections: [], markers: [], words: [], bpm: 120 };
+  /** object tracks mapped onto the edit (project time, frame px): { name: [{ itemId, start, end, points:[{t,x,y,w,h,lost}] }] } */
+  let tracks = {}, planes = {}, cameras = {};
+  /** placement covering project time T, and the two samples around it (+ blend factor) */
+  function around(places, T, key) {
+    const pl = (places || []).find((p) => T >= p.start - 1e-6 && T <= p.end + 1e-6);
+    if (!pl) return null;
+    const F = pl[key];
+    if (!F || !F.length) return null;
+    if (T <= F[0].t) return [F[0], F[0], 0];
+    if (T >= F[F.length - 1].t) return [F[F.length - 1], F[F.length - 1], 0];
+    let lo = 0, hi = F.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (F[mid].t <= T) lo = mid; else hi = mid; }
+    return [F[lo], F[hi], (T - F[lo].t) / ((F[hi].t - F[lo].t) || 1)];
+  }
+  /** projective transform taking the rect (0,0)-(w,h) onto quad q (TL,TR,BR,BL) → CSS matrix3d */
+  function quadMatrix(q, w, h) {
+    const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q;
+    const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+    let a, b, c, d, e, f, g, hh;
+    if (Math.abs(dx3) < 1e-9 && Math.abs(dy3) < 1e-9) { a = x1 - x0; b = x2 - x1; c = x0; d = y1 - y0; e = y2 - y1; f = y0; g = 0; hh = 0; }
+    else {
+      const den = dx1 * dy2 - dx2 * dy1 || 1e-9;
+      g = (dx3 * dy2 - dx2 * dy3) / den; hh = (dx1 * dy3 - dx3 * dy1) / den;
+      a = x1 - x0 + g * x1; b = x3 - x0 + hh * x3; c = x0; d = y1 - y0 + g * y1; e = y3 - y0 + hh * y3; f = y0;
+    }
+    a /= w; d /= w; g /= w; b /= h; e /= h; hh /= h;
+    return `matrix3d(${a},${d},0,${g},${b},${e},0,${hh},0,0,1,0,${c},${f},0,1)`;
+  }
+  function sampleTrack(name, T) {
+    const places = tracks[name];
+    if (!places || !places.length) return null;
+    const pl = places.find((p) => T >= p.start - 1e-6 && T <= p.end + 1e-6) || null;
+    if (!pl) return null;
+    const P = pl.points;
+    if (T <= P[0].t) return P[0];
+    if (T >= P[P.length - 1].t) return P[P.length - 1];
+    let lo = 0, hi = P.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (P[mid].t <= T) lo = mid; else hi = mid; }
+    const a = P[lo], b = P[hi], k = (T - a.t) / ((b.t - a.t) || 1);
+    const L = (u, v) => u + (v - u) * k;
+    return { x: L(a.x, b.x), y: L(a.y, b.y), w: L(a.w, b.w), h: L(a.h, b.h), lost: !!(a.lost && b.lost) };
+  }
   const timelines = new Set();
   let currentT = 0;
   let lastT = 0;
@@ -127,6 +169,39 @@
     /** transcript words in clip-local seconds: [{text, start, end}] */
     get words() { return localize(timing.words); },
     get bpm() { return timing.bpm || 120; },
+    /**
+     * where a tracked object is at clip-local time t (track_object): {x, y, w, h, cx, cy, lost} in frame pixels,
+     * already mapped through the video's position on the timeline (start/in, fit, transform). null if not on screen.
+     */
+    track(name, t = currentT) {
+      const r = sampleTrack(name, t + (Number(input.offset) || 0));
+      return r ? { ...r, cx: r.x + r.w / 2, cy: r.y + r.h / 2 } : null;
+    },
+    /** names of the project's tracks */
+    get tracks() { return { objects: Object.keys(tracks), planes: Object.keys(planes), cameras: Object.keys(cameras) }; },
+    /**
+     * a tracked flat surface (planar_track) at clip-local t: { corners: [[x,y]×4] TL,TR,BR,BL in frame px, matrix(w,h) }.
+     * Put an element on it: el.style.transformOrigin = '0 0'; el.style.transform = pl.matrix(elWidth, elHeight). null if not on screen.
+     */
+    plane(name, t = currentT) {
+      const r = around(planes[name], t + (Number(input.offset) || 0), 'frames');
+      if (!r) return null;
+      const [A, B, k] = r;
+      const corners = A.corners.map((c, i) => [c[0] + (B.corners[i][0] - c[0]) * k, c[1] + (B.corners[i][1] - c[1]) * k]);
+      return { corners, matrix: (w, h) => quadMatrix(corners, w, h) };
+    },
+    /**
+     * camera_track: where the scene point that was at (x, y) — frame px on the first tracked frame — is at clip-local t.
+     * Graphics placed with it stay glued to the world while the camera pans/zooms/rolls. null if the shot isn't on screen.
+     */
+    follow(name, x, y, t = currentT) {
+      const r = around(cameras[name], t + (Number(input.offset) || 0), 'frames');
+      if (!r) return null;
+      const [A, B, k] = r;
+      const H = A.H.map((v, i) => v + (B.H[i] - v) * k);
+      const w = H[6] * x + H[7] * y + H[8] || 1e-9;
+      return { x: (H[0] * x + H[1] * y + H[2]) / w, y: (H[3] * x + H[4] * y + H[5]) / w, scale: Math.hypot(H[0], H[3]) / w };
+    },
     /** time (clip-local seconds) of the n-th beat at/after clip start (0-based) */
     beat(n = 0) {
       const b = studio.beats.filter((x) => x >= -1e-6);
@@ -298,8 +373,9 @@
   async function loadTiming() {
     if (input.timing !== false) {
       try {
-        const res = await fetch('/api/timing', { cache: 'no-store' });
+        const [res, tr] = await Promise.all([fetch('/api/timing', { cache: 'no-store' }), fetch('/api/tracks', { cache: 'no-store' })]);
         if (res.ok) timing = { ...timing, ...(await res.json()) };
+        if (tr.ok) { const d = await tr.json(); tracks = d.objects || {}; planes = d.planes || {}; cameras = d.cameras || {}; }
       } catch (e) { /* standalone */ }
     }
     if (!timing.beats.length) {

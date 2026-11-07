@@ -26,6 +26,7 @@ import { boardFrame } from './render/board.ts';
 import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
 import { voiceScene, cleanupTakes, voicePace } from './voice/voiceover.ts';
 import { listInspiration, getInspiration, inspirationThumb } from './inspiration.ts';
+import { projectTracks } from './tracks.ts';
 import { blenderBin, listScenes3d, getScene3d, createScene3d, render3d, listJobs3d, openInBlender } from './blender.ts';
 import { paceReport } from './voice/speech.ts';
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
@@ -330,6 +331,7 @@ export async function registerRoutes(app: FastifyInstance) {
     });
     return { ok: true };
   });
+  app.get('/api/tracks', async () => (hasProject() ? projectTracks(cur().dir, cur().project) : {}));
   app.get('/api/timing', async () => (hasProject() ? getTiming() : { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }));
 
   // ---------- media ----------

@@ -81,3 +81,18 @@ description: Programmatic media operations on photos, footage and audio (list_me
 2. Translate it into the edit: scene/shot durations ≈ the reference's median shot (in beats of our music: `beatsPerShot`), cut on beats if the reference does, reuse its colour progression in the design system or grades.
 3. To reuse the user's own footage shot by shot: `split_shots` (check with detect_shots first), then place the shots on the timeline at the planned cut points.
 4. Never re-upload or re-cut someone else's video into the user's video unless the user owns it — study the rhythm, don't copy the footage.
+
+## Tracking — make graphics live in the footage
+
+| Need | Op | In a clip |
+|---|---|---|
+| Graphics glued to the WORLD while the camera pans/zooms/rolls (labels on buildings, arrows on a product on a table) | `camera_track {video}` | `const p = studio.follow('cam', x0, y0, t)` → where the point (x0, y0) of the first tracked frame is now; scale too |
+| A UI / logo / text ON a flat surface with perspective (phone or laptop screen, poster, sign, wall) | `planar_track {video, corners:"TL x,y, TR, BR, BL", at}` | `const pl = studio.plane('screen', t); el.style.transformOrigin='0 0'; el.style.transform = pl.matrix(el.offsetWidth, el.offsetHeight)` |
+| Something that moves on its own (a person, car, ball, a held product) | `track_object {video, query:"the phone"}` or `{box:"x,y,w,h", at}` | `studio.track('phone', t)` → `{x,y,w,h,cx,cy,lost}` (callouts, highlights, labels that follow) |
+| Vertical cut-down that follows the subject | `reframe_follow {video, track, aspect:"9:16"}` | — |
+| Hide faces / plates / logos | `blur_track {video, track, mode}` | — |
+
+- Coordinates in clips are FRAME pixels, already mapped through the video's position on the timeline (start/in, fit, transform) — move or trim the video and the graphics follow.
+- Get corners/boxes by looking: `extract_frames` at the time you need, estimate the points (0…1 of the frame is fine), then check the returned contact sheet — the box/quad/grid must stay locked. If it swims: pick a more textured area (planar), lower `fps` blur issues, give a tighter box, or split the shot at the cut (`detect_shots`) — never track across cuts.
+- `camera_track` treats the scene as a plane: perfect for pans/tilts/zooms/rolls and distant scenes; strong parallax (camera moving close past objects) drifts — keep labels near the plane you care about.
+- Sheets and track files are cheap: re-run with other params rather than fixing coordinates by hand.

@@ -4,6 +4,8 @@ import './ops/video.ts';
 import './ops/morph.ts';
 import './ops/audio.ts';
 import './ops/shots.ts';
+import './ops/track.ts';
+import './ops/scene.ts';
 
 export { catalog, getOp, runOp, runOpAndWait, listJobs, getJob, cancelJob, defineOp } from './registry.ts';
 export type { ToolOp, OpContext, ParamSpec } from './registry.ts';
