@@ -702,5 +702,9 @@
   "Speech (what the narrator says)": "Речь (что говорит диктор)",
   "Numbers as words, {2026|two thousand twenty-six}, stress á, [pause 0.4]": "Числа словами, {2026|две тысячи двадцать шестой}, ударение а́, [pause 0.4]",
   "Voice pace: {r} syllables/s · {n} flagged": "Темп голоса: {r} слог/с · отмечено: {n}",
-  "Prepare speech": "Подготовить речь"
+  "Prepare speech": "Подготовить речь",
+  "Make in my style": "Сделать в моём стиле",
+  "Insert the reference clip as-is (quick draft)": "Вставить эталонный клип как есть (быстрый черновик)",
+  "Make an original track with this technique": "Сделать свой трек этим приёмом",
+  "Techniques": "Приёмы"
 }

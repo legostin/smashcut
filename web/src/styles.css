@@ -374,7 +374,7 @@ input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.15); }
 .lib-live:not(.ready) { transition: none; }
 .lib-live.ready { opacity: 1; }
 .lib-live iframe { width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; pointer-events: none; color-scheme: normal; background: transparent; }
-.lib-add { position: absolute; right: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 8px; border-radius: 999px; background: var(--fg); color: #0b0b0c; font-size: 12px; font-weight: 600; opacity: 0; transform: translateY(4px); transition: opacity 180ms var(--ease), transform 180ms var(--ease); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
+.lib-add { position: absolute; left: 8px; bottom: 8px; background: var(--accent) !important; color: var(--accent-ink) !important; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 8px; border-radius: 999px; background: var(--fg); color: #0b0b0c; font-size: 12px; font-weight: 600; opacity: 0; transform: translateY(4px); transition: opacity 180ms var(--ease), transform 180ms var(--ease); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
 .lib-card:hover .lib-add { opacity: 1; transform: none; }
 .lib-mine { position: absolute; left: 8px; top: 8px; font-size: 10.5px; padding: 1px 7px; border-radius: 999px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px); color: var(--fg); }
 .lib-mine.inline { position: static; margin-left: 8px; background: var(--raise); }
@@ -885,3 +885,7 @@ button.chip:hover { filter: brightness(1.25); }
 
 .vo-pace { font-size: 11px; color: var(--tone-done); font-variant-numeric: tabular-nums; padding: 0 4px; }
 .vo-pace.warn { color: var(--tone-review); }
+
+.lib-insert { position: absolute; right: 8px; bottom: 8px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgba(10, 10, 11, .78); color: var(--fg); opacity: 0; transition: opacity 180ms var(--ease), background var(--t); backdrop-filter: blur(6px); }
+.lib-card:hover .lib-insert { opacity: 1; }
+.lib-insert:hover { background: rgba(40, 40, 46, .9); }

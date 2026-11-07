@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { GalleryItem } from '../../../shared/types';
-import { useStore, setState, actions, time, api, notify, refreshGallery, projectBase } from '../store';
+import { useStore, setState, getState, actions, time, api, notify, refreshGallery, projectBase } from '../store';
 import { Icon } from './Icon';
 import { TransitionsGrid, EffectsGrid, MasksGrid } from './FxLibrary';
 import { RecordPanel } from './RecordPanel';
@@ -105,20 +105,39 @@ function ClipGrid({ items, q, empty }: { items: GalleryItem[]; q: string; empty?
   return <div className="lib-grid">{list.map((g, i) => g.kind === 'clip' ? <Card key={g.origin + g.id} g={g} i={i} /> : <MusicRow key={g.origin + g.id} g={g} />)}</div>;
 }
 
+/**
+ * Techniques, not templates: the agent studies the technique (TECHNIQUE.md + reference code) and makes an original
+ * clip in the project's design system — for the selected scenes, or the scene under the playhead.
+ */
+export function makeWithTechnique(g: GalleryItem) {
+  const st = getState();
+  const scenes = st.script.scenes;
+  const picked = scenes.map((s, i) => ({ s, n: i + 1 })).filter((x) => st.sceneSelection.includes(x.s.id));
+  const now = time.get();
+  const at = picked.length ? picked : scenes.map((s, i) => ({ s, n: i + 1 })).filter((x) => now >= x.s.start && now < x.s.start + x.s.duration);
+  const where = at.length
+    ? `for ${at.map((x) => `scene ${x.n} “${x.s.title}” (id ${x.s.id}, ${x.s.start.toFixed(2)}–${(x.s.start + x.s.duration).toFixed(2)} s)`).join('; ')}`
+    : `at the playhead (${now.toFixed(2)} s)`;
+  const kind = g.kind === 'music' ? 'music' : 'clip';
+  actions.startTask(`Use the ${kind === 'music' ? 'music ' : ''}technique “${g.name}” (get_technique {id: "${g.id}"${kind === 'music' ? ', kind: "music"' : ''}}) to make an ORIGINAL ${kind === 'music' ? 'score' : 'clip'} ${where}, in this project's design system and script copy — learn the technique, don't paste the reference. Place it on the timeline, verify with render_frame, and tell me what you adapted.`);
+  setState({ libraryOpen: false, sideTab: 'agent' });
+}
+
 function Card({ g, i }: { g: GalleryItem; i: number }) {
   const [hover, setHover] = useState(false);
   const [loaded, setLoaded] = useState(false);
   return (
-    <button className="lib-card" style={{ animationDelay: `${Math.min(i, 12) * 22}ms` }} onClick={() => addTemplate(g)} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+    <div className="lib-card" role="button" tabIndex={0} style={{ animationDelay: `${Math.min(i, 12) * 22}ms` }} onClick={() => makeWithTechnique(g)} onKeyDown={(e) => e.key === 'Enter' && makeWithTechnique(g)} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
       <div className={'lib-thumb' + (loaded ? ' loaded' : '')}>
         <img src={g.thumb} loading="lazy" alt="" onLoad={() => setLoaded(true)} />
         {hover && <Live g={g} />}
-        <span className="lib-add"><Icon name="plus" size={13} /> {t('Add')}</span>
+        <span className="lib-add"><Icon name="sparkle" size={12} /> {t('Make in my style')}</span>
+        <button className="lib-insert" title={t('Insert the reference clip as-is (quick draft)')} onClick={(e) => { e.stopPropagation(); addTemplate(g); }}><Icon name="plus" size={12} /></button>
         {g.origin === 'library' && <span className="lib-mine">{t('mine')}</span>}
       </div>
       <div className="lib-card-name">{g.name}</div>
       {g.description && <div className="lib-card-desc">{g.description}</div>}
-    </button>
+    </div>
   );
 }
 
@@ -155,7 +174,7 @@ function MusicList({ items, q }: { items: GalleryItem[]; q: string }) {
 }
 function MusicRow({ g }: { g: GalleryItem }) {
   return (
-    <button className="lib-row" onClick={() => addTemplate(g)}>
+    <button className="lib-row" onClick={() => makeWithTechnique(g)} title={t('Make an original track with this technique')}>
       <span className="lib-row-icon"><Icon name="music" size={16} /></span>
       <span className="grow minw0">
         <span className="lib-row-name">{g.name}{g.origin === 'library' && <span className="lib-mine inline">{t('mine')}</span>}</span>

@@ -193,7 +193,7 @@ function Rail() {
       <V v="edit" icon="edit" label={t('Edit')} />
       <V v="board" icon="canvas" label={t('Canvas')} />
       <span className="rail-sep" />
-      <button className={'rail-btn' + (libraryOpen && libraryTab === 'templates' ? ' on' : '')} onClick={() => lib('templates')} aria-label={t('Templates')} data-tip={t('Templates')}><Icon name="sparkle" size={18} /></button>
+      <button className={'rail-btn' + (libraryOpen && libraryTab === 'templates' ? ' on' : '')} onClick={() => lib('templates')} aria-label={t('Techniques')} data-tip={t('Techniques')}><Icon name="sparkle" size={18} /></button>
       <button className={'rail-btn' + (libraryOpen && libraryTab === 'media' ? ' on' : '')} onClick={() => lib('media')} aria-label={t('Media')} data-tip={t('Media')}><Icon name="image" size={19} /></button>
       <button className={'rail-btn' + (libraryOpen && libraryTab === 'project' ? ' on' : '')} onClick={() => lib('project')} aria-label={t('Edit library')} data-tip={t('Transitions, effects, masks')}><Icon name="wand" size={19} /></button>
       <div className="grow" />

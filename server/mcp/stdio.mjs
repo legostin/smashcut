@@ -104,12 +104,17 @@ server.registerTool('create_music', {
 }, safe(async (a) => text(await api('POST', '/api/music', a))));
 
 server.registerTool('list_templates', {
-  description: 'Built-in gallery and the user library: clip & music templates (id, origin, category, description). Template source folders can be Read for reference.',
+  description: 'The technique library (built-in gallery + the user library): clip & music techniques (id, origin, category, description, sourceDir). These are NOT templates to paste: pick the techniques that fit the script and design system, read them with get_technique, then write an ORIGINAL clip/score in the project style (see the studio-techniques skill).',
   inputSchema: { kind: z.enum(['clip', 'music']).optional(), query: z.string().optional() },
 }, safe(async ({ kind, query }) => text(await api('GET', `/api/agent/templates?kind=${kind || ''}&q=${encodeURIComponent(query || '')}`))));
 
+server.registerTool('get_technique', {
+  description: 'Read one technique: TECHNIQUE.md (use it for / anatomy / motion with timings and easings / adapting to the design system and formats / variations / pitfalls / key code) and the list of reference files in its folder (Read them for the full code). Then build your own clip with create_clip.',
+  inputSchema: { id: z.string(), kind: z.enum(['clip', 'music']).optional() },
+}, safe(async ({ id, kind }) => text(await api('GET', `/api/agent/techniques/${kind === 'music' ? 'music' : 'clip'}/${encodeURIComponent(id)}`))));
+
 server.registerTool('use_template', {
-  description: 'Copy a template into the project (clips/<newId> or music/<newId>) and optionally place it on the timeline.',
+  description: 'Copy a technique\'s reference implementation into the project as-is (clips/<newId> or music/<newId>), optionally placing it. Only for quick drafts or when the user asks for that exact clip — restyle it to the design system before calling it done. Prefer get_technique + create_clip.',
   inputSchema: {
     origin: z.enum(['builtin', 'library']), kind: z.enum(['clip', 'music']), id: z.string(), newId: z.string().optional(),
     place: z.object({ track: z.string().optional(), start: z.number(), duration: z.number().optional(), params: z.record(z.string(), z.any()).optional() }).optional(),

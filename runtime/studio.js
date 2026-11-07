@@ -206,11 +206,13 @@
   const KEY_ROLES = [
     [/^(accent2|color2|c2|colorb|keycolor2|glowcolor2|secondary.*)$/i, 'accent-2'],
     [/^(highlighttext|accenttext|pilltextcolor)$/i, 'bg'],
-    [/^(accent|accentcolor|highlight|highlightcolor|color1|c1|colora|keycolor1|pincolor|barcolor|bar|pillcolor|ripplecolor|glow|glowcolor|linecolor|strokecolor|color)$/i, 'accent'],
-    [/^(textcolor|cardtext|typecolor|facecolor)$/i, 'text'],
+    [/^(accent|accentcolor|highlight|highlightcolor|color1|c1|colora|keycolor1|pincolor|pillcolor|ripplecolor|glow|glowcolor|linecolor|strokecolor)$/i, 'accent'],
+    // a plain `color` is almost always the main text/shape colour, not the accent
+    [/^(color|textcolor|cardtext|typecolor|facecolor)$/i, 'text'],
+    [/^(barcolor)$/i, 'muted'],
     [/^(labelcolor|sublinecolor|rolecolor)$/i, 'muted'],
-    [/^(background|bg|bgcolor|bg1|bgcenter|dark|navy|basecolor)$/i, 'bg'],
-    [/^(cardcolor|plate|bg2|bgedge|surface)$/i, 'surface'],
+    [/^(background|bg|bgcolor|bg1|bgedge|dark|basecolor)$/i, 'bg'],
+    [/^(cardcolor|plate|bg2|bgcenter|surface|bar|navy)$/i, 'surface'],
   ];
   let bindings = {};
   function tokenColor(role) {

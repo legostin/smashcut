@@ -832,6 +832,18 @@ export async function registerRoutes(app: FastifyInstance) {
     return listGallery().filter((g) => (!req.query.kind || g.kind === req.query.kind) && (!q || JSON.stringify(g).toLowerCase().includes(q)))
       .map((g) => ({ origin: g.origin, kind: g.kind, id: g.id, name: g.name, category: g.category, description: g.description, duration: g.duration, sourceDir: path.join(g.origin === 'builtin' ? GALLERY_DIR : LIBRARY_DIR, g.kind === 'clip' ? 'clips' : 'music', g.id) }));
   });
+  /** a technique: TECHNIQUE.md (how this kind of clip/score is made) + the reference source file list */
+  app.get<{ Params: { kind: string; id: string } }>('/api/agent/techniques/:kind/:id', async (req) => {
+    const kind = req.params.kind === 'music' ? 'music' : 'clips';
+    const id = req.params.id.replace(/[^a-z0-9_-]/gi, '');
+    for (const base of [GALLERY_DIR, LIBRARY_DIR]) {
+      const dir = path.join(base, kind, id);
+      if (!fs.existsSync(dir)) continue;
+      const doc = path.join(dir, 'TECHNIQUE.md');
+      return { id, kind, dir, technique: fs.existsSync(doc) ? fs.readFileSync(doc, 'utf8') : null, files: fs.readdirSync(dir).filter((f) => !f.startsWith('.')) };
+    }
+    throw uerr('Technique not found: {id}', { id }, 404);
+  });
   app.post<{ Body: { musicId: string } }>('/api/agent/render-music', async (req) => {
     const store = need();
     const info = await renderMusic(req.body.musicId, true);
