@@ -1,8 +1,8 @@
 {
-  "name": "agent-videostudio",
+  "name": "smashcut-studio",
   "version": "0.1.0",
   "license": "MIT",
-  "description": "Local-first agentic motion graphics & video editor",
+  "description": "Smashcut — AI agents (Claude Code / Codex) make motion graphics, music, voice-over, 3D and the edit; you direct. Local-first video editor.",
   "type": "module",
   "keywords": [
     "video-editor",
@@ -15,7 +15,8 @@
     "tone.js"
   ],
   "bin": {
-    "agent-videostudio": "bin/studio.mjs"
+    "smashcut": "bin/studio.mjs",
+    "smashcut-studio": "bin/studio.mjs"
   },
   "files": [
     "bin/",

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// agent-videostudio — start the local editor and open it in the browser.
+// smashcut — start the local editor and open it in the browser.
 // Runs the prebuilt server (dist/server) in an installed package, or the TypeScript sources via tsx in a dev checkout.
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -12,12 +12,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 
 const HELP = `
-  Agent Video Studio ${pkg.version} — local-first agentic motion graphics & video editor
+  Smashcut ${pkg.version} — local-first agentic motion graphics & video editor
 
   Usage
-    agent-videostudio [projectDir] [options]   start the editor (opens or creates projectDir;
-                                               default: the last project, or a demo in ~/AgentVideoStudio)
-    agent-videostudio doctor [--json]          check ffmpeg, the render browser, claude/codex logins… and exit
+    smashcut [projectDir] [options]   start the editor (opens or creates projectDir;
+                                      default: the last project, or a demo in ~/Smashcut)
+    smashcut doctor [--json]          check ffmpeg, the render browser, claude/codex logins… and exit
 
   Options
     -p, --port <n>   port to listen on (default 4317, env STUDIO_PORT)
@@ -26,8 +26,8 @@ const HELP = `
     -h, --help       this help
 
   Environment
-    STUDIO_HOME      settings, library, render browser (default ~/.agent-videostudio)
-    STUDIO_PROJECTS  where new projects go (default ~/AgentVideoStudio)
+    STUDIO_HOME      settings, library, render browser (default ~/.smashcut)
+    STUDIO_PROJECTS  where new projects go (default ~/Smashcut)
     STUDIO_HOST      bind address (default 127.0.0.1)
     STUDIO_CHROMIUM, STUDIO_FFMPEG, STUDIO_FFPROBE   explicit binaries
 
@@ -54,7 +54,7 @@ if (process.env.STUDIO_PORT && !/^\d+$/.test(process.env.STUDIO_PORT)) { console
 
 const nodeMajor = Number(process.versions.node.split('.')[0]);
 if (nodeMajor < 20) {
-  console.error(`Agent Video Studio needs Node.js 20 or newer (this is ${process.version}). Install it from https://nodejs.org or with \`brew install node\`.`);
+  console.error(`Smashcut needs Node.js 20 or newer (this is ${process.version}). Install it from https://nodejs.org or with \`brew install node\`.`);
   process.exit(1);
 }
 
@@ -97,7 +97,7 @@ async function probe() {
 // already running on this port? just open it
 const state = await probe();
 if (state === 'studio') {
-  console.log(`\n  Agent Video Studio is already running → ${url}\n`);
+  console.log(`\n  Smashcut is already running → ${url}\n`);
   if (pass.length) console.log('  (open the project from the editor, or stop the running instance first)\n');
   openBrowser();
   process.exit(0);
@@ -106,7 +106,7 @@ if (state === 'other') {
   // something answers but is not the studio (or does not answer HTTP) — let the server try anyway only if the port is free
   const net = await import('node:net');
   const free = await new Promise((res) => { const s = net.createServer(); s.once('error', () => res(false)); s.listen(port, process.env.STUDIO_HOST || '127.0.0.1', () => s.close(() => res(true))); });
-  if (!free) { console.error(`\n  Port ${port} is used by another program. Start on another port:  agent-videostudio --port ${port + 1}\n`); process.exit(1); }
+  if (!free) { console.error(`\n  Port ${port} is used by another program. Start on another port:  smashcut --port ${port + 1}\n`); process.exit(1); }
 }
 
 // dev checkout: build the UI on first start
@@ -116,8 +116,9 @@ if (devCheckout && !(fs.existsSync(path.join(root, 'web', 'dist', 'index.html'))
   if (r.status !== 0) process.exit(r.status || 1);
 }
 
-const home = process.env.STUDIO_HOME || path.join(os.homedir(), '.agent-videostudio');
-if (!fs.existsSync(home)) console.log(`\n  Welcome! First run: setting up ${home}${pass.length ? '' : ` and a demo project in ${process.env.STUDIO_PROJECTS || '~/AgentVideoStudio'}`}…`);
+const legacyOr = (fresh, legacy) => (!fs.existsSync(fresh) && fs.existsSync(legacy) ? legacy : fresh);
+const home = process.env.STUDIO_HOME || legacyOr(path.join(os.homedir(), '.smashcut'), path.join(os.homedir(), '.agent-videostudio'));
+if (!fs.existsSync(home)) console.log(`\n  Welcome! First run: setting up ${home}${pass.length ? '' : ` and a demo project in ${process.env.STUDIO_PROJECTS || '~/Smashcut'}`}…`);
 
 const child = spawn(process.execPath, [...entry('index'), ...pass], { cwd: root, stdio: 'inherit', env: process.env });
 child.on('exit', (c, sig) => process.exit(c ?? (sig ? 1 : 0)));

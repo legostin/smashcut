@@ -1,4 +1,4 @@
-# Agent Video Studio: catalog of 39 new motion-graphics templates (2025–2026 research)
+# Smashcut: catalog of 39 new motion-graphics templates (2025–2026 research)
 
 **About the ranking.** No marketplace publishes sales numbers by category. VideoHive, Envato and Motion Array show bestseller sorts, but nothing I could pull as data. The ranking below is my own inference from how often a pattern came up across:
 - marketplace listings (Envato Elements, VideoHive, Motion Array)

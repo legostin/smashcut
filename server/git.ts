@@ -4,7 +4,7 @@ import path from 'node:path';
 import { run, Mutex } from './util.ts';
 
 const mutex = new Mutex();
-const ENV = { GIT_AUTHOR_NAME: 'Agent Video Studio', GIT_AUTHOR_EMAIL: 'studio@localhost', GIT_COMMITTER_NAME: 'Agent Video Studio', GIT_COMMITTER_EMAIL: 'studio@localhost' };
+const ENV = { GIT_AUTHOR_NAME: 'Smashcut', GIT_AUTHOR_EMAIL: 'studio@localhost', GIT_COMMITTER_NAME: 'Smashcut', GIT_COMMITTER_EMAIL: 'studio@localhost' };
 
 export async function gitInit(dir: string) {
   if (fs.existsSync(path.join(dir, '.git'))) return;

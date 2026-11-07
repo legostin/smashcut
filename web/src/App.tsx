@@ -150,13 +150,13 @@ function TopBar() {
   const job = useStore((s) => s.jobs.find((j) => j.status === 'running'));
   const running = useStore((s) => s.tasks.filter((x) => x.status === 'running').length);
   const [family, setFamily] = useState<{ dir: string; label?: string; width: number; height: number; current?: boolean }[]>([]);
-  useEffect(() => { document.title = /Agent Video Studio/.test(project.name) ? project.name : `${project.name} — Agent Video Studio`; }, [project.name]);
+  useEffect(() => { document.title = /Smashcut/.test(project.name) ? project.name : `${project.name} — Smashcut`; }, [project.name]);
   useEffect(() => { api<typeof family>('GET', '/api/variants').then(setFamily).catch(() => setFamily([])); }, [project.name, project.width, project.height]);
   const openVariant = async (dir: string) => { await api('POST', '/api/projects/open', { path: dir }); await refresh(); time.set(0); setState({ selectedItemId: null, selectedTaskId: null, sceneSelection: [] }); };
   return (
     <header className="topbar">
       <div className="row gap10 minw0">
-        <span className="logo" aria-hidden><Icon name="play" size={13} /></span>
+        <span className="logo" aria-hidden title="Smashcut"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 4h9.5L8 20H4z" fill="currentColor" /><path d="M16 4h4v16h-9.5z" fill="currentColor" transform="translate(1.2 -1.2)" /></svg></span>
         <button className="project-name" onClick={() => setState({ dialog: 'projects' })} title={t('Projects')}>
           <span className={'conn' + (connected ? '' : ' off')} /><span className="ellipsis">{project.name.replace(/ — .*$/, '')}</span><Icon name="chevron" size={12} />
         </button>
@@ -421,7 +421,7 @@ function VoiceSettings({ s, setS }: { s: Settings; setS: (s: Settings) => void }
           </label>
         </div>
       )}
-      <div className="muted xsmall">{t('The key is stored only locally (~/.agent-videostudio). The voiceover lands on an audio track, and word timings work for subtitles right away.')}</div>
+      <div className="muted xsmall">{t('The key is stored only locally (~/.smashcut). The voiceover lands on an audio track, and word timings work for subtitles right away.')}</div>
     </div>
   );
 }

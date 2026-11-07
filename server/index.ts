@@ -149,7 +149,7 @@ openProject(target);
 
 // render looping gallery previews in the background (cached; once per technique version)
 setTimeout(() => { import('./gallery.ts').then((g) => g.warmPreviews()).catch(() => {}); }, 15000);
-console.log(`\n  Agent Video Studio  →  ${BASE_URL}\n  project: ${cur().dir}\n`);
+console.log(`\n  Smashcut  →  ${BASE_URL}\n  project: ${cur().dir}\n`);
 if (!fs.existsSync(path.join(WEB_DIST, 'index.html'))) console.log('  (web UI not built — run `npm run dev` and open http://localhost:5173, or `npm start`)\n');
 // first-run checks: compact summary; fetch the render browser in the background if there is none
 runDoctor({ serverRunning: true }).then((checks) => console.log(formatDoctor(checks, { compact: true }) + '\n')).catch(() => {});

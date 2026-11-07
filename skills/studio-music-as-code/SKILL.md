@@ -1,6 +1,6 @@
 ---
 name: studio-music-as-code
-description: Write music as Tone.js code for Agent Video Studio (score API, helpers, mixing, sections/markers that drive motion sync, render_music verification). Read before creating or editing music/<id>/score.js.
+description: Write music as Tone.js code for Smashcut (score API, helpers, mixing, sections/markers that drive motion sync, render_music verification). Read before creating or editing music/<id>/score.js.
 ---
 
 # Music as code

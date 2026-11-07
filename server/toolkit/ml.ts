@@ -1,5 +1,5 @@
 // Local ML for the toolkit (transformers.js, ONNX on CPU). Models download on first use into
-// STUDIO_MODELS (default ~/.agent-videostudio/models, shared with Whisper) and then work offline.
+// STUDIO_MODELS (default ~/.smashcut/models, shared with Whisper) and then work offline.
 import path from 'node:path';
 import { HOME_DIR } from '../config.ts';
 import { Mutex } from '../util.ts';

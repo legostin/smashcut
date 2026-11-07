@@ -414,7 +414,7 @@ export interface ToolkitJob {
   endedAt?: string;
 }
 
-/** GET /api/doctor — one entry per machine requirement (also printed at boot and by `agent-videostudio doctor`) */
+/** GET /api/doctor — one entry per machine requirement (also printed at boot and by `smashcut doctor`) */
 export type DoctorStatus = 'ok' | 'warn' | 'missing';
 export interface DoctorCheck {
   /** node | ffmpeg | ffprobe | git | browser | claude | codex | home | disk | port */

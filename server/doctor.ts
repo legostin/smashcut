@@ -61,7 +61,7 @@ function browserCheck(): DoctorCheck {
     return { id: 'browser', title, status: 'ok', detail: b.source === 'system' ? `system Chrome — ${b.detail}` : b.detail };
   }
   if (browserInstalling) return { id: 'browser', title, status: 'warn', detail: `downloading Chrome Headless Shell into ${BROWSERS_DIR}…`, fix: 'Wait for the download to finish (progress is in the console)' };
-  return { id: 'browser', title, status: 'warn', detail: 'no Chrome/Chromium found — Chrome Headless Shell (~100 MB) is downloaded automatically when the editor starts', fix: `npx agent-videostudio   (or: PLAYWRIGHT_BROWSERS_PATH=${BROWSERS_DIR} npx playwright-core install chromium-headless-shell)` };
+  return { id: 'browser', title, status: 'warn', detail: 'no Chrome/Chromium found — Chrome Headless Shell (~100 MB) is downloaded automatically when the editor starts', fix: `npx smashcut-studio   (or: PLAYWRIGHT_BROWSERS_PATH=${BROWSERS_DIR} npx playwright-core install chromium-headless-shell)` };
 }
 
 async function claudeCheck(): Promise<DoctorCheck & { _present: boolean }> {
@@ -122,8 +122,8 @@ async function portCheck(serverRunning: boolean): Promise<DoctorCheck> {
   let studio = false;
   try { const r = await fetch(`http://127.0.0.1:${PORT}/api/state`, { signal: AbortSignal.timeout(1500) }); studio = r.ok && 'project' in (await r.json()); } catch {}
   return studio
-    ? { id: 'port', title, status: 'ok', detail: `Agent Video Studio is already running on ${PORT}` }
-    : { id: 'port', title, status: 'warn', detail: `port ${PORT} is used by another program`, fix: `agent-videostudio --port ${PORT + 1}   (or STUDIO_PORT=${PORT + 1})` };
+    ? { id: 'port', title, status: 'ok', detail: `Smashcut is already running on ${PORT}` }
+    : { id: 'port', title, status: 'warn', detail: `port ${PORT} is used by another program`, fix: `smashcut --port ${PORT + 1}   (or STUDIO_PORT=${PORT + 1})` };
 }
 
 function homeCheck(): DoctorCheck {

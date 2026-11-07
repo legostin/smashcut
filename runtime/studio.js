@@ -1,5 +1,5 @@
 /*
- * Agent Video Studio — clip runtime.
+ * Smashcut — clip runtime.
  * A clip is a pure function of time. This runtime:
  *  - loads params (params.json defaults + overrides from the URL hash),
  *  - virtualises time (Date.now, performance.now, requestAnimationFrame, Math.random are deterministic),

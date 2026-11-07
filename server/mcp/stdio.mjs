@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Agent Video Studio — MCP server (stdio). Thin bridge to the editor's REST API.
+// Smashcut — MCP server (stdio). Thin bridge to the editor's REST API.
 // Attach to any agent:  claude mcp add studio -- node <repo>/server/mcp/stdio.mjs
 // Env: STUDIO_URL (default http://127.0.0.1:4317), STUDIO_TASK (task id for attribution), STUDIO_PROJECT (open project id)
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -40,7 +40,7 @@ const withImages = (t, images) => ({ content: [{ type: 'text', text: typeof t ==
 const safe = (fn) => async (args) => { try { return await fn(args || {}); } catch (e) { return { isError: true, content: [{ type: 'text', text: 'Error: ' + e.message }] }; } };
 
 const server = new McpServer({ name: 'studio', version: '0.1.0' }, {
-  instructions: 'Agent Video Studio editor tools. Always verify visual work with render_clip / render_frame and look at the images. Resolve comments you addressed with resolve_comment.',
+  instructions: 'Smashcut editor tools. Always verify visual work with render_clip / render_frame and look at the images. Resolve comments you addressed with resolve_comment.',
 });
 
 server.registerTool('get_project', {

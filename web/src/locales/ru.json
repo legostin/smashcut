@@ -529,7 +529,7 @@
   "The clip looks fine": "Клип в порядке",
   "the editor restarted — recovering the task": "редактор перезапустился — восстанавливаю задачу",
   "the editor restarted — the agent keeps working": "редактор перезапустился — агент продолжает работать",
-  "The key is stored only locally (~/.agent-videostudio). The voiceover lands on an audio track, and word timings work for subtitles right away.": "Ключ хранится только локально (~/.agent-videostudio). Озвучка ложится на аудиодорожку, а тайминги слов сразу работают для субтитров.",
+  "The key is stored only locally (~/.smashcut). The voiceover lands on an audio track, and word timings work for subtitles right away.": "Ключ хранится только локально (~/.smashcut). Озвучка ложится на аудиодорожку, а тайминги слов сразу работают для субтитров.",
   "The project has no clips or tracks of its own yet. Ask the agent to make something and they will appear here.": "В проекте пока нет своих клипов и треков. Попросите агента сделать что-нибудь — они появятся здесь.",
   "The project has no design system yet": "В проекте пока нет дизайн-системы",
   "The project's clips, tracks and media will appear here.": "Клипы, треки и медиа проекта появятся здесь.",

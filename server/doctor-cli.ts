@@ -1,4 +1,4 @@
-// `agent-videostudio doctor [--json]` — print the machine checks and exit (1 if something required is missing)
+// `smashcut doctor [--json]` — print the machine checks and exit (1 if something required is missing)
 import { runDoctor, formatDoctor } from './doctor.ts';
 
 const checks = await runDoctor();

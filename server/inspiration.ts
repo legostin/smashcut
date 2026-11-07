@@ -14,7 +14,7 @@ export const listInspiration = (): Inspiration[] => readJson<Inspiration[]>(FILE
 export const getInspiration = (id: string) => listInspiration().find((x) => x.id === id);
 
 const inflight = new Map<string, Promise<string | null>>();
-/** official preview image, downloaded once into ~/.agent-videostudio/inspiration */
+/** official preview image, downloaded once into ~/.smashcut/inspiration */
 export function inspirationThumb(id: string): Promise<string | null> {
   const it = getInspiration(id);
   if (!it?.thumb) return Promise.resolve(null);
@@ -25,7 +25,7 @@ export function inspirationThumb(id: string): Promise<string | null> {
   if (inflight.has(key)) return inflight.get(key)!;
   const p = (async () => {
     try {
-      const res = await fetch(it.thumb!, { headers: { 'user-agent': 'AgentVideoStudio/0.1 (+preview cache)' }, signal: AbortSignal.timeout(15000) });
+      const res = await fetch(it.thumb!, { headers: { 'user-agent': 'Smashcut/0.1 (+preview cache)' }, signal: AbortSignal.timeout(15000) });
       if (!res.ok) return null;
       const ct = res.headers.get('content-type') || '';
       const ext = ct.includes('png') ? 'png' : ct.includes('webp') ? 'webp' : ct.includes('gif') ? 'gif' : 'jpg';

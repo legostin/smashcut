@@ -8,10 +8,10 @@ import { which } from '../bin.ts';
 
 // ---------- which Chromium renders frames ----------
 // 1. STUDIO_CHROMIUM (explicit executable)
-// 2. Playwright's Chrome Headless Shell of the exact revision this playwright-core expects — in ~/.agent-videostudio/browsers,
+// 2. Playwright's Chrome Headless Shell of the exact revision this playwright-core expects — in ~/.smashcut/browsers,
 //    PLAYWRIGHT_BROWSERS_PATH or the default ms-playwright cache
 // 3. an installed Google Chrome / Chromium (skipped with STUDIO_NO_SYSTEM_CHROME=1)
-// 4. otherwise download Chrome Headless Shell into ~/.agent-videostudio/browsers (once, with progress in the console)
+// 4. otherwise download Chrome Headless Shell into ~/.smashcut/browsers (once, with progress in the console)
 export interface BrowserInfo { source: 'env' | 'playwright' | 'system' | 'missing'; executablePath?: string; detail: string }
 
 const PW_DIR = moduleDir('playwright-core');

@@ -1,5 +1,5 @@
 """
-studio3d — helpers for Agent Video Studio 3D scenes (Blender, run headless).
+studio3d — helpers for Smashcut 3D scenes (Blender, run headless).
 
 A scene is scenes3d/<id>/scene.py with:
 

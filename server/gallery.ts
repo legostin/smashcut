@@ -66,7 +66,7 @@ export function galleryThumb(origin: Origin, id: string): Promise<string> {
 
 /**
  * Looping preview video of a technique (for the live gallery grid): ~5 s at 24 fps, 640 px wide, H.264.
- * Rendered once per clip version and cached in ~/.agent-videostudio/previews; generated one at a time.
+ * Rendered once per clip version and cached in ~/.smashcut/previews; generated one at a time.
  */
 const previewQueue: (() => Promise<void>)[] = [];
 const previewJobs = new Map<string, Promise<string>>();
@@ -142,7 +142,7 @@ export function useTemplate(origin: Origin, kind: 'clip' | 'music', id: string, 
   return target;
 }
 
-/** save a project clip/music into ~/.agent-videostudio/library */
+/** save a project clip/music into ~/.smashcut/library */
 export function saveToLibrary(kind: 'clip' | 'music', id: string, name?: string) {
   const store = cur();
   const folder = kind === 'clip' ? 'clips' : 'music';

@@ -10,7 +10,7 @@ import type { Item, PackageManifest } from '../shared/types.ts';
 /** a ready-to-play demo project built from the built-in gallery */
 export async function createDemoProject(dir: string): Promise<string> {
   if (ProjectStore.exists(dir)) return dir;
-  const store = await ProjectStore.create(dir, { name: 'Demo — Agent Video Studio', duration: 20 });
+  const store = await ProjectStore.create(dir, { name: 'Demo — Smashcut', duration: 20 });
   // background footage: generated animated gradient (so the demo works offline)
   await run('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'gradients=s=1920x1080:d=20:speed=0.01:type=radial:c0=0x161a4d:c1=0x0a3a4a:c2=0x1e0c33:nb_colors=3:r=30,format=yuv420p,noise=alls=3:allf=t', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', store.p('media', 'demo-background.mp4')]);
   const items: Item[] = [];

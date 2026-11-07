@@ -1,6 +1,6 @@
 ---
 name: studio-clip-authoring
-description: How to write a motion-graphics clip for Agent Video Studio (HTML/CSS/JS + GSAP, pure function of time, params schema, render-and-look loop). Read before creating or editing anything in clips/.
+description: How to write a motion-graphics clip for Smashcut (HTML/CSS/JS + GSAP, pure function of time, params schema, render-and-look loop). Read before creating or editing anything in clips/.
 ---
 
 # Authoring a clip

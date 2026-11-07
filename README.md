@@ -1,80 +1,56 @@
-# Agent Video Studio
+# Smashcut
 
-Локальный веб-редактор видео, где моушн-графику, музыку и монтаж делают **ваши локальные агенты**: Claude Code и Codex.
-Всё бесплатно и работает офлайн, кроме самих агентов, которые ходят по вашей подписке.
+**Your AI crew makes the video. You direct.**
 
-- **Графика.** Клип — это HTML/CSS/JS-композиция (GSAP, CSS, SVG, canvas), то есть чистая функция от времени. Её рендерит headless Chromium покадрово.
-- **Музыка.** Треки пишутся кодом на Tone.js и рендерятся офлайн в WAV. Партитура отдаёт карту битов, секций и маркеров, к которой привязывается графика.
-- **Монтаж.** `project.json`: дорожки, клипы, медиа, музыка. Есть таймлайн с прилипанием к битам, обрезкой и разрезом.
-- **Агенты.** Редактор сам запускает `claude -p` / `codex exec` в папке проекта и стримит их работу в UI. Агенты получают MCP-сервер `studio`: могут отрендерить свои кадры и *посмотреть* на них, читать и закрывать комментарии, править таймлайн, слушать музыку через громкость, акценты и спектрограмму.
-- **Правки поверх кадров.** Пин или область на кадре → черновик. «Отправить» запускает по агенту на каждый клип, параллельно, с аннотированным скриншотом. Агент закрывает комментарий, а вы принимаете правку или возвращаете её в работу.
-- **Перебить агента.** Пока агент работает, можно написать ему: Enter («Перебить») мягко останавливает его и сразу продолжает ту же сессию с вашим сообщением, «После» ставит сообщение в очередь.
-- **Холст как в Figma.** Фреймы сценария, дизайн-системы, раскадровки, слоёв и компонентов, курсор агента.
-  - Выделение кликом, Shift или рамкой.
-  - «Комментарий агенту» оставляет пин на объекте, и агент получает контекст выделенного.
-  - Агент сам закрывает комментарии или удаляет неактуальные, всегда с причиной.
-- **Переходы, эффекты, маски.** 24 перехода, 17 эффектов (цвет, зерно, виньетка, аберрация, кен-бёрнс, тряска…), 5 масок, 16 режимов наложения. Превью и экспорт собирает один и тот же плеер.
-- **Версии.** Проект — это git-репозиторий. Каждая задача агента сохраняется коммитом. Можно сравнить версии A/B и откатиться.
-- **Галерея.** 17 шаблонов клипов и 6 треков. Есть «Моя библиотека» (`~/.agent-videostudio/library`). Параметры шаблонов правятся в инспекторе без агента.
-- **Аудио-интеллект.** Локальный Whisper (transformers.js) даёт транскрипт со словами и таймкодами, отсюда караоке-субтитры. Темп, биты и акценты определяются для импортированной музыки.
-- **Экспорт.**
-  - Форматы: MP4 H.264, ProRes 4444 и WebM VP9 (оба с альфой, чтобы отдать графику в Premiere, DaVinci или After Effects), GIF.
-  - Масштаб 50/100/200 %, пресеты качества.
-  - Настоящий motion blur: подкадры, затвор 180°.
-  - Цвет BT.709 с тегами, слои склеиваются в RGB без потерь.
-  - Экспорт можно отменить. Паритет превью и экспорта проверяется тестом по PSNR.
-- **Ядро.**
-  - Захват кадров через CDP (в 1.7 раза быстрее), повтор куска при падении браузера.
-  - Рантайм глушит CSS-transitions; линтер проверяет детерминизм скачками вперёд-назад.
-  - Undo/redo (⌘Z / ⇧⌘Z) для любых правок проекта, включая правки агентов.
-  - Тяжёлые и неподдерживаемые браузером видео (4K, ProRes, HEVC, 10-bit) автоматически получают 720p-прокси для превью; экспорт идёт из оригинала.
+Smashcut is a local-first video editor where your own coding agents — **Claude Code** and **Codex** — write the script, design the motion graphics, compose the music, voice it, build 3D shots in Blender and cut the edit. You steer with a storyboard, comments on frames and plain language. Everything they make is code you can open, version and change.
 
-## Запуск
+*Русская версия: [README.ru.md](README.ru.md)*
 
-Нужны Node ≥ 20, ffmpeg в PATH, и для агентов — `claude` и/или `codex`, в которые вы залогинены.
+## Install
 
-```bash
-npm install          # заодно ставит headless Chromium для рендера
-npm start            # собирает UI, поднимает http://127.0.0.1:4317 и открывает браузер
-npm start -- ~/Videos/my-project   # открыть или создать проект в папке
+Requirements: macOS or Linux, Node.js 20+, and at least one agent CLI you are logged into —
+[Claude Code](https://claude.com/claude-code) (`npm i -g @anthropic-ai/claude-code`, then `claude`) and/or Codex (`npm i -g @openai/codex`, then `codex login`).
+
+```sh
+npx smashcut-studio                 # opens http://127.0.0.1:4317 with a demo project in ~/Smashcut
+# or
+npm i -g smashcut-studio && smashcut ~/Videos/my-video
+
+smashcut doctor                     # checks ffmpeg, the render browser, claude/codex logins, Blender, disk, port
+smashcut --port 4400 --no-open
 ```
 
-При первом запуске создаётся демо-проект `~/AgentVideoStudio/demo`.
+ffmpeg is used from your system if present (`brew install ffmpeg`), otherwise a bundled build. Rendering uses your installed Chrome or downloads Chrome Headless Shell once. Blender (optional) enables 3D scenes.
 
-Режим разработки: `npm run dev` (UI на :5173 с HMR, сервер на :4317). Проверка: `npm test` (e2e smoke) и `npm run typecheck`.
+## How it works
 
-### Агент в своём терминале
+- **Storyboard first.** The agent writes the script — scenes with timing, copy and visual notes — then produces scene by scene. Every scene shows a live status (not started → in progress → needs review → done → approved) and which agent is on it. Select scenes and *Make*, *Redo*, *Variations*, *Voice-over*, *Approve* or *Lock* them; approved and locked scenes are off-limits for agents.
+- **Motion graphics as code.** A clip is HTML/CSS/JS (GSAP, SVG, canvas) — a pure function of time, rendered frame-exact. Flexible params, design-system tokens, layout gizmo, transitions, effects, masks and blend modes, identical in preview and export.
+- **References, techniques, inspiration.** 57 built-in *techniques* (each with a TECHNIQUE.md the agent studies — not templates to paste) and 108 curated real-world motion pieces (studios, product launches, code demos, social formats) with breakdowns. Add them to the project as references, bound to scenes.
+- **Music as code.** Tone.js scores rendered offline; beats, sections and markers drive the animation.
+- **Voice-over as a process.** Speech text with numbers spelled out, stress marks and pauses (`{2026|twenty twenty-six}`), ElevenLabs takes with a pace check so the voice doesn't speed up or slow down; captions keep the display text.
+- **3D with Blender.** Scenes as Python code, rendered headless in stages: mock (seconds) → look (EEVEE) → final; renders land on the timeline and get replaced in place.
+- **Media toolkit for agents.** Background removal (images & video), chroma key, stickers, reframing, morphs, slow-mo, loudness, denoise, silence removal, music ducking.
+- **Review loop.** Pin comments on frames or canvas objects; agents resolve or dismiss them. Interrupt a working agent at any time; sub-agents build scenes in parallel.
+- **Versions.** Spin off a version in another language, aspect ratio or length — it inherits the script and design system and the agent adapts it.
+- **Safe by default.** Projects are git repositories (every agent task is a commit; undo/redo), agents run isolated with only the editor's tools, the editor survives restarts and agents keep working.
+- Multiple projects in separate tabs, English UI with Russian and more locales, export to MP4 / ProRes 4444 (alpha) / WebM / GIF.
 
-MCP редактора можно подключить к любому агенту:
+## Use your own terminal agent
 
-```bash
-claude mcp add studio -e STUDIO_URL=http://127.0.0.1:4317 -- node /path/to/agent-videostudio/server/mcp/stdio.mjs
+```sh
+claude mcp add studio -e STUDIO_URL=http://127.0.0.1:4317 -- node "$(npm root -g)/smashcut-studio/server/mcp/stdio.mjs"
 ```
 
-## Как это устроено
+## Develop
 
-```
-server/            Fastify + WebSocket (TS через tsx)
-  project.ts       папка проекта, watcher, project.json/comments.json
-  render/          Chromium-пул, рендер клипов и музыки, композит кадра, ffmpeg-экспорт
-  agents/          запуск claude/codex, разбор stream-json, очередь, коммиты
-  mcp/stdio.mjs    MCP-сервер "studio" (мост к REST)
-  audio/           анализ (онсеты, темп, громкость, спектрограмма), Whisper
-runtime/           studio.js (рантайм клипа), music.js (рантайм Tone.js)
-web/               React-редактор: плеер, таймлайн, галерея, инспектор, правки, агенты
-gallery/           встроенные шаблоны (clips/, music/) — формат пакета: папка + manifest.json
-skills/            скиллы для агентов → .claude/skills и AGENTS.md каждого проекта
+```sh
+npm install
+npm run dev        # server (tsx) + Vite
+npm start          # build the UI if needed and run
+npm test           # end-to-end: templates, music, composite, MCP, export parity
+npx tsx test/toolkit.ts
+npm run build && npm pack
 ```
 
-Папка проекта:
-
-```
-project.json  comments.json  clips/<id>/  music/<id>/score.js  media/
-.studio/ (кэш, экспорты, снапшоты)  CLAUDE.md  AGENTS.md  .claude/skills/
-```
-
-Контракт клипа: `studio.clip({ duration, setup(root, params, ctx) { ctx.tl… }, render(t) })`. Подробности в `skills/studio-clip-authoring/SKILL.md`.
-
-## Дальше
-
-Интеграция видеогенераторов (Higgsfield и прямые API). В модели данных для этого уже есть тип элемента `generated: { provider, prompt, jobId, output }`.
+MIT license.

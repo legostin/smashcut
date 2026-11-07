@@ -1,5 +1,5 @@
 /*
- * Agent Video Studio — music-as-code runtime (Tone.js).
+ * Smashcut — music-as-code runtime (Tone.js).
  * A score calls studio.music({ bpm, beatsPerBar, bars | duration, sections, markers, build(m) }).
  * The renderer runs build() inside Tone.Offline → deterministic WAV + beat map.
  */

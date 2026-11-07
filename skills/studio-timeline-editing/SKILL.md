@@ -1,6 +1,6 @@
 ---
 name: studio-timeline-editing
-description: Editing the timeline of an Agent Video Studio project (project.json model, tracks/items/params, MCP timeline tools, syncing to beats/transcripts, captions, export). Use for any task that places, times or arranges things.
+description: Editing the timeline of an Smashcut project (project.json model, tracks/items/params, MCP timeline tools, syncing to beats/transcripts, captions, export). Use for any task that places, times or arranges things.
 ---
 
 # Timeline editing
