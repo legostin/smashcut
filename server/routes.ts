@@ -17,7 +17,8 @@ import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
 import { compositeFrame, sheet, annotate, startExport, getJobs } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
-import { startTask, followUp, cancelTask, listTasks } from './agents/runner.ts';
+import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus } from './agents/runner.ts';
+import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
 
@@ -57,6 +58,7 @@ export function state() {
     skills: listSkills(),
     jobs: getJobs(),
     permissions: permissions.list(),
+    script: getScript(),
     exports: listExports(),
     recents: getRecents(),
     projectsDir: PROJECTS_DIR,
@@ -94,7 +96,7 @@ async function renderClipSheet(clipId: string, opts: { times?: number[]; count?:
   const times = opts.times?.length ? opts.times : Array.from({ length: count }, (_, i) => +((duration * (i + 0.5)) / count).toFixed(2));
   const r = await renderClipFrames(clipUrl(clipId, input), { width: p.width, height: p.height }, times);
   const png = await sheet(r.frames.map((f, i) => ({ png: f, caption: `t=${times[i].toFixed(2)}s` })), { cols: times.length === 1 ? 1 : times.length <= 4 ? 2 : 4, width: times.length === 1 ? 1280 : 1600 });
-  const file = `.studio/frames/${clipId}-sheet.png`;
+  const file = `.studio/frames/${clipId}-${Date.now().toString(36)}.png`;
   fs.writeFileSync(store.p(file), png);
   return { png, times, duration, errors: r.errors, file };
 }
@@ -109,7 +111,7 @@ async function renderFrames(times: number[]) {
     errors.push(...r.errors);
   }
   const png = shots.length === 1 ? shots[0].png : await sheet(shots, { cols: shots.length <= 4 ? 2 : 3, checker: false });
-  const file = `.studio/frames/frame-${times.map((t) => t.toFixed(2)).join('_').slice(0, 60)}.png`;
+  const file = `.studio/frames/frame-${Date.now().toString(36)}.png`;
   fs.writeFileSync(store.p(file), png);
   return { png, times, errors: [...new Set(errors)], file };
 }
@@ -180,6 +182,7 @@ function overview() {
     media: store.listMedia().map((m) => ({ file: m.file, type: m.type, duration: m.duration, size: m.width ? `${m.width}x${m.height}` : undefined, transcript: !!m.transcript })),
     openComments: open.map((c) => ({ id: c.id, time: c.time, clipId: c.clipId, text: c.text, status: c.status })),
     timing: { bpm: timing.bpm, beats: timing.beats.length, sections: timing.sections, markers: timing.markers, words: timing.words.length },
+    script: (() => { const sc = getScript(); return { stage: sc.stage, brief: sc.brief, scenes: sc.scenes.map((x) => ({ id: x.id, title: x.title, start: x.start, end: +(x.start + x.duration).toFixed(2), status: x.status })) }; })(),
     galleryDir: GALLERY_DIR,
     libraryDir: LIBRARY_DIR,
   };
@@ -449,6 +452,21 @@ export async function registerRoutes(app: FastifyInstance) {
     return { ok: true };
   });
 
+  // ---------- script / storyboard ----------
+  app.get('/api/script', async () => { need(); return { ...getScript(), stages: STAGES }; });
+  app.put<{ Body: any }>('/api/script', async (req) => { need(); return saveScript(req.body as any); });
+  app.patch<{ Body: any }>('/api/script', async (req) => { need(); return saveScript(req.body as any); });
+  app.post<{ Body: any }>('/api/script/scenes', async (req) => {
+    need();
+    const s = getScript();
+    const b = (req.body || {}) as any;
+    const last = s.scenes[s.scenes.length - 1];
+    const scene = { id: 's' + nid(), title: b.title || `Сцена ${s.scenes.length + 1}`, start: b.start ?? (last ? last.start + last.duration : 0), duration: b.duration ?? 4, voiceover: b.voiceover || '', visual: b.visual || '', notes: '', status: 'todo' as const, itemIds: [] };
+    return saveScript({ scenes: [...s.scenes, scene] });
+  });
+  app.patch<{ Params: { id: string }; Body: any }>('/api/script/scenes/:id', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', at: Date.now() }); return patchScene(req.params.id, req.body as any); });
+  app.delete<{ Params: { id: string } }>('/api/script/scenes/:id', async (req) => { need(); const s = getScript(); return saveScript({ scenes: s.scenes.filter((x) => x.id !== req.params.id) }); });
+
   // ---------- versions ----------
   app.get<{ Querystring: { path?: string } }>('/api/versions', async (req) => gitLog(need().dir, req.query.path || undefined));
   app.post<{ Body: { sha: string; path: string } }>('/api/versions/restore', async (req) => {
@@ -488,14 +506,19 @@ export async function registerRoutes(app: FastifyInstance) {
       return { ...c, clipLocalTime: item ? +(c.time - item.start + item.in).toFixed(3) : undefined, snapshot: c.snapshot ? store.p(c.snapshot) : undefined };
     });
   });
+  const taskOf = (req: { headers: Record<string, unknown> }) => String(req.headers['x-studio-task'] || '');
   app.post<{ Body: { clipId: string; times?: number[]; count?: number; itemId?: string } }>('/api/agent/render-clip', async (req) => {
     need();
     const r = await renderClipSheet(req.body.clipId, req.body);
+    const tid = taskOf(req);
+    if (tid) { taskEvent(tid, { kind: 'image', src: '/p/' + r.file, text: `${req.body.clipId} · ${r.times.length} кадр.` }); setFocus(tid, { kind: 'clip', id: req.body.clipId, at: Date.now() }); }
     return { ...r, png: r.png.toString('base64'), file: cur().p(r.file) };
   });
   app.post<{ Body: { times: number[] } }>('/api/agent/render-frame', async (req) => {
     need();
     const r = await renderFrames(req.body.times);
+    const tid = taskOf(req);
+    if (tid) taskEvent(tid, { kind: 'image', src: '/p/' + r.file, text: `кадр ${req.body.times.map((t) => t.toFixed(1) + 's').join(', ')}` });
     return { ...r, png: r.png.toString('base64'), file: cur().p(r.file) };
   });
   app.post<{ Body: { clipId: string } }>('/api/agent/lint-clip', async (req) => { need(); return lintClip(req.body.clipId); });
@@ -511,6 +534,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const a = readJson<AudioAnalysis | null>(store.p('.studio', 'analysis', `music-${req.body.musicId}.json`), null);
     const spec = store.p('.studio', 'frames', `spec-${req.body.musicId}.png`);
     await spectrogram(store.p(info.rendered!), spec);
+    { const tid = taskOf(req); if (tid) taskEvent(tid, { kind: 'image', src: `/p/.studio/frames/spec-${req.body.musicId}.png?v=${Date.now()}`, text: `спектр трека ${req.body.musicId}` }); }
     return {
       summary: { ...info.meta, rendered: info.rendered, peakDbfs: a ? +(20 * Math.log10(a.peak + 1e-9)).toFixed(1) : null, loudness: a ? loudnessSparkline(a.loudness) : null, loudnessNote: 'one char ≈ ' + (a ? (a.duration / Math.min(80, a.loudness.length)).toFixed(2) : '?') + 's, ▁ quiet → █ loud', accents: a?.accents, detectedBpm: a?.bpm },
       spectrogram: fs.readFileSync(spec).toString('base64'),

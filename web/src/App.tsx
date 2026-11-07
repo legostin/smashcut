@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem } from './store';
+import { ScriptPanel } from './components/ScriptPanel';
+import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo } from './store';
 import { Viewer } from './components/Viewer';
 import { Timeline } from './components/Timeline';
 import { Library } from './components/Library';
@@ -9,6 +10,7 @@ import { Icon } from './components/Icon';
 import type { Project, Settings } from '../../shared/types';
 
 export function App() {
+  useFollowAgent();
   const project = useStore((s) => s.project);
   const connected = useStore((s) => s.connected);
   const dialog = useStore((s) => s.dialog);
@@ -40,19 +42,66 @@ export function App() {
       <Modal open={dialog === 'settings'}><SettingsDialog /></Modal>
       <Modal open={dialog === 'export'}><ExportDialog /></Modal>
       <Modal open={!!dialog && typeof dialog === 'object'} wide>{dialog && typeof dialog === 'object' && 'compare' in dialog ? <CompareDialog clipId={dialog.compare.clipId} sha={dialog.compare.sha} /> : null}</Modal>
+      <Lightbox />
       <Notices />
     </div>
   );
 }
 
-/** Right column: the agent conversation, or the selected item's panel (cross-faded). */
+/** Right column: Agent / Script tabs; the selected item's panel slides over both. */
 function Side({ project }: { project: Project }) {
   const item = useSelectedItem();
+  const tab = useStore((s) => s.sideTab);
+  const running = useStore((s) => s.tasks.filter((t) => t.status === 'running' || t.status === 'queued').length);
+  const scenes = useStore((s) => s.script.scenes);
+  const doneScenes = scenes.filter((x) => x.status === 'done').length;
   return (
     <aside className="side">
-      <div className={'side-layer' + (item ? ' hidden' : '')}><Chat /></div>
-      <div className={'side-layer' + (item ? '' : ' hidden')}>{item && <ItemPanel key={item.id} item={item} project={project} />}</div>
+      <div className="side-tabs">
+        <button className={tab === 'agent' ? 'on' : ''} onClick={() => setState({ sideTab: 'agent' })}>Агент{running > 0 && <span className="tab-live" />}</button>
+        <button className={tab === 'script' ? 'on' : ''} onClick={() => setState({ sideTab: 'script' })}>Сценарий{scenes.length > 0 && <span className="tab-count">{doneScenes}/{scenes.length}</span>}</button>
+      </div>
+      <div className="side-stack">
+        <div className={'side-layer' + (tab === 'agent' ? '' : ' hidden left')}><Chat /></div>
+        <div className={'side-layer' + (tab === 'script' ? '' : ' hidden')}><ScriptPanel /></div>
+      </div>
+      <div className={'side-layer over' + (item ? '' : ' hidden')}>{item && <ItemPanel key={item.id} item={item} project={project} />}</div>
     </aside>
+  );
+}
+
+/** Follow the agent: when a running task starts working on a clip/track, bring it into view. */
+function useFollowAgent() {
+  const tasks = useStore((s) => s.tasks);
+  const follow = useStore((s) => s.followAgent);
+  const seen = useRef<string>('');
+  useEffect(() => {
+    if (!follow) return;
+    const live = tasks.filter((t) => t.status === 'running' && t.focus && (t.focus.kind === 'clip' || t.focus.kind === 'music')).sort((a, b) => (b.focus!.at - a.focus!.at))[0];
+    if (!live) return;
+    const key = live.id + ':' + live.focus!.kind + ':' + live.focus!.id;
+    if (key === seen.current) return;
+    seen.current = key;
+    const st = getState();
+    if (st.playing || !st.project) return;
+    const kind = live.focus!.kind;
+    const it = st.project.items.find((i) => i.kind === kind && i.ref === live.focus!.id);
+    if (!it) return;
+    const t = time.get();
+    if (t < it.start || t >= it.start + it.duration) seekTo(it.start + Math.min(it.duration / 2, 1.2));
+  }, [tasks, follow]);
+}
+
+function Lightbox() {
+  const src = useStore((s) => s.lightbox);
+  const [shown, setShown] = useState<string | null>(src);
+  useEffect(() => { if (src) setShown(src); }, [src]);
+  useEffect(() => { if (!src) return; const k = (e: KeyboardEvent) => e.key === 'Escape' && setState({ lightbox: null }); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [src]);
+  if (!shown) return null;
+  return (
+    <div className={'lightbox' + (src ? ' open' : '')} onClick={() => setState({ lightbox: null })} onTransitionEnd={() => { if (!src) setShown(null); }}>
+      <img src={shown} alt="" />
+    </div>
   );
 }
 

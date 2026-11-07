@@ -22,17 +22,45 @@ export function Viewer({ project }: { project: Project }) {
       <div className="stage" ref={wrap} onPointerDown={(e) => { if (e.target === e.currentTarget) setState({ selectedCommentId: null }); }}>
         {scale > 0 && (
           <div className={'frame' + (commentMode ? ' commenting' : '')} style={{ width: project.width * scale, height: project.height * scale }}>
+            <UpdateFlash />
             <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0', width: project.width, height: project.height }}>
               <Player project={project} />
             </div>
             <CommentLayer project={project} active={commentMode} />
           </div>
         )}
+        <LivePill />
         <ReviewBar />
       </div>
       <Transport project={project} />
     </section>
   );
+}
+
+/** "Agent is editing …" indicator over the stage while an agent works on something visible. */
+function LivePill() {
+  const tasks = useStore((s) => s.tasks);
+  const clips = useStore((s) => s.clips);
+  const music = useStore((s) => s.music);
+  const running = tasks.filter((t) => t.status === 'running');
+  const t = running.filter((x) => x.focus).sort((a, b) => b.focus!.at - a.focus!.at)[0] || running[0];
+  if (!t) return <div className="live-pill" />;
+  const f = t.focus;
+  const what = !f ? 'думает' : f.kind === 'clip' ? `правит «${clips.find((c) => c.id === f.id)?.name || f.id}»` : f.kind === 'music' ? `пишет музыку «${music.find((m) => m.id === f.id)?.name || f.id}»` : f.kind === 'script' ? 'работает над сценарием' : 'монтирует таймлайн';
+  return (
+    <button className="live-pill show" onClick={() => setState({ sideTab: 'agent', selectedTaskId: t.id, selectedItemId: null })}>
+      <span className="live-dot" />{t.agent === 'claude' ? 'Claude' : 'Codex'} {what}{running.length > 1 ? <span className="muted"> · ещё {running.length - 1}</span> : null}
+    </button>
+  );
+}
+
+/** Brief glow on the frame when a visible clip is updated from disk (agent edit). */
+function UpdateFlash() {
+  const fv = useStore((s) => s.fileVersion);
+  const [n, setN] = useState(0);
+  const first = useRef(true);
+  useEffect(() => { if (first.current) { first.current = false; return; } setN((x) => x + 1); }, [fv]);
+  return n ? <div key={n} className="update-flash" /> : null;
 }
 
 /** Floating pill: draft comments → send; resolved → review. */

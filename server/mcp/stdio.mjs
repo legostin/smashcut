@@ -125,6 +125,25 @@ server.registerTool('get_timing', {
   inputSchema: { from: z.number().optional(), to: z.number().optional() },
 }, safe(async ({ from, to }) => text(await api('GET', `/api/agent/timing?from=${from ?? ''}&to=${to ?? ''}`))));
 
+server.registerTool('get_script', {
+  description: 'The video script / storyboard (script.json): brief, production stage (brief→script→storyboard→production→review→export) and scenes [{id,title,start,duration,voiceover,visual,notes,status todo|doing|done,itemIds}]. Read it before producing a video.',
+  inputSchema: {},
+}, safe(async () => text(await api('GET', '/api/script'))));
+
+server.registerTool('set_script', {
+  description: 'Write the script: any of {brief, stage, scenes}. scenes replaces the whole list (keep ids of existing scenes). Use it to draft a script from a brief, re-time scenes, or advance the stage. The user sees it live in the editor.',
+  inputSchema: {
+    brief: z.string().optional(),
+    stage: z.enum(['brief', 'script', 'storyboard', 'production', 'review', 'export']).optional(),
+    scenes: z.array(z.object({ id: z.string().optional(), title: z.string(), start: z.number(), duration: z.number(), voiceover: z.string().optional(), visual: z.string().optional(), notes: z.string().optional(), status: z.enum(['todo', 'doing', 'done']).optional(), itemIds: z.array(z.string()).optional() })).optional(),
+  },
+}, safe(async (a) => text(await api('PUT', '/api/script', a))));
+
+server.registerTool('update_scene', {
+  description: 'Patch one scene (title, start, duration, voiceover, visual, notes, status, itemIds). Set status "doing" when you start a scene and "done" when it is finished and verified — the user watches progress live.',
+  inputSchema: { id: z.string(), patch: z.record(z.string(), z.any()) },
+}, safe(async ({ id, patch }) => text(await api('PATCH', `/api/script/scenes/${id}`, patch))));
+
 server.registerTool('approve_permission', {
   description: 'Internal: permission prompt bridge. Claude Code calls this (via --permission-prompt-tool) when an action needs approval; the user approves or denies it in the editor UI.',
   inputSchema: { tool_name: z.string(), input: z.record(z.string(), z.any()), tool_use_id: z.string().optional() },

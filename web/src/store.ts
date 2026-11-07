@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest } from '../../shared/types';
+import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script } from '../../shared/types';
 
 export interface SkillInfo { name: string; description: string; origin: string; path: string }
 export interface State {
@@ -23,6 +23,10 @@ export interface State {
   agents: { claude: string | null; codex: string | null } | null;
   permissions: PermissionRequest[];
   repo?: string;
+  script: Script;
+  sideTab: 'agent' | 'script';
+  followAgent: boolean;
+  lightbox: string | null;
   // ui
   libraryOpen: boolean;
   libraryTab: 'templates' | 'media' | 'project';
@@ -45,6 +49,7 @@ export interface State {
 const initial: State = {
   connected: false, project: null, comments: [], clips: [], music: [], media: [], tasks: [], skills: [], jobs: [], exports: [], gallery: [], recents: [],
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
+  script: { brief: '', stage: 'brief', scenes: [] }, sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null,
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -177,11 +182,12 @@ function onEvent(ev: ServerEvent) {
       break;
     }
     case 'notice': notify(ev.level, ev.text); break;
+    case 'script': setState({ script: ev.script }); break;
     case 'permissions': {
       const prev = new Set(getState().permissions.map((p) => p.id));
       setState({ permissions: ev.permissions });
       const fresh = ev.permissions.find((p) => !prev.has(p.id));
-      if (fresh) { notify('info', `Агент просит разрешение: ${fresh.tool}`); setState({ selectedTaskId: fresh.taskId, selectedItemId: null }); }
+      if (fresh) { notify('info', `Агент просит разрешение: ${fresh.tool}`); setState({ selectedTaskId: fresh.taskId, selectedItemId: null, sideTab: 'agent' }); }
       break;
     }
   }
@@ -240,15 +246,23 @@ export const actions = {
   async sendComments(ids?: string[]) {
     notify('info', 'Готовлю снапшоты кадров и запускаю агентов…');
     const tasks = await api<Task[]>('POST', '/api/comments/send', { ids, agent: getState().agent });
-    setState({ selectedItemId: null, selectedTaskId: tasks[0]?.id || null });
+    setState({ selectedItemId: null, selectedTaskId: tasks[0]?.id || null, sideTab: 'agent' });
   },
   async startTask(prompt: string, ctx: { itemId?: string | null; clipId?: string } = {}) {
     const t = await api<Task>('POST', '/api/tasks', { prompt, agent: getState().agent, itemId: ctx.itemId || undefined, clipId: ctx.clipId, playhead: time.get() });
-    setState({ selectedTaskId: t.id, selectedItemId: null });
+    setState({ selectedTaskId: t.id, selectedItemId: null, sideTab: 'agent' });
     return t;
   },
   followUp(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/message`, { prompt }); },
   cancelTask(taskId: string) { return api('POST', `/api/tasks/${taskId}/cancel`); },
+  setFollow(v: boolean) { try { localStorage.setItem('follow', v ? '1' : '0'); } catch {} setState({ followAgent: v }); },
+  saveScript(patch: Partial<Script>) { setState((s) => ({ script: { ...s.script, ...patch } })); return api('PATCH', '/api/script', patch); },
+  patchScene(id: string, patch: Partial<Script['scenes'][number]>) {
+    setState((s) => ({ script: { ...s.script, scenes: s.script.scenes.map((x) => (x.id === id ? { ...x, ...patch } : x)) } }));
+    return api('PATCH', `/api/script/scenes/${id}`, patch);
+  },
+  addScene() { return api('POST', '/api/script/scenes', {}); },
+  deleteScene(id: string) { return api('DELETE', `/api/script/scenes/${id}`); },
   decidePermission(id: string, allow: boolean, always = false) { return api('POST', `/api/permissions/${id}`, { allow, always }); },
 };
 

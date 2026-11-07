@@ -35,6 +35,7 @@ function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null 
         <Icon name="chevron" size={12} />
       </button>
       <div className="row gap6">
+        <FollowToggle />
         {pending > 0 && <span className="pill warn">{pending} ждёт разрешения</span>}
         {running > 0 && <span className="pill">{running} в работе</span>}
         {current && <button className="icon-btn" title="Новая задача" onClick={() => setState({ selectedTaskId: null })}><Icon name="plus" size={14} /></button>}
@@ -54,6 +55,15 @@ function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null 
   );
 }
 
+function FollowToggle() {
+  const follow = useStore((s) => s.followAgent);
+  return (
+    <button className={'follow' + (follow ? ' on' : '')} onClick={() => actions.setFollow(!follow)} title="Следить за агентом: превью переходит к тому, что он сейчас правит">
+      <Icon name="eye" size={13} />
+    </button>
+  );
+}
+
 const Dot = ({ status }: { status: Task['status'] }) => <span className={`dot st-${status}`} />;
 
 function Empty() {
@@ -69,7 +79,7 @@ function Empty() {
 
 // ---------- feed ----------
 type Step = { tool: AgentEvent; result?: AgentEvent };
-type Block = { kind: 'event'; e: AgentEvent } | { kind: 'steps'; steps: Step[] };
+type Block = { kind: 'event'; e: AgentEvent } | { kind: 'steps'; steps: Step[]; images?: AgentEvent[] };
 
 function buildBlocks(events: AgentEvent[]): Block[] {
   const blocks: Block[] = [];
@@ -85,6 +95,11 @@ function buildBlocks(events: AgentEvent[]): Block[] {
     }
     if (e.kind === 'tool_result') { const st = pending.shift(); if (st) st.result = e; continue; }
     if (e.kind === 'status' || (e.kind === 'result' && e.ok !== false)) continue;
+    if (e.kind === 'image') {
+      // frames the agent looked at: attach to the current steps group so they read as "what it saw"
+      const last = blocks[blocks.length - 1];
+      if (last?.kind === 'steps') { (last as any).images = [...((last as any).images || []), e]; continue; }
+    }
     blocks.push({ kind: 'event', e });
   }
   return blocks;
@@ -101,7 +116,7 @@ function Feed({ task }: { task: Task }) {
   return (
     <div className="feed" ref={scroller} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40; }}>
       {blocks.map((b, i) => b.kind === 'steps'
-        ? <Steps key={i} steps={b.steps} live={busy && i === blocks.length - 1} />
+        ? <Steps key={i} steps={b.steps} images={b.images} live={busy && i === blocks.length - 1} />
         : <Message key={i} e={b.e} />)}
       {perms.map((p) => <PermissionCard key={p.id} p={p} />)}
       {busy && !perms.length && <div className="working"><span className="spinner" /> {task.status === 'queued' ? 'в очереди' : 'работает'}</div>}
@@ -122,6 +137,7 @@ function Message({ e }: { e: AgentEvent }) {
     return <div className={'msg-user' + (long && !open ? ' clamp' : '')} onClick={() => long && setOpen(!open)}>{e.text}</div>;
   }
   if (e.kind === 'text') return <div className="msg-agent"><Markdown text={e.text || ''} /></div>;
+  if (e.kind === 'image') return <Frames images={[e]} />;
   return <div className="msg-error">{e.text}</div>;
 }
 
@@ -135,7 +151,21 @@ const LABEL: Record<string, string> = {
 };
 const label = (t?: string) => { const k = (t || '').replace(/^(studio\.|mcp__studio__)/, ''); return LABEL[k] || k; };
 
-function Steps({ steps, live }: { steps: Step[]; live: boolean }) {
+function Frames({ images }: { images: AgentEvent[] }) {
+  const shown = images.slice(-6);
+  return (
+    <div className="frames">
+      {shown.map((im, i) => (
+        <button key={i} className="frame-thumb" title={im.text} onClick={() => setState({ lightbox: im.src || null })}>
+          <img src={im.src} alt="" loading="lazy" />
+          {i === shown.length - 1 && <span className="frame-cap">{im.text}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Steps({ steps, live, images }: { steps: Step[]; live: boolean; images?: AgentEvent[] }) {
   const [open, setOpen] = useState(false);
   const failed = steps.filter((s) => s.result?.ok === false).length;
   const last = steps[steps.length - 1];
@@ -148,6 +178,7 @@ function Steps({ steps, live }: { steps: Step[]; live: boolean }) {
           : <span>{steps.length} {plural(steps.length, 'действие', 'действия', 'действий')}{failed ? <span className="muted"> · {failed} не удалось</span> : null}</span>}
       </button>
       {open && <div className="steps-list">{steps.map((s, i) => <StepRow key={i} s={s} />)}</div>}
+      {images && images.length > 0 && <Frames images={images} />}
     </div>
   );
 }

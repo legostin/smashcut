@@ -205,7 +205,10 @@ function parseClaude(t: Task, m: any) {
     for (const c of m.message?.content || []) {
       if (c.type === 'text' && c.text?.trim()) pushEvent(t, { kind: 'text', text: c.text });
       else if (c.type === 'thinking' && c.thinking?.trim()) pushEvent(t, { kind: 'thinking', text: c.thinking });
-      else if (c.type === 'tool_use') pushEvent(t, { kind: 'tool', tool: String(c.name).replace(/^mcp__studio__/, 'studio.'), input: c.input, text: toolSummary(c.name, c.input) });
+      else if (c.type === 'tool_use') {
+        pushEvent(t, { kind: 'tool', tool: String(c.name).replace(/^mcp__studio__/, 'studio.'), input: c.input, text: toolSummary(c.name, c.input) });
+        setFocus(t.id, focusFromTool(c.name, c.input));
+      }
     }
     return;
   }
@@ -235,14 +238,14 @@ function parseCodex(t: Task, m: any) {
   const itype = it.type || it.item_type;
   if (type === 'item.started') {
     if (itype === 'command_execution') pushEvent(t, { kind: 'tool', tool: 'shell', text: it.command, input: { command: it.command } });
-    else if (itype === 'mcp_tool_call') pushEvent(t, { kind: 'tool', tool: `${it.server}.${it.tool}`, input: it.arguments, text: toolSummary(it.tool, it.arguments) });
+    else if (itype === 'mcp_tool_call') { pushEvent(t, { kind: 'tool', tool: `${it.server}.${it.tool}`, input: it.arguments, text: toolSummary(it.tool, it.arguments) }); setFocus(t.id, focusFromTool(it.tool, it.arguments)); }
     return;
   }
   if (type === 'item.completed') {
     if (itype === 'agent_message' || itype === 'assistant_message') pushEvent(t, { kind: 'text', text: it.text });
     else if (itype === 'reasoning') pushEvent(t, { kind: 'thinking', text: it.text });
     else if (itype === 'command_execution') pushEvent(t, { kind: 'tool_result', ok: it.exit_code === 0, text: short(it.aggregated_output || '') });
-    else if (itype === 'file_change') pushEvent(t, { kind: 'tool', tool: 'edit', text: (it.changes || []).map((c: any) => `${c.kind} ${c.path}`).join('\n') });
+    else if (itype === 'file_change') { pushEvent(t, { kind: 'tool', tool: 'edit', text: (it.changes || []).map((c: any) => `${c.kind} ${c.path}`).join('\n') }); const c0 = (it.changes || [])[0]; if (c0) setFocus(t.id, focusFromPath(String(c0.path))); }
     else if (itype === 'mcp_tool_call') {
       const res = it.result?.content?.map((x: any) => (x.type === 'text' ? x.text : '[image]')).join('\n') || it.error?.message || '';
       pushEvent(t, { kind: 'tool_result', ok: !it.error && it.status !== 'failed', text: short(res) });
@@ -264,3 +267,37 @@ function toolSummary(name: string, input: any): string {
 }
 
 export function runningCount() { return procs.size; }
+
+/** attach an event (e.g. a rendered frame) to a task from outside the stream (MCP bridge) */
+export function taskEvent(taskId: string, ev: Omit<AgentEvent, 't'>) {
+  const t = tasks.get(taskId);
+  if (!t) return;
+  pushEvent(t, ev);
+  persist(t);
+}
+
+/** remember what the agent is working on; the UI follows it */
+export function setFocus(taskId: string, focus: Task['focus']) {
+  const t = tasks.get(taskId);
+  if (!t || !focus) return;
+  if (t.focus && t.focus.kind === focus.kind && t.focus.id === focus.id) { t.focus.at = focus.at; return; }
+  t.focus = focus;
+  emitTask(t);
+}
+
+function focusFromPath(p: string): Task['focus'] | undefined {
+  const m = /(?:^|\/)(clips|music)\/([^/]+)\//.exec(p);
+  if (m) return { kind: m[1] === 'clips' ? 'clip' : 'music', id: m[2], at: Date.now() };
+  if (/(?:^|\/)project\.json$/.test(p)) return { kind: 'timeline', at: Date.now() };
+  if (/(?:^|\/)script\.json$/.test(p)) return { kind: 'script', at: Date.now() };
+  return undefined;
+}
+function focusFromTool(name: string, input: any): Task['focus'] | undefined {
+  const n = String(name).replace(/^(mcp__studio__|studio\.)/, '');
+  if (input?.file_path) return focusFromPath(String(input.file_path));
+  if (input?.clipId) return { kind: 'clip', id: input.clipId, at: Date.now() };
+  if (input?.musicId) return { kind: 'music', id: input.musicId, at: Date.now() };
+  if (n.startsWith('timeline_') || n === 'use_template') return { kind: 'timeline', at: Date.now() };
+  if (n.includes('script') || n.includes('scene')) return { kind: 'script', at: Date.now() };
+  return undefined;
+}

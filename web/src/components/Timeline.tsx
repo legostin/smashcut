@@ -14,6 +14,7 @@ export function Timeline({ project }: { project: Project }) {
   const snap = useStore((s) => s.snap);
   const timing = useStore((s) => s.timing);
   const comments = useStore((s) => s.comments);
+  const scenes = useStore((s) => s.script.scenes);
   const selectedItemId = useStore((s) => s.selectedItemId);
   const scroller = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<DragState>(null);
@@ -156,10 +157,16 @@ export function Timeline({ project }: { project: Project }) {
               <input className="tl-zoom" type="range" min={8} max={400} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} title="Масштаб (⌘ + колесо)" />
             </div>
             <div className="tl-ruler" style={{ width }} onPointerDown={scrub}>
+              {scenes.map((sc, i) => (
+                <div key={sc.id} className={`tl-scene st-${sc.status}`} style={{ left: sc.start * zoom + 1, width: Math.max(2, sc.duration * zoom - 2) }} title={`${i + 1}. ${sc.title}`}
+                  onPointerDown={(e) => { e.stopPropagation(); seek(sc.start + 0.001); }}>
+                  <span>{i + 1}. {sc.title}</span>
+                </div>
+              ))}
               {timing.sections.map((s, i) => <div key={i} className="tl-section" style={{ left: s.start * zoom, width: (s.end - s.start) * zoom }}>{s.name}</div>)}
               {zoom > 25 && timing.beats.map((b, i) => <div key={i} className={'tl-beat' + (timing.bars.includes(b) ? ' bar' : '')} style={{ left: b * zoom }} />)}
               {ticks.map((t) => <div key={t} className="tl-tick" style={{ left: t * zoom }}><span>{t % 1 === 0 ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}` : ''}</span></div>)}
-              {timing.markers.map((m, i) => <div key={i} className="tl-marker" style={{ left: m.time * zoom }} title={m.name}>◆ {m.name}</div>)}
+              {timing.markers.map((m, i) => <div key={i} className="tl-marker" style={{ left: m.time * zoom }} title={m.name}>◆</div>)}
               {comments.map((c) => <div key={c.id} className={`tl-comment status-${c.status}`} style={{ left: c.time * zoom }} title={c.text} onPointerDown={(e) => { e.stopPropagation(); seek(c.time); setState({ selectedCommentId: c.id }); }} />)}
             </div>
           </div>
@@ -203,7 +210,7 @@ function TlItem({ item, zoom, selected, dragging, onDown }: { item: Item; zoom: 
   const music = useStore((s) => s.music);
   const errors = useStore((s) => s.clipErrors[item.id]);
   const openComments = useStore((s) => s.comments.filter((c) => c.itemId === item.id && (c.status === 'draft' || c.status === 'sent')).length);
-  const running = useStore((s) => s.tasks.some((t) => t.status === 'running' && t.clipId && item.kind === 'clip' && t.clipId === item.ref));
+  const running = useStore((s) => s.tasks.some((t) => t.status === 'running' && ((t.focus && t.focus.id === item.ref && (t.focus.kind === item.kind)) || (t.clipId && item.kind === 'clip' && t.clipId === item.ref))));
   let label = item.label || item.ref;
   let thumb: string | undefined;
   let peaksUrl: string | undefined;
@@ -221,7 +228,7 @@ function TlItem({ item, zoom, selected, dragging, onDown }: { item: Item; zoom: 
   }
   const w = Math.max(4, item.duration * zoom);
   return (
-    <div className={`tl-item kind-${item.kind}${thumb ? ' has-thumb' : ''}${selected ? ' selected' : ''}${dragging ? ' dragging' : ''}${errors?.length ? ' has-error' : ''}`}
+    <div className={`tl-item kind-${item.kind}${running ? ' live' : ''}${thumb ? ' has-thumb' : ''}${selected ? ' selected' : ''}${dragging ? ' dragging' : ''}${errors?.length ? ' has-error' : ''}`}
       style={{ left: item.start * zoom, width: w, backgroundImage: thumb ? `url(${thumb})` : undefined }}
       onPointerDown={(e) => onDown(e, 'move')}
       title={`${label}\n${item.start.toFixed(2)}s → ${(item.start + item.duration).toFixed(2)}s${errors?.length ? '\n⚠ ' + errors.join('\n') : ''}`}>

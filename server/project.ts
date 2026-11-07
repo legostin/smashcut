@@ -33,7 +33,7 @@ export class ProjectStore {
   private watcher?: FSWatcher;
   private selfWrites = new Map<string, number>();
   private mutex = new Mutex();
-  listeners: { music?: (id: string) => void; media?: (file: string) => void; clip?: (id: string) => void } = {};
+  listeners: { music?: (id: string) => void; media?: (file: string) => void; clip?: (id: string) => void; script?: () => void } = {};
 
   constructor(dir: string) {
     this.dir = path.resolve(dir);
@@ -181,13 +181,14 @@ export class ProjectStore {
         this.comments = readJson<Comment[]>(this.p('comments.json'), this.comments);
         bus.send({ type: 'comments', comments: this.comments });
       }
+      if (rels.includes('script.json')) this.listeners.script?.();
       const musicIds = new Set(rels.filter((r) => r.startsWith('music/')).map((r) => r.split('/')[1]).filter(Boolean));
       for (const id of musicIds) this.listeners.music?.(id);
       const mediaFiles = new Set(rels.filter((r) => r.startsWith('media/') && r.split('/').length === 2).map((r) => r.split('/')[1]));
       for (const f of mediaFiles) if (fs.existsSync(this.p('media', f))) this.listeners.media?.(f);
       const clipIds = new Set(rels.filter((r) => r.startsWith('clips/')).map((r) => r.split('/')[1]).filter(Boolean));
       for (const id of clipIds) this.listeners.clip?.(id);
-      const other = rels.filter((r) => r !== 'project.json' && r !== 'comments.json');
+      const other = rels.filter((r) => r !== 'project.json' && r !== 'comments.json' && r !== 'script.json');
       if (other.length) bus.send({ type: 'files', paths: other });
     };
     w.on('all', (_ev, p) => {

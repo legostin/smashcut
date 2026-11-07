@@ -141,7 +141,9 @@ export type TaskStatus = 'queued' | 'running' | 'done' | 'error' | 'cancelled';
 
 export interface AgentEvent {
   t: number;
-  kind: 'user' | 'text' | 'thinking' | 'tool' | 'tool_result' | 'status' | 'error' | 'result';
+  kind: 'user' | 'text' | 'thinking' | 'tool' | 'tool_result' | 'status' | 'error' | 'result' | 'image';
+  /** for kind=image: URL of a frame the agent rendered to look at */
+  src?: string;
   text?: string;
   tool?: string;
   input?: unknown;
@@ -164,6 +166,32 @@ export interface Task {
   commitBefore?: string;
   commitAfter?: string;
   costUsd?: number;
+  /** what the agent is working on right now (derived from its tool calls) */
+  focus?: { kind: 'clip' | 'music' | 'timeline' | 'script'; id?: string; at: number };
+}
+
+export type StageId = 'brief' | 'script' | 'storyboard' | 'production' | 'review' | 'export';
+export type SceneStatus = 'todo' | 'doing' | 'done';
+export interface Scene {
+  id: string;
+  title: string;
+  /** project seconds */
+  start: number;
+  duration: number;
+  /** narration / on-screen copy */
+  voiceover?: string;
+  /** what we see: visual idea, motion, style */
+  visual?: string;
+  notes?: string;
+  status: SceneStatus;
+  /** timeline items that realise this scene */
+  itemIds?: string[];
+}
+export interface Script {
+  brief: string;
+  stage: StageId;
+  scenes: Scene[];
+  updatedAt?: string;
 }
 
 export interface Timing {
@@ -218,4 +246,5 @@ export type ServerEvent =
   | { type: 'music'; music: MusicInfo }
   | { type: 'media'; media: MediaInfo }
   | { type: 'permissions'; permissions: PermissionRequest[] }
+  | { type: 'script'; script: Script }
   | { type: 'notice'; level: 'info' | 'error'; text: string };
