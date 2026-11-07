@@ -67,11 +67,16 @@ function FollowToggle() {
 const Dot = ({ status }: { status: Task['status'] }) => <span className={`dot st-${status}`} />;
 
 function Empty() {
-  const examples = ['Интро 5 секунд с названием в ритм музыки', 'Субтитры-караоке по речи из видео', 'Трек 120 BPM с дропом на 8-й секунде'];
+  const hasScript = useStore((s) => s.script.scenes.length > 0);
+  const examples = hasScript
+    ? ['Сделай всё видео по сценарию', 'Спроектируй дизайн-систему и примени её к клипам', 'Напиши трек под сценарий и синхронизируй сцены с битами']
+    : ['30-секундный промо-ролик продукта для соцсетей', 'Объясняющее видео на 1 минуту с субтитрами', 'Заставка для подкаста: 8 секунд, логотип и музыка'];
   return (
     <div className="chat-empty">
-      <div className="chat-empty-title">Что делаем?</div>
-      <div className="muted">Агент соберёт графику, музыку и монтаж прямо в этом проекте и проверит результат по кадрам.</div>
+      <div className="chat-empty-title">{hasScript ? 'Что делаем дальше?' : 'Какое видео делаем?'}</div>
+      <div className="muted">{hasScript
+        ? 'Агент работает по сценарию: сцена за сценой, со статусами — следите на холсте или в превью.'
+        : 'Опишите идею. Первым делом агент напишет сценарий — сцены, текст, визуал — а потом соберёт графику, музыку и монтаж.'}</div>
       <div className="examples">{examples.map((e) => <button key={e} className="example" onClick={() => setState({ chatDraft: e })}>{e}</button>)}</div>
     </div>
   );

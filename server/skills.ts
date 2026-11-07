@@ -51,6 +51,7 @@ Layout: \`project.json\` (timeline — prefer the MCP timeline tools), \`clips/<
 Built-in templates: ${GALLERY_DIR}/clips and /music (copy via MCP \`use_template\`).
 
 Golden rules:
+0. Script first: \`get_script\`; if it has no scenes, write it with \`set_script\` before any other work (see the studio-production skill).
 1. A clip is a pure function of time — read the clip authoring skill before writing one.
 2. After every change, render frames (\`render_clip\` / \`render_frame\`) and look at them; iterate until it is genuinely good.
 3. When you work on comments, call \`resolve_comment\` for each one you addressed, with a one-line note.`;

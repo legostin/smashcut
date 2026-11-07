@@ -144,6 +144,23 @@ server.registerTool('update_scene', {
   inputSchema: { id: z.string(), patch: z.record(z.string(), z.any()) },
 }, safe(async ({ id, patch }) => text(await api('PATCH', `/api/script/scenes/${id}`, patch))));
 
+server.registerTool('get_design', {
+  description: 'The project design system (design.json): colour tokens, type roles, motion tokens, spacing. Clips get them as CSS vars: var(--color-<name>), var(--font-<role>) / var(--weight-<role>) / var(--size-<role>), var(--dur-<name>), var(--space-<name>), and as studio.design in JS (motion eases for GSAP).',
+  inputSchema: {},
+}, safe(async () => text(await api('GET', '/api/design'))));
+
+server.registerTool('set_design', {
+  description: 'Create or update the design system (any of name, colors, type, motion, spacing, notes; arrays replace). Define it before building clips so every clip shares one look; the user watches it on the board live.',
+  inputSchema: {
+    name: z.string().optional(),
+    colors: z.array(z.object({ name: z.string(), value: z.string(), role: z.string().optional() })).optional(),
+    type: z.array(z.object({ role: z.string(), family: z.string(), weight: z.number(), size: z.number(), tracking: z.number().optional(), sample: z.string().optional() })).optional(),
+    motion: z.array(z.object({ name: z.string(), ease: z.string(), duration: z.number() })).optional(),
+    spacing: z.array(z.object({ name: z.string(), value: z.number() })).optional(),
+    notes: z.string().optional(),
+  },
+}, safe(async (a) => text(await api('PUT', '/api/design', a))));
+
 server.registerTool('approve_permission', {
   description: 'Internal: permission prompt bridge. Claude Code calls this (via --permission-prompt-tool) when an action needs approval; the user approves or denies it in the editor UI.',
   inputSchema: { tool_name: z.string(), input: z.record(z.string(), z.any()), tool_use_id: z.string().optional() },

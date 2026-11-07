@@ -146,6 +146,18 @@
       const since = (((t + offset()) % spb) + spb) % spb;
       return 0.35 + 0.55 * Math.exp(-since * 7);
     },
+    /**
+     * project design system: { colors[], type[], motion[], spacing[] } plus helpers:
+     * studio.design.color('accent', '#fff'), studio.design.motion('enter') → {ease, duration}
+     */
+    get design() {
+      return {
+        ...design,
+        color: (name, fallback) => ((design.colors || []).find((c) => c.name === name) || {}).value || fallback,
+        font: (role, fallback) => (design.type || []).find((t) => t.role === role) || fallback,
+        motion: (name, fallback = { ease: 'power3.out', duration: 0.6 }) => (design.motion || []).find((m) => m.name === name) || fallback,
+      };
+    },
     /** paused GSAP timeline that the runtime seeks for you */
     timeline(vars) {
       if (!window.gsap) throw new Error('GSAP not loaded: add <script src="/vendor/gsap.min.js"></script>');
@@ -174,6 +186,25 @@
     const defaults = {};
     for (const [k, s] of Object.entries(schema)) defaults[k] = s.default;
     params = { ...defaults, ...(input.params || {}) };
+  }
+
+  // design system tokens → CSS custom properties + studio.design
+  let design = { colors: [], type: [], motion: [], spacing: [] };
+  async function loadDesign() {
+    if (input.design === false) return;
+    try {
+      const res = await fetch('/api/design', { cache: 'no-store' });
+      if (!res.ok) return;
+      design = await res.json();
+      const L = [];
+      for (const c of design.colors || []) L.push(`--color-${c.name}:${c.value}`);
+      for (const t of design.type || []) { L.push(`--font-${t.role}:'${t.family}',system-ui,sans-serif`, `--weight-${t.role}:${t.weight}`, `--size-${t.role}:${t.size}px`); if (t.tracking != null) L.push(`--tracking-${t.role}:${t.tracking}em`); }
+      for (const m of design.motion || []) L.push(`--dur-${m.name}:${m.duration}s`);
+      for (const x of design.spacing || []) L.push(`--space-${x.name}:${x.value}px`);
+      let el = document.getElementById('studio-design');
+      if (!el) { el = document.createElement('style'); el.id = 'studio-design'; document.head.prepend(el); }
+      el.textContent = `:root{${L.join(';')}}`;
+    } catch (e) { /* standalone */ }
   }
 
   async function loadTiming() {
@@ -260,7 +291,7 @@
     document.documentElement.style.setProperty('--h', studio.height + 'px');
     // load every bundled face up-front so setup() can measure text with final metrics
     const fontsP = Promise.all([...document.fonts].map((f) => f.load().catch(() => null)));
-    await Promise.all([loadParams(), loadTiming(), Promise.race([fontsP, new Promise((r) => nativeTimeout(r, 5000))])]);
+    await Promise.all([loadParams(), loadTiming(), loadDesign(), Promise.race([fontsP, new Promise((r) => nativeTimeout(r, 5000))])]);
     await runSetup();
     applyTime(Number(input.t || 0));
     isReady = true;

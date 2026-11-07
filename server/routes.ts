@@ -19,6 +19,8 @@ import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
 import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus } from './agents/runner.ts';
 import { getScript, saveScript, patchScene, STAGES } from './script.ts';
+import { getDesign, saveDesign } from './design.ts';
+import { boardFrame } from './render/board.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
 
@@ -59,6 +61,7 @@ export function state() {
     jobs: getJobs(),
     permissions: permissions.list(),
     script: getScript(),
+    design: getDesign(),
     exports: listExports(),
     recents: getRecents(),
     projectsDir: PROJECTS_DIR,
@@ -182,6 +185,7 @@ function overview() {
     media: store.listMedia().map((m) => ({ file: m.file, type: m.type, duration: m.duration, size: m.width ? `${m.width}x${m.height}` : undefined, transcript: !!m.transcript })),
     openComments: open.map((c) => ({ id: c.id, time: c.time, clipId: c.clipId, text: c.text, status: c.status })),
     timing: { bpm: timing.bpm, beats: timing.beats.length, sections: timing.sections, markers: timing.markers, words: timing.words.length },
+    design: getDesign(),
     script: (() => { const sc = getScript(); return { stage: sc.stage, brief: sc.brief, scenes: sc.scenes.map((x) => ({ id: x.id, title: x.title, start: x.start, end: +(x.start + x.duration).toFixed(2), status: x.status })) }; })(),
     galleryDir: GALLERY_DIR,
     libraryDir: LIBRARY_DIR,
@@ -223,6 +227,7 @@ async function sendComments(ids: string[] | undefined, agent?: 'claude' | 'codex
 }
 
 export async function registerRoutes(app: FastifyInstance) {
+  const taskOf = (req: { headers: Record<string, unknown> }) => String(req.headers['x-studio-task'] || '');
   const need = () => { if (!hasProject()) throw Object.assign(new Error('no project open'), { statusCode: 409 }); return cur(); };
 
   // ---------- state & projects ----------
@@ -430,7 +435,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const b = req.body;
     const item = b.itemId ? store.project.items.find((i) => i.id === b.itemId) : undefined;
     const clipId = b.clipId || (item?.kind === 'clip' ? item.ref : undefined);
-    const prompt = chatTaskPrompt({ prompt: b.prompt, project: store.project, playhead: b.playhead, item, clipId });
+    const prompt = chatTaskPrompt({ prompt: b.prompt, project: store.project, playhead: b.playhead, item, clipId, hasScript: getScript().scenes.length > 0 });
     return startTask({ agent: b.agent, title: b.prompt.split('\n')[0].slice(0, 80), prompt, clipId: undefined });
   });
   app.post<{ Params: { id: string }; Body: { prompt: string } }>('/api/tasks/:id/message', async (req) => followUp(req.params.id, req.body.prompt));
@@ -452,9 +457,21 @@ export async function registerRoutes(app: FastifyInstance) {
     return { ok: true };
   });
 
+  // ---------- design system ----------
+  app.get('/api/design', async () => (hasProject() ? getDesign() : { colors: [], type: [], motion: [], spacing: [] }));
+  app.put<{ Body: any }>('/api/design', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'design', at: Date.now() }); return saveDesign(req.body as any); });
+
+  // ---------- board (canvas) frames ----------
+  app.get<{ Querystring: { t: string; w?: string } }>('/api/board/frame', async (req, reply) => {
+    need();
+    const file = await boardFrame(Number(req.query.t) || 0, Math.min(960, Number(req.query.w) || 480));
+    reply.header('cache-control', 'max-age=3600').type('image/jpeg');
+    return fs.createReadStream(file);
+  });
+
   // ---------- script / storyboard ----------
   app.get('/api/script', async () => { need(); return { ...getScript(), stages: STAGES }; });
-  app.put<{ Body: any }>('/api/script', async (req) => { need(); return saveScript(req.body as any); });
+  app.put<{ Body: any }>('/api/script', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', at: Date.now() }); return saveScript(req.body as any); });
   app.patch<{ Body: any }>('/api/script', async (req) => { need(); return saveScript(req.body as any); });
   app.post<{ Body: any }>('/api/script/scenes', async (req) => {
     need();
@@ -464,7 +481,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const scene = { id: 's' + nid(), title: b.title || `Сцена ${s.scenes.length + 1}`, start: b.start ?? (last ? last.start + last.duration : 0), duration: b.duration ?? 4, voiceover: b.voiceover || '', visual: b.visual || '', notes: '', status: 'todo' as const, itemIds: [] };
     return saveScript({ scenes: [...s.scenes, scene] });
   });
-  app.patch<{ Params: { id: string }; Body: any }>('/api/script/scenes/:id', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', at: Date.now() }); return patchScene(req.params.id, req.body as any); });
+  app.patch<{ Params: { id: string }; Body: any }>('/api/script/scenes/:id', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', id: req.params.id, at: Date.now() }); return patchScene(req.params.id, req.body as any); });
   app.delete<{ Params: { id: string } }>('/api/script/scenes/:id', async (req) => { need(); const s = getScript(); return saveScript({ scenes: s.scenes.filter((x) => x.id !== req.params.id) }); });
 
   // ---------- versions ----------
@@ -506,7 +523,6 @@ export async function registerRoutes(app: FastifyInstance) {
       return { ...c, clipLocalTime: item ? +(c.time - item.start + item.in).toFixed(3) : undefined, snapshot: c.snapshot ? store.p(c.snapshot) : undefined };
     });
   });
-  const taskOf = (req: { headers: Record<string, unknown> }) => String(req.headers['x-studio-task'] || '');
   app.post<{ Body: { clipId: string; times?: number[]; count?: number; itemId?: string } }>('/api/agent/render-clip', async (req) => {
     need();
     const r = await renderClipSheet(req.body.clipId, req.body);

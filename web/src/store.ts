@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script } from '../../shared/types';
+import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script, DesignSystem } from '../../shared/types';
 
 export interface SkillInfo { name: string; description: string; origin: string; path: string }
 export interface State {
@@ -24,6 +24,8 @@ export interface State {
   permissions: PermissionRequest[];
   repo?: string;
   script: Script;
+  design: DesignSystem;
+  view: 'edit' | 'board';
   sideTab: 'agent' | 'script';
   followAgent: boolean;
   lightbox: string | null;
@@ -49,7 +51,8 @@ export interface State {
 const initial: State = {
   connected: false, project: null, comments: [], clips: [], music: [], media: [], tasks: [], skills: [], jobs: [], exports: [], gallery: [], recents: [],
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
-  script: { brief: '', stage: 'brief', scenes: [] }, sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null,
+  script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
+  view: (() => { try { return localStorage.getItem('view') === 'board' ? 'board' : 'edit'; } catch { return 'edit'; } })() as 'edit' | 'board', sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null,
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -183,6 +186,7 @@ function onEvent(ev: ServerEvent) {
     }
     case 'notice': notify(ev.level, ev.text); break;
     case 'script': setState({ script: ev.script }); break;
+    case 'design': setState({ design: ev.design }); break;
     case 'permissions': {
       const prev = new Set(getState().permissions.map((p) => p.id));
       setState({ permissions: ev.permissions });
@@ -255,6 +259,7 @@ export const actions = {
   },
   followUp(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/message`, { prompt }); },
   cancelTask(taskId: string) { return api('POST', `/api/tasks/${taskId}/cancel`); },
+  setView(v: 'edit' | 'board') { try { localStorage.setItem('view', v); } catch {} setState({ view: v }); },
   setFollow(v: boolean) { try { localStorage.setItem('follow', v ? '1' : '0'); } catch {} setState({ followAgent: v }); },
   saveScript(patch: Partial<Script>) { setState((s) => ({ script: { ...s.script, ...patch } })); return api('PATCH', '/api/script', patch); },
   patchScene(id: string, patch: Partial<Script['scenes'][number]>) {

@@ -16,6 +16,7 @@ import { recomputeTiming } from './timing.ts';
 import { closeBrowser } from './render/browser.ts';
 import { createDemoProject } from './demo.ts';
 import { onScriptFileChanged } from './script.ts';
+import { onDesignFileChanged } from './design.ts';
 
 const app = Fastify({ logger: false, bodyLimit: 50 * 1024 * 1024 });
 await app.register(fastifyWebsocket);
@@ -72,6 +73,7 @@ onProjectOpen((store) => {
     musicTimers.set(id, setTimeout(() => renderMusic(id).catch((e) => console.error('music', e.message)), 400));
   };
   store.listeners.script = () => onScriptFileChanged();
+  store.listeners.design = () => onDesignFileChanged();
   store.listeners.media = (file) => { probeMedia(file).catch((e) => console.error('probe', e.message)); };
   // warm up: probe media, render music
   setTimeout(async () => {

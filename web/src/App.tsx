@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScriptPanel } from './components/ScriptPanel';
-import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo } from './store';
+import { Board } from './components/Board';
+import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo, actions } from './store';
 import { Viewer } from './components/Viewer';
 import { Timeline } from './components/Timeline';
 import { Library } from './components/Library';
@@ -14,6 +15,7 @@ export function App() {
   const project = useStore((s) => s.project);
   const connected = useStore((s) => s.connected);
   const dialog = useStore((s) => s.dialog);
+  const view = useStore((s) => s.view);
   const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 240));
   if (!project) return (
     <div className="app-empty">
@@ -22,10 +24,13 @@ export function App() {
     </div>
   );
   return (
-    <div className="app" style={{ gridTemplateRows: `48px minmax(0, 1fr) ${tlHeight}px` }}>
+    <div className={'app view-' + view} style={{ gridTemplateRows: view === 'board' ? '48px minmax(0, 1fr) 0px' : `48px minmax(0, 1fr) ${tlHeight}px` }}>
       <TopBar />
       <div className="main">
-        <Viewer project={project} />
+        <div className="stage-swap">
+          <div className={'swap-layer' + (view === 'edit' ? '' : ' off')}><Viewer project={project} /></div>
+          <div className={'swap-layer' + (view === 'board' ? '' : ' off')}>{view === 'board' && <Board project={project} />}</div>
+        </div>
         <Side project={project} />
         <Library />
       </div>
@@ -113,6 +118,7 @@ function TopBar() {
   return (
     <header className="topbar">
       <div className="row gap8">
+        <ViewSwitch />
         <button className={'tb-btn' + (libraryOpen ? ' on' : '')} onClick={() => setState({ libraryOpen: !libraryOpen })} title="Шаблоны, медиа, ассеты">
           <Icon name="plus" size={14} /> Добавить
         </button>
@@ -126,6 +132,17 @@ function TopBar() {
         <button className="btn sm primary" onClick={() => setState({ dialog: 'export' })}>Экспорт</button>
       </div>
     </header>
+  );
+}
+
+function ViewSwitch() {
+  const view = useStore((s) => s.view);
+  return (
+    <div className="view-switch">
+      <span className="vs-thumb" style={{ transform: `translateX(${view === 'edit' ? 0 : 100}%)` }} />
+      <button className={view === 'edit' ? 'on' : ''} onClick={() => actions.setView('edit')}>Монтаж</button>
+      <button className={view === 'board' ? 'on' : ''} onClick={() => actions.setView('board')}>Холст</button>
+    </div>
   );
 }
 

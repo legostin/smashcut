@@ -290,6 +290,7 @@ function focusFromPath(p: string): Task['focus'] | undefined {
   if (m) return { kind: m[1] === 'clips' ? 'clip' : 'music', id: m[2], at: Date.now() };
   if (/(?:^|\/)project\.json$/.test(p)) return { kind: 'timeline', at: Date.now() };
   if (/(?:^|\/)script\.json$/.test(p)) return { kind: 'script', at: Date.now() };
+  if (/(?:^|\/)design\.json$/.test(p)) return { kind: 'design', at: Date.now() };
   return undefined;
 }
 function focusFromTool(name: string, input: any): Task['focus'] | undefined {
@@ -298,6 +299,8 @@ function focusFromTool(name: string, input: any): Task['focus'] | undefined {
   if (input?.clipId) return { kind: 'clip', id: input.clipId, at: Date.now() };
   if (input?.musicId) return { kind: 'music', id: input.musicId, at: Date.now() };
   if (n.startsWith('timeline_') || n === 'use_template') return { kind: 'timeline', at: Date.now() };
-  if (n.includes('script') || n.includes('scene')) return { kind: 'script', at: Date.now() };
+  if (n === 'update_scene') return { kind: 'script', id: input?.id, at: Date.now() };
+  if (n.includes('script')) return { kind: 'script', at: Date.now() };
+  if (n.includes('design')) return { kind: 'design', at: Date.now() };
   return undefined;
 }

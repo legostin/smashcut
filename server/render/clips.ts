@@ -55,7 +55,7 @@ export async function renderItemSequence(item: Item, project: Project, onProgres
   const store = cur();
   const clipDir = store.p('clips', item.ref);
   const input = itemInput(item, project);
-  const key = sha1(hashDir(clipDir) + rtHash() + JSON.stringify({ input, in: item.in, timing: fs.existsSync(store.p('.studio', 'timing.json')) ? fs.readFileSync(store.p('.studio', 'timing.json'), 'utf8') : '' }));
+  const key = sha1(hashDir(clipDir) + rtHash() + JSON.stringify({ input, in: item.in, timing: fs.existsSync(store.p('.studio', 'timing.json')) ? fs.readFileSync(store.p('.studio', 'timing.json'), 'utf8') : '', design: fs.existsSync(store.p('design.json')) ? fs.readFileSync(store.p('design.json'), 'utf8') : '' }));
   const dir = store.p('.studio', 'cache', 'clips', `${item.ref}-${key}`);
   const count = Math.max(1, Math.round(item.duration * project.fps));
   if (fs.existsSync(path.join(dir, '.done'))) { onProgress?.(count, count); return { dir, count, errors: [] }; }

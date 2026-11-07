@@ -167,7 +167,21 @@ export interface Task {
   commitAfter?: string;
   costUsd?: number;
   /** what the agent is working on right now (derived from its tool calls) */
-  focus?: { kind: 'clip' | 'music' | 'timeline' | 'script'; id?: string; at: number };
+  focus?: { kind: 'clip' | 'music' | 'timeline' | 'script' | 'design'; id?: string; at: number };
+}
+
+export interface DesignSystem {
+  name?: string;
+  /** colour tokens → CSS var(--color-<name>) */
+  colors: { name: string; value: string; role?: string }[];
+  /** type roles → CSS var(--font-<role>), var(--weight-<role>), var(--size-<role>) */
+  type: { role: string; family: string; weight: number; size: number; tracking?: number; sample?: string }[];
+  /** motion tokens → CSS var(--ease-<name>) / var(--dur-<name>) and studio.design.motion */
+  motion: { name: string; ease: string; duration: number }[];
+  /** spacing / radius tokens → CSS var(--space-<name>) */
+  spacing?: { name: string; value: number }[];
+  notes?: string;
+  updatedAt?: string;
 }
 
 export type StageId = 'brief' | 'script' | 'storyboard' | 'production' | 'review' | 'export';
@@ -247,4 +261,5 @@ export type ServerEvent =
   | { type: 'media'; media: MediaInfo }
   | { type: 'permissions'; permissions: PermissionRequest[] }
   | { type: 'script'; script: Script }
+  | { type: 'design'; design: DesignSystem }
   | { type: 'notice'; level: 'info' | 'error'; text: string };

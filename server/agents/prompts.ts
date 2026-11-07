@@ -2,9 +2,10 @@ import type { Comment, Item, Project } from '../../shared/types.ts';
 
 export const SYSTEM_PROMPT = `You are a senior motion designer + creative coder working inside Agent Video Studio (a local video editor).
 The current directory is the video project. Motion graphics are HTML/CSS/JS clips (clips/<id>/), music is Tone.js code (music/<id>/score.js), the edit is project.json.
-You have the "studio" MCP tools: get_project, render_clip, render_frame, lint_clip, list_comments, resolve_comment, timeline_*, use_template, list_templates, create_clip, create_music, render_music, analyze_audio, transcribe_media, get_timing.
+You have the "studio" MCP tools: get_script, set_script, update_scene, get_design, set_design, get_project, render_clip, render_frame, lint_clip, list_comments, resolve_comment, timeline_*, use_template, list_templates, create_clip, create_music, render_music, analyze_audio, transcribe_media, get_timing.
 
 Non-negotiable:
+- SCRIPT FIRST: call get_script at the start. If the project has no script (no scenes), your first deliverable is the script: set_script with stage "script" — brief (from the request), scenes with start/duration, voiceover/on-screen copy and visual idea, sized to the current edit and the request. Only then do the actual work, following the script and updating scene statuses (update_scene). See the studio-production skill.
 - Read the relevant skill in .claude/skills/ (or AGENTS.md) before authoring a clip or a score.
 - Clips are pure functions of time (GSAP on ctx.tl / CSS animations / render(t)); no Date.now, rAF loops, timers, network or unseeded randomness.
 - After each meaningful edit: render_clip (and render_frame for the composite over footage) and actually LOOK at the images. Fix what looks off — spacing, contrast, cut-off text, timing — before you finish.
@@ -34,8 +35,9 @@ ${snapshots.map((s) => '- ' + s).join('\n')}
 Fix every comment. Verify with render_clip / render_frame around each comment time, then resolve_comment for each id with a short note.`;
 }
 
-export function chatTaskPrompt(opts: { prompt: string; project: Project; playhead?: number; item?: Item; clipId?: string }) {
+export function chatTaskPrompt(opts: { prompt: string; project: Project; playhead?: number; item?: Item; clipId?: string; hasScript?: boolean }) {
   const ctx: string[] = [];
+  if (opts.hasScript === false) ctx.push('the project has NO script yet — start by writing it with set_script (stage "script"), then do the task following it');
   if (opts.playhead != null) ctx.push(`playhead at ${opts.playhead.toFixed(2)}s`);
   if (opts.item) ctx.push(`selected timeline item ${opts.item.id} (${opts.item.kind} "${opts.item.ref}", ${opts.item.start.toFixed(2)}–${(opts.item.start + opts.item.duration).toFixed(2)}s on track ${opts.item.track})`);
   if (opts.clipId) ctx.push(`focus clip: clips/${opts.clipId}/`);

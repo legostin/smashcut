@@ -50,6 +50,12 @@ Rules (the linter `lint_clip` checks these):
 - Background is **transparent** by default — overlays (lower thirds, captions, callouts, logos) must stay transparent so footage shows through. Full-frame scenes paint their own background.
 - Keep important content inside title-safe: 5% margin horizontally, 7% vertically (more for vertical social: avoid bottom 18% and right 12% where platform UI sits).
 
+## Design system (shared look)
+If the project has a design system (`get_design`), use its tokens instead of hard-coded values so every clip matches and a token change restyles the whole video:
+- CSS: `var(--color-<name>)`, `var(--font-<role>)`, `var(--weight-<role>)`, `var(--size-<role>)`, `var(--tracking-<role>)`, `var(--dur-<name>)`, `var(--space-<name>)`.
+- JS: `studio.design.color('accent', '#fff')`, `studio.design.motion('enter')` → `{ease, duration}` for GSAP.
+- Params may still override (e.g. a colour param whose default is empty → fall back to the token).
+
 ## Params
 Expose every user-facing string, colour and key number in `params.json` so humans can tweak without you.
 `type: textarea` for multi-line data (e.g. chart rows `Label: 42`). Use readable labels. Defaults must look great.
