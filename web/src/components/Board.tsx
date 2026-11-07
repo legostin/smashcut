@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DesignSystem, Item, Project, Scene, Task } from '../../../shared/types';
-import { useStore, actions, seek, setState, getState, fmtTime, api } from '../store';
+import { useStore, actions, seek, setState, getState, fmtTime, api, projectBase } from '../store';
 import { withContext } from './Chat';
 import { Icon } from './Icon';
 import { t, tn } from '../i18n';
@@ -430,7 +430,7 @@ function ComponentsFrame({ project, active }: { project: Project; active: string
         ))}
         {media.map((m) => (
           <div key={m.file} className="cmp">
-            <span className="cmp-icon kind-media">{m.thumb ? <img src={`/p/${m.thumb}`} alt="" /> : <Icon name="film" size={13} />}</span>
+            <span className="cmp-icon kind-media">{m.thumb ? <img src={`${projectBase()}/${m.thumb}`} alt="" /> : <Icon name="film" size={13} />}</span>
             <span className="grow minw0"><span className="ellipsis block">{m.file}</span><span className="muted xsmall">{m.type}{m.duration ? ` · ${m.duration.toFixed(1)}s` : ''}</span></span>
           </div>
         ))}

@@ -1,3 +1,4 @@
+import type { Settings } from '../../shared/types.ts';
 import type { Comment, Item, Project } from '../../shared/types.ts';
 
 export const SYSTEM_PROMPT = `You are a senior motion designer + creative coder working inside Agent Video Studio (a local video editor).
@@ -43,3 +44,28 @@ export function chatTaskPrompt(opts: { prompt: string; project: Project; playhea
   if (opts.clipId) ctx.push(`focus clip: clips/${opts.clipId}/`);
   return `${opts.prompt}${ctx.length ? `\n\n(Editor context: ${ctx.join('; ')}.)` : ''}`;
 }
+
+/** the user's standing instructions (Settings → Your style), applied to every project */
+export function houseStylePrompt(h?: Settings['houseStyle']) {
+  if (!h) return '';
+  const parts = [
+    h.style?.trim() && `Visual style: ${h.style.trim()}`,
+    h.direction?.trim() && `Direction, pacing and editing: ${h.direction.trim()}`,
+    h.colors?.trim() && `Colours and type: ${h.colors.trim()}`,
+  ].filter(Boolean);
+  if (!parts.length) return '';
+  return `\n\nTHE USER'S STANDING INSTRUCTIONS (apply them to every project; the project's own script/design system and explicit requests in this task take precedence when they conflict):\n${parts.map((p) => '- ' + p).join('\n')}`;
+}
+
+export const SUBAGENTS_PROMPT = `
+
+SUB-AGENTS (parallel work). You may delegate independent pieces of work to sub-agents that run in parallel with you and edit the same project:
+- delegate_task {title, prompt, clipId?} starts one; wait_subagents {ids?} blocks until they finish and returns their reports; message_subagent {id, text} sends a follow-up.
+- Delegate only well-separated work: e.g. one clip per sub-agent ("build clip intro-title for scene 1 per the script and design system"), the music track, a voice-over pass, research. Keep the script, design system and the final timeline assembly yourself.
+- Write self-contained assignments: the scene, the clip id to create/edit, the duration, the relevant tokens from get_design, exactly what to deliver. Sub-agents see the same project and tools but not your conversation.
+- Never let two sub-agents edit the same clip or file. Do the timeline_add/update for delegated clips yourself after wait_subagents (or tell a sub-agent explicitly that it may place its own clip).
+- Review results (render_frame) before you report back to the user.`;
+
+export const SUBAGENT_ROLE = (parentTitle: string) => `
+
+YOU ARE A SUB-AGENT of the task “${parentTitle}”. Do exactly the assignment below — nothing outside its scope (don't rewrite the script, the design system or other clips unless the assignment says so). Don't ask the user questions: make reasonable decisions. Finish with a short report: what you made (ids, files), how you verified it, anything the lead agent must do next.`;

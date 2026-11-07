@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScriptPanel } from './components/ScriptPanel';
 import { Board } from './components/Board';
-import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo, actions } from './store';
+import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo, actions, projectBase, projectHeaders, openInNewTab } from './store';
 import { Viewer } from './components/Viewer';
 import { Timeline } from './components/Timeline';
 import { Library } from './components/Library';
 import { Chat } from './components/Chat';
 import { ItemPanel } from './components/ItemPanel';
 import { Icon } from './components/Icon';
+import { VersionDialog } from './components/VersionDialog';
 import type { Project, Settings, Voice } from '../../shared/types';
 import { t, tn, LANGS, setLocale, useLocale, fmtNumber, type Lang } from './i18n';
 
@@ -63,6 +64,7 @@ export function App() {
       <Modal open={dialog === 'projects'}><ProjectsDialog /></Modal>
       <Modal open={dialog === 'settings'}><SettingsDialog /></Modal>
       <Modal open={dialog === 'export'}><ExportDialog /></Modal>
+      <Modal open={dialog === 'version'}><VersionDialog /></Modal>
       <Modal open={!!dialog && typeof dialog === 'object'} wide>{dialog && typeof dialog === 'object' && 'compare' in dialog ? <CompareDialog clipId={dialog.compare.clipId} sha={dialog.compare.sha} /> : null}</Modal>
       <Lightbox />
       <Reconnecting />
@@ -140,6 +142,7 @@ function TopBar() {
   const connected = useStore((s) => s.connected);
   const job = useStore((s) => s.jobs.find((j) => j.status === 'running'));
   const libraryOpen = useStore((s) => s.libraryOpen);
+  useEffect(() => { document.title = /Agent Video Studio/.test(project.name) ? project.name : `${project.name} — Agent Video Studio`; }, [project.name]);
   return (
     <header className="topbar">
       <div className="row gap8">
@@ -154,6 +157,7 @@ function TopBar() {
       <div className="row gap8 end">
         {job && <div className="tb-progress"><div style={{ width: `${Math.round(job.progress * 100)}%` }} /><span>{t('Export {p}%', { p: Math.round(job.progress * 100) })}</span></div>}
         <button className="icon-btn" title={t('Settings')} onClick={() => setState({ dialog: 'settings' })}><Icon name="gear" size={15} /></button>
+        <button className="btn sm ghost" title={t('A copy in another language, format or length — the agent adapts it')} onClick={() => setState({ dialog: 'version' })}><Icon name="copy" size={13} /> {t('New version')}</button>
         <button className="btn sm primary" onClick={() => setState({ dialog: 'export' })}>{t('Export')}</button>
       </div>
     </header>
@@ -184,7 +188,8 @@ function Modal({ children, open, wide }: { children: React.ReactNode; open: bool
 }
 
 function ProjectsDialog() {
-  const [data, setData] = useState<{ current: string | null; projects: string[]; projectsDir: string } | null>(null);
+  const dir = useStore((s) => s.dir);
+  const [data, setData] = useState<{ current: string | null; projects: string[]; projectsDir: string; open?: string[]; ids?: Record<string, string> } | null>(null);
   const [name, setName] = useState('');
   const [size, setSize] = useState('1920x1080');
   const [openPath, setOpenPath] = useState('');
@@ -199,11 +204,20 @@ function ProjectsDialog() {
     <div className="col gap16">
       <h2>{t('Projects')}</h2>
       <div className="col gap6">
-        {data?.projects.map((p) => (
-          <button key={p} className={'project-row' + (p === data.current ? ' current' : '')} onClick={() => open(p)}>
-            <Icon name="folder" size={14} /> <span className="strong">{p.split('/').pop()}</span> <span className="muted xsmall ellipsis">{p}</span>
-          </button>
-        ))}
+        {data?.projects.map((p) => {
+          const id = data.ids?.[p];
+          const here = p === dir;
+          return (
+            <div key={p} className={'project-row' + (here ? ' current' : '')}>
+              <button className="project-open" onClick={(e) => (e.metaKey || e.ctrlKey) && id ? openInNewTab(id) : !here && open(p)} title={t('Open here · ⌘-click opens in a new tab')}>
+                <Icon name="folder" size={14} /> <span className="strong">{p.split('/').pop()}</span>
+                {here ? <span className="pill xs">{t('this tab')}</span> : data.open?.includes(p) ? <span className="pill xs ghost">{t('open')}</span> : null}
+                <span className="muted xsmall ellipsis">{p}</span>
+              </button>
+              {id && !here && <button className="icon-btn xs" title={t('Open in a new tab')} onClick={() => openInNewTab(id)}><Icon name="external" size={13} /></button>}
+            </div>
+          );
+        })}
       </div>
       <div className="card col gap8">
         <div className="strong small">{t('New project')}</div>
@@ -242,10 +256,11 @@ function SettingsDialog() {
         <label className="field"><span>{t('Agent permissions')}</span><select className="input" value={s.permissionMode} onChange={(e) => setS({ ...s, permissionMode: e.target.value as any })}><option value="auto">{t('Auto — ask here when in doubt')}</option><option value="acceptEdits">{t('File edits only — ask for the rest')}</option><option value="bypassPermissions">{t('Everything, no questions')}</option></select></label>
         <label className="field"><span>{t('Claude model (empty = default)')}</span><input className="input" value={s.claudeModel || ''} onChange={(e) => setS({ ...s, claudeModel: e.target.value || undefined })} placeholder={t('e.g. opus / sonnet')} /></label>
         <label className="field"><span>{t('Codex model')}</span><input className="input" value={s.codexModel || ''} onChange={(e) => setS({ ...s, codexModel: e.target.value || undefined })} /></label>
-        <label className="field"><span>{t('Parallel agents')}</span><input className="input" type="number" min={1} max={8} value={s.parallelTasks} onChange={(e) => setS({ ...s, parallelTasks: Number(e.target.value) })} /></label>
         <label className="field"><span>{t('Render workers')}</span><input className="input" type="number" min={1} max={12} value={s.renderWorkers} onChange={(e) => setS({ ...s, renderWorkers: Number(e.target.value) })} /></label>
         <label className="field"><span>{t('Transcription model')}</span><select className="input" value={s.transcribeModel} onChange={(e) => setS({ ...s, transcribeModel: e.target.value })}><option value="Xenova/whisper-tiny">{t('whisper-tiny (fast)')}</option><option value="Xenova/whisper-base">whisper-base</option><option value="Xenova/whisper-small">{t('whisper-small (more accurate)')}</option></select></label>
       </div>
+      <AgentPoolSettings s={s} setS={setS} />
+      <HouseStyleSettings s={s} setS={setS} />
       <VoiceSettings s={s} setS={setS} />
       <div className="card small col gap4">
         <div><b>Claude Code:</b> {agents?.claude || t('not found')}</div>
@@ -255,6 +270,72 @@ function SettingsDialog() {
         <div className="muted xsmall">{t('Project folder:')} <code className="selectable">{dir}</code></div>
       </div>
       <div className="row gap6 end"><button className="btn ghost sm" onClick={() => setState({ dialog: null })}>{t('Cancel')}</button><button className="btn primary sm" onClick={save}>{t('Save')}</button></div>
+    </div>
+  );
+}
+
+/** how many agents run at once, and whether a task may split its work between sub-agents */
+function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => void }) {
+  const sub = s.subagents !== false;
+  return (
+    <div className="set-section col gap10">
+      <div className="section-title">{t('Agents working at once')}</div>
+      <div className="set-row">
+        <div className="col gap2 grow">
+          <span className="small">{t('Simultaneous tasks')}</span>
+          <span className="muted xsmall">{t('Each message you send to an agent starts a task (a separate agent session). This many tasks run at the same time — across all open projects; the rest wait in the queue.')}</span>
+        </div>
+        <Stepper value={s.parallelTasks} min={1} max={8} onChange={(v) => setS({ ...s, parallelTasks: v })} />
+      </div>
+      <div className="set-row">
+        <div className="col gap2 grow">
+          <span className="small">{t('Sub-agents')}</span>
+          <span className="muted xsmall">{t('A task may split its work: the lead agent hands self-contained assignments (one clip, the music, a voice-over pass) to sub-agents that work in parallel, then reviews and assembles the result. Sub-agents appear under their task in the agent panel. Faster, but uses more of your agent quota.')}</span>
+        </div>
+        <input type="checkbox" className="toggle" checked={sub} onChange={(e) => setS({ ...s, subagents: e.target.checked })} />
+      </div>
+      {sub && (
+        <div className="set-row">
+          <div className="col gap2 grow">
+            <span className="small">{t('Sub-agents per task')}</span>
+            <span className="muted xsmall">{t('How many sub-agents one task may run at the same time. They have their own slots and do not take simultaneous-task slots.')}</span>
+          </div>
+          <Stepper value={s.maxSubagents ?? 3} min={1} max={6} onChange={(v) => setS({ ...s, maxSubagents: v })} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stepper({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (v: number) => void }) {
+  return (
+    <div className="stepper">
+      <button disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>−</button>
+      <span>{value}</span>
+      <button disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>+</button>
+    </div>
+  );
+}
+
+/** the user's standing instructions for every project (sent to agents with each task) */
+function HouseStyleSettings({ s, setS }: { s: Settings; setS: (s: Settings) => void }) {
+  const h = s.houseStyle || {};
+  const set = (k: 'style' | 'direction' | 'colors', v: string) => setS({ ...s, houseStyle: { ...h, [k]: v } });
+  return (
+    <div className="set-section col gap10">
+      <div className="col gap2">
+        <div className="section-title">{t('Your style')}</div>
+        <span className="muted xsmall">{t('Standing instructions for agents in every project. A project’s own script and design system win when they conflict.')}</span>
+      </div>
+      <label className="field"><span>{t('Visual style')}</span>
+        <textarea className="input" rows={2} value={h.style || ''} onChange={(e) => set('style', e.target.value)} placeholder={t('e.g. clean Swiss minimalism, lots of negative space, no gradients or glow, flat shapes')} />
+      </label>
+      <label className="field"><span>{t('Direction & pacing')}</span>
+        <textarea className="input" rows={2} value={h.direction || ''} onChange={(e) => set('direction', e.target.value)} placeholder={t('e.g. hook in the first 2 s, cuts on the beat, calm easing (power3.out), no shaky cams, end on the logo')} />
+      </label>
+      <label className="field"><span>{t('Colours & type')}</span>
+        <textarea className="input" rows={2} value={h.colors || ''} onChange={(e) => set('colors', e.target.value)} placeholder={t('e.g. off-black #111 background, one accent #FF5A36, Inter for text, Unbounded for titles')} />
+      </label>
     </div>
   );
 }
@@ -270,7 +351,7 @@ function VoiceSettings({ s, setS }: { s: Settings; setS: (s: Settings) => void }
     setLoading(true); setErr('');
     try {
       if (s.elevenlabsKey && !s.elevenlabsKey.startsWith('••••')) await api('PATCH', '/api/settings', { elevenlabsKey: s.elevenlabsKey });
-      const r = await fetch('/api/voice/voices' + (refresh ? '?refresh=1' : ''));
+      const r = await fetch('/api/voice/voices' + (refresh ? '?refresh=1' : ''), { headers: projectHeaders() });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error);
       setVoices(j.voices); setModels(j.models);
@@ -362,8 +443,8 @@ function ExportDialog() {
           <div className="row between small"><span>{job.status === 'done' ? t('Done') : job.status === 'error' ? (isCancelled(job.error) ? t('Cancelled') : t('Error')) : t(job.stageKey || job.stage, job.stageParams)}</span><span className="mono">{Math.round(job.progress * 100)}%</span></div>
           <div className="progress"><div style={{ width: `${job.progress * 100}%` }} /></div>
           {job.error && !isCancelled(job.error) && <pre className="error-box xsmall">{job.error}</pre>}
-          {job.output && /\.(mp4|webm)$/.test(job.output) && <video className="export-preview" src={`/p/${job.output}`} controls />}
-          {job.output && /\.gif$/.test(job.output) && <img className="export-preview" src={`/p/${job.output}`} alt="" />}
+          {job.output && /\.(mp4|webm)$/.test(job.output) && <video className="export-preview" src={`${projectBase()}/${job.output}`} controls />}
+          {job.output && /\.gif$/.test(job.output) && <img className="export-preview" src={`${projectBase()}/${job.output}`} alt="" />}
         </div>
       )}
       {exportsList.length > 0 && (
@@ -371,9 +452,9 @@ function ExportDialog() {
           <div className="section-title">{t('Files')}</div>
           {exportsList.slice(0, 8).map((e) => (
             <div key={e.file} className="row gap8 small">
-              <a href={`/p/${e.file}`} target="_blank" rel="noreferrer" className="ellipsis grow">{e.file.split('/').pop()}</a>
+              <a href={`${projectBase()}/${e.file}`} target="_blank" rel="noreferrer" className="ellipsis grow">{e.file.split('/').pop()}</a>
               <span className="muted xsmall">{fmtNumber(e.size / 1e6, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB</span>
-              <a className="btn xs" href={`/p/${e.file}`} download>{t('Download')}</a>
+              <a className="btn xs" href={`${projectBase()}/${e.file}`} download>{t('Download')}</a>
             </div>
           ))}
         </div>
@@ -409,7 +490,7 @@ function CompareDialog({ clipId, sha }: { clipId: string; sha: string }) {
       <h2>{t('Compare versions · {clip}', { clip: clipId })}</h2>
       <div className="row gap12 wrap">
         {base && frame(`${base}/${clipId}/index.html#${input}`, a, t('Version {sha}', { sha }))}
-        {frame(`/p/clips/${clipId}/index.html#${input}`, b, t('Current'))}
+        {frame(`${projectBase()}/clips/${clipId}/index.html#${input}`, b, t('Current'))}
       </div>
       <input type="range" min={0} max={dur} step={1 / project.fps} value={tm} onChange={(e) => setT(Number(e.target.value))} />
       <div className="row between small"><span className="muted">t = {tm.toFixed(2)}s {t('(clip time)')}</span>

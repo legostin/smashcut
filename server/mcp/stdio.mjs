@@ -159,6 +159,26 @@ server.registerTool('get_timing', {
   inputSchema: { from: z.number().optional(), to: z.number().optional() },
 }, safe(async ({ from, to }) => text(await api('GET', `/api/agent/timing?from=${from ?? ''}&to=${to ?? ''}`))));
 
+server.registerTool('delegate_task', {
+  description: 'Start a SUB-AGENT that works in parallel on a self-contained assignment in this project (e.g. build one clip, compose the music, a voice-over pass). It does not see your conversation: give it everything it needs (scene, clip id, duration, design tokens, what to deliver). Returns {taskId}. Then keep working and call wait_subagents to collect the reports. Available only if the user enabled sub-agents in Settings.',
+  inputSchema: {
+    title: z.string().describe('short name shown in the editor, e.g. "Clip: intro title"'),
+    prompt: z.string().describe('the complete assignment'),
+    clipId: z.string().optional().describe('the clip this sub-agent owns (scopes its commit)'),
+    agent: z.enum(['claude', 'codex']).optional(),
+  },
+}, safe(async (a) => text(await api('POST', '/api/agent/subagents', a))));
+
+server.registerTool('wait_subagents', {
+  description: 'Wait until your sub-agents finish (all of them, or the given ids) and get their reports [{id,title,status,report,version}]. Waits up to ~9 minutes per call; if some are still running, call it again.',
+  inputSchema: { ids: z.array(z.string()).optional() },
+}, safe(async (a) => text(await api('POST', '/api/agent/subagents/wait', a))));
+
+server.registerTool('message_subagent', {
+  description: 'Send a follow-up instruction to one of your sub-agents (it continues its own session; queued if it is busy).',
+  inputSchema: { id: z.string(), text: z.string() },
+}, safe(async (a) => text(await api('POST', '/api/agent/subagents/message', a))));
+
 server.registerTool('get_script', {
   description: 'The video script / storyboard (script.json): brief, production stage (brief→script→storyboard→production→review→export) and scenes [{id,title,start,duration,voiceover,visual,notes,status todo|doing|done,itemIds}]. Read it before producing a video.',
   inputSchema: {},

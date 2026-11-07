@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Item, Project, Track } from '../../../shared/types';
-import { useStore, usePlayhead, setState, getState, actions, seek, time, projectEnd, api, fmtTime, notify } from '../store';
+import { useStore, usePlayhead, setState, getState, actions, seek, time, projectEnd, api, fmtTime, notify, projectBase } from '../store';
 import { Icon } from './Icon';
 import { applyTransition } from './FxLibrary';
 import { t } from '../i18n';
@@ -230,8 +230,8 @@ function TlItem({ item, zoom, selected, dragging, onDown }: { item: Item; zoom: 
   if (item.kind === 'clip') label = item.label || clips.find((c) => c.id === item.ref)?.name || item.ref;
   if (item.kind === 'media') {
     const m = media.find((x) => x.file === item.ref);
-    if (m?.thumb) thumb = `/p/${m.thumb}`;
-    if (m?.peaks && m.type === 'audio') { peaksUrl = `/p/${m.peaks}`; peaksKey = m.peaks; }
+    if (m?.thumb) thumb = `${projectBase()}/${m.thumb}`;
+    if (m?.peaks && m.type === 'audio') { peaksUrl = `${projectBase()}/${m.peaks}`; peaksKey = m.peaks; }
   }
   if (item.kind === 'music') {
     const m = music.find((x) => x.id === item.ref);

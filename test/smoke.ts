@@ -127,7 +127,7 @@ try {
   await api('POST', `/api/export/${job2.id}/cancel`);
   await new Promise((r) => setTimeout(r, 2500));
   const j2 = (await api('GET', '/api/state')).jobs.find((x: any) => x.id === job2.id);
-  ok('export cancel', j2?.status === 'error' && /Отменено/.test(j2.error || ''), j2?.status);
+  ok('export cancel', j2?.status === 'error' && /Cancelled|Отменено/.test(j2.error || ''), j2?.status);
 
   // ---------- undo / redo ----------
   const before = (await api('GET', '/api/project')).items.length;

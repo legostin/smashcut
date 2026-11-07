@@ -8,7 +8,8 @@ import { cur, hasProject, runIn, type ProjectStore } from '../project.ts';
 import { bus } from '../bus.ts';
 import { nid, readJson, writeJson } from '../util.ts';
 import { commit } from '../git.ts';
-import { SYSTEM_PROMPT } from './prompts.ts';
+import { SYSTEM_PROMPT, houseStylePrompt, SUBAGENTS_PROMPT, SUBAGENT_ROLE } from './prompts.ts';
+import { uerr } from '../i18n.ts';
 import { denyTask } from '../permissions.ts';
 
 const tasks = new Map<string, Task>();
@@ -17,6 +18,7 @@ const live = new Map<string, { timer: NodeJS.Timeout; partial: string }>();
 const queue: { taskId: string; prompt: string; images: string[] }[] = [];
 /** which open project a task belongs to (several projects can be open in different tabs) */
 const owner = new Map<string, ProjectStore>();
+const starting = new Set<string>();
 /** run fn in the context of the task's project */
 const inTask = <T>(t: Task | string, fn: () => T): T => { const s = owner.get(typeof t === 'string' ? t : t.id); return s ? runIn(s, fn) : fn(); };
 export function taskProject(taskId: string) { return owner.get(taskId); }
@@ -75,11 +77,11 @@ export function listTasks() {
 }
 export function getTask(id: string) { return tasks.get(id); }
 
-export interface StartOpts { agent?: AgentKind; title: string; prompt: string; clipId?: string; commentIds?: string[]; images?: string[] }
+export interface StartOpts { agent?: AgentKind; title: string; prompt: string; clipId?: string; commentIds?: string[]; images?: string[]; parentId?: string }
 
 export function startTask(o: StartOpts): Task {
   const t: Task = {
-    id: 't' + nid(), agent: o.agent || getSettings().defaultAgent, title: o.title, prompt: o.prompt, clipId: o.clipId, commentIds: o.commentIds || [],
+    id: 't' + nid(), agent: o.agent || getSettings().defaultAgent, title: o.title, prompt: o.prompt, clipId: o.clipId, commentIds: o.commentIds || [], parentId: o.parentId,
     status: 'queued', events: [], createdAt: new Date().toISOString(),
   };
   tasks.set(t.id, t);
@@ -153,17 +155,69 @@ export function cancelTask(id: string) {
   t.pending = undefined;
   t.endedAt = new Date().toISOString();
   denyTask(id);
+  for (const c of tasks.values()) if (c.parentId === id && (c.status === 'running' || c.status === 'queued')) cancelTask(c.id);
   pushEvent(t, { kind: 'status', text: 'cancelled' });
   emitTask(t);
 }
 
+/**
+ * Start queued work. Two pools: top-level tasks share `parallelTasks` slots; sub-agents run in their parent's
+ * own pool (`maxSubagents` per parent), so a lead agent waiting for its sub-agents never blocks them.
+ */
 function pump() {
-  while (live.size < getSettings().parallelTasks && queue.length) {
-    const next = queue.shift()!;
+  const st = getSettings();
+  const running = () => [...new Set([...live.keys(), ...starting])].map((id) => tasks.get(id)).filter(Boolean) as Task[];
+  for (let i = 0; i < queue.length; ) {
+    const next = queue[i];
     const t = tasks.get(next.taskId);
-    if (!t || t.status === 'cancelled') continue;
-    void inTask(t, () => runTask(t, next.prompt, next.images));
+    if (!t || t.status === 'cancelled') { queue.splice(i, 1); continue; }
+    const r = running();
+    const free = t.parentId
+      ? r.filter((x) => x.parentId === t.parentId).length < Math.max(1, st.maxSubagents || 1)
+      : r.filter((x) => !x.parentId).length < Math.max(1, st.parallelTasks || 1);
+    if (!free) { i++; continue; }
+    queue.splice(i, 1);
+    starting.add(t.id); // holds the slot until attach() registers the live watcher
+    void inTask(t, () => runTask(t, next.prompt, next.images)).finally(() => starting.delete(t.id));
   }
+}
+
+// ---------- sub-agents ----------
+const lastReport = (t: Task) => {
+  const lastUser = t.events.map((e) => e.kind).lastIndexOf('user');
+  const texts = t.events.slice(lastUser + 1).filter((e) => e.kind === 'text' && e.text);
+  return texts.length ? texts[texts.length - 1].text! : '';
+};
+export function children(parentId: string) { return [...tasks.values()].filter((x) => x.parentId === parentId); }
+
+/** a lead agent hands an assignment to a sub-agent (runs in parallel, same project) */
+export function delegateTask(parentId: string, o: { title: string; prompt: string; clipId?: string; agent?: AgentKind }) {
+  const st = getSettings();
+  if (!st.subagents) throw uerr('Sub-agents are turned off in Settings — do the work yourself.');
+  const parent = tasks.get(parentId);
+  if (!parent) throw uerr('Unknown task');
+  if (parent.parentId) throw uerr('A sub-agent cannot start its own sub-agents — do the work yourself.');
+  if (!o.title?.trim() || !o.prompt?.trim()) throw uerr('title and prompt are required');
+  return inTask(parent, () => {
+    const t = startTask({ agent: o.agent || parent.agent, title: o.title.trim(), prompt: o.prompt.trim(), clipId: o.clipId, parentId });
+    pushEvent(parent, { kind: 'status', ...msg('sub-agent started: {title}', { title: t.title }) });
+    return t;
+  });
+}
+
+/** wait until the given (or all) sub-agents of a task are finished; returns their reports */
+export async function waitSubagents(parentId: string, ids?: string[], timeoutMs = 540_000) {
+  const until = Date.now() + Math.min(timeoutMs, 540_000);
+  const pick = () => (ids?.length ? ids.map((id) => tasks.get(id)).filter((x): x is Task => !!x && x.parentId === parentId) : children(parentId));
+  const busy = (x: Task) => x.status === 'running' || x.status === 'queued';
+  while (Date.now() < until && pick().some(busy)) await new Promise((r) => setTimeout(r, 1000));
+  return pick().map((x) => ({ id: x.id, title: x.title, status: x.status, report: busy(x) ? '' : lastReport(x), version: x.commitAfter }));
+}
+
+function systemPromptFor(t: Task) {
+  const st = getSettings();
+  const role = t.parentId ? SUBAGENT_ROLE(tasks.get(t.parentId)?.title || '') : st.subagents ? SUBAGENTS_PROMPT : '';
+  return SYSTEM_PROMPT + houseStylePrompt(st.houseStyle) + role;
 }
 
 function mcpConfigFile(taskId: string) {
@@ -195,7 +249,8 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '--permission-prompt-tool', 'mcp__studio__approve_permission',
       '--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)',
       '--add-dir', GALLERY_DIR, LIBRARY_DIR,
-      '--append-system-prompt', SYSTEM_PROMPT];
+      '--disallowedTools', 'Task',
+      '--append-system-prompt', systemPromptFor(t)];
     if (settings.claudeModel) args.push('--model', settings.claudeModel);
     if (t.sessionId) args.push('--resume', t.sessionId);
     if (images.length) args[1] = prompt + '\n\nAttached images (Read them): ' + images.join(', ');
@@ -214,7 +269,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '-c', `sandbox_workspace_write.writable_roots=[${JSON.stringify(store.dir)}]`];
     if (settings.codexModel) common.push('-m', settings.codexModel);
     for (const img of images) common.push('-i', img);
-    const full = SYSTEM_PROMPT + '\n\n---\n\n' + prompt;
+    const full = systemPromptFor(t) + '\n\n---\n\n' + prompt;
     args = t.sessionId ? ['exec', ...common, 'resume', t.sessionId, full] : ['exec', ...common, '-C', store.dir, full];
   }
 

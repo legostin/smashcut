@@ -166,6 +166,8 @@ export interface Task {
   id: string;
   agent: AgentKind;
   title: string;
+  /** set on sub-agent tasks: the task that delegated this assignment */
+  parentId?: string;
   prompt: string;
   clipId?: string;
   commentIds: string[];
@@ -252,7 +254,14 @@ export interface Settings {
   codexModel?: string;
   /** claude permission mode for spawned sessions */
   permissionMode: 'auto' | 'acceptEdits' | 'bypassPermissions';
+  /** how many independent agent tasks (chats) may run at the same time; the rest wait in a queue */
   parallelTasks: number;
+  /** let an agent split its work: it hands assignments to sub-agents that run in parallel (shown under the parent task) */
+  subagents: boolean;
+  /** max sub-agents one task may run at the same time (they don't use the parallelTasks slots) */
+  maxSubagents: number;
+  /** the user's standing instructions for every project: visual style, direction, colours */
+  houseStyle?: { style?: string; direction?: string; colors?: string };
   renderWorkers: number;
   transcribeModel: string;
   /** ElevenLabs: API key (stored locally; masked when sent to the UI), default voice & model */

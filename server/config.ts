@@ -25,6 +25,8 @@ const DEFAULT_SETTINGS: Settings = {
   defaultAgent: 'claude',
   permissionMode: 'auto',
   parallelTasks: 3,
+  subagents: true,
+  maxSubagents: 3,
   renderWorkers: Math.max(2, Math.min(6, os.cpus().length - 2)),
   transcribeModel: 'Xenova/whisper-base',
 };

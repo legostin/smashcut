@@ -5,7 +5,7 @@ import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, PackageManifest,
 import { bus } from './bus.ts';
 import { readJson, writeJson, nid, Mutex } from './util.ts';
 import { gitInit } from './git.ts';
-import { pushRecent, getRecents } from './config.ts';
+import { pushRecent, getRecents, PROJECTS_DIR } from './config.ts';
 
 export const MEDIA_EXT: Record<string, MediaInfo['type']> = {
   '.mp4': 'video', '.mov': 'video', '.webm': 'video', '.mkv': 'video', '.m4v': 'video',
@@ -311,7 +311,8 @@ export function storeById(id: string | undefined | null): ProjectStore | undefin
   const s = stores.get(id);
   if (s) return s;
   if (!/^[0-9a-f]{10}$/.test(id)) return;
-  const dir = getRecents().find((d) => projectId(d) === id);
+  const inFolder = fs.existsSync(PROJECTS_DIR) ? fs.readdirSync(PROJECTS_DIR).map((d) => path.join(PROJECTS_DIR, d)) : [];
+  const dir = [...getRecents(), ...inFolder].find((d) => projectId(d) === id);
   if (dir && ProjectStore.exists(dir)) return openProject(dir, { focus: false });
 }
 

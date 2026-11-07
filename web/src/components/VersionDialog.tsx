@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useStore, api, setState, refresh, time } from '../store';
+import { useStore, api, setState, refresh, time, openInNewTab } from '../store';
 import { t } from '../i18n';
 import { Icon } from './Icon';
 
@@ -27,6 +27,7 @@ export function VersionDialog() {
   const [label, setLabel] = useState('');
   const [labelTouched, setLabelTouched] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [newTab, setNewTab] = useState(true);
   useEffect(() => { api<Variant[]>('GET', '/api/variants').then(setFamily).catch(() => {}); }, []);
 
   const auto = useMemo(() => {
@@ -43,10 +44,11 @@ export function VersionDialog() {
   const create = async () => {
     setBusy(true);
     try {
-      const r = await api<{ dir: string; task: { id: string } }>('POST', '/api/variants', {
+      const r = await api<{ dir: string; task: { id: string }; state: { pid: string } }>('POST', '/api/variants', {
         label: label.trim() || auto, prompt, agent,
         width: fmt.w || undefined, height: fmt.h || undefined, language: language || undefined, duration: length || undefined,
-      });
+      }, { stay: newTab });
+      if (newTab) { openInNewTab(r.state.pid); setState({ dialog: null }); return; }
       await refresh();
       time.set(0);
       setState({ dialog: null, selectedItemId: null, selectedTaskId: r.task.id, sideTab: 'agent' });
@@ -106,7 +108,10 @@ export function VersionDialog() {
       </label>
 
       <div className="row between">
-        <span className="muted xsmall">{project.width}×{project.height}{fmt.w ? ` → ${fmt.w}×${fmt.h}` : ''}</span>
+        <div className="row gap12">
+          <span className="muted xsmall">{project.width}×{project.height}{fmt.w ? ` → ${fmt.w}×${fmt.h}` : ''}</span>
+          <label className="row gap6 xsmall muted"><input type="checkbox" className="toggle" checked={newTab} onChange={(e) => setNewTab(e.target.checked)} />{t('Open in a new tab')}</label>
+        </div>
         <div className="row gap8">
           <button className="btn ghost sm" onClick={() => setState({ dialog: null })}>{t('Cancel')}</button>
           <button className="btn primary sm" disabled={busy || nothing} onClick={create}>{busy ? <span className="spinner sm" /> : <Icon name="sparkle" size={12} />} {t('Create version')}</button>

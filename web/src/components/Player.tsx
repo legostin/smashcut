@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Item, Project } from '../../../shared/types';
 import { layerFrame, audioGain, type LayerFrame } from '../../../shared/fx';
-import { useStore, time, clipInput, getState, setState } from '../store';
+import { useStore, time, clipInput, getState, setState, projectBase } from '../store';
 
 const VISUAL = new Set(['video', 'graphics']);
 const isImage = (f: string) => /\.(png|jpe?g|webp|gif|svg)$/i.test(f);
@@ -51,8 +51,8 @@ export function Player({ project, frames, renderMode }: { project: Project; fram
       ))}
       {audioItems.map((it) => {
         let src: string | undefined;
-        if (it.kind === 'music') { const m = music.find((x) => x.id === it.ref); src = m?.rendered ? `/p/${m.rendered}` : undefined; }
-        else src = `/p/media/${encodeURIComponent(it.ref)}`;
+        if (it.kind === 'music') { const m = music.find((x) => x.id === it.ref); src = m?.rendered ? `${projectBase()}/${m.rendered}` : undefined; }
+        else src = `${projectBase()}/media/${encodeURIComponent(it.ref)}`;
         return src ? <AudioLayer key={it.id + src} item={it} src={src} playing={playing} muted={mutedTracks.has(it.track)} /> : null;
       })}
     </div>
@@ -146,7 +146,7 @@ function ImageLayer({ item }: { item: Item }) {
     if (!renderSync.enabled) return;
     return time.sub(() => { const el = ref.current; if (el && !el.complete) renderSync.waits.push(el.decode().catch(() => {})); });
   }, []);
-  return <img ref={ref} className="layer" src={`/p/media/${encodeURIComponent(item.ref)}`} style={mediaStyle(item)} alt="" />;
+  return <img ref={ref} className="layer" src={`${projectBase()}/media/${encodeURIComponent(item.ref)}`} style={mediaStyle(item)} alt="" />;
 }
 
 /** render mode: show the pre-extracted JPEG frame for the current time */
@@ -206,7 +206,7 @@ function ClipFrame({ v, item, project, visible, onReady }: { v: number; item: It
   const ready = useRef(false);
   const input = JSON.stringify(clipInput(item, project));
   const initialInput = useRef(input);
-  const src = `/p/clips/${encodeURIComponent(item.ref)}/index.html?v=${v}#${encodeURIComponent(initialInput.current)}`;
+  const src = `${projectBase()}/clips/${encodeURIComponent(item.ref)}/index.html?v=${v}#${encodeURIComponent(initialInput.current)}`;
   const post = (m: object) => ref.current?.contentWindow?.postMessage({ __studio: true, ...m }, '*');
   const readyResolve = useRef<(() => void) | undefined>(undefined);
   if (!clipReady.has(item.id)) clipReady.set(item.id, new Promise<void>((r) => (readyResolve.current = r)));
@@ -245,12 +245,12 @@ function ClipFrame({ v, item, project, visible, onReady }: { v: number; item: It
   }, [item.start, item.in, item.duration]);
 
   useEffect(() => { if (visible && ref.current) clipFrames.set(item.id, ref.current); }, [visible, item.id]);
-  return <iframe ref={ref} className="layer clip-layer" src={src} title={item.ref} style={{ visibility: visible ? 'visible' : 'hidden' }} />;
+  return <iframe ref={ref} className="layer clip-layer" src={src} title={item.ref} style={{ visibility: visible ? 'inherit' : 'hidden' }} />;
 }
 
 function useMediaSrc(file: string) {
   const proxy = useStore((s) => s.media.find((m) => m.file === file)?.proxy);
-  return proxy ? `/p/${proxy}` : `/p/media/${encodeURIComponent(file)}`;
+  return proxy ? `${projectBase()}/${proxy}` : `${projectBase()}/media/${encodeURIComponent(file)}`;
 }
 
 function VideoLayer({ item, muted, playing }: { item: Item; muted: boolean; playing: boolean }) {

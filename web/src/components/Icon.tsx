@@ -37,6 +37,7 @@ const P: Record<string, string> = {
   more: 'M5 12h.01M12 12h.01M19 12h.01',
   grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
+  external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
 };
 export function Icon({ name, size = 16 }: { name: string; size?: number }) {
   const filled = ['play', 'pause', 'skipBack', 'stepBack', 'stepFwd', 'send', 'sparkle', 'stop'].includes(name);

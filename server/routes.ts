@@ -4,9 +4,9 @@ import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { spawn } from 'node:child_process';
 import type { FastifyInstance } from 'fastify';
-import type { Comment, Item, Project, PackageManifest } from '../shared/types.ts';
+import type { Comment, Item, Project, PackageManifest, AgentKind } from '../shared/types.ts';
 import { ROOT, GALLERY_DIR, LIBRARY_DIR, PROJECTS_DIR, getSettings, saveSettings, getRecents, HOME_DIR } from './config.ts';
-import { cur, hasProject, openProject, ProjectStore, MEDIA_EXT, pbase, runIn, openStores } from './project.ts';
+import { cur, hasProject, openProject, ProjectStore, MEDIA_EXT, pbase, runIn, openStores, projectId } from './project.ts';
 import { bus } from './bus.ts';
 import { nid, readJson, writeJson, copyDir, slug, safeJoin, run } from './util.ts';
 import { log as gitLog, restore as gitRestore, exportAt, commit } from './git.ts';
@@ -18,7 +18,7 @@ import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
 import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport, getManifest } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
-import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus, interruptTask } from './agents/runner.ts';
+import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus, interruptTask, delegateTask, waitSubagents, children } from './agents/runner.ts';
 import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
@@ -73,7 +73,7 @@ export function state() {
     settings: (() => { const st = getSettings(); return { ...st, elevenlabsKey: st.elevenlabsKey ? '••••' + st.elevenlabsKey.slice(-4) : '', hasElevenlabsKey: !!apiKey() }; })(),
     skills: listSkills(),
     jobs: getJobs(),
-    permissions: permissions.list(),
+    permissions: (() => { const own = new Set(listTasks().map((x) => x.id)); return permissions.list().filter((x) => own.has(x.taskId)); })(),
     script: getScript(),
     design: getDesign(),
     boardNotes: readJson<{ notes: any[] }>(cur().p('board.json'), { notes: [] }).notes,
@@ -251,7 +251,8 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get('/api/state', async () => state());
   app.get('/api/projects', async () => {
     const dirs = fs.existsSync(PROJECTS_DIR) ? fs.readdirSync(PROJECTS_DIR).map((d) => path.join(PROJECTS_DIR, d)).filter((d) => ProjectStore.exists(d)) : [];
-    return { current: hasProject() ? cur().dir : null, open: openStores().map((s) => ({ id: s.id, dir: s.dir, name: s.project.name })), recents: getRecents(), projects: [...new Set([...getRecents(), ...dirs])], projectsDir: PROJECTS_DIR };
+    const all = [...new Set([...getRecents(), ...dirs])];
+    return { current: hasProject() ? cur().dir : null, open: openStores().map((s) => s.dir), ids: Object.fromEntries(all.map((d) => [d, projectId(d)])), recents: getRecents(), projects: [...new Set([...getRecents(), ...dirs])], projectsDir: PROJECTS_DIR };
   });
   app.post<{ Body: { path: string } }>('/api/projects/open', async (req) => {
     const dir = path.resolve(req.body.path.replace(/^~/, process.env.HOME || ''));
@@ -732,6 +733,26 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- agent (MCP bridge) ----------
   app.get('/api/agent/overview', async () => { need(); return overview(); });
+  // sub-agents: the lead agent (x-studio-task) delegates assignments that run in parallel
+  app.post<{ Body: { title: string; prompt: string; clipId?: string; agent?: AgentKind } }>('/api/agent/subagents', async (req) => {
+    need();
+    const tid = taskOf(req);
+    if (!tid) throw uerr('Only an agent task can start sub-agents');
+    const t = delegateTask(tid, req.body);
+    return { taskId: t.id, title: t.title, status: t.status };
+  });
+  app.post<{ Body: { ids?: string[] } }>('/api/agent/subagents/wait', async (req) => {
+    const tid = taskOf(req);
+    if (!tid) throw uerr('Only an agent task can wait for sub-agents');
+    if (!children(tid).length) return { subagents: [], note: 'no sub-agents were started by this task' };
+    return { subagents: await waitSubagents(tid, req.body?.ids) };
+  });
+  app.post<{ Body: { id: string; text: string } }>('/api/agent/subagents/message', async (req) => {
+    const tid = taskOf(req);
+    if (!children(tid).some((c) => c.id === req.body.id)) throw uerr('Not your sub-agent: {id}', { id: req.body.id });
+    const t = followUp(req.body.id, req.body.text);
+    return { id: t.id, status: t.status };
+  });
   app.get<{ Querystring: { status?: string; clipId?: string } }>('/api/agent/comments', async (req) => {
     const store = need();
     let l = store.comments;

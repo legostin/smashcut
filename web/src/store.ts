@@ -51,7 +51,7 @@ export interface State {
   /** param → design token the runtime bound it to (per timeline item) */
   clipBindings: Record<string, Record<string, string>>;
   playing: boolean;
-  dialog: null | 'projects' | 'settings' | 'export' | { compare: { clipId: string; sha: string } };
+  dialog: null | 'projects' | 'settings' | 'export' | 'version' | { compare: { clipId: string; sha: string } };
   agent: AgentKind;
   chatDraft: string;
 }
@@ -119,15 +119,45 @@ export function projectEnd(p: Project) {
   return Math.max(1, ...p.items.map((i) => i.start + i.duration));
 }
 
+// ---------- which project this tab works on (several tabs can edit different projects) ----------
+let pid = new URLSearchParams(location.search).get('p') || '';
+export const projectId = () => pid;
+/** URL prefix of this tab's project files */
+export const projectBase = () => (pid ? `/p/${pid}` : '/p');
+/** URL of a project file (path relative to the project folder) */
+export const pfile = (rel: string) => `${projectBase()}/${rel}`;
+export const projectHeaders = (): Record<string, string> => (pid ? { 'x-studio-project': pid } : {});
+let switching = false;
+function setProjectId(id?: string) {
+  if (!id || id === pid) return;
+  pid = id;
+  if (!/render\.html$/.test(location.pathname)) {
+    const u = new URL(location.href);
+    u.searchParams.set('p', id);
+    history.replaceState(null, '', u);
+  }
+  // re-subscribe to this project's events
+  if (ws && ws.readyState <= 1) { switching = true; ws.close(); }
+}
+/** open a project in a new browser tab */
+export function openInNewTab(id: string) { window.open(`${location.pathname}?p=${id}`, '_blank'); }
+
 // ---------- API ----------
-export async function api<T = any>(method: string, url: string, body?: unknown): Promise<T> {
-  const res = await fetch(url, { method, headers: body !== undefined ? { 'content-type': 'application/json' } : {}, body: body !== undefined ? JSON.stringify(body) : undefined });
+export async function api<T = any>(method: string, url: string, body?: unknown, opts: { stay?: boolean } = {}): Promise<T> {
+  const headers: Record<string, string> = { ...projectHeaders() };
+  if (body !== undefined) headers['content-type'] = 'application/json';
+  const res = await fetch(url, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
   const ct = res.headers.get('content-type') || '';
   const data = ct.includes('json') ? await res.json() : await res.text();
   if (!res.ok) {
-    const msg = typeof data === 'string' ? data : data.error || res.statusText;
+    const msg = typeof data === 'string' ? data : data.key ? t(data.key, data.params) : data.error || res.statusText;
     notify('error', msg);
     throw new Error(msg);
+  }
+  // responses that switch the tab to another project (open / create / new version) carry its state
+  if (data && typeof data === 'object' && !opts.stay) {
+    const st = (data as any).project !== undefined ? data : (data as any).state;
+    if (st && typeof st.pid === 'string') setProjectId(st.pid);
   }
   return data as T;
 }
@@ -155,7 +185,7 @@ let ws: WebSocket | null = null;
 let everConnected = false;
 let lostAt = 0;
 function connect() {
-  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws${pid ? `?p=${pid}` : ''}`);
   ws.onopen = () => {
     setState({ connected: true });
     // came back after the server restarted: pull fresh state, nothing is lost
@@ -163,7 +193,12 @@ function connect() {
     everConnected = true;
     lostAt = 0;
   };
-  ws.onclose = () => { if (!lostAt) lostAt = Date.now(); setState({ connected: false }); setTimeout(connect, 1000); };
+  ws.onclose = () => {
+    if (switching) { switching = false; connect(); return; }
+    if (!lostAt) lostAt = Date.now();
+    setState({ connected: false });
+    setTimeout(connect, 1000);
+  };
   ws.onmessage = (m) => onEvent(JSON.parse(m.data));
 }
 
@@ -173,6 +208,7 @@ function scheduleLists() { clearTimeout(listsTimer); listsTimer = setTimeout(ref
 function scheduleTiming() { clearTimeout(timingTimer); timingTimer = setTimeout(refreshTiming, 400); }
 
 function onEvent(ev: ServerEvent) {
+  if (ev.pid && pid && ev.pid !== pid) return; // another project's event (tab is switching)
   switch (ev.type) {
     case 'project': {
       const prevDir = getState().project?.name;
@@ -207,8 +243,10 @@ function onEvent(ev: ServerEvent) {
     case 'record': setState((s) => ({ recordJobs: [...s.recordJobs.filter((j) => j.id !== ev.job.id), ev.job] })); if (ev.job.status === 'done') scheduleLists(); break;
     case 'permissions': {
       const prev = new Set(getState().permissions.map((p) => p.id));
-      setState({ permissions: ev.permissions });
-      const fresh = ev.permissions.find((p) => !prev.has(p.id));
+      // prompts are global; this tab shows only its own project's agents
+      const mine = ev.permissions.filter((p) => getState().tasks.some((x) => x.id === p.taskId));
+      setState({ permissions: mine });
+      const fresh = mine.find((p) => !prev.has(p.id));
       if (fresh) { notify('info', t('Agent requests permission: {tool}', { tool: fresh.tool })); setState({ selectedTaskId: fresh.taskId, selectedItemId: null, sideTab: 'agent' }); }
       break;
     }
@@ -252,7 +290,7 @@ export const actions = {
     const fd = new FormData();
     for (const f of Array.from(files)) fd.append('file', f, f.name);
     notify('info', tn(Array.from(files).length, 'Uploading {n} file…', 'Uploading {n} files…'));
-    const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
+    const res = await fetch('/api/media/upload', { method: 'POST', body: fd, headers: projectHeaders() });
     if (!res.ok) { notify('error', t('Upload failed')); return []; }
     const infos = await res.json();
     await refreshLists();

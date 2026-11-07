@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { GalleryItem } from '../../../shared/types';
-import { useStore, setState, actions, time, api, notify, refreshGallery } from '../store';
+import { useStore, setState, actions, time, api, notify, refreshGallery, projectBase } from '../store';
 import { Icon } from './Icon';
 import { TransitionsGrid, EffectsGrid, MasksGrid } from './FxLibrary';
 import { RecordPanel } from './RecordPanel';
@@ -192,7 +192,7 @@ function Media() {
           {media.map((m, i) => (
             <div key={m.file} className="lib-card" style={{ animationDelay: `${Math.min(i, 12) * 22}ms` }} onClick={() => add(m.file)} role="button">
               <div className="lib-thumb loaded">
-                {m.thumb ? <img src={`/p/${m.thumb}`} alt="" /> : <div className="lib-thumb-icon"><Icon name={m.type === 'audio' ? 'music' : 'film'} size={22} /></div>}
+                {m.thumb ? <img src={`${projectBase()}/${m.thumb}`} alt="" /> : <div className="lib-thumb-icon"><Icon name={m.type === 'audio' ? 'music' : 'film'} size={22} /></div>}
                 <span className="lib-add"><Icon name="plus" size={13} /> {t('Add')}</span>
                 {m.duration > 0 && m.type !== 'image' && <span className="lib-dur">{fmt(m.duration)}</span>}
               </div>

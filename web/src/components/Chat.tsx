@@ -13,6 +13,7 @@ export function Chat() {
   return (
     <div className="chat">
       <TaskSwitcher tasks={tasks} current={task} />
+      {task && <SubagentStrip task={task} tasks={tasks} />}
       {task ? <Feed task={task} /> : <Empty />}
       <Composer task={task} />
     </div>
@@ -45,13 +46,38 @@ function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null 
         <div className="menu switcher-menu" onPointerDown={(e) => e.stopPropagation()}>
           <button className="menu-item" onClick={() => { setState({ selectedTaskId: null }); setOpen(false); }}><Icon name="plus" size={13} /> {t('New task')}</button>
           {tasks.length > 0 && <div className="menu-sep" />}
-          {tasks.slice(0, 40).map((tk) => (
-            <button key={tk.id} className={'menu-item' + (tk.id === current?.id ? ' active' : '')} onClick={() => { setState({ selectedTaskId: tk.id }); setOpen(false); }}>
-              <Dot status={tk.status} /><span className="ellipsis grow">{tk.title}</span><span className="muted xsmall">{tk.agent}</span>
+          {tasks.filter((tk) => !tk.parentId).slice(0, 40).flatMap((tk) => [tk, ...tasks.filter((c) => c.parentId === tk.id).reverse()]).map((tk) => (
+            <button key={tk.id} className={'menu-item' + (tk.id === current?.id ? ' active' : '') + (tk.parentId ? ' sub' : '')} onClick={() => { setState({ selectedTaskId: tk.id }); setOpen(false); }}>
+              <Dot status={tk.status} /><span className="ellipsis grow">{tk.title}</span><span className="muted xsmall">{tk.parentId ? t('sub-agent') : tk.agent}</span>
             </button>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/** a lead task's sub-agents (or, on a sub-agent, the way back to its lead task) */
+function SubagentStrip({ task, tasks }: { task: Task; tasks: Task[] }) {
+  const parent = task.parentId ? tasks.find((x) => x.id === task.parentId) : null;
+  const kids = useMemo(() => tasks.filter((x) => x.parentId === task.id).reverse(), [tasks, task.id]);
+  if (parent) {
+    return (
+      <div className="sub-strip">
+        <button className="sub-back" onClick={() => setState({ selectedTaskId: parent.id })}><Icon name="back" size={12} /> {t('Lead task')}: <span className="ellipsis">{parent.title}</span></button>
+      </div>
+    );
+  }
+  if (!kids.length) return null;
+  const done = kids.filter((k) => k.status === 'done').length;
+  return (
+    <div className="sub-strip">
+      <span className="muted xsmall">{t('Sub-agents {done}/{n}', { done, n: kids.length })}</span>
+      <div className="sub-chips">
+        {kids.map((k) => (
+          <button key={k.id} className="sub-chip" title={k.title} onClick={() => setState({ selectedTaskId: k.id })}><Dot status={k.status} /><span className="ellipsis">{k.title}</span></button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -100,7 +126,7 @@ function buildBlocks(events: AgentEvent[]): Block[] {
       continue;
     }
     if (e.kind === 'tool_result') { const st = pending.shift(); if (st) st.result = e; continue; }
-    if (e.kind === 'status' && /interrupt|stopped|restarted|queued/i.test(e.key || e.text || '')) { blocks.push({ kind: 'event', e }); continue; }
+    if (e.kind === 'status' && /interrupt|stopped|restarted|queued|sub-agent/i.test(e.key || e.text || '')) { blocks.push({ kind: 'event', e }); continue; }
     if (e.kind === 'status' || (e.kind === 'result' && e.ok !== false)) continue;
     if (e.kind === 'image') {
       // frames the agent looked at: attach to the current steps group so they read as "what it saw"
@@ -156,6 +182,7 @@ const LABEL: Record<string, string> = {
   list_comments: 'Reading notes', create_clip: 'Creating a clip', create_music: 'Creating a track', render_music: 'Listening to a track', analyze_audio: 'Analyzing audio',
   transcribe_media: 'Transcribing', get_timing: 'Checking the rhythm', timeline_add: 'Placing on the timeline', timeline_update: 'Moving on the timeline', timeline_remove: 'Removing from the timeline',
   use_template: 'Using a template', list_templates: 'Browsing the gallery', set_project: 'Project settings',
+  delegate_task: 'Starting a sub-agent', wait_subagents: 'Waiting for sub-agents', message_subagent: 'Messaging a sub-agent',
 };
 const label = (tool?: string) => { const k = (tool || '').replace(/^(studio\.|mcp__studio__)/, ''); return LABEL[k] ? t(LABEL[k]) : k; };
 
