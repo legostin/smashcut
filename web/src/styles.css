@@ -963,3 +963,16 @@ button.chip:hover { filter: brightness(1.25); }
 .inspo-by { font-size: 12px; color: var(--fg3); }
 .inspo-tech { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .inspo-tech span { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--raise); color: var(--fg2); }
+
+/* ---------- 3D stages ---------- */
+.stage3d { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
+.stage3d-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 9px 10px; border-radius: 10px; background: var(--raise); border: 1px solid transparent; text-align: left; transition: border-color var(--t), background var(--t); }
+.stage3d-btn:hover:not(:disabled) { background: var(--hover); }
+.stage3d-btn.on { border-color: var(--accent); background: #171a10; }
+.stage3d-btn:disabled { opacity: .5; cursor: default; }
+.stage3d-name { font-weight: 600; font-size: 12.5px; }
+.stage3d-sub { font-size: 11px; color: var(--fg3); }
+.stage3d-prog { position: relative; height: 22px; border-radius: 7px; background: var(--raise); overflow: hidden; margin-bottom: 8px; }
+.stage3d-prog > div { position: absolute; inset: 0 auto 0 0; background: rgba(212, 255, 58, .22); transition: width 300ms var(--ease); }
+.stage3d-prog span { position: relative; font-size: 11.5px; line-height: 22px; padding-left: 8px; color: var(--fg2); }
+.err { color: var(--err); white-space: pre-wrap; }

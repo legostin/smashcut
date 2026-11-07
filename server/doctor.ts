@@ -1,3 +1,4 @@
+import { blenderVersion } from './blender.ts';
 // First-run doctor: everything the editor needs from the machine, as [{id, title, status, detail, fix}].
 // Cheap checks only — no model calls (agent logins are read from the CLIs' own status commands / credential files).
 import fs from 'node:fs';
@@ -133,12 +134,18 @@ function homeCheck(): DoctorCheck {
   } catch (e) { return { id: 'home', title: 'Studio home', status: 'missing', detail: `${HOME_DIR} is not writable: ${(e as Error).message}`, fix: 'Fix permissions or set STUDIO_HOME to a writable folder' }; }
 }
 
+function blenderCheck(): DoctorCheck {
+  const v = blenderVersion();
+  return v ? { id: 'blender', title: 'Blender (3D scenes, optional)', status: 'ok', detail: v }
+    : { id: 'blender', title: 'Blender (3D scenes, optional)', status: 'warn', detail: 'not found — 3D stages are unavailable', fix: process.platform === 'darwin' ? 'brew install --cask blender   (or download from blender.org)' : 'Install Blender 4.2+ from blender.org' };
+}
+
 export async function runDoctor(opts: { serverRunning?: boolean } = {}): Promise<DoctorCheck[]> {
   const [ffmpeg, ffprobe, git, claude, codex, port] = await Promise.all([ffCheck('ffmpeg'), ffCheck('ffprobe'), gitCheck(), claudeCheck(), codexCheck(), portCheck(!!opts.serverRunning)]);
   // one agent is enough: a missing CLI only counts as "missing" when neither is installed
   const agents = [claude, codex].map(({ _present, ...c }) => c as DoctorCheck);
   if (claude._present || codex._present) for (const a of agents) if (a.status === 'missing') a.status = 'warn';
-  return [nodeCheck(), ffmpeg, ffprobe, git, browserCheck(), ...agents, homeCheck(), diskCheck(), port];
+  return [nodeCheck(), ffmpeg, ffprobe, git, browserCheck(), ...agents, blenderCheck(), homeCheck(), diskCheck(), port];
 }
 
 const ICON = { ok: '✓', warn: '!', missing: '✗' } as const;

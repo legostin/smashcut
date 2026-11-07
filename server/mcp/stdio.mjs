@@ -108,6 +108,23 @@ server.registerTool('list_templates', {
   inputSchema: { kind: z.enum(['clip', 'music']).optional(), query: z.string().optional() },
 }, safe(async ({ kind, query }) => text(await api('GET', `/api/agent/templates?kind=${kind || ''}&q=${encodeURIComponent(query || '')}`))));
 
+server.registerTool('create_3d_scene', {
+  description: 'Create (or update the manifest of) a Blender 3D scene: scenes3d/<id>/scene.py (+ manifest). The scene is CODE using the studio3d helper library — read the studio-blender-3d skill first. Pass `code` to write scene.py, or edit the file afterwards with your file tools. transparent:true renders with alpha (WebM) for compositing over other layers.',
+  inputSchema: { id: z.string(), name: z.string().optional(), duration: z.number().optional(), transparent: z.boolean().optional(), code: z.string().optional(), params: z.record(z.string(), z.any()).optional() },
+}, safe(async (a) => text(await api('POST', '/api/3d', a))));
+
+server.registerTool('render_3d', {
+  description: 'Render a 3D scene with Blender in a stage: quality "mock" (Workbench solid, half-res, seconds — composition, camera, timing), "look" (EEVEE, materials & light), "final" (EEVEE high samples + motion blur; params.engine="cycles" for Cycles). mode "stills" (default) renders the given times (s) into a contact sheet you get back as an image — LOOK at it; mode "animation" renders the whole scene into media and places it on the timeline (replacing the previous render of this scene, keeping its position; pass place {start, track} the first time). Workflow: mock stills → fix → mock animation for timing → look stills → look animation → final animation only when the user approves.',
+  inputSchema: { id: z.string(), quality: z.enum(['mock', 'look', 'final']).optional(), mode: z.enum(['stills', 'animation']).optional(), times: z.array(z.number()).optional(), place: z.object({ start: z.number().optional(), track: z.string().optional() }).optional() },
+}, async (a) => {
+  try {
+    const r = await api('POST', `/api/3d/${encodeURIComponent(a.id)}/render`, a);
+    const content = [{ type: 'text', text: JSON.stringify({ ...r, image: undefined }, null, 2) }];
+    if (r.image) content.push({ type: 'image', data: r.image, mimeType: 'image/png' });
+    return { content };
+  } catch (e) { return { content: [{ type: 'text', text: 'Error: ' + e.message }], isError: true }; }
+});
+
 server.registerTool('list_references', {
   description: 'The project\'s references — techniques from the library, images/videos, links — that the user wants this video to follow, with the scenes each applies to and how to read it. Call it before designing or making scenes; study the relevant ones (get_technique / Read the media) and follow them in the project style. Mention which references you used.',
   inputSchema: {},

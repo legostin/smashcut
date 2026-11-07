@@ -734,5 +734,17 @@
   "3D-look motion": "3D-моушн",
   "Title sequences": "Титры и заставки",
   "Abstract": "Абстракция",
-  "Click — add to the project references (bound to the selected scenes) · ↗ opens the original": "Клик — в референсы проекта (к выделенным сценам) · ↗ открывает оригинал"
+  "Click — add to the project references (bound to the selected scenes) · ↗ opens the original": "Клик — в референсы проекта (к выделенным сценам) · ↗ открывает оригинал",
+  "3D stage": "3D-этап",
+  "Open in Blender": "Открыть в Blender",
+  "Mock": "Мок",
+  "Look": "Лукдев",
+  "Final": "Финал",
+  "current": "текущий",
+  "render": "рендер",
+  "Solid blocking, half-res — composition, camera, timing (seconds)": "Болванки в половинном разрешении — композиция, камера, тайминг (секунды)",
+  "EEVEE — materials and light (about a second per frame)": "EEVEE — материалы и свет (около секунды на кадр)",
+  "High samples + motion blur — slow, for the approved shot": "Высокое качество и размытие в движении — медленно, для утверждённого кадра",
+  "Rendering {q} · {p}%": "Рендер: {q} · {p}%",
+  "The scene is code in scenes3d/{id}/scene.py — ask the agent for changes; the timeline position is kept between stages.": "Сцена — это код в scenes3d/{id}/scene.py. Правки просите у агента; место на таймлайне сохраняется между этапами."
 }

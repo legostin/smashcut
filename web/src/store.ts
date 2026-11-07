@@ -28,6 +28,7 @@ export interface State {
   design: DesignSystem;
   view: View;
   references: Reference[];
+  render3d: Extract<ServerEvent, { type: 'render3d' }>['job'][];
   /** scenes selected on the storyboard / scene strip (ids) */
   sceneSelection: string[];
   /** full timeline expanded (otherwise the compact scene strip) */
@@ -66,7 +67,7 @@ const initial: State = {
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
   view: (() => { try { const v = localStorage.getItem('view'); return v === 'board' || v === 'edit' || v === 'nodes' ? v : 'story'; } catch { return 'story'; } })() as View,
-  references: [], sceneSelection: [], timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
+  references: [], render3d: [], sceneSelection: [], timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -249,6 +250,7 @@ function onEvent(ev: ServerEvent) {
     case 'design': setState({ design: ev.design }); break;
     case 'board': setState({ boardNotes: ev.notes }); break;
     case 'references': setState({ references: ev.references }); break;
+    case 'render3d': setState((s) => ({ render3d: [...s.render3d.filter((j) => j.id !== ev.job.id), ev.job].slice(-20) })); if (ev.job.status === 'done') scheduleLists(); break;
     case 'record': setState((s) => ({ recordJobs: [...s.recordJobs.filter((j) => j.id !== ev.job.id), ev.job] })); if (ev.job.status === 'done') scheduleLists(); break;
     case 'permissions': {
       const prev = new Set(getState().permissions.map((p) => p.id));

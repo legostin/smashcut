@@ -277,6 +277,8 @@ export interface Settings {
   elevenlabsKey?: string;
   elevenlabsVoiceId?: string;
   elevenlabsModel?: string;
+  /** path to the Blender executable (default: /Applications/Blender.app or `blender` in PATH) */
+  blenderPath?: string;
   /** voice-over: max takes per scene when the pace check fails (each take costs ElevenLabs characters) */
   voiceMaxTakes?: number;
 }
@@ -343,6 +345,7 @@ export type ServerEvent = (
   | { type: 'design'; design: DesignSystem }
   | { type: 'board'; notes: BoardNote[] }
   | { type: 'references'; references: Reference[] }
+  | { type: 'render3d'; job: { id: string; sceneId: string; quality: 'mock' | 'look' | 'final'; mode: 'stills' | 'animation'; status: 'running' | 'done' | 'error'; progress: number; output?: string; sheet?: string; error?: string } }
   | { type: 'record'; job: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string } }
   | { type: 'toolkit-job'; job: ToolkitJob }
   | { type: 'notice'; level: 'info' | 'error'; text: string; key?: string; params?: Record<string, string | number> }) & { pid?: string };

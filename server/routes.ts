@@ -26,6 +26,7 @@ import { boardFrame } from './render/board.ts';
 import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
 import { voiceScene, cleanupTakes, voicePace } from './voice/voiceover.ts';
 import { listInspiration, getInspiration, inspirationThumb } from './inspiration.ts';
+import { blenderBin, listScenes3d, getScene3d, createScene3d, render3d, listJobs3d, openInBlender } from './blender.ts';
 import { paceReport } from './voice/speech.ts';
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
 import { recordWeb, defaultWebActions, recordJobs, emitJob, type RecordJob } from './record/web.ts';
@@ -403,6 +404,24 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- gallery & library ----------
   app.get('/api/gallery', async () => listGallery());
+  // ---------- 3D (Blender): scenes as code, rendered in stages mock → look → final ----------
+  app.get('/api/3d', async () => { need(); return { blender: blenderBin(), scenes: listScenes3d(), jobs: listJobs3d() }; });
+  app.post<{ Body: any }>('/api/3d', async (req) => { need(); const tid = taskOf(req); const r = createScene3d((req.body || {}) as any); if (tid) setFocus(tid, { kind: 'clip', id: r.manifest.id, at: Date.now() }); return r; });
+  app.get<{ Params: { id: string } }>('/api/3d/:id', async (req) => { need(); return getScene3d(req.params.id); });
+  app.post<{ Params: { id: string }; Body: { quality?: 'mock' | 'look' | 'final'; mode?: 'stills' | 'animation'; times?: number[]; place?: any; wait?: boolean } }>('/api/3d/:id/render', async (req) => {
+    need();
+    const tid = taskOf(req);
+    const b = req.body || {};
+    const { job, done } = render3d(req.params.id, b);
+    if (b.wait === false) return job;
+    const r = await done;
+    if (r.status === 'error') throw uerr('3D render failed: {error}', { error: r.error || '' });
+    if (tid && r.sheet) taskEvent(tid, { kind: 'image', src: pbase() + '/' + r.sheet + '?v=' + Date.now(), ...msg('3D {id} · {q}', { id: req.params.id, q: r.quality }) });
+    return { ...r, image: r.sheet ? fs.readFileSync(cur().p(r.sheet)).toString('base64') : undefined };
+  });
+  app.get<{ Params: { jid: string } }>('/api/3d/jobs/:jid', async (req) => { need(); const j = listJobs3d().find((x) => x.id === req.params.jid); if (!j) throw uerr('Not found', {}, 404); return j; });
+  app.post<{ Params: { id: string } }>('/api/3d/:id/open', async (req) => { need(); return openInBlender(req.params.id); });
+
   // ---------- inspiration (curated real-world motion: link + breakdown) ----------
   app.get('/api/inspiration', async () => listInspiration().map(({ breakdown, ...x }) => ({ ...x, breakdown: breakdown.slice(0, 280) })));
   app.get<{ Params: { id: string } }>('/api/inspiration/:id', async (req) => { const x = getInspiration(req.params.id); if (!x) throw uerr('Not found', {}, 404); return x; });

@@ -61,6 +61,8 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
           {audible && <Slider label={t('Volume')} value={item.volume ?? 1} max={1.5} onChange={(v) => up({ volume: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
         </Section>
 
+        {item.kind === 'media' && /^3d-/.test(item.ref) && <Stage3D item={item} />}
+
         {visual && <LayoutPanel item={item} project={project} />}
 
         {item.kind !== 'music' && <FxPanel item={item} />}
@@ -184,4 +186,34 @@ function variationsPrompt(item: Item, name: string) {
 Each one as a separate clip clips/${item.ref}-v1, -v2, -v3 (copy the package and edit the copy): different typography, animation rhythm, composition and color accent; same texts and meaning; follow the project's design system if there is one.
 Put the variants on a new graphics track (set_project tracks) at the same time as the original, but turn their visibility off (hidden: true) — the user will switch them. Do not change the original.
 Render contact sheets of all three (render_clip) and briefly describe how they differ.`;
+}
+
+/** 3D render on the timeline: re-render it in another stage (mock → look → final), open the .blend */
+const STAGES3D = [
+  { q: 'mock', label: 'Mock', hint: 'Solid blocking, half-res — composition, camera, timing (seconds)' },
+  { q: 'look', label: 'Look', hint: 'EEVEE — materials and light (about a second per frame)' },
+  { q: 'final', label: 'Final', hint: 'High samples + motion blur — slow, for the approved shot' },
+] as const;
+function Stage3D({ item }: { item: Item }) {
+  const m = /^3d-(.+)-(mock|look|final)\.(mp4|webm)$/.exec(item.ref);
+  const id = m?.[1] || '', cur = m?.[2] || 'mock';
+  const job = useStore((s) => [...s.render3d].reverse().find((j) => j.sceneId === id && j.mode === 'animation'));
+  const busy = job?.status === 'running';
+  const render = (q: string) => api('POST', `/api/3d/${encodeURIComponent(id)}/render`, { quality: q, mode: 'animation', wait: false });
+  return (
+    <div className="ip-section">
+      <div className="ip-section-title row between"><span>{t('3D stage')}</span><button className="link" onClick={() => api('POST', `/api/3d/${encodeURIComponent(id)}/open`).catch(() => {})}>{t('Open in Blender')}</button></div>
+      <div className="stage3d">
+        {STAGES3D.map((s) => (
+          <button key={s.q} className={'stage3d-btn' + (cur === s.q ? ' on' : '')} disabled={busy} title={t(s.hint)} onClick={() => render(s.q)}>
+            <span className="stage3d-name">{t(s.label)}</span>
+            <span className="stage3d-sub">{cur === s.q ? t('current') : t('render')}</span>
+          </button>
+        ))}
+      </div>
+      {busy && <div className="stage3d-prog"><div style={{ width: `${Math.round((job!.progress || 0) * 100)}%` }} /><span>{t('Rendering {q} · {p}%', { q: t(STAGES3D.find((x) => x.q === job!.quality)?.label || ''), p: Math.round((job!.progress || 0) * 100) })}</span></div>}
+      {job?.status === 'error' && <div className="small err">{job.error}</div>}
+      <div className="muted xsmall">{t('The scene is code in scenes3d/{id}/scene.py — ask the agent for changes; the timeline position is kept between stages.', { id })}</div>
+    </div>
+  );
 }
