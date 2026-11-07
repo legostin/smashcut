@@ -298,7 +298,8 @@ input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.15); }
 .lib-thumb.loaded img { opacity: 1; }
 .lib-card:hover .lib-thumb { box-shadow: 0 0 0 1px var(--line3), 0 14px 34px rgba(0, 0, 0, 0.45); transform: translateY(-2px); }
 .lib-thumb-icon { position: absolute; inset: 0; display: grid; place-items: center; color: var(--fg3); }
-.lib-live { position: absolute; inset: 0; background: #141417; opacity: 0; transition: opacity 220ms var(--ease); }
+.lib-live { position: absolute; inset: 0; background: #141417; opacity: 0; transition: opacity 260ms var(--ease); }
+.lib-live:not(.ready) { transition: none; }
 .lib-live.ready { opacity: 1; }
 .lib-live iframe { width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; pointer-events: none; color-scheme: normal; background: transparent; }
 .lib-add { position: absolute; right: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 8px; border-radius: 999px; background: var(--fg); color: #0b0b0c; font-size: 12px; font-weight: 600; opacity: 0; transform: translateY(4px); transition: opacity 180ms var(--ease), transform 180ms var(--ease); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }

@@ -7,7 +7,8 @@ const close = () => setState({ libraryOpen: false });
 
 const CATEGORY: Record<string, string> = {
   titles: 'Титры', 'lower-thirds': 'Плашки', captions: 'Субтитры', infographics: 'Инфографика', callouts: 'Выноски',
-  logos: 'Логотипы', transitions: 'Переходы', backgrounds: 'Фоны', social: 'Соцсети', custom: 'Своё', other: 'Другое',
+  logos: 'Логотипы', transitions: 'Переходы', backgrounds: 'Фоны', social: 'Соцсети', product: 'Продукт и UI', maps: 'Карты',
+  audio: 'Подкасты и аудио', broadcast: 'Новости и эфир', 'text-effects': 'Текстовые эффекты', custom: 'Своё', other: 'Другое',
 };
 const catLabel = (c?: string) => CATEGORY[c || 'other'] || (c ? c[0].toUpperCase() + c.slice(1) : 'Другое');
 
@@ -118,7 +119,11 @@ function Live({ g }: { g: GalleryItem }) {
   const d = g.duration || 5;
   useLayoutEffect(() => { if (box.current) setScale(box.current.clientWidth / 1920); }, []);
   useEffect(() => {
-    const onMsg = (e: MessageEvent) => { if (e.source === frame.current?.contentWindow && e.data?.__studio && e.data.type === 'ready') setReady(true); };
+    // reveal only after the clip has painted a real frame (avoids a white flash from the blank iframe)
+    const onMsg = (e: MessageEvent) => {
+      if (e.source !== frame.current?.contentWindow || !e.data?.__studio || e.data.type !== 'ready') return;
+      requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => setReady(true), 40)));
+    };
     window.addEventListener('message', onMsg);
     let t = 0;
     const iv = setInterval(() => { t = (t + 1 / 30) % d; frame.current?.contentWindow?.postMessage({ __studio: true, type: 'seek', t }, '*'); }, 33);
@@ -127,7 +132,7 @@ function Live({ g }: { g: GalleryItem }) {
   const input = encodeURIComponent(JSON.stringify({ width: 1920, height: 1080, fps: 30, duration: d, timing: false }));
   return (
     <div ref={box} className={'lib-live' + (ready ? ' ready' : '')}>
-      {scale > 0 && <iframe ref={frame} src={`${g.url}#${input}`} title={g.name} style={{ transform: `scale(${scale})` }} />}
+      {scale > 0 && <iframe ref={frame} src={`${g.url}#${input}`} title={g.name} style={{ transform: `scale(${scale})`, visibility: ready ? 'visible' : 'hidden' }} />}
     </div>
   );
 }
