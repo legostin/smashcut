@@ -4,7 +4,7 @@ import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { spawn } from 'node:child_process';
 import type { FastifyInstance } from 'fastify';
-import type { Comment, Item, Project, PackageManifest, AgentKind } from '../shared/types.ts';
+import type { Comment, Item, Project, PackageManifest, AgentKind, Reference } from '../shared/types.ts';
 import { ROOT, GALLERY_DIR, LIBRARY_DIR, PROJECTS_DIR, getSettings, saveSettings, getRecents, HOME_DIR } from './config.ts';
 import { cur, hasProject, openProject, ProjectStore, MEDIA_EXT, pbase, runIn, openStores, projectId } from './project.ts';
 import { bus } from './bus.ts';
@@ -81,6 +81,7 @@ export function state() {
     script: getScript(),
     design: getDesign(),
     boardNotes: readJson<{ notes: any[] }>(cur().p('board.json'), { notes: [] }).notes,
+    references: readJson<{ references: any[] }>(cur().p('references.json'), { references: [] }).references,
     exports: listExports(),
     recents: getRecents(),
     projectsDir: PROJECTS_DIR,
@@ -585,6 +586,39 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get('/api/fx', async () => ({ transitions: TRANSITIONS, effects: EFFECTS.map((e) => ({ type: e.type, name: e.name, group: e.group, params: e.params.map((p) => ({ key: p.key, min: p.min, max: p.max, default: p.def })), options: e.options })), masks: MASKS, blends: BLENDS.map((b) => b.mode) }));
 
   // ---------- board notes (comments on board objects) ----------
+  // ---------- references (techniques, images/videos, links the video should follow) ----------
+  const refsFile = () => cur().p('references.json');
+  const readRefs = () => readJson<{ references: Reference[] }>(refsFile(), { references: [] }).references;
+  const writeRefs = (list: Reference[]) => { writeJson(refsFile(), { references: list }); bus.send({ type: 'references', references: list }); return list; };
+  app.get('/api/references', async () => { need(); return readRefs(); });
+  app.post<{ Body: Partial<Reference> }>('/api/references', async (req) => {
+    need();
+    const b = req.body || {};
+    if (!b.kind || !b.ref) throw uerr('kind and ref are required');
+    const list = readRefs();
+    const same = list.find((r) => r.kind === b.kind && r.ref === b.ref);
+    if (same) {
+      // adding again binds it to more scenes
+      const sceneIds = [...new Set([...(same.sceneIds || []), ...(b.sceneIds || [])])];
+      return writeRefs(list.map((r) => (r === same ? { ...r, sceneIds, note: b.note || r.note } : r)));
+    }
+    const r: Reference = { id: 'r' + nid(), kind: b.kind as Reference['kind'], ref: String(b.ref), origin: b.origin, title: b.title || String(b.ref), note: b.note || '', sceneIds: b.sceneIds || [], thumb: b.thumb, addedAt: new Date().toISOString() };
+    return writeRefs([...list, r]);
+  });
+  app.patch<{ Params: { id: string }; Body: Partial<Reference> }>('/api/references/:id', async (req) => { need(); return writeRefs(readRefs().map((r) => (r.id === req.params.id ? { ...r, ...req.body, id: r.id } : r))); });
+  app.delete<{ Params: { id: string } }>('/api/references/:id', async (req) => { need(); return writeRefs(readRefs().filter((r) => r.id !== req.params.id)); });
+  /** for agents: references with what to read for each */
+  app.get('/api/agent/references', async () => {
+    need();
+    const scenes = getScript().scenes;
+    return readRefs().map((r) => ({
+      id: r.id, kind: r.kind, title: r.title, note: r.note || undefined,
+      scenes: (r.sceneIds || []).map((id) => { const i = scenes.findIndex((s) => s.id === id); return i >= 0 ? `${i + 1}:${scenes[i].title} (${id})` : id; }),
+      appliesTo: r.sceneIds?.length ? 'listed scenes' : 'the whole video',
+      howToRead: r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? `Read media/${r.ref} (look at it; for video, extract_frames via run_media_tool)` : `WebFetch ${r.ref}`,
+    }));
+  });
+
   const notesFile = () => cur().p('board.json');
   const readNotes = () => readJson<{ notes: any[] }>(notesFile(), { notes: [] }).notes;
   const writeNotes = (notes: any[]) => { writeJson(notesFile(), { notes }); bus.send({ type: 'board', notes } as any); return notes; };

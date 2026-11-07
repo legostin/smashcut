@@ -108,6 +108,11 @@ server.registerTool('list_templates', {
   inputSchema: { kind: z.enum(['clip', 'music']).optional(), query: z.string().optional() },
 }, safe(async ({ kind, query }) => text(await api('GET', `/api/agent/templates?kind=${kind || ''}&q=${encodeURIComponent(query || '')}`))));
 
+server.registerTool('list_references', {
+  description: 'The project\'s references — techniques from the library, images/videos, links — that the user wants this video to follow, with the scenes each applies to and how to read it. Call it before designing or making scenes; study the relevant ones (get_technique / Read the media) and follow them in the project style. Mention which references you used.',
+  inputSchema: {},
+}, safe(async () => text(await api('GET', '/api/agent/references'))));
+
 server.registerTool('get_technique', {
   description: 'Read one technique: TECHNIQUE.md (use it for / anatomy / motion with timings and easings / adapting to the design system and formats / variations / pitfalls / key code) and the list of reference files in its folder (Read them for the full code). Then build your own clip with create_clip.',
   inputSchema: { id: z.string(), kind: z.enum(['clip', 'music']).optional() },

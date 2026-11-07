@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { t, tn, getLocale, fmtNumber } from './i18n';
-import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script, DesignSystem, BoardNote, Scene } from '../../shared/types';
+import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script, DesignSystem, BoardNote, Scene, Reference } from '../../shared/types';
 
 export interface SkillInfo { name: string; description: string; origin: string; path: string }
 export interface State {
@@ -27,6 +27,7 @@ export interface State {
   script: Script;
   design: DesignSystem;
   view: View;
+  references: Reference[];
   /** scenes selected on the storyboard / scene strip (ids) */
   sceneSelection: string[];
   /** full timeline expanded (otherwise the compact scene strip) */
@@ -65,7 +66,7 @@ const initial: State = {
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
   view: (() => { try { const v = localStorage.getItem('view'); return v === 'board' || v === 'edit' || v === 'nodes' ? v : 'story'; } catch { return 'story'; } })() as View,
-  sceneSelection: [], timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
+  references: [], sceneSelection: [], timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -247,6 +248,7 @@ function onEvent(ev: ServerEvent) {
     case 'script': setState({ script: ev.script }); break;
     case 'design': setState({ design: ev.design }); break;
     case 'board': setState({ boardNotes: ev.notes }); break;
+    case 'references': setState({ references: ev.references }); break;
     case 'record': setState((s) => ({ recordJobs: [...s.recordJobs.filter((j) => j.id !== ev.job.id), ev.job] })); if (ev.job.status === 'done') scheduleLists(); break;
     case 'permissions': {
       const prev = new Set(getState().permissions.map((p) => p.id));
@@ -351,6 +353,15 @@ export const actions = {
     return r;
   },
   addScene() { return api('POST', '/api/script/scenes', {}); },
+  /** add a reference to the project; bound to the selected scenes (if any) */
+  async addReference(r: Partial<Reference>) {
+    const sceneIds = getState().sceneSelection;
+    await api('POST', '/api/references', { ...r, sceneIds });
+    const n = sceneIds.length;
+    notify('info', n ? t('Added to references for {n} selected scenes', { n }) : t('Added to the project references'));
+  },
+  removeReference(id: string) { return api('DELETE', `/api/references/${id}`); },
+  patchReference(id: string, patch: Partial<Reference>) { return api('PATCH', `/api/references/${id}`, patch); },
   deleteScene(id: string) { return api('DELETE', `/api/script/scenes/${id}`); },
   decidePermission(id: string, allow: boolean, always = false) { return api('POST', `/api/permissions/${id}`, { allow, always }); },
 };

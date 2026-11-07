@@ -306,6 +306,22 @@ export interface ExportJob {
   to: number;
 }
 
+/** a reference attached to the project: a technique from the library, an image/video from media, or a link */
+export interface Reference {
+  id: string;
+  kind: 'technique' | 'music-technique' | 'media' | 'link';
+  /** technique id (gallery/library), media file name, or URL */
+  ref: string;
+  origin?: 'builtin' | 'library';
+  title: string;
+  /** what to take from it ("the motion of the title", "this palette") */
+  note?: string;
+  /** scenes it applies to (empty = the whole video) */
+  sceneIds?: string[];
+  thumb?: string;
+  addedAt: string;
+}
+
 /** every event is tagged with the id of the project it belongs to (`pid`, absent = global) */
 export type ServerEvent = (
   | { type: 'project'; project: Project }
@@ -320,6 +336,7 @@ export type ServerEvent = (
   | { type: 'script'; script: Script }
   | { type: 'design'; design: DesignSystem }
   | { type: 'board'; notes: BoardNote[] }
+  | { type: 'references'; references: Reference[] }
   | { type: 'record'; job: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string } }
   | { type: 'toolkit-job'; job: ToolkitJob }
   | { type: 'notice'; level: 'info' | 'error'; text: string; key?: string; params?: Record<string, string | number> }) & { pid?: string };

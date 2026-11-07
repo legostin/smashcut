@@ -116,6 +116,11 @@ function ClipGrid({ items, q, empty }: { items: GalleryItem[]; q: string; empty?
  * Techniques, not templates: the agent studies the technique (TECHNIQUE.md + reference code) and makes an original
  * clip in the project's design system — for the selected scenes, or the scene under the playhead.
  */
+/** techniques are references: clicking one attaches it to the project (and the selected scenes) */
+export function addTechniqueRef(g: GalleryItem) {
+  actions.addReference({ kind: g.kind === 'music' ? 'music-technique' : 'technique', ref: g.id, origin: g.origin as any, title: g.name, thumb: g.thumb });
+}
+
 export function makeWithTechnique(g: GalleryItem) {
   const st = getState();
   const scenes = st.script.scenes;
@@ -134,11 +139,11 @@ function Card({ g, i }: { g: GalleryItem; i: number }) {
   const [hover, setHover] = useState(false);
   const [loaded, setLoaded] = useState(false);
   return (
-    <div className="lib-card" role="button" tabIndex={0} style={{ animationDelay: `${Math.min(i, 12) * 22}ms` }} onClick={() => makeWithTechnique(g)} onKeyDown={(e) => e.key === 'Enter' && makeWithTechnique(g)} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+    <div className="lib-card" role="button" tabIndex={0} style={{ animationDelay: `${Math.min(i, 12) * 22}ms` }} onClick={() => addTechniqueRef(g)} onKeyDown={(e) => e.key === 'Enter' && addTechniqueRef(g)} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
       <div className={'lib-thumb' + (loaded ? ' loaded' : '')}>
         <img src={g.thumb} loading="lazy" alt="" onLoad={() => setLoaded(true)} />
         {hover && <Live g={g} />}
-        <span className="lib-add"><Icon name="sparkle" size={12} /> {t('Make in my style')}</span>
+        <span className="lib-add"><Icon name="star" size={12} /> {t('Add to references')}</span>
         <button className="lib-insert" title={t('Insert the reference clip as-is (quick draft)')} onClick={(e) => { e.stopPropagation(); addTemplate(g); }}><Icon name="plus" size={12} /></button>
         {g.origin === 'library' && <span className="lib-mine">{t('mine')}</span>}
       </div>
@@ -177,6 +182,7 @@ function Wall({ items }: { items: GalleryItem[] }) {
 }
 
 function Tile({ g, i, big }: { g: GalleryItem; i: number; big: boolean }) {
+  const isRef = useStore((s) => s.references.some((r) => r.ref === g.id && (r.kind === 'technique' || r.kind === 'music-technique')));
   const ref = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const [visible, setVisible] = useState(false);
@@ -200,8 +206,8 @@ function Tile({ g, i, big }: { g: GalleryItem; i: number; big: boolean }) {
   }, [visible, src, g.origin, g.id]);
   useEffect(() => { const v = video.current; if (!v) return; if (visible) v.play().catch(() => {}); else v.pause(); }, [visible, src]);
   return (
-    <div ref={ref} className={'tile' + (big ? ' big' : '') + (playing ? ' playing' : '')} style={{ animationDelay: `${Math.min(i, 16) * 25}ms` }}
-      role="button" tabIndex={0} onClick={() => makeWithTechnique(g)} onKeyDown={(e) => e.key === 'Enter' && makeWithTechnique(g)}>
+    <div ref={ref} className={'tile' + (big ? ' big' : '') + (playing ? ' playing' : '') + (isRef ? ' isref' : '')} style={{ animationDelay: `${Math.min(i, 16) * 25}ms` }}
+      role="button" tabIndex={0} onClick={() => addTechniqueRef(g)} onKeyDown={(e) => e.key === 'Enter' && addTechniqueRef(g)}>
       <img className="tile-still" src={g.thumb} loading="lazy" alt="" />
       {src && <video ref={video} className="tile-video" src={src} muted loop playsInline autoPlay preload="auto" onPlaying={() => setPlaying(true)} />}
       <div className="tile-shade" />
@@ -212,7 +218,8 @@ function Tile({ g, i, big }: { g: GalleryItem; i: number; big: boolean }) {
         {g.description && <div className="tile-desc">{g.description}</div>}
       </div>
       <div className="tile-actions">
-        <span className="tile-cta"><Icon name="sparkle" size={12} /> {t('Make in my style')}</span>
+        {isRef && <span className="tile-ref-on"><Icon name="check" size={12} /> {t('In references')}</span>}
+        {!isRef && <span className="tile-cta"><Icon name="star" size={12} /> {t('Add to references')}</span>}
         <button className="tile-insert" title={t('Insert the reference clip as-is (quick draft)')} onClick={(e) => { e.stopPropagation(); addTemplate(g); }}><Icon name="plus" size={13} /></button>
       </div>
     </div>
@@ -252,7 +259,7 @@ function MusicList({ items, q }: { items: GalleryItem[]; q: string }) {
 }
 function MusicRow({ g }: { g: GalleryItem }) {
   return (
-    <button className="lib-row" onClick={() => makeWithTechnique(g)} title={t('Make an original track with this technique')}>
+    <button className="lib-row" onClick={() => addTechniqueRef(g)} title={t('Add to references')}>
       <span className="lib-row-icon"><Icon name="music" size={16} /></span>
       <span className="grow minw0">
         <span className="lib-row-name">{g.name}{g.origin === 'library' && <span className="lib-mine inline">{t('mine')}</span>}</span>
@@ -292,6 +299,7 @@ function Media() {
                 {m.thumb ? <img src={`${projectBase()}/${m.thumb}`} alt="" /> : <div className="lib-thumb-icon"><Icon name={m.type === 'audio' ? 'music' : 'film'} size={22} /></div>}
                 <span className="lib-add"><Icon name="plus" size={13} /> {t('Add')}</span>
                 {m.duration > 0 && m.type !== 'image' && <span className="lib-dur">{fmt(m.duration)}</span>}
+                {m.type !== 'audio' && <button className="lib-insert" title={t('Add to references')} onClick={(e) => { e.stopPropagation(); actions.addReference({ kind: 'media', ref: m.file, title: m.file }); }}><Icon name="star" size={12} /></button>}
               </div>
               <div className="lib-card-name ellipsis">{m.file}</div>
               <div className="lib-card-desc row gap8">

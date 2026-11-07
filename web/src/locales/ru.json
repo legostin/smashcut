@@ -707,5 +707,17 @@
   "Insert the reference clip as-is (quick draft)": "Вставить эталонный клип как есть (быстрый черновик)",
   "Make an original track with this technique": "Сделать свой трек этим приёмом",
   "Techniques": "Приёмы",
-  "All": "Все"
+  "All": "Все",
+  "Added to references for {n} selected scenes": "Добавлено в референсы для выделенных сцен: {n}",
+  "Added to the project references": "Добавлено в референсы проекта",
+  "In references": "В референсах",
+  "Add to references": "В референсы",
+  "References": "Референсы",
+  "References for this scene": "Референсы этой сцены",
+  "whole video": "весь ролик",
+  "scenes {list}": "сцены {list}",
+  "Click to bind to / unbind from the selected scenes": "Клик — привязать к выделенным сценам или отвязать",
+  "Select scenes, then click to bind this reference to them": "Выделите сцены и кликните, чтобы привязать к ним референс",
+  "Remove reference": "Убрать референс",
+  "Add references: techniques, images, links": "Добавьте референсы: приёмы, картинки, ссылки"
 }

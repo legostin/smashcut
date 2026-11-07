@@ -922,3 +922,26 @@ button.chip:hover { filter: brightness(1.25); }
 .tile:not(.big) .tile-cta .icon { width: 13px; height: 13px; }
 .tile-insert { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(10, 10, 11, .6); backdrop-filter: blur(10px); color: #fff; transition: background var(--t); }
 .tile-insert:hover { background: rgba(40, 40, 46, .9); }
+
+.tile-ref-on { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; background: rgba(10, 10, 11, .72); backdrop-filter: blur(10px); color: var(--accent); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.tile:not(.big) .tile-ref-on { font-size: 0; gap: 0; width: 30px; padding: 0; justify-content: center; }
+
+/* ---------- references ---------- */
+.tile.isref { outline: 2px solid var(--accent); outline-offset: -2px; }
+.refs { display: flex; align-items: center; gap: 8px; margin: -4px 0 18px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.refs-title { display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 12px; font-weight: 600; color: var(--fg2); margin-right: 2px; }
+.refs-title .icon { color: var(--accent); }
+.ref-card { position: relative; flex: none; display: flex; align-items: center; gap: 9px; height: 46px; padding: 4px 26px 4px 4px; max-width: 240px; border-radius: 12px; background: var(--card); border: 1px solid #222227; cursor: pointer; transition: border-color var(--t), background var(--t); }
+.ref-card:hover { border-color: #34343b; }
+.ref-card.bound { border-color: var(--accent); background: #171a10; }
+.ref-thumb { width: 60px; height: 36px; border-radius: 8px; overflow: hidden; background: #0c0c0e; display: grid; place-items: center; flex: none; color: var(--fg3); }
+.ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ref-text { display: flex; flex-direction: column; min-width: 0; }
+.ref-name { font-size: 12.5px; font-weight: 550; }
+.ref-scope { font-size: 11px; color: var(--fg3); }
+.ref-x { position: absolute; right: 5px; top: 5px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; color: var(--fg3); opacity: 0; transition: opacity var(--t), background var(--t); }
+.ref-card:hover .ref-x { opacity: 1; }
+.ref-x:hover { background: var(--press); color: var(--fg); }
+.ref-add { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; border: 1px dashed #2c2c33; color: var(--fg3); font-size: 12px; transition: color var(--t), border-color var(--t); }
+.ref-add:hover { color: var(--fg); border-color: var(--line3); }
+.scene-refs { position: absolute; left: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 7px; border-radius: 999px; background: rgba(10, 10, 11, .78); color: var(--accent); font-size: 11px; font-weight: 600; }

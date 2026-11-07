@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Project, Scene, Task } from '../../../shared/types';
-import { useStore, setState, getState, actions, seek, fmtTime } from '../store';
+import type { Project, Scene, Task, Reference } from '../../../shared/types';
+import { useStore, setState, getState, actions, seek, fmtTime, pfile } from '../store';
 import { t, tn } from '../i18n';
 import { Icon } from './Icon';
 import { statusLabel, statusTone, SCENE_STATUS } from '../sceneStatus';
@@ -73,6 +73,7 @@ export function Storyboard({ project }: { project: Project }) {
         <div className="grow" />
         <span className="muted xsmall">{t('Click to select · ⇧/⌘ to add · double-click to open')}</span>
       </div>
+      <ReferencesStrip />
       <div className="story-grid" style={{ ['--ar' as any]: `${project.width} / ${project.height}` }}>
         {scenes.map((sc, i) => <SceneCard key={sc.id} sc={sc} n={i + 1} project={project} selected={sel.includes(sc.id)} agent={agents[sc.id]} />)}
         <button className="scene-add" onClick={() => actions.startTask('Add one more scene to the script that continues the story, then make it.')}>
@@ -97,6 +98,7 @@ function SceneCard({ sc, n, project, selected, agent }: { sc: Scene; n: number; 
     img.onload = () => setShown(src);
     img.src = src;
   }, [src]);
+  const refCount = useStore((s) => s.references.filter((r) => r.sceneIds?.includes(sc.id)).length);
   const tone = statusTone(sc);
   const note = sc.status === 'review' && sc.notes ? sc.notes : sc.voiceover || sc.visual || '';
   return (
@@ -109,6 +111,7 @@ function SceneCard({ sc, n, project, selected, agent }: { sc: Scene; n: number; 
         <span className="scene-n mono">{String(n).padStart(2, '0')}</span>
         {agent && <span className="scene-agent"><span className="pulse" />{agent.agent === 'codex' ? 'Codex' : 'Claude'}</span>}
         {sc.locked && <span className="scene-lock" title={t('Locked — agents won’t change it')}><Icon name="lock" size={12} /></span>}
+        {refCount > 0 && <span className="scene-refs" title={t('References for this scene')}><Icon name="star" size={11} />{refCount}</span>}
       </div>
       <div className="scene-meta">
         <span className="scene-title ellipsis">{sc.title}</span>
@@ -118,6 +121,40 @@ function SceneCard({ sc, n, project, selected, agent }: { sc: Scene; n: number; 
         <span className={'chip tone-' + tone}><span className="dot" />{statusLabel(sc)}</span>
         {note && <span className="scene-note ellipsis">{note}</span>}
       </div>
+    </div>
+  );
+}
+
+/** the project's references: techniques, images, links. Click one to (un)bind it to the selected scenes. */
+function ReferencesStrip() {
+  const refs = useStore((s) => s.references);
+  const sel = useStore((s) => s.sceneSelection);
+  const scenes = useStore((s) => s.script.scenes);
+  const media = useStore((s) => s.media);
+  const label = (ids?: string[]) => {
+    if (!ids?.length) return t('whole video');
+    const ns = ids.map((id) => scenes.findIndex((s) => s.id === id) + 1).filter((n) => n > 0).sort((a, b) => a - b);
+    return ns.length ? t('scenes {list}', { list: ns.join(', ') }) : t('whole video');
+  };
+  const toggle = (r: Reference) => {
+    if (!sel.length) return;
+    const has = sel.every((id) => r.sceneIds?.includes(id));
+    const next = has ? (r.sceneIds || []).filter((id) => !sel.includes(id)) : [...new Set([...(r.sceneIds || []), ...sel])];
+    actions.patchReference(r.id, { sceneIds: next });
+  };
+  const thumb = (r: Reference) => r.kind === 'media' ? (media.find((m) => m.file === r.ref)?.thumb ? pfile(media.find((m) => m.file === r.ref)!.thumb!) : null) : r.thumb || null;
+  return (
+    <div className="refs">
+      <span className="refs-title"><Icon name="star" size={13} /> {t('References')}</span>
+      {refs.map((r) => (
+        <div key={r.id} className={'ref-card' + (sel.length && sel.every((id) => r.sceneIds?.includes(id)) ? ' bound' : '')} role="button" tabIndex={0}
+          title={sel.length ? t('Click to bind to / unbind from the selected scenes') : t('Select scenes, then click to bind this reference to them')} onClick={() => toggle(r)}>
+          <span className="ref-thumb">{thumb(r) ? <img src={thumb(r)!} alt="" /> : <Icon name={r.kind === 'link' ? 'external' : r.kind === 'music-technique' ? 'music' : 'image'} size={14} />}</span>
+          <span className="ref-text"><span className="ref-name ellipsis">{r.title}</span><span className="ref-scope">{label(r.sceneIds)}</span></span>
+          <button className="ref-x" aria-label={t('Remove reference')} onClick={(e) => { e.stopPropagation(); actions.removeReference(r.id); }}><Icon name="x" size={10} /></button>
+        </div>
+      ))}
+      <button className="ref-add" onClick={() => setState({ libraryOpen: true, libraryTab: 'templates' })}><Icon name="plus" size={12} /> {refs.length ? t('Add') : t('Add references: techniques, images, links')}</button>
     </div>
   );
 }
