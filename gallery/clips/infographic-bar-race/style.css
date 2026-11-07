@@ -1,0 +1,16 @@
+.br { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+.br .head { position: absolute; }
+.br .title { font: 800 58px/1.02 'Manrope', sans-serif; letter-spacing: -0.03em; overflow: hidden; padding-bottom: .06em; }
+.br .title span { display: inline-block; }
+.br .sub { margin-top: 12px; font: 500 26px/1.2 'Inter', sans-serif; opacity: .55; }
+.br .period { position: absolute; font: 300 220px/1 'Inter', sans-serif; letter-spacing: -0.04em; text-align: right; font-variant-numeric: tabular-nums; overflow: hidden; height: 1.02em; }
+.br .period span { display: block; }
+.br .tick { position: absolute; top: 0; width: 0; }
+.br .tick i { position: absolute; left: 0; width: 1.5px; margin-left: -0.75px; opacity: .12; display: block; }
+.br .tick b { position: absolute; bottom: 100%; margin-bottom: 12px; transform: translateX(-50%); font: 500 20px/1 'Inter', sans-serif; opacity: .5; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.br .row { position: absolute; left: 0; top: 0; }
+.br .row .nm { position: absolute; right: 100%; margin-right: 22px; top: 0; white-space: nowrap; font: 600 27px/1 'Inter', sans-serif; text-align: right; }
+.br .row .bar { position: absolute; left: 0; top: 0; border-radius: 4px 10px 10px 4px; transform-origin: 0 50%; }
+.br .row .bar::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0) 55%); }
+.br .row .ic { position: absolute; top: 50%; border-radius: 50%; background: rgba(255,255,255,.92); display: flex; align-items: center; justify-content: center; font: 800 17px/1 'Manrope', sans-serif; letter-spacing: -0.02em; }
+.br .row .val { position: absolute; top: 0; white-space: nowrap; font: 700 27px/1 'Inter', sans-serif; font-variant-numeric: tabular-nums; }

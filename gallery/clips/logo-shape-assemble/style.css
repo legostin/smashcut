@@ -1,0 +1,6 @@
+.sa { position: absolute; inset: 0; overflow: hidden; }
+.sa svg.fx { position: absolute; left: 0; top: 0; overflow: visible; }
+.sa .wm { position: absolute; top: 50%; overflow: hidden; padding: 0.1em 0.1em 0.12em 0; transform: translateY(-50%); }
+.sa .wm .in { display: block; white-space: nowrap; will-change: transform; }
+.sa .wm .word { display: block; line-height: 1; }
+.sa .wm .tag { display: block; margin-top: 0.5em; font: 600 26px/1 'Manrope', sans-serif; letter-spacing: 0.3em; text-transform: uppercase; opacity: .6; }

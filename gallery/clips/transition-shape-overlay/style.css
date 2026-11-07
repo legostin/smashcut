@@ -1,0 +1,5 @@
+.tso { position: absolute; inset: 0; overflow: hidden; }
+.tso svg { position: absolute; left: 0; top: 0; display: block; }
+.tso .label { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font: 800 calc(110px * var(--u)) / 1 'Unbounded', sans-serif; letter-spacing: -0.03em; white-space: nowrap; }
+.tso .label .in { display: inline-block; }
+.tso .mask { display: inline-block; overflow: hidden; padding: 0.08em 0.04em; }

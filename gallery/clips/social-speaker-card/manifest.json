@@ -1,0 +1,9 @@
+{
+  "id": "social-speaker-card",
+  "kind": "clip",
+  "name": "Speaker announcement",
+  "description": "Full-frame editorial bento card announcing a speaker: arch-masked photo, name, role, talk title, date/time and event chips that clip-reveal cell by cell and collapse at the end; use for conference, webinar, meetup and podcast-guest promos in 16:9 or 9:16.",
+  "category": "social",
+  "tags": ["speaker", "event", "conference", "webinar", "announcement", "bento", "promo", "full-frame"],
+  "duration": 7
+}

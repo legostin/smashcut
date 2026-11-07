@@ -1,0 +1,23 @@
+.es { position: absolute; inset: 0; overflow: hidden; }
+.es .bg { position: absolute; inset: 0; }
+.es .bg svg { position: absolute; inset: 0; display: block; }
+.es .head { position: absolute; left: 0; right: 0; text-align: center; }
+.es .sub { font: 600 calc(26px * var(--u)) / 1 'Inter', sans-serif; letter-spacing: 0.32em; text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: calc(18px * var(--u)); }
+.es .sub span { display: inline-block; }
+.es .hl { font: 800 calc(88px * var(--u)) / 1 'Unbounded', sans-serif; letter-spacing: -0.02em; text-transform: uppercase; color: #fff; white-space: nowrap; }
+.es .slot { position: absolute; border-radius: calc(20px * var(--u)); }
+.es .slot .frame { position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 calc(2px * var(--u)) rgba(255,255,255,.55); }
+.es .slot.fill .frame { background: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.03)); box-shadow: inset 0 0 0 calc(2px * var(--u)) rgba(255,255,255,.28), inset 0 calc(1px * var(--u)) 0 rgba(255,255,255,.35), 0 calc(30px * var(--u)) calc(70px * var(--u)) rgba(0,0,0,.35); }
+.es .slot .play { position: absolute; left: 50%; top: 50%; width: calc(96px * var(--u)); height: calc(96px * var(--u)); margin: calc(-48px * var(--u)) 0 0 calc(-48px * var(--u)); border-radius: 50%; background: rgba(255,255,255,.14); display: grid; place-items: center; }
+.es .slot .play svg { width: 42%; height: 42%; margin-left: 8%; }
+.es .slot .ghost { position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 calc(2px * var(--u)) rgba(255,255,255,.22); }
+.es .slot .plist { position: absolute; right: 0; top: 0; bottom: 0; width: 34%; border-radius: 0 calc(20px * var(--u)) calc(20px * var(--u)) 0; background: rgba(0,0,0,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(12px * var(--u)); font: 700 calc(22px * var(--u)) / 1 'Inter', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; }
+.es .slot .plist svg { width: calc(52px * var(--u)); height: calc(52px * var(--u)); }
+.es .lab { position: absolute; left: 0; top: 100%; margin-top: calc(18px * var(--u)); display: flex; align-items: center; gap: calc(12px * var(--u)); font: 600 calc(28px * var(--u)) / 1 'Inter', sans-serif; color: rgba(255,255,255,.88); white-space: nowrap; }
+.es .lab i { width: calc(10px * var(--u)); height: calc(10px * var(--u)); border-radius: 50%; background: var(--accent); flex: none; }
+.es .subwrap { position: absolute; }
+.es .ring { position: absolute; inset: 0; overflow: visible; }
+.es .avatar { position: absolute; border-radius: 50%; display: grid; place-items: center; font: 800 calc(64px * var(--u)) / 1 'Unbounded', sans-serif; color: #fff; }
+.es .chan { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: calc(28px * var(--u)); display: flex; align-items: center; gap: calc(18px * var(--u)); white-space: nowrap; }
+.es .chan .nm { font: 700 calc(32px * var(--u)) / 1 'Inter', sans-serif; }
+.es .chan .btn { font: 700 calc(26px * var(--u)) / 1 'Inter', sans-serif; padding: calc(14px * var(--u)) calc(26px * var(--u)); border-radius: 999px; background: var(--accent); color: #fff; letter-spacing: 0.01em; box-shadow: 0 calc(10px * var(--u)) calc(30px * var(--u)) color-mix(in srgb, var(--accent) 45%, transparent); }

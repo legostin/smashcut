@@ -1,0 +1,9 @@
+{
+  "id": "social-chat-bubbles",
+  "kind": "clip",
+  "name": "Text message conversation",
+  "description": "iMessage- or WhatsApp-style chat where messages pop in from their tails after typing dots, the thread scrolls up as it grows and a read receipt lands at the end; use for story-time, skits and \"texting\" scenes in Shorts and Reels.",
+  "category": "social",
+  "tags": ["chat", "imessage", "whatsapp", "text message", "conversation", "story", "skit", "social", "overlay"],
+  "duration": 9
+}

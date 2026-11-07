@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "direction": { "type": "select", "label": "Direction", "options": ["right", "left", "down", "up"], "default": "right" },
+    "bandCount": { "type": "number", "label": "Bands", "min": 6, "max": 24, "step": 1, "default": 14 },
+    "color1": { "type": "color", "label": "Streak colour 1", "default": "#f5f3ff" },
+    "color2": { "type": "color", "label": "Streak colour 2", "default": "#8b7bff" },
+    "color3": { "type": "color", "label": "Streak colour 3", "default": "#ff4d8d" },
+    "baseColor": { "type": "color", "label": "Base colour (most bands)", "default": "#0e0c1d" },
+    "spread": { "type": "number", "label": "Start spread (frames)", "min": 0, "max": 8, "step": 1, "default": 5 },
+    "speedLines": { "type": "boolean", "label": "Speed lines", "default": true },
+    "flashAtCut": { "type": "boolean", "label": "White flash on the cut", "default": true },
+    "hold": { "type": "number", "label": "Covered hold (s)", "min": 0, "max": 1, "step": 0.02, "default": 0 },
+    "seed": { "type": "number", "label": "Random seed", "min": 1, "max": 9999, "step": 1, "default": 11 }
+  }
+}

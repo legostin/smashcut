@@ -1,0 +1,9 @@
+{
+  "id": "text-3d-extrude",
+  "kind": "clip",
+  "name": "Retro 3D extrude type",
+  "description": "Chunky retro 3D type: letters bounce-drop in, pop out of the page as the extrusion grows, the extrude angle sways during the hold and collapses on exit; use for sale/promo hits, YouTube punchlines, kids and gaming content.",
+  "category": "text-effects",
+  "tags": ["3d", "extrude", "retro", "bounce", "playful", "promo", "sale", "title", "overlay"],
+  "duration": 4
+}

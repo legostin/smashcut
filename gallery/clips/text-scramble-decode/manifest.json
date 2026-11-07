@@ -1,0 +1,9 @@
+{
+  "id": "text-scramble-decode",
+  "kind": "clip",
+  "name": "Scramble decode text",
+  "description": "Hacker-style headline that decodes from random glyphs into the final text (left-to-right, random or centre-out) with a subtitle line, idle glitches and a re-scramble exit; use for tech, AI, cyber and reveal moments.",
+  "category": "text-effects",
+  "tags": ["scramble", "decode", "hacker", "tech", "glitch", "monospace", "reveal", "overlay"],
+  "duration": 4
+}

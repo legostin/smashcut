@@ -1,0 +1,9 @@
+{
+  "id": "text-typewriter-terminal",
+  "kind": "clip",
+  "name": "Typewriter terminal",
+  "description": "Terminal window where commands type out at a human pace with a blinking block cursor, syntax colouring and instantly printed output; use for dev tools, AI/product demos, tutorials and code reveals.",
+  "category": "text-effects",
+  "tags": ["typewriter", "terminal", "code", "console", "developer", "cli", "tech", "overlay"],
+  "duration": 6
+}

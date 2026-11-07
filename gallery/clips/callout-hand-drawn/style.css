@@ -1,0 +1,4 @@
+.hd { position: absolute; inset: 0; }
+.hd svg { position: absolute; inset: 0; overflow: visible; }
+.hd .marks.shadow { filter: drop-shadow(0 2px 5px rgba(0,0,0,.28)); }
+.hd path.s { fill: none; stroke-linecap: round; stroke-linejoin: round; }

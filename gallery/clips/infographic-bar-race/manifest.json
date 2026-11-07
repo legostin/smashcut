@@ -1,0 +1,9 @@
+{
+  "id": "infographic-bar-race",
+  "kind": "clip",
+  "name": "Bar chart race",
+  "description": "Full-frame bar chart race: horizontal bars interpolate between periods, re-rank with smooth position swaps, count their values and rescale the axis to the leader under a big period label; use for data-story videos that show how rankings change over time.",
+  "category": "infographics",
+  "tags": ["chart", "bar race", "ranking", "data", "infographic", "statistics", "timeline", "animated chart"],
+  "duration": 12
+}

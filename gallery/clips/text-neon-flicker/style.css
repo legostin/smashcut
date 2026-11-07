@@ -1,0 +1,7 @@
+.nf { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; padding: 70px 110px 80px; }
+.nf .bloom { position: absolute; left: 50%; top: 50%; width: 1700px; height: 1000px; margin: -500px 0 0 -850px; pointer-events: none; }
+.nf .frame { position: absolute; inset: 0; border-radius: 64px; border: 5px solid transparent; pointer-events: none; }
+.nf .l1, .nf .l2 { position: relative; white-space: nowrap; }
+.nf .l1 { line-height: 1.05; letter-spacing: 0.01em; }
+.nf .l2 { margin-top: 18px; line-height: 1.1; letter-spacing: 0.14em; }
+.nf .ch { display: inline-block; white-space: pre; }

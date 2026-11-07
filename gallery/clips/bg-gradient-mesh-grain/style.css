@@ -1,0 +1,5 @@
+.bmg { position: absolute; inset: 0; overflow: hidden; }
+.bmg canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.bmg canvas.mesh { transform: scale(1.06); }
+.bmg canvas.grain { mix-blend-mode: overlay; }
+.bmg .vig { position: absolute; inset: 0; pointer-events: none; }

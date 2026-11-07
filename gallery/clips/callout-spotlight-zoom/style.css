@@ -1,0 +1,11 @@
+.sp { position: absolute; inset: 0; }
+.sp svg { position: absolute; inset: 0; overflow: visible; }
+.sp .card { position: absolute; left: 0; top: 0; max-width: 600px; padding: 24px 32px 28px; border-radius: 22px;
+  background: rgba(24, 28, 38, .96); border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08); color: #fff; }
+.sp .card.light { background: rgba(255,255,255,.97); border-color: rgba(10,14,25,.06); color: #10131a; box-shadow: 0 24px 60px rgba(0,0,0,.30); }
+.sp .card .step { display: inline-flex; align-items: center; justify-content: center; height: 34px; min-width: 52px; padding: 0 12px; margin-bottom: 16px;
+  border-radius: 17px; font: 700 18px/1 'JetBrains Mono', monospace; letter-spacing: .04em; color: #fff; }
+.sp .card .t { text-wrap: balance; font: 700 38px/1.08 'Manrope', sans-serif; letter-spacing: -0.02em; }
+.sp .card .b { text-wrap: balance; margin-top: 10px; font: 500 25px/1.32 'Inter', sans-serif; opacity: .68; }
+.sp .card .mask { overflow: hidden; }

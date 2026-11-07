@@ -1,0 +1,17 @@
+{
+  "schema": {
+    "label": { "type": "text", "label": "Block label", "default": "Срочно" },
+    "altLabel": { "type": "text", "label": "Alternate label (flips every few seconds, empty = off)", "default": "Новости" },
+    "headline": { "type": "text", "label": "Headline", "default": "Учёные впервые сняли на видео рождение айсберга" },
+    "subheadline": { "type": "text", "label": "Subheadline", "default": "Ледник Туэйтса потерял фрагмент размером с город" },
+    "location": { "type": "text", "label": "Location tag", "default": "Антарктида" },
+    "liveText": { "type": "text", "label": "LIVE bug text (empty = hide)", "default": "Прямой эфир" },
+    "channel": { "type": "text", "label": "Channel logo text (empty = hide)", "default": "24" },
+    "startTime": { "type": "text", "label": "Clock start (HH:MM or HH:MM:SS, empty = hide)", "default": "14:32:40" },
+    "palette": { "type": "select", "label": "Palette", "options": ["red", "blue", "custom"], "default": "red" },
+    "accent": { "type": "color", "label": "Custom accent (palette = custom)", "default": "#e3172b" },
+    "navy": { "type": "color", "label": "Secondary bar colour", "default": "#0b1d3a" },
+    "flipEvery": { "type": "number", "label": "Label flip interval (s)", "min": 1.5, "max": 10, "step": 0.5, "default": 4 },
+    "position": { "type": "select", "label": "Position", "options": ["bottom", "top"], "default": "bottom" }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "steps": { "type": "textarea", "label": "Steps — one per line: \"move|click|type: x, y [, zoom] [| text]\" in % of the 16:9 screen (type = click + type text; click text = tooltip)", "default": "type: 35.6, 18.7 | Q3 revenue\nclick: 70.2, 18.7\nclick: 84.9, 18.7, 1.6 | Click Export" },
+    "mode": { "type": "select", "label": "Screen", "options": ["mockup", "image", "overlay"], "default": "mockup" },
+    "image": { "type": "text", "label": "Screenshot path (relative to the clip, e.g. assets/app.png; image mode)", "default": "" },
+    "theme": { "type": "select", "label": "Mockup theme", "options": ["dark", "light"], "default": "dark" },
+    "appName": { "type": "text", "label": "Mockup app name", "default": "Lumen" },
+    "accent": { "type": "color", "label": "Accent colour", "default": "#7C5CFF" },
+    "rippleColor": { "type": "color", "label": "Click ripple colour", "default": "#7C5CFF" },
+    "cursorStyle": { "type": "select", "label": "Cursor", "options": ["light", "dark"], "default": "light" },
+    "cursorSize": { "type": "number", "label": "Cursor scale", "min": 1, "max": 3, "step": 0.1, "default": 1.6 },
+    "typeColor": { "type": "color", "label": "Typed text colour (image / overlay modes)", "default": "#111111" },
+    "background": { "type": "color", "label": "Background colour", "default": "#0a0c12" }
+  }
+}

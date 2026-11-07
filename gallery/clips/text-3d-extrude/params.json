@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "text": { "type": "textarea", "label": "Text (one line per row)", "default": "ХИТ\nСЕЗОНА!" },
+    "palette": { "type": "select", "label": "Palette", "options": ["retro", "candy", "mint", "sunset", "custom"], "default": "retro" },
+    "faceColor": { "type": "color", "label": "Face colour (custom)", "default": "#fff1d6" },
+    "extrudeColor": { "type": "color", "label": "Extrude colour (custom)", "default": "#e8432d" },
+    "outlineColor": { "type": "color", "label": "Outline colour (custom)", "default": "#1d2b4f" },
+    "font": { "type": "select", "label": "Font", "options": ["Unbounded", "Inter", "Manrope", "Playfair Display"], "default": "Unbounded" },
+    "size": { "type": "number", "label": "Size (px)", "min": 60, "max": 320, "step": 2, "default": 230 },
+    "depth": { "type": "number", "label": "Extrude depth (layers)", "min": 4, "max": 40, "step": 1, "default": 22 },
+    "angle": { "type": "number", "label": "Extrude angle (deg, 0 = right, 90 = down)", "min": 0, "max": 180, "step": 1, "default": 50 },
+    "tilt": { "type": "number", "label": "Block tilt (deg)", "min": -15, "max": 15, "step": 0.5, "default": -4 },
+    "sway": { "type": "boolean", "label": "Sway extrude angle during hold", "default": true },
+    "longShadow": { "type": "boolean", "label": "Soft drop shadow", "default": true }
+  }
+}

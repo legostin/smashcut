@@ -1,0 +1,9 @@
+{
+  "id": "caption-mrbeast-pop",
+  "kind": "clip",
+  "name": "Beast pop words",
+  "description": "One huge word at a time that pops in with overshoot and tilt, a chunky 3D extruded shadow and coloured keywords (uses studio.words, falls back to the Text param); use for high-energy viral shorts, challenge and reaction videos.",
+  "category": "captions",
+  "tags": ["captions", "subtitles", "mrbeast", "pop", "one-word", "viral", "shorts", "tiktok", "transcript"],
+  "duration": 6
+}

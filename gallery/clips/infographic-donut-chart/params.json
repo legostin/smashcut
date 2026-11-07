@@ -1,0 +1,21 @@
+{
+  "schema": {
+    "data": { "type": "textarea", "label": "Segments — one \"Label: value\" per line", "default": "Подписки: 46\nРеклама: 24\nМаркетплейс: 18\nПартнёрства: 12" },
+    "title": { "type": "text", "label": "Title", "default": "Структура выручки" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "2026 год, доля в процентах" },
+    "highlightIndex": { "type": "number", "label": "Highlighted segment (1-based, 0 = none)", "min": 0, "max": 12, "step": 1, "default": 1 },
+    "centerLabel": { "type": "text", "label": "Centre label (empty = highlighted segment's name)", "default": "" },
+    "valueFormat": { "type": "select", "label": "Values shown as", "options": ["percent", "value"], "default": "percent" },
+    "prefix": { "type": "text", "label": "Value prefix (value mode)", "default": "" },
+    "suffix": { "type": "text", "label": "Value suffix (value mode)", "default": "" },
+    "decimals": { "type": "number", "label": "Decimals", "min": 0, "max": 2, "step": 1, "default": 0 },
+    "thickness": { "type": "number", "label": "Ring thickness (% of radius)", "min": 8, "max": 45, "step": 1, "default": 21 },
+    "gapDeg": { "type": "number", "label": "Gap between segments (°)", "min": 0, "max": 8, "step": 0.5, "default": 2.5 },
+    "roundCaps": { "type": "boolean", "label": "Rounded segment ends", "default": false },
+    "showLegend": { "type": "boolean", "label": "Legend", "default": true },
+    "colors": { "type": "text", "label": "Segment colours (comma-separated)", "default": "#7C5CFF, #2EC5FF, #FFB547, #FF5C8A, #2EE6A6, #A0A8BD" },
+    "card": { "type": "boolean", "label": "Card background", "default": true },
+    "cardColor": { "type": "color", "label": "Card colour", "default": "#11141c" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" }
+  }
+}

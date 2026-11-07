@@ -1,0 +1,9 @@
+{
+  "id": "transition-ink-blob",
+  "kind": "clip",
+  "name": "Ink blob reveal",
+  "description": "Organic ink transition: gooey blots grow from seeded drop points with wobbling edges and splatter droplets, merge to cover the whole frame at duration/2, then dissolve through growing ink holes (or shrink away); transparent at both ends, centre it on a cut for lifestyle, wedding and art edits.",
+  "category": "transitions",
+  "tags": ["transition", "ink", "liquid", "blob", "gooey", "splatter", "organic", "cut", "fullframe"],
+  "duration": 1.6
+}

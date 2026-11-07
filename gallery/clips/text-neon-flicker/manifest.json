@@ -1,0 +1,9 @@
+{
+  "id": "text-neon-flicker",
+  "kind": "clip",
+  "name": "Neon sign flicker",
+  "description": "Glowing neon-sign text that powers on with a seeded per-letter flicker, breathes during the hold with one faulty letter, and cuts off with a cooling afterglow; use for nightlife, gaming, music and retro moments.",
+  "category": "text-effects",
+  "tags": ["neon", "glow", "flicker", "sign", "retro", "nightlife", "gaming", "overlay"],
+  "duration": 5
+}

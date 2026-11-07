@@ -1,0 +1,9 @@
+{
+  "id": "social-end-screen",
+  "kind": "clip",
+  "name": "YouTube end screen",
+  "description": "End-screen layout in YouTube's safe zones with a headline, two video slots (or video + playlist) and a circular subscribe slot drawn on, over a brand gradient or with transparent holes for thumbnails; use for the last 5–20 seconds of a YouTube video.",
+  "category": "social",
+  "tags": ["youtube", "end screen", "outro", "subscribe", "watch next", "social", "full-frame"],
+  "duration": 10
+}

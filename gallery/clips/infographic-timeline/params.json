@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "items": { "type": "textarea", "label": "Milestones — one per line: \"Date | Title | Text\"", "default": "2016 | Идея | Два основателя и прототип на ноутбуке\n2018 | Первые клиенты | 100 компаний за первый год продаж\n2020 | Раунд A | 12 млн долларов на развитие продукта\n2022 | Выход в Европу | Офисы в Берлине и Лиссабоне\n2024 | Миллион пользователей | Каждый день — 40 000 новых видео\n2026 | Что дальше? | ИИ-режиссёр для каждой команды" },
+    "title": { "type": "text", "label": "Title", "default": "Как мы росли" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "Десять лет в шести шагах" },
+    "orientation": { "type": "select", "label": "Orientation", "options": ["auto", "horizontal", "vertical"], "default": "auto" },
+    "spacing": { "type": "number", "label": "Distance between milestones (px)", "min": 240, "max": 800, "step": 10, "default": 430 },
+    "cameraFollow": { "type": "boolean", "label": "Camera follows progress (when wider than the frame)", "default": true },
+    "accent": { "type": "color", "label": "Accent colour", "default": "#FF7A45" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "background": { "type": "boolean", "label": "Paint background (off = transparent overlay)", "default": true },
+    "bgColor": { "type": "color", "label": "Background colour", "default": "#0d1020" }
+  }
+}

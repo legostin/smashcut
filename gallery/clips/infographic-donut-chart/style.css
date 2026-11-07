@@ -1,0 +1,17 @@
+.dn { position: absolute; left: 50%; top: 50%; }
+.dn .card { position: absolute; inset: 0; border-radius: 36px; box-shadow: 0 40px 100px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.06); }
+.dn .head { position: absolute; }
+.dn .title { font: 800 54px/1.05 'Manrope', sans-serif; letter-spacing: -0.03em; overflow: hidden; padding-bottom: .06em; }
+.dn .title span { display: inline-block; }
+.dn .sub { margin-top: 10px; font: 500 26px/1.2 'Inter', sans-serif; opacity: .55; }
+.dn svg { position: absolute; overflow: visible; }
+.dn .center { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.dn .center .num { white-space: nowrap; font: 800 112px/1 'Manrope', sans-serif; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.dn .center .lab { margin-top: 10px; font: 600 26px/1.15 'Inter', sans-serif; opacity: .65; max-width: 300px; }
+.dn .legend { position: absolute; display: flex; flex-direction: column; }
+.dn .lg { display: flex; align-items: center; gap: 20px; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+.dn .lg:last-child { border-bottom: 0; }
+.dn .lg i { width: 18px; height: 18px; border-radius: 6px; flex: none; display: block; }
+.dn .lg .l { flex: 1; font: 600 32px/1.15 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dn .lg .v { font: 700 34px/1 'Manrope', sans-serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.dn.nocard .title, .dn.nocard .center, .dn.nocard .legend, .dn.nocard .sub { text-shadow: 0 2px 16px rgba(0,0,0,.55); }

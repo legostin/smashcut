@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "data": { "type": "textarea", "label": "Data — one series per line: \"Name: v1, v2, v3…\" (one value per period)", "default": "JavaScript: 68, 67, 67, 70, 68, 68, 65, 65, 64, 62, 62\nPython: 24, 28, 32, 39, 42, 44, 48, 48, 49, 51, 54\nTypeScript: 3, 6, 10, 17, 21, 25, 30, 35, 39, 41, 43\nJava: 40, 40, 39, 41, 41, 40, 35, 33, 31, 30, 29\nC#: 32, 34, 35, 34, 31, 31, 28, 28, 27, 27, 27\nPHP: 29, 27, 28, 26, 26, 22, 22, 20, 18, 18, 17\nC++: 21, 22, 23, 25, 23, 23, 24, 22, 23, 23, 22\nGo: 2, 4, 5, 7, 8, 9, 10, 11, 13, 14, 16\nRust: 1, 1, 2, 3, 3, 5, 7, 9, 13, 13, 15\nKotlin: 0, 1, 2, 5, 6, 8, 8, 9, 9, 9, 10\nRuby: 9, 9, 8, 7, 7, 7, 6, 6, 6, 5, 5\nSwift: 8, 8, 7, 8, 7, 6, 5, 5, 5, 5, 5" },
+    "periods": { "type": "text", "label": "Period labels (comma-separated, one per value column)", "default": "2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025" },
+    "title": { "type": "text", "label": "Title", "default": "Most used programming languages" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "Share of developers, % · sample data" },
+    "topN": { "type": "number", "label": "Bars shown (top N)", "min": 3, "max": 15, "step": 1, "default": 10 },
+    "interpolation": { "type": "select", "label": "Between periods", "options": ["linear", "smooth"], "default": "linear" },
+    "prefix": { "type": "text", "label": "Value prefix", "default": "" },
+    "suffix": { "type": "text", "label": "Value suffix", "default": "%" },
+    "decimals": { "type": "number", "label": "Value decimals", "min": 0, "max": 3, "step": 1, "default": 1 },
+    "compact": { "type": "boolean", "label": "Compact numbers (12.3K, 4.5M)", "default": false },
+    "colors": { "type": "text", "label": "Bar colours (comma-separated, assigned in data order)", "default": "#F7C948, #3FA7F5, #2F74C0, #E76F51, #9B5DE5, #7A86F0, #00B4D8, #00C2A8, #F15BB5, #FF8C42, #E63946, #FF6F59" },
+    "icons": { "type": "boolean", "label": "Initials badge at bar end", "default": true },
+    "background": { "type": "color", "label": "Background colour", "default": "#0b0d13" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" }
+  }
+}

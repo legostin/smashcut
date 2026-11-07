@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "lines": { "type": "textarea", "label": "Script: '$ ' = typed command, '~ ' = typed text, other lines = printed output", "default": "$ npx studio new launch-teaser\n✓ Created launch-teaser/ with 12 files\n$ studio render --fps 60 --res \"4k\"\nRendering 600 frames … 100%\n✓ Done in 8.4s → out/launch-teaser.mp4" },
+    "prompt": { "type": "text", "label": "Prompt path", "default": "~/studio" },
+    "title": { "type": "text", "label": "Window title", "default": "zsh — studio" },
+    "cps": { "type": "number", "label": "Typing speed (chars / s)", "min": 5, "max": 80, "step": 1, "default": 30 },
+    "finalPrompt": { "type": "boolean", "label": "Fresh prompt after the last output", "default": true },
+    "cursorStyle": { "type": "select", "label": "Cursor", "options": ["block", "bar", "underline"], "default": "block" },
+    "showWindow": { "type": "boolean", "label": "Window chrome", "default": true },
+    "theme": { "type": "select", "label": "Theme", "options": ["dark", "light"], "default": "dark" },
+    "syntax": { "type": "select", "label": "Syntax colouring", "options": ["bash", "none"], "default": "bash" },
+    "accent": { "type": "color", "label": "Accent (prompt, cursor)", "default": "#3fdc8a" },
+    "fontSize": { "type": "number", "label": "Font size (px)", "min": 18, "max": 64, "step": 1, "default": 34 },
+    "width": { "type": "number", "label": "Window width (px)", "min": 600, "max": 1800, "step": 10, "default": 1240 },
+    "maxLines": { "type": "number", "label": "Visible lines (scrolls beyond)", "min": 3, "max": 20, "step": 1, "default": 9 },
+    "seed": { "type": "number", "label": "Typing rhythm seed", "min": 1, "max": 9999, "step": 1, "default": 3 }
+  }
+}

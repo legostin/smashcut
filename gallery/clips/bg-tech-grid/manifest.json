@@ -1,0 +1,9 @@
+{
+  "id": "bg-tech-grid",
+  "kind": "clip",
+  "name": "Blueprint tech grid",
+  "description": "Full-frame \"Vercel-style\" blueprint background: a dot and/or line grid that draws in ring by ring from the centre under a radial fade and soft brand glow, with seeded light pulses racing along grid lines and lighting up nearby dots; optional synthwave perspective floor or transparent overlay mode; use behind SaaS, AI and product titles.",
+  "category": "backgrounds",
+  "tags": ["background", "grid", "blueprint", "tech", "dots", "saas", "pulse", "glow", "fullframe"],
+  "duration": 10
+}

@@ -1,0 +1,79 @@
+{
+  "schema": {
+    "eyebrow": {
+      "type": "text",
+      "label": "Eyebrow",
+      "default": "Спикер"
+    },
+    "name": {
+      "type": "text",
+      "label": "Name",
+      "default": "Анна Ковалёва"
+    },
+    "role": {
+      "type": "text",
+      "label": "Role",
+      "default": "Арт-директор, студия «Север»"
+    },
+    "talkLabel": {
+      "type": "text",
+      "label": "Talk label",
+      "default": "Доклад"
+    },
+    "talkTitle": {
+      "type": "textarea",
+      "label": "Talk title",
+      "default": "Как дизайн-системы ускоряют видеопродакшн в 10 раз"
+    },
+    "date": {
+      "type": "text",
+      "label": "Date (big)",
+      "default": "14 дек"
+    },
+    "weekday": {
+      "type": "text",
+      "label": "Date subline",
+      "default": "Суббота"
+    },
+    "time": {
+      "type": "text",
+      "label": "Time chip",
+      "default": "19:00 МСК"
+    },
+    "event": {
+      "type": "text",
+      "label": "Event name",
+      "default": "Motion Conf 2026"
+    },
+    "location": {
+      "type": "text",
+      "label": "Location / URL",
+      "default": "Москва · онлайн-трансляция"
+    },
+    "badge": {
+      "type": "text",
+      "label": "Rotating sticker text",
+      "default": "Вход свободный"
+    },
+    "photo": {
+      "type": "text",
+      "label": "Photo (local path or project asset URL; empty = placeholder)",
+      "default": ""
+    },
+    "palette": {
+      "type": "select",
+      "label": "Palette",
+      "options": [
+        "ink",
+        "paper",
+        "cobalt"
+      ],
+      "default": "ink"
+    },
+    "accent": {
+      "type": "color",
+      "label": "Accent (overrides palette)",
+      "default": "#d4ff3a"
+    }
+  }
+}

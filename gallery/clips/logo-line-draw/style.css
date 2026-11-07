@@ -1,0 +1,10 @@
+.ld { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }
+.ld.horizontal { flex-direction: row; gap: 56px; }
+.ld .markw { position: relative; flex: none; }
+.ld svg { display: block; overflow: visible; }
+.ld .txt { display: flex; flex-direction: column; align-items: center; }
+.ld.horizontal .txt { align-items: flex-start; }
+.ld .word { white-space: nowrap; line-height: 1; margin-top: 56px; }
+.ld.horizontal .word { margin-top: 0; }
+.ld .tag { margin-top: 26px; font: 500 26px/1 'Inter', sans-serif; letter-spacing: 0.42em; text-transform: uppercase; white-space: nowrap; opacity: .7; }
+.ld.stacked .tag { padding-left: 0.42em; }

@@ -1,0 +1,22 @@
+.tm { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+.tm .bg { position: absolute; inset: 0; }
+.tm .bg .dots { position: absolute; inset: 0; opacity: .6; background-image: radial-gradient(rgba(255,255,255,.07) 1.3px, transparent 1.5px); background-size: 34px 34px; }
+.tm .bg .glow { position: absolute; width: 760px; height: 760px; margin: -380px 0 0 -380px; border-radius: 50%; filter: blur(140px); opacity: .22; }
+.tm .head { position: absolute; z-index: 3; }
+.tm .title { font: 800 64px/1.02 'Manrope', sans-serif; letter-spacing: -0.03em; overflow: hidden; padding-bottom: .06em; }
+.tm .title span { display: inline-block; }
+.tm .sub { margin-top: 10px; font: 500 28px/1.2 'Inter', sans-serif; opacity: .55; }
+.tm .track { position: absolute; left: 0; top: 0; }
+.tm .base { position: absolute; }
+.tm .prog { position: absolute; transform-origin: 0 0; border-radius: 3px; }
+.tm .tip { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; }
+.tm .node { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; border: 4px solid; background: transparent; }
+.tm .node .fill { position: absolute; inset: 3px; border-radius: 50%; }
+.tm .stem { position: absolute; width: 2px; margin-left: -1px; opacity: .45; transform-origin: 50% 0; }
+.tm .card { position: absolute; width: 360px; padding: 26px 28px 28px; border-radius: 22px; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09);
+  box-shadow: 0 24px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06); backdrop-filter: blur(6px); }
+.tm .card .d { font: 800 46px/1 'Manrope', sans-serif; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.tm .card .t { margin-top: 14px; font: 700 28px/1.15 'Manrope', sans-serif; letter-spacing: -0.015em; }
+.tm .card .x { margin-top: 10px; font: 400 22px/1.38 'Inter', sans-serif; opacity: .66; }
+.tm.nobg .title, .tm.nobg .sub { text-shadow: 0 2px 16px rgba(0,0,0,.5); }
+.tm.nobg .card { background: rgba(12,14,24,.82); }

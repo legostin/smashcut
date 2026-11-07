@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "eyebrow": { "type": "text", "label": "Eyebrow label", "default": "Новое приложение" },
+    "headline": { "type": "textarea", "label": "Headline (one line per row)", "default": "Финансы\nпод контролем" },
+    "bullets": { "type": "textarea", "label": "Feature bullets (one per line)", "default": "Аналитика расходов в реальном времени\nУмные копилки и цели\nПереводы без комиссии" },
+    "layout": { "type": "select", "label": "Layout", "options": ["left", "right", "center", "fan3"], "default": "left" },
+    "screen1": { "type": "text", "label": "Screen 1 image (path relative to the clip, empty = built-in UI)", "default": "" },
+    "screen2": { "type": "text", "label": "Screen 2 image", "default": "" },
+    "screen3": { "type": "text", "label": "Screen 3 image", "default": "" },
+    "screenCount": { "type": "number", "label": "Screens to cycle", "min": 1, "max": 3, "step": 1, "default": 3 },
+    "deviceColor": { "type": "select", "label": "Device finish", "options": ["natural", "black", "white", "desert"], "default": "natural" },
+    "accent": { "type": "color", "label": "Accent colour", "default": "#3DDC97" },
+    "background": { "type": "color", "label": "Background colour", "default": "#0a0f1c" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "swayAmount": { "type": "number", "label": "Sway (degrees)", "min": 0, "max": 10, "step": 0.5, "default": 4 },
+    "glare": { "type": "boolean", "label": "Glass glare sweep", "default": true }
+  }
+}

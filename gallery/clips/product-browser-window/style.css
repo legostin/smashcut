@@ -1,0 +1,80 @@
+.bw { position: absolute; inset: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+.bw .bg { position: absolute; inset: 0; overflow: hidden; }
+.bw .bg .glow { position: absolute; border-radius: 50%; filter: blur(150px); }
+.bw .bg .grid { position: absolute; inset: 0; opacity: .5;
+  background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse at 50% 45%, #000 20%, transparent 70%); }
+.bw .persp { position: absolute; left: 0; top: 0; perspective: 2200px; }
+.bw .win { position: absolute; left: 0; top: 0; width: 1500px; height: 880px; border-radius: 14px; overflow: hidden; transform-origin: 50% 0%;
+  box-shadow: 0 70px 140px rgba(0,0,0,.55), 0 24px 48px rgba(0,0,0,.30), 0 0 0 1px var(--edge); background: var(--chrome); }
+.bw .win.light { --chrome: #eef0f4; --tab: #ffffff; --fg: #1a1d24; --muted: #6c7385; --pill: #ffffff; --edge: rgba(0,0,0,.18); --icon: #6c7385; }
+.bw .win.dark { --chrome: #1d2029; --tab: #2a2e39; --fg: #eef0f6; --muted: #9aa1b4; --pill: #12141a; --edge: rgba(255,255,255,.10); --icon: #9aa1b4; }
+.bw .tabs { position: relative; height: 46px; display: flex; align-items: flex-end; padding: 0 16px; gap: 10px; }
+.bw .tl { display: flex; gap: 9px; align-self: center; margin-right: 18px; }
+.bw .tl i { width: 13px; height: 13px; border-radius: 50%; display: block; }
+.bw .tab { position: relative; height: 38px; width: 300px; border-radius: 11px 11px 0 0; background: var(--tab); display: flex; align-items: center; gap: 10px; padding: 0 14px; font: 500 15px/1 'Inter', sans-serif; color: var(--fg); }
+.bw .tab .fav { width: 18px; height: 18px; border-radius: 5px; flex: none; }
+.bw .tab .tt { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bw .tab .x { color: var(--muted); font-size: 18px; }
+.bw .tab2 { width: 34px; height: 30px; align-self: center; color: var(--muted); font: 400 24px/30px 'Inter', sans-serif; text-align: center; }
+.bw .toolbar { height: 56px; background: var(--tab); display: flex; align-items: center; padding: 0 18px; gap: 16px; border-bottom: 1px solid var(--edge); }
+.bw .toolbar .nav { display: flex; gap: 14px; color: var(--icon); }
+.bw .addr { flex: 1; height: 38px; border-radius: 19px; background: var(--chrome); display: flex; align-items: center; gap: 10px; padding: 0 18px; font: 500 17px/1 'Inter', sans-serif; color: var(--fg); }
+.bw .addr .ph { color: var(--muted); }
+.bw .addr .caret { width: 2px; height: 20px; margin-left: -8px; }
+.bw .addr .lock { color: var(--muted); flex: none; }
+.bw .toolbar .menu { display: flex; gap: 14px; color: var(--icon); }
+.bw .load { position: absolute; left: 0; top: 101px; height: 3px; width: 100%; transform-origin: 0 50%; z-index: 3; }
+.bw .view { position: absolute; left: 0; right: 0; top: 102px; bottom: 0; overflow: hidden; background: #fff; }
+.bw .page { position: absolute; left: 0; top: 0; width: 100%; }
+.bw .page img { width: 100%; display: block; }
+.bw .skel { position: absolute; inset: 0; background: #fff; padding: 28px 60px; }
+.bw .skel b { display: block; border-radius: 10px; background: #eceef3; position: relative; overflow: hidden; }
+.bw .skel b::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, rgba(255,255,255,0) 20%, rgba(255,255,255,.75) 50%, rgba(255,255,255,0) 80%); transform: translateX(var(--sh, -100%)); }
+
+/* ---------- built-in landing page (1500 px wide) ---------- */
+.bw .site { color: #0f1220; background: #fff; font-family: 'Inter', sans-serif; }
+.bw .site .nv { height: 84px; display: flex; align-items: center; padding: 0 64px; gap: 40px; border-bottom: 1px solid #eef0f4; }
+.bw .site .lg { display: flex; align-items: center; gap: 10px; font: 800 24px/1 'Manrope', sans-serif; letter-spacing: -0.02em; }
+.bw .site .lg i { width: 30px; height: 30px; border-radius: 9px; display: block; }
+.bw .site .lk { display: flex; gap: 34px; font: 500 16px/1 'Inter', sans-serif; color: #4a5065; margin-left: 30px; }
+.bw .site .nv .sp { flex: 1; }
+.bw .site .btn { display: inline-flex; align-items: center; height: 48px; padding: 0 24px; border-radius: 12px; font: 700 16px/1 'Inter', sans-serif; color: #fff; }
+.bw .site .btn.gh { background: #f1f2f6; color: #0f1220; }
+.bw .site .hero { position: relative; padding: 76px 64px 0; text-align: center; overflow: hidden; }
+.bw .site .badge { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px; border-radius: 20px; background: #f3f3ff; font: 600 15px/1 'Inter', sans-serif; color: #3b3d8f; }
+.bw .site .badge b { padding: 5px 9px; border-radius: 12px; color: #fff; font-size: 13px; }
+.bw .site h1 { text-wrap: balance; margin: 26px auto 0; max-width: 1100px; font: 800 92px/1 'Manrope', sans-serif; letter-spacing: -0.045em; }
+.bw .site .hero p { text-wrap: balance; margin: 24px auto 0; max-width: 760px; font: 400 23px/1.45 'Inter', sans-serif; color: #535a70; }
+.bw .site .ctas { margin-top: 34px; display: flex; gap: 14px; justify-content: center; }
+.bw .site .shot { position: relative; margin: 58px auto 0; width: 1180px; height: 560px; border-radius: 22px 22px 0 0; padding: 18px 18px 0;
+  box-shadow: 0 -10px 60px rgba(70,70,180,.18); }
+.bw .site .shot .ed { width: 100%; height: 100%; border-radius: 12px 12px 0 0; background: #11131c; position: relative; overflow: hidden; }
+.bw .site .shot .pv { position: absolute; left: 24px; top: 24px; width: 760px; height: 330px; border-radius: 10px; overflow: hidden; }
+.bw .site .shot .pv b { position: absolute; left: 40px; bottom: 36px; font: 800 44px/1 'Manrope', sans-serif; color: #fff; letter-spacing: -0.02em; }
+.bw .site .shot .pn { position: absolute; left: 808px; right: 24px; top: 24px; height: 330px; border-radius: 10px; background: #1a1d29; padding: 20px; }
+.bw .site .shot .pn i { display: block; height: 14px; border-radius: 7px; background: #2a2e3e; margin-bottom: 16px; }
+.bw .site .shot .trk { position: absolute; left: 24px; right: 24px; height: 34px; border-radius: 8px; }
+.bw .site .shot .ph { position: absolute; top: 376px; bottom: 0; width: 3px; background: #fff; }
+.bw .site .logos { padding: 56px 64px 64px; text-align: center; border-top: 1px solid #eef0f4; }
+.bw .site .logos small { font: 600 14px/1 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #8a90a3; }
+.bw .site .logos div { display: flex; justify-content: space-around; margin-top: 30px; font: 800 30px/1 'Manrope', sans-serif; color: #a3a8b8; letter-spacing: -0.02em; }
+.bw .site .feat { padding: 90px 64px; background: #f7f8fb; }
+.bw .site h2 { margin: 0; text-align: center; font: 800 58px/1.05 'Manrope', sans-serif; letter-spacing: -0.035em; }
+.bw .site .feat .sub2 { text-align: center; margin-top: 16px; font: 400 21px/1.4 'Inter', sans-serif; color: #5d6378; }
+.bw .site .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+.bw .site .cd { background: #fff; border-radius: 20px; padding: 32px; box-shadow: 0 1px 0 #e9ebf1, 0 12px 30px rgba(20,25,60,.06); }
+.bw .site .cd i { display: flex; width: 56px; height: 56px; border-radius: 16px; align-items: center; justify-content: center; }
+.bw .site .cd h3 { margin: 22px 0 0; font: 700 24px/1.2 'Manrope', sans-serif; letter-spacing: -0.015em; }
+.bw .site .cd p { margin: 12px 0 0; font: 400 17px/1.5 'Inter', sans-serif; color: #5d6378; }
+.bw .site .cd .mini { margin-top: 24px; height: 150px; border-radius: 12px; background: #f3f4f8; position: relative; overflow: hidden; }
+.bw .site .stats { display: flex; padding: 90px 64px; gap: 24px; }
+.bw .site .stats div { flex: 1; text-align: center; }
+.bw .site .stats b { display: block; font: 800 76px/1 'Manrope', sans-serif; letter-spacing: -0.04em; }
+.bw .site .stats span { display: block; margin-top: 12px; font: 500 18px/1.3 'Inter', sans-serif; color: #5d6378; }
+.bw .site .cta { margin: 0 64px 70px; border-radius: 28px; padding: 80px; text-align: center; color: #fff; position: relative; overflow: hidden; }
+.bw .site .cta h2 { color: #fff; }
+.bw .site .cta p { margin: 18px 0 32px; font: 400 21px/1.4 'Inter', sans-serif; opacity: .85; }
+.bw .site .cta .btn { background: #fff; color: #0f1220; }
+.bw .site .ft { display: flex; padding: 34px 64px 50px; border-top: 1px solid #eef0f4; font: 500 15px/1 'Inter', sans-serif; color: #8a90a3; gap: 30px; }
+.bw .site .ft .sp { flex: 1; }

@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "wordmark": { "type": "text", "label": "Wordmark", "default": "ПИКСЕЛЬ" },
+    "tagline": { "type": "text", "label": "Tagline (empty = none)", "default": "креативное агентство" },
+    "logoSvg": { "type": "textarea", "label": "Logo SVG (full <svg> markup or one path 'd' per line; each path = one piece; empty = built-in mark)", "default": "" },
+    "palette": { "type": "text", "label": "Shape colours (comma separated, cycled)", "default": "#ff5a36, #2f5bff, #ffc21a, #141414" },
+    "shapeCount": { "type": "number", "label": "Shapes (when the logo has a single path)", "min": 4, "max": 8, "step": 1, "default": 6 },
+    "background": { "type": "select", "label": "Background", "options": ["solid", "transparent"], "default": "solid" },
+    "bgColor": { "type": "color", "label": "Background colour", "default": "#f2ede4" },
+    "textColor": { "type": "color", "label": "Wordmark colour", "default": "#141414" },
+    "font": { "type": "select", "label": "Wordmark font", "options": ["Unbounded", "Manrope", "Inter", "Playfair Display"], "default": "Unbounded" },
+    "markSize": { "type": "number", "label": "Mark height (px)", "min": 100, "max": 600, "step": 10, "default": 230 },
+    "wordSize": { "type": "number", "label": "Wordmark size (px)", "min": 30, "max": 220, "step": 2, "default": 110 },
+    "syncToBeat": { "type": "boolean", "label": "Land the shapes on a music beat", "default": false }
+  }
+}

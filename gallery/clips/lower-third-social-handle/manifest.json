@@ -1,0 +1,9 @@
+{
+  "id": "lower-third-social-handle",
+  "kind": "clip",
+  "name": "Social handle cycler",
+  "description": "Compact pill lower third that grows out of a platform icon disc and flips through your social handles (YouTube, Instagram, TikTok, X, Telegram, VK…) with optional follower counts; use in any creator video to show where to follow you.",
+  "category": "lower-thirds",
+  "tags": ["lower third", "social", "handle", "follow", "instagram", "youtube", "tiktok", "telegram", "overlay"],
+  "duration": 7
+}

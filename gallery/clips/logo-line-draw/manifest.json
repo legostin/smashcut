@@ -1,0 +1,9 @@
+{
+  "id": "logo-line-draw",
+  "kind": "clip",
+  "name": "Line-draw logo sting",
+  "description": "Logo sting where the mark's outlines draw on in sequence, the fills fade in as the strokes fade out, a shine passes over the settled mark and the wordmark tracks in; use as an elegant intro/outro or brand watermark (paste your own SVG path data or use the built-in mark).",
+  "category": "logos",
+  "tags": ["logo", "sting", "line-draw", "drawsvg", "intro", "outro", "brand", "minimal", "overlay"],
+  "duration": 4.5
+}

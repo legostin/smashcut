@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "stops": { "type": "textarea", "label": "Stops, one per line: Name | lon, lat", "default": "Москва | 37.62, 55.75\nСтамбул | 28.98, 41.01\nДубай | 55.27, 25.20\nМале | 73.51, 4.18" },
+    "vehicle": { "type": "select", "label": "Vehicle", "options": ["plane", "car", "train", "ship", "none"], "default": "plane" },
+    "mapStyle": { "type": "select", "label": "Map style", "options": ["dots", "dark", "light"], "default": "dots" },
+    "accent": { "type": "color", "label": "Route colour", "default": "#ffb547" },
+    "pinColor": { "type": "color", "label": "Pin colour", "default": "#ffffff" },
+    "distanceUnit": { "type": "select", "label": "Distance chips", "options": ["км", "km", "mi", "none"], "default": "км" },
+    "arcHeight": { "type": "number", "label": "Arc height", "min": 0, "max": 0.6, "step": 0.02, "default": 0.22 },
+    "cameraFollow": { "type": "boolean", "label": "Camera follows each leg", "default": true },
+    "dotSpacing": { "type": "select", "label": "Dot spacing (degrees, dots style)", "options": ["0.5", "1", "1.5", "2"], "default": "1" },
+    "finalOverview": { "type": "boolean", "label": "Zoom out to the whole route at the end", "default": true }
+  }
+}

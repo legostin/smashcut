@@ -1,0 +1,10 @@
+{
+  "schema": {
+    "handles": { "type": "textarea", "label": "Handles, one per line: \"platform: @handle | followers\" (youtube, instagram, tiktok, x, telegram, twitch, linkedin, facebook, vk, threads, web)", "default": "youtube: @agentstudio | 1.2M subscribers\ninstagram: @agent.studio | 84K followers\ntiktok: @agentstudio | 310K followers\ntelegram: t.me/agentstudio | 12K readers" },
+    "showFollowers": { "type": "boolean", "label": "Show follower counts", "default": true },
+    "cycleDuration": { "type": "number", "label": "Seconds per handle", "min": 0.8, "max": 5, "step": 0.1, "default": 1.6 },
+    "position": { "type": "select", "label": "Position", "options": ["bottom-left", "bottom-right", "top-left", "top-right"], "default": "bottom-left" },
+    "theme": { "type": "select", "label": "Theme", "options": ["dark", "light"], "default": "dark" },
+    "scale": { "type": "number", "label": "Scale", "min": 0.5, "max": 2, "step": 0.05, "default": 1 }
+  }
+}

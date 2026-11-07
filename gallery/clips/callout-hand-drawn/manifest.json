@@ -1,0 +1,9 @@
+{
+  "id": "callout-hand-drawn",
+  "kind": "clip",
+  "name": "Hand-drawn annotations",
+  "description": "Wobbly marker circles, underlines, boxes, strikes, brackets, highlighter swipes and scribbled arrows that draw on in sequence over footage (Vox / explainer look); use to point at words, map regions or screenshot details.",
+  "category": "callouts",
+  "tags": ["callout", "annotation", "hand-drawn", "marker", "highlight", "circle", "underline", "explainer", "vox"],
+  "duration": 5
+}

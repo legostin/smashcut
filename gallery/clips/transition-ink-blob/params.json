@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "color1": { "type": "color", "label": "Ink colour", "default": "#16121f" },
+    "color2": { "type": "color", "label": "Bleed colour (two-tone)", "default": "#e8455d" },
+    "twoTone": { "type": "boolean", "label": "Two-tone bleed edge", "default": true },
+    "seeds": { "type": "number", "label": "Drop points", "min": 1, "max": 7, "step": 1, "default": 4 },
+    "edgeNoise": { "type": "number", "label": "Edge wobble", "min": 0, "max": 0.4, "step": 0.01, "default": 0.16 },
+    "splatter": { "type": "number", "label": "Splatter droplets per drop", "min": 0, "max": 40, "step": 1, "default": 16 },
+    "goo": { "type": "number", "label": "Gooeyness", "min": 0, "max": 40, "step": 1, "default": 16 },
+    "outMode": { "type": "select", "label": "Reveal (second half)", "options": ["holes", "shrink"], "default": "holes" },
+    "hold": { "type": "number", "label": "Fully covered hold (s)", "min": 0, "max": 2, "step": 0.05, "default": 0.08 },
+    "label": { "type": "text", "label": "Optional text during cover", "default": "" },
+    "labelColor": { "type": "color", "label": "Text colour", "default": "#f6efe6" },
+    "seed": { "type": "number", "label": "Random seed", "min": 1, "max": 9999, "step": 1, "default": 5 }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "infographic-timeline",
+  "kind": "clip",
+  "name": "Milestone timeline",
+  "description": "A spine draws on node by node — each dot pops and its milestone card (date, title, line of text) rises from the line, alternating above and below — while the camera pans to follow the progress head; use for company histories, roadmaps and 'how we got here' segments.",
+  "category": "infographics",
+  "tags": ["timeline", "milestones", "history", "roadmap", "infographic", "dates", "company", "progress"],
+  "duration": 10
+}

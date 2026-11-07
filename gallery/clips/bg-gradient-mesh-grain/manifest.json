@@ -1,0 +1,9 @@
+{
+  "id": "bg-gradient-mesh-grain",
+  "kind": "clip",
+  "name": "Grainy mesh gradient",
+  "description": "Full-frame animated mesh-gradient background (Stripe-style aurora): 4–6 large soft colour blobs drifting on slow seamless-looping Lissajous paths with breathing scale, plus seeded film grain (animated or static) and an optional vignette; use behind titles, quotes, product shots and talking heads.",
+  "category": "backgrounds",
+  "tags": ["background", "gradient", "mesh", "aurora", "grain", "noise", "loop", "ambient", "fullframe"],
+  "duration": 10
+}

@@ -1,0 +1,19 @@
+{
+  "schema": {
+    "country": { "type": "text", "label": "Country (ISO code like KAZ / KZ, or English name)", "default": "KAZ" },
+    "countryLabel": { "type": "text", "label": "Country label (empty = automatic name)", "default": "" },
+    "pinLabel": { "type": "text", "label": "Pin label", "default": "Астана" },
+    "pinLonLat": { "type": "text", "label": "Pin position \"lon, lat\" (empty = country centre)", "default": "71.43, 51.13" },
+    "country2": { "type": "text", "label": "Second country (optional, highlighted while the camera reframes)", "default": "" },
+    "country2Label": { "type": "text", "label": "Second country label (empty = automatic)", "default": "" },
+    "lang": { "type": "select", "label": "Automatic names language", "options": ["ru", "en"], "default": "ru" },
+    "mapStyle": { "type": "select", "label": "Map style", "options": ["paper", "dark", "flat"], "default": "paper" },
+    "accent": { "type": "color", "label": "Highlight colour", "default": "#d7263d" },
+    "accent2": { "type": "color", "label": "Second country colour", "default": "#f2a541" },
+    "framing": { "type": "number", "label": "Framing (share of frame the country fills)", "min": 0.2, "max": 0.9, "step": 0.05, "default": 0.55 },
+    "pushDuration": { "type": "number", "label": "Camera push (s)", "min": 0.8, "max": 5, "step": 0.1, "default": 2.5 },
+    "grain": { "type": "number", "label": "Film grain", "min": 0, "max": 0.3, "step": 0.01, "default": 0.09 },
+    "vignette": { "type": "boolean", "label": "Vignette", "default": true },
+    "exitAtEnd": { "type": "boolean", "label": "Retract pin and tag at the end", "default": true }
+  }
+}

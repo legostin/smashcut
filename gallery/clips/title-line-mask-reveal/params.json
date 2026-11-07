@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "text": { "type": "textarea", "label": "Lines (one per row, wrap *words* for accent colour)", "default": "Всё начинается\nс одной *идеи*" },
+    "eyebrow": { "type": "text", "label": "Eyebrow (small label above)", "default": "Глава первая" },
+    "subtitle": { "type": "text", "label": "Subtitle (below the rule)", "default": "Документальный фильм · 2026" },
+    "font": { "type": "select", "label": "Font", "options": ["Playfair Display", "Manrope", "Inter", "Unbounded"], "default": "Playfair Display" },
+    "weight": { "type": "select", "label": "Weight", "options": ["regular", "bold"], "default": "regular" },
+    "size": { "type": "number", "label": "Font size (px)", "min": 60, "max": 280, "step": 2, "default": 176 },
+    "align": { "type": "select", "label": "Align", "options": ["left", "center"], "default": "left" },
+    "variant": { "type": "select", "label": "Reveal", "options": ["slide", "rotate", "blur"], "default": "slide" },
+    "stagger": { "type": "number", "label": "Line stagger (s)", "min": 0.02, "max": 0.4, "step": 0.01, "default": 0.09 },
+    "color": { "type": "color", "label": "Text colour", "default": "#f6f2ea" },
+    "accent": { "type": "color", "label": "Accent (eyebrow, rule, *words*)", "default": "#e7b977" },
+    "shadow": { "type": "boolean", "label": "Soft shadow (for busy footage)", "default": true }
+  }
+}

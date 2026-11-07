@@ -1,0 +1,17 @@
+.lm { position: absolute; left: 160px; right: 160px; top: 50%; transform: translateY(-50%); color: var(--color); }
+.lm.center { text-align: center; }
+.lm .eyebrow { display: flex; align-items: center; gap: 24px; margin-bottom: 0.32em; font: 600 28px/1 'Manrope', sans-serif; letter-spacing: 0.34em; text-transform: uppercase; color: var(--accent); }
+.lm.center .eyebrow { justify-content: center; }
+.lm .eyebrow i { display: block; width: 64px; height: 2px; background: var(--accent); transform-origin: left center; flex: none; }
+.lm .clip { overflow: hidden; display: block; padding: 0.1em 0 0.14em; margin: -0.1em 0 -0.14em; }
+.lm .clip > span { display: block; }
+.lm .lines { line-height: 0.98; letter-spacing: -0.025em; }
+.lm .line { white-space: nowrap; }
+.lm .line .in { display: block; will-change: transform; }
+.lm .ch { display: inline-block; white-space: pre; }
+.lm .acc { color: var(--accent); }
+.lm .foot { margin-top: 44px; }
+.lm .rule { height: 1px; background: currentColor; opacity: 0.45; transform-origin: left center; width: 100%; }
+.lm.center .rule { transform-origin: center; }
+.lm .sub { margin-top: 26px; font: 500 30px/1.2 'Manrope', sans-serif; letter-spacing: 0.04em; opacity: 0.78; }
+.lm.shadow .lines, .lm.shadow .eyebrow, .lm.shadow .sub { text-shadow: 0 4px 34px rgba(0,0,0,.38); }

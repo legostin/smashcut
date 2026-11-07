@@ -1,0 +1,21 @@
+{
+  "schema": {
+    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "I spent 7 days on a deserted island with $1,000,000 and only one rule" },
+    "font": { "type": "select", "label": "Font", "options": ["Unbounded", "Inter", "Manrope"], "default": "Unbounded" },
+    "size": { "type": "number", "label": "Font size (px at 1080p)", "min": 60, "max": 260, "step": 2, "default": 150 },
+    "uppercase": { "type": "boolean", "label": "Uppercase", "default": true },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "keywords": { "type": "text", "label": "Keywords (comma-separated)", "default": "deserted, island, one rule" },
+    "autoKeywords": { "type": "boolean", "label": "Numbers & money are keywords", "default": true },
+    "keyColor1": { "type": "color", "label": "Keyword colour 1", "default": "#ffe11a" },
+    "keyColor2": { "type": "color", "label": "Keyword colour 2", "default": "#3dff6e" },
+    "keyColor3": { "type": "color", "label": "Keyword colour 3", "default": "#ff3b4a" },
+    "shadowDepth": { "type": "number", "label": "3D shadow depth (px at 1080p)", "min": 0, "max": 30, "step": 1, "default": 15 },
+    "strokeWidth": { "type": "number", "label": "Outline width (px at 1080p)", "min": 0, "max": 20, "step": 1, "default": 9 },
+    "rotationRange": { "type": "number", "label": "Pop-in rotation (deg)", "min": 0, "max": 20, "step": 1, "default": 8 },
+    "popScale": { "type": "number", "label": "Pop overshoot scale", "min": 1, "max": 1.6, "step": 0.05, "default": 1.25 },
+    "shake": { "type": "boolean", "label": "Subtle shake on hold", "default": true },
+    "position": { "type": "select", "label": "Vertical position", "options": ["auto", "center", "lower", "upper"], "default": "auto" },
+    "seed": { "type": "number", "label": "Random seed", "min": 1, "max": 999, "step": 1, "default": 7 }
+  }
+}

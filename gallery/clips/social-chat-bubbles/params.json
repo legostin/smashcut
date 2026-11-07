@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "messages": { "type": "textarea", "label": "Messages, one per line: \"me: text\" or \"them: text\" (optional time prefix \"[2.5] me: text\")", "default": "them: are you awake?\nthem: i need to tell you something\nme: what happened??\nthem: i accidentally deleted the whole project\nme: the one due TOMORROW?\nthem: ...but i found the autosave\nme: never scare me like that again" },
+    "style": { "type": "select", "label": "Style", "options": ["ios", "whatsapp"], "default": "ios" },
+    "theme": { "type": "select", "label": "Theme", "options": ["dark", "light"], "default": "dark" },
+    "contactName": { "type": "text", "label": "Contact name", "default": "Maya" },
+    "contactInitials": { "type": "text", "label": "Contact initials", "default": "M" },
+    "avatarColor": { "type": "color", "label": "Avatar colour", "default": "#8e8e93" },
+    "status": { "type": "text", "label": "Header subtitle (WhatsApp)", "default": "online" },
+    "showTyping": { "type": "boolean", "label": "Typing dots before their messages", "default": true },
+    "receipt": { "type": "text", "label": "Read receipt (empty = none)", "default": "Read 1:42 AM" },
+    "panel": { "type": "boolean", "label": "Phone-style panel (off = bubbles only)", "default": true },
+    "textSize": { "type": "number", "label": "Text size (px at 1080p)", "min": 22, "max": 56, "step": 1, "default": 34 },
+    "position": { "type": "select", "label": "Position", "options": ["center", "left", "right"], "default": "center" }
+  }
+}

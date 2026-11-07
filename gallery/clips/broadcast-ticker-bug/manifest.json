@@ -1,0 +1,9 @@
+{
+  "id": "broadcast-ticker-bug",
+  "kind": "clip",
+  "name": "News ticker + station bug",
+  "description": "Broadcast overlay: a full-width bottom ticker bar with a category box that flips in sync with the headlines, a seamless constant-speed crawl, a running clock chip and a top-corner station bug with a pulsing LIVE tag; use for news parodies, streams, event screens and market updates.",
+  "category": "broadcast",
+  "tags": ["broadcast", "news", "ticker", "crawl", "bug", "live", "stream", "overlay"],
+  "duration": 10
+}

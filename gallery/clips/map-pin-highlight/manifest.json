@@ -1,0 +1,9 @@
+{
+  "id": "map-pin-highlight",
+  "kind": "clip",
+  "name": "Country highlight + pin (Vox style)",
+  "description": "Full-frame explainer map: a paper-textured world pushes in to a country, its border draws on, the fill wipes in accent red and a pin drops with a labelled tag (optional second country while the camera reframes); use for geography, news and explainer beats.",
+  "category": "maps",
+  "tags": ["map", "country", "highlight", "pin", "vox", "explainer", "geography", "zoom", "fullframe"],
+  "duration": 7
+}

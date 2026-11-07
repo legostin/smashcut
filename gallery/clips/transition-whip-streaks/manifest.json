@@ -1,0 +1,9 @@
+{
+  "id": "transition-whip-streaks",
+  "kind": "clip",
+  "name": "Whip pan streaks",
+  "description": "Fast graphic whip transition: seeded horizontal streak bands with motion-smeared edges and speed lines rip across, cover the frame completely at duration/2 (optional white flash on the cut) and tear away the other side; transparent at both ends, centre it on a cut for energetic edits.",
+  "category": "transitions",
+  "tags": ["transition", "whip", "pan", "streaks", "speed", "blur", "fast", "cut", "fullframe"],
+  "duration": 0.6
+}

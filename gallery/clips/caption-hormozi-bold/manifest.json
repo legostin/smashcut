@@ -1,0 +1,9 @@
+{
+  "id": "caption-hormozi-bold",
+  "kind": "clip",
+  "name": "Hormozi bold captions",
+  "description": "Heavy all-caps captions, 1–3 words per page, thick black stroke, the spoken word snaps yellow and emphasis words go green (uses studio.words, falls back to the Text param); use over talking-head business/education shorts and reels.",
+  "category": "captions",
+  "tags": ["captions", "subtitles", "hormozi", "bold", "shorts", "reels", "tiktok", "transcript", "social"],
+  "duration": 6
+}

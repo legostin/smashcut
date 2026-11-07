@@ -1,0 +1,9 @@
+{
+  "id": "social-tweet-card",
+  "kind": "clip",
+  "name": "Animated post card",
+  "description": "Social post card (X, Threads, Bluesky or Reddit style; dark or light) that rises in, reveals the text word by word, counts up its metrics and pops the like; use to quote a post in commentary videos, news recaps and Shorts.",
+  "category": "social",
+  "tags": ["tweet", "x", "threads", "bluesky", "reddit", "post", "card", "quote", "social", "overlay"],
+  "duration": 6
+}

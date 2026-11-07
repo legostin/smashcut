@@ -1,0 +1,7 @@
+.mrf { position: absolute; inset: 0; overflow: hidden; }
+.mrf canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.mrf .ov { position: absolute; inset: 0; pointer-events: none; }
+.mrf .city, .mrf .dist { position: absolute; left: 0; top: 0; white-space: nowrap; overflow: hidden; }
+.mrf .city .in { display: block; padding: calc(11px * var(--u)) calc(20px * var(--u)) calc(12px * var(--u)); background: var(--plate); color: var(--text); border-radius: calc(8px * var(--u)); font: 700 calc(32px * var(--u))/1 'Manrope', sans-serif; letter-spacing: -0.01em; box-shadow: inset 0 calc(-3px * var(--u)) 0 var(--acc); }
+.mrf .dist { overflow: visible; }
+.mrf .dist .in { display: block; padding: calc(7px * var(--u)) calc(14px * var(--u)); border-radius: 999px; background: var(--acc); color: #121212; font: 700 calc(24px * var(--u))/1 'JetBrains Mono', monospace; letter-spacing: -0.02em; box-shadow: 0 calc(6px * var(--u)) calc(18px * var(--u)) rgba(0,0,0,0.3); }

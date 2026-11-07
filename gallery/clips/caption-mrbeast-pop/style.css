@@ -1,0 +1,3 @@
+.bp { position: absolute; inset: 0; pointer-events: none; }
+.bp .word { position: absolute; left: 50%; top: 0; white-space: nowrap; line-height: 1; visibility: hidden;
+  -webkit-text-stroke: var(--sw) #000; paint-order: stroke fill; text-shadow: var(--ex); }

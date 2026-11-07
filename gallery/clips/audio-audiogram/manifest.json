@@ -1,0 +1,9 @@
+{
+  "id": "audio-audiogram",
+  "kind": "clip",
+  "name": "Podcast audiogram",
+  "description": "Full-frame podcast audiogram: cover art with a slow Ken Burns over its own blurred backdrop, show and episode titles, a mirrored waveform driven by the project audio (studio.level, beat-pulse fallback), word-highlighted captions (transcript words or your text) and a progress bar with elapsed time; use to promote podcast or interview clips (16:9 and 9:16 layouts).",
+  "category": "audio",
+  "tags": ["audio", "podcast", "audiogram", "waveform", "captions", "music", "visualizer", "fullframe"],
+  "duration": 12
+}

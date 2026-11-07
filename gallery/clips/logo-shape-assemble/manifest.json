@@ -1,0 +1,9 @@
+{
+  "id": "logo-shape-assemble",
+  "kind": "clip",
+  "name": "Geometric shape logo build",
+  "description": "Logo build where flat primitive shapes fly in on curved paths, orbit the centre, then morph into the pieces of the mark with a flash ring, before the wordmark slides out from behind it; use for brand intros/outros and agency or product stings (bring your own multi-path SVG or use the built-in Bauhaus mark).",
+  "category": "logos",
+  "tags": ["logo", "shapes", "morph", "geometric", "bauhaus", "assemble", "intro", "outro", "brand", "sting"],
+  "duration": 5
+}

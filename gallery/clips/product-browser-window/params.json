@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "url": { "type": "text", "label": "URL (typed into the address bar)", "default": "acme.studio" },
+    "tabTitle": { "type": "text", "label": "Tab title", "default": "Acme — Ship videos faster" },
+    "brand": { "type": "text", "label": "Mock site brand name", "default": "Acme" },
+    "headline": { "type": "text", "label": "Mock site hero headline", "default": "Ship videos 10× faster" },
+    "subhead": { "type": "text", "label": "Mock site hero subhead", "default": "Script, edit and render on-brand videos with an AI co-pilot — no timeline wrangling required." },
+    "screenshot": { "type": "text", "label": "Tall screenshot path (relative to the clip, e.g. assets/page.png; empty = built-in site)", "default": "" },
+    "scrollStops": { "type": "text", "label": "Scroll stops (% of page, comma-separated; snap to sections on the built-in site)", "default": "0, 60, 100" },
+    "theme": { "type": "select", "label": "Browser chrome", "options": ["light", "dark"], "default": "light" },
+    "tilt": { "type": "boolean", "label": "3D tilt on entrance", "default": true },
+    "accent": { "type": "color", "label": "Accent colour", "default": "#5B5BF6" },
+    "showBackground": { "type": "boolean", "label": "Paint background (off = transparent overlay)", "default": true },
+    "background": { "type": "color", "label": "Background colour", "default": "#0b0d14" }
+  }
+}

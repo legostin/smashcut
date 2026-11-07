@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "text": { "type": "text", "label": "Headline", "default": "ДОСТУП РАЗРЕШЁН" },
+    "subtitle": { "type": "text", "label": "Second line (decodes 0.3 s later)", "default": "протокол 7 · канал зашифрован · 256 бит" },
+    "label": { "type": "text", "label": "Tag above (small)", "default": "[ SYS://AUTH ]" },
+    "charset": { "type": "text", "label": "Scramble glyphs", "default": "01!<>-_\\/[]{}=+*^?#%$&@ЖЩЯФ" },
+    "direction": { "type": "select", "label": "Resolve order", "options": ["ltr", "random", "center-out"], "default": "ltr" },
+    "decode": { "type": "number", "label": "Decode duration (s)", "min": 0.3, "max": 4, "step": 0.1, "default": 1.2 },
+    "exit": { "type": "select", "label": "Exit", "options": ["scramble", "reverse"], "default": "scramble" },
+    "font": { "type": "select", "label": "Font", "options": ["JetBrains Mono", "Inter", "Manrope", "Unbounded"], "default": "JetBrains Mono" },
+    "size": { "type": "number", "label": "Headline size (px)", "min": 40, "max": 220, "step": 2, "default": 128 },
+    "align": { "type": "select", "label": "Align", "options": ["center", "left"], "default": "center" },
+    "scrambleColor": { "type": "color", "label": "Scramble colour", "default": "#00ff9c" },
+    "finalColor": { "type": "color", "label": "Final colour", "default": "#f2f5f3" },
+    "glow": { "type": "boolean", "label": "Glow", "default": true },
+    "seed": { "type": "number", "label": "Seed", "min": 1, "max": 9999, "step": 1, "default": 7 }
+  }
+}

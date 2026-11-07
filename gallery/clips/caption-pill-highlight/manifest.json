@@ -1,0 +1,9 @@
+{
+  "id": "caption-pill-highlight",
+  "kind": "clip",
+  "name": "Pill highlight captions",
+  "description": "Clean sentence-case captions where one rounded pill glides from word to word as each is spoken (uses studio.words, falls back to the Text param); use for modern, minimal captions on tutorials, vlogs, podcasts and product videos.",
+  "category": "captions",
+  "tags": ["captions", "subtitles", "pill", "minimal", "capcut", "transcript", "social", "reels", "shorts"],
+  "duration": 7
+}

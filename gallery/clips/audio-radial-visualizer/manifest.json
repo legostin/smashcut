@@ -1,0 +1,9 @@
+{
+  "id": "audio-radial-visualizer",
+  "kind": "clip",
+  "name": "Radial music visualizer",
+  "description": "Circular music visualizer driven by the project audio (studio.level, beat-pulse fallback): a spinning vinyl or your artwork that pumps on the bass, a mirrored ring of spectrum bars/line/dots in a colour sweep, glow that follows loudness and particles that fly outward faster on kicks, plus track title and artist; use for music uploads, lo-fi loops and DJ promos (full-frame or transparent overlay).",
+  "category": "audio",
+  "tags": ["audio", "music", "visualizer", "spectrum", "radial", "circle", "vinyl", "beat", "fullframe"],
+  "duration": 10
+}

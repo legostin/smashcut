@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "wordmark": { "type": "text", "label": "Wordmark", "default": "NORTHWIND" },
+    "tagline": { "type": "text", "label": "Tagline (empty = none)", "default": "Design studio" },
+    "logoSvg": { "type": "textarea", "label": "Logo SVG (full <svg> markup or one path 'd' per line; empty = built-in mark)", "default": "" },
+    "variant": { "type": "select", "label": "Variant", "options": ["full", "sting"], "default": "full" },
+    "layout": { "type": "select", "label": "Layout", "options": ["stacked", "horizontal"], "default": "stacked" },
+    "strokeColor": { "type": "color", "label": "Stroke colour", "default": "#7ef0d8" },
+    "fillColors": { "type": "text", "label": "Fill colours per path (comma separated, cycled)", "default": "#ffffff, #ffffff, #ff6b4a" },
+    "textColor": { "type": "color", "label": "Wordmark colour", "default": "#ffffff" },
+    "font": { "type": "select", "label": "Wordmark font", "options": ["Manrope", "Inter", "Unbounded", "Playfair Display"], "default": "Manrope" },
+    "markSize": { "type": "number", "label": "Mark size (px)", "min": 80, "max": 600, "step": 10, "default": 260 },
+    "wordSize": { "type": "number", "label": "Wordmark size (px)", "min": 30, "max": 220, "step": 2, "default": 96 },
+    "drawDuration": { "type": "number", "label": "Draw duration per path (s)", "min": 0.2, "max": 2, "step": 0.05, "default": 0.8 },
+    "strokeWidth": { "type": "number", "label": "Stroke width (px)", "min": 1, "max": 8, "step": 0.5, "default": 2.5 },
+    "shine": { "type": "boolean", "label": "Shine pass", "default": true }
+  }
+}

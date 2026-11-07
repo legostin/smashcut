@@ -1,0 +1,5 @@
+.mq { position: absolute; inset: 0; overflow: hidden; }
+.mq .row { position: absolute; left: 0; width: 100%; height: 0; will-change: transform, opacity; }
+.mq .strip { position: absolute; left: 0; top: 0; display: flex; align-items: center; white-space: nowrap; will-change: transform; }
+.mq .unit { display: flex; align-items: center; flex: none; line-height: 1; }
+.mq .dot { display: inline-block; width: 0.16em; height: 0.16em; border-radius: 50%; margin: 0 0.42em; background: currentColor; flex: none; }

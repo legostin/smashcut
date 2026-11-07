@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "targets": { "type": "textarea", "label": "Targets — one per line: \"x, y, w, h | Title | Body\" in % of frame (add \"| circle\" for a round cutout)", "default": "8, 18, 30, 22 | Загрузка файлов | Перетащите видео прямо в окно проекта\n60, 56, 26, 24 | Экспорт в один клик | MP4, MOV или GIF — до 4K, без водяных знаков" },
+    "shape": { "type": "select", "label": "Cutout shape", "options": ["rounded", "circle"], "default": "rounded" },
+    "labelSide": { "type": "select", "label": "Label side", "options": ["auto", "left", "right", "above", "below"], "default": "auto" },
+    "dimOpacity": { "type": "number", "label": "Dim amount", "min": 0.2, "max": 0.95, "step": 0.05, "default": 0.66 },
+    "scrimColor": { "type": "color", "label": "Scrim colour", "default": "#05070d" },
+    "accent": { "type": "color", "label": "Accent (ring, step badge)", "default": "#5B8CFF" },
+    "radius": { "type": "number", "label": "Corner radius (px)", "min": 0, "max": 80, "step": 1, "default": 22 },
+    "feather": { "type": "number", "label": "Edge feather (px)", "min": 0, "max": 60, "step": 1, "default": 18 },
+    "ring": { "type": "boolean", "label": "Outline ring", "default": true },
+    "stepNumbers": { "type": "boolean", "label": "Step numbers on cards", "default": true },
+    "cardTheme": { "type": "select", "label": "Card theme", "options": ["dark", "light"], "default": "dark" },
+    "holdPerTarget": { "type": "number", "label": "Hold per target (s, 0 = fit to clip)", "min": 0, "max": 20, "step": 0.1, "default": 0 }
+  }
+}

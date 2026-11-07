@@ -1,0 +1,9 @@
+{
+  "id": "title-marquee-repeat",
+  "kind": "clip",
+  "name": "Repetitive type marquee",
+  "description": "Full-frame wall of repeated words: rows scroll in alternating directions with a sine wave, alternating filled and outline type, an accent centre row that scales up mid-clip; use for fashion, event and music promos or as a bold section opener.",
+  "category": "titles",
+  "tags": ["marquee", "repetitive", "typography", "kinetic", "wave", "fashion", "promo", "fullframe", "loop"],
+  "duration": 6
+}

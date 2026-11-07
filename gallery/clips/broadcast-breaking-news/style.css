@@ -1,0 +1,32 @@
+.bn { position: absolute; font-family: 'Inter', sans-serif; color: #fff; }
+.bn .chips { display: flex; gap: calc(10px * var(--u)); margin-bottom: calc(10px * var(--u)); overflow: hidden; padding-bottom: 2px; }
+.bn .chips > div { display: flex; align-items: center; gap: calc(10px * var(--u)); height: calc(44px * var(--u)); padding: 0 calc(16px * var(--u)); font: 700 calc(22px * var(--u))/1 'Inter', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; border-radius: calc(4px * var(--u)); }
+.bn .live { background: var(--acc); }
+.bn .live .dot { width: calc(12px * var(--u)); height: calc(12px * var(--u)); border-radius: 50%; background: #fff; }
+.bn .loc { background: rgba(8, 14, 28, 0.82); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14); }
+.bn .loc .pin { width: calc(10px * var(--u)); height: calc(10px * var(--u)); border: calc(3px * var(--u)) solid var(--acc); border-radius: 50%; }
+
+.bn .row1 { display: flex; align-items: stretch; height: calc(92px * var(--u)); filter: drop-shadow(0 calc(10px * var(--u)) calc(22px * var(--u)) rgba(0,0,0,0.35)); }
+.bn .blk { position: relative; z-index: 2; flex: none; transform-origin: 0 50%; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 82%, #fff) 0%, var(--acc) 42%, color-mix(in srgb, var(--acc) 78%, #000) 100%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 30px * var(--u)) 100%, 0 100%); }
+.bn .blk::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(255,255,255,0.45); }
+.bn .persp { position: absolute; inset: 0; perspective: calc(600px * var(--u)); }
+.bn .flip { position: absolute; inset: 0; transform-style: preserve-3d; }
+.bn .face { position: absolute; inset: 0; display: flex; align-items: center; padding-left: calc(34px * var(--u)); padding-right: calc(64px * var(--u)); backface-visibility: hidden; font: 900 calc(44px * var(--u))/1 'Inter', sans-serif; letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap; }
+.bn .f2 { transform: rotateX(180deg); }
+.bn .sweep { position: absolute; top: 0; bottom: 0; left: 0; width: 28%; background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 100%); transform: translateX(-120%) skewX(-18deg); pointer-events: none; mix-blend-mode: soft-light; }
+.bn .hl .sweep { width: 9%; mix-blend-mode: normal; background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(210,225,255,0.8) 50%, rgba(255,255,255,0) 100%); }
+.bn .hl { position: relative; margin-left: calc(-30px * var(--u)); padding-left: calc(56px * var(--u)); padding-right: calc(24px * var(--u)); display: flex; align-items: center; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, #f1f3f7 60%, #e3e7ee 100%); color: var(--navy); }
+.bn .hl .mask { overflow: hidden; padding: 0.08em 0; }
+.bn .hl .txt { font: 800 calc(50px * var(--u))/1.08 'Inter', sans-serif; letter-spacing: -0.02em; white-space: nowrap; }
+.bn .row1.wrap { height: auto; min-height: calc(92px * var(--u)); }
+.bn .hl.wrap { padding-top: calc(14px * var(--u)); padding-bottom: calc(14px * var(--u)); }
+.bn .hl.wrap .txt { white-space: normal; line-height: 1.08; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bn .logo { flex: none; width: calc(92px * var(--u)); display: grid; place-items: center; background: linear-gradient(180deg, color-mix(in srgb, var(--navy) 70%, #fff 8%), var(--navy)); font: 800 calc(40px * var(--u))/1 'Unbounded', sans-serif; letter-spacing: -0.04em; box-shadow: inset calc(4px * var(--u)) 0 0 var(--acc); }
+
+.bn .row2 { display: flex; height: calc(56px * var(--u)); background: var(--navy); box-shadow: 0 calc(8px * var(--u)) calc(20px * var(--u)) rgba(0,0,0,0.3); }
+.bn .sub { flex: 1; min-width: 0; display: flex; align-items: center; padding: 0 calc(34px * var(--u)); overflow: hidden; }
+.bn .sub .mask { overflow: hidden; min-width: 0; }
+.bn .sub .txt { font: 500 calc(30px * var(--u))/1.15 'Inter', sans-serif; letter-spacing: -0.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(255,255,255,0.92); }
+.bn .clock { flex: none; display: flex; align-items: center; padding: 0 calc(24px * var(--u)); background: rgba(0,0,0,0.28); box-shadow: inset 1px 0 0 rgba(255,255,255,0.12); font: 700 calc(28px * var(--u))/1 'JetBrains Mono', monospace; letter-spacing: 0.02em; }

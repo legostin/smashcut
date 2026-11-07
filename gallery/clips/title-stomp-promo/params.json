@@ -1,0 +1,20 @@
+{
+  "schema": {
+    "words": { "type": "textarea", "label": "Words / short phrases (one per beat)", "default": "THIS\nSUMMER\nONE\nNIGHT\nONLY\nLOUDER\nTHAN\nEVER\nJULY 26" },
+    "loop": { "type": "boolean", "label": "Loop words to fill the clip", "default": true },
+    "beatsPerWord": { "type": "number", "label": "Beats per word", "min": 0.5, "max": 4, "step": 0.5, "default": 1 },
+    "offsetBeats": { "type": "number", "label": "Start offset (beats)", "min": 0, "max": 16, "step": 1, "default": 0 },
+    "font": { "type": "select", "label": "Font (Bebas Neue: Latin only)", "options": ["Bebas Neue", "Unbounded", "Inter", "Manrope"], "default": "Bebas Neue" },
+    "uppercase": { "type": "boolean", "label": "Uppercase", "default": true },
+    "fill": { "type": "number", "label": "Word width (% of frame)", "min": 40, "max": 95, "step": 1, "default": 84 },
+    "dark": { "type": "color", "label": "Dark colour", "default": "#0b0b0c" },
+    "light": { "type": "color", "label": "Light colour", "default": "#f3efe6" },
+    "accent": { "type": "color", "label": "Accent colour", "default": "#ff3d1f" },
+    "invertEvery": { "type": "number", "label": "Invert background every N words (0 = never)", "min": 0, "max": 8, "step": 1, "default": 2 },
+    "accentEvery": { "type": "number", "label": "Accent flash every N words (0 = never)", "min": 0, "max": 12, "step": 1, "default": 4 },
+    "outlineEvery": { "type": "number", "label": "Outline-only word every N words (0 = never)", "min": 0, "max": 12, "step": 1, "default": 3 },
+    "ghostTrail": { "type": "boolean", "label": "Whip ghost trail every 4th word", "default": true },
+    "meta": { "type": "text", "label": "Corner label (small)", "default": "LIVE · 2026" },
+    "counter": { "type": "boolean", "label": "Show word counter", "default": true }
+  }
+}

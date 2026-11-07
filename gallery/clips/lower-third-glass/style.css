@@ -1,0 +1,25 @@
+.lg { position: absolute; font-family: 'Inter', sans-serif; }
+.lg .glass { position: absolute; top: 0; overflow: hidden;
+  background:
+    radial-gradient(120% 140% at 12% 0%, rgba(255,255,255,.30) 0%, rgba(255,255,255,0) 55%),
+    linear-gradient(140deg, color-mix(in srgb, var(--tint) 34%, transparent) 0%, color-mix(in srgb, var(--tint) 10%, transparent) 60%, color-mix(in srgb, var(--tint) 22%, transparent) 100%),
+    rgba(14, 18, 28, var(--frost));
+  -webkit-backdrop-filter: blur(calc(26px * var(--u))) saturate(170%); backdrop-filter: blur(calc(26px * var(--u))) saturate(170%);
+  box-shadow:
+    inset 0 calc(1.5px * var(--u)) 0 rgba(255,255,255,.6),
+    inset 0 calc(-1px * var(--u)) 0 rgba(255,255,255,.12),
+    inset calc(1px * var(--u)) 0 0 rgba(255,255,255,.18),
+    calc(-1.5px * var(--u)) 0 0 rgba(255, 90, 140, .22),
+    calc(1.5px * var(--u)) 0 0 rgba(90, 210, 255, .26),
+    0 calc(30px * var(--u)) calc(70px * var(--u)) rgba(0,0,0,.32),
+    0 calc(6px * var(--u)) calc(16px * var(--u)) rgba(0,0,0,.18); }
+.lg .glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: calc(1.5px * var(--u));
+  background: linear-gradient(150deg, rgba(255,255,255,.75), rgba(255,255,255,.08) 35%, rgba(255,255,255,0) 60%, rgba(255,255,255,.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; z-index: 3; }
+.lg .grain { position: absolute; inset: 0; mix-blend-mode: overlay; z-index: 1; }
+.lg .spec { position: absolute; width: 60%; height: 220%; top: -60%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,.22), rgba(255,255,255,0)); z-index: 1; }
+.lg .sheen { position: absolute; top: -20%; bottom: -20%; width: 34%; left: 0; background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.38) 45%, rgba(255,255,255,.08) 60%, rgba(255,255,255,0) 100%); transform: skewX(-18deg); z-index: 2; }
+.lg .content { position: absolute; top: 0; display: flex; align-items: center; gap: calc(22px * var(--u)); z-index: 4; white-space: nowrap; }
+.lg .dot { width: calc(18px * var(--u)); height: calc(18px * var(--u)); border-radius: 50%; background: var(--accent); flex: none; }
+.lg .nm { font: 800 calc(54px * var(--u)) / 1.04 'Manrope', sans-serif; letter-spacing: -0.02em; color: #fff; text-shadow: 0 calc(2px * var(--u)) calc(14px * var(--u)) rgba(0,0,0,.25); }
+.lg .tt { margin-top: calc(8px * var(--u)); font: 500 calc(28px * var(--u)) / 1.2 'Inter', sans-serif; color: rgba(255,255,255,.8); text-shadow: 0 calc(1px * var(--u)) calc(10px * var(--u)) rgba(0,0,0,.25); }

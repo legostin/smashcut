@@ -1,0 +1,12 @@
+.sp { position: absolute; inset: 0; overflow: hidden; }
+.sp .bg { position: absolute; inset: 0; }
+.sp .stage { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.sp .w { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: normal; transform: translate(-50%, -50%); will-change: transform; }
+.sp .w.ghost { pointer-events: none; }
+.sp .flash { position: absolute; inset: 0; opacity: 0; }
+.sp .meta { position: absolute; font: 600 24px/1 'Inter', sans-serif; letter-spacing: 0.24em; text-transform: uppercase; white-space: nowrap; }
+.sp .meta.tl { left: 72px; top: 64px; }
+.sp .meta.br { right: 72px; bottom: 64px; font-variant-numeric: tabular-nums; }
+.sp .meta.tr { right: 72px; top: 64px; }
+.sp .meta i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 14px; vertical-align: 0; background: currentColor; }
+.sp .bar { position: absolute; left: 72px; right: 72px; bottom: 52px; height: 3px; transform-origin: left center; display: none; }

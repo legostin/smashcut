@@ -1,0 +1,9 @@
+{
+  "id": "product-cursor-demo",
+  "kind": "clip",
+  "name": "Cursor click walkthrough",
+  "description": "A macOS-style cursor glides along arcs between targets, clicks with ripples, types into fields and triggers a camera zoom over a built-in SaaS dashboard mockup (or your own screenshot, or as a transparent overlay); use for product demos and launch videos without screen recording.",
+  "category": "product",
+  "tags": ["product", "cursor", "click", "demo", "saas", "ui", "walkthrough", "mockup", "tutorial", "zoom"],
+  "duration": 8
+}

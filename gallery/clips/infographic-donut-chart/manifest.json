@@ -1,0 +1,9 @@
+{
+  "id": "infographic-donut-chart",
+  "kind": "clip",
+  "name": "Donut breakdown",
+  "description": "Donut chart whose segments sweep in clockwise from 12 o'clock with a counting centre stat, a staggered legend and one highlighted segment that pops out while the rest dim; use to show shares of a whole — budgets, market share, survey answers.",
+  "category": "infographics",
+  "tags": ["chart", "donut", "pie", "breakdown", "share", "percent", "infographic", "data"],
+  "duration": 6
+}

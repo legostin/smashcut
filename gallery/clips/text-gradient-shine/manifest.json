@@ -1,0 +1,9 @@
+{
+  "id": "text-gradient-shine",
+  "kind": "clip",
+  "name": "Gradient shine headline",
+  "description": "Keynote / SaaS-style hero headline whose words blur-rise in, filled with a slowly sweeping multi-stop gradient (or a solid fill with a light shine pass), with a badge and subline; use for product launches, feature intros and modern tech titles.",
+  "category": "text-effects",
+  "tags": ["gradient", "shine", "saas", "keynote", "hero", "headline", "modern", "launch", "overlay"],
+  "duration": 5
+}

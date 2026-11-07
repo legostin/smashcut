@@ -1,0 +1,9 @@
+{
+  "id": "transition-shape-overlay",
+  "kind": "clip",
+  "name": "Gooey wave cover",
+  "description": "Full-frame transition: 1–4 stacked colour layers sweep across with an organic, wavy leading edge (each edge point on its own delay) until the frame is fully covered at exactly duration/2 (the cut point), then continue off the far side; transparent at both ends, so centre it across a cut.",
+  "category": "transitions",
+  "tags": ["transition", "wave", "liquid", "gooey", "shape", "cover", "cut", "fullframe"],
+  "duration": 1.2
+}

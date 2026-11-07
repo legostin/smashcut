@@ -1,0 +1,21 @@
+{
+  "schema": {
+    "platform": { "type": "select", "label": "Platform style", "options": ["x", "threads", "bluesky", "reddit"], "default": "x" },
+    "theme": { "type": "select", "label": "Theme", "options": ["dark", "light"], "default": "dark" },
+    "name": { "type": "text", "label": "Display name (subreddit for Reddit)", "default": "Ника Орлова" },
+    "handle": { "type": "text", "label": "Handle", "default": "@nika.cuts" },
+    "verified": { "type": "boolean", "label": "Verified badge", "default": true },
+    "initials": { "type": "text", "label": "Avatar initials", "default": "НО" },
+    "avatarColor": { "type": "color", "label": "Avatar colour", "default": "#ff7a45" },
+    "text": { "type": "textarea", "label": "Post text (#tags and @mentions are highlighted)", "default": "Лучший совет по монтажу, который я получил: режь на полслова раньше, чем кажется нужным. Зритель простит всё, кроме паузы. #монтаж" },
+    "timestamp": { "type": "text", "label": "Timestamp", "default": "10:24 · 7 нояб. 2026" },
+    "replies": { "type": "number", "label": "Replies", "min": 0, "max": 100000000, "step": 1, "default": 248 },
+    "reposts": { "type": "number", "label": "Reposts", "min": 0, "max": 100000000, "step": 1, "default": 1340 },
+    "likes": { "type": "number", "label": "Likes", "min": 0, "max": 100000000, "step": 1, "default": 12800 },
+    "views": { "type": "number", "label": "Views", "min": 0, "max": 1000000000, "step": 1, "default": 1240000 },
+    "locale": { "type": "select", "label": "Number format", "options": ["ru", "en"], "default": "ru" },
+    "likePop": { "type": "boolean", "label": "Pop the like button", "default": true },
+    "scale": { "type": "number", "label": "Card scale", "min": 0.5, "max": 1.6, "step": 0.05, "default": 1 },
+    "position": { "type": "select", "label": "Position", "options": ["center", "left", "right"], "default": "center" }
+  }
+}

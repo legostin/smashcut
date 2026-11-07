@@ -1,0 +1,60 @@
+{
+  "schema": {
+    "items": {
+      "type": "textarea",
+      "label": "Headlines, one per line: CATEGORY | text (category optional)",
+      "default": "MARKETS | Tech stocks close at a record high as chipmakers rally\nWEATHER | Storm warning extended for the east coast through Sunday\nSPORTS | Underdogs clinch the title in a stunning overtime finish\nMARKETS | Oil slips 2% after a surprise inventory build\nLATEST | City council approves the new waterfront transit line"
+    },
+    "speed": {
+      "type": "number",
+      "label": "Crawl speed (px/s at 1080p)",
+      "min": 40,
+      "max": 500,
+      "step": 10,
+      "default": 200
+    },
+    "separator": {
+      "type": "text",
+      "label": "Separator glyph",
+      "default": "•"
+    },
+    "accent": {
+      "type": "color",
+      "label": "Accent (category box)",
+      "default": "#ffd23f"
+    },
+    "accentText": {
+      "type": "color",
+      "label": "Category text",
+      "default": "#111111"
+    },
+    "bar": {
+      "type": "color",
+      "label": "Bar colour",
+      "default": "#0c1322"
+    },
+    "bugLogo": {
+      "type": "text",
+      "label": "Station bug logo text (empty = hide bug)",
+      "default": "WNN"
+    },
+    "bugLabel": {
+      "type": "text",
+      "label": "Bug label",
+      "default": "LIVE"
+    },
+    "startTime": {
+      "type": "text",
+      "label": "Clock start HH:MM[:SS] (empty = hide)",
+      "default": "09:41:30"
+    },
+    "barHeight": {
+      "type": "number",
+      "label": "Bar height (px at 1080p)",
+      "min": 44,
+      "max": 96,
+      "step": 2,
+      "default": 62
+    }
+  }
+}

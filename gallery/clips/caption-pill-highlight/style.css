@@ -1,0 +1,7 @@
+.ph { position: absolute; inset: 0; pointer-events: none; }
+.ph .page { position: absolute; left: 50%; display: block; text-align: center; line-height: 1.32; letter-spacing: -0.01em; word-spacing: 0.1em; visibility: hidden; text-wrap: balance; }
+.ph .page.plate::before { content: ''; position: absolute; inset: -0.32em -0.36em; border-radius: 0.5em; background: rgba(10,10,14,.55); }
+.ph .w { position: relative; display: inline-block; z-index: 1; text-shadow: 0 0.03em 0.18em rgba(0,0,0,.45); }
+.ph .w.on { text-shadow: none; }
+.ph .g { white-space: nowrap; }
+.ph .pill { position: absolute; left: 0; top: 0; z-index: 0; box-shadow: 0 0.12em 0.4em rgba(0,0,0,.28), inset 0 0.03em 0 rgba(255,255,255,.28); }

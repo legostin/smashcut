@@ -1,0 +1,9 @@
+{
+  "id": "callout-spotlight-zoom",
+  "kind": "clip",
+  "name": "Spotlight focus",
+  "description": "Dims the frame with a feathered scrim and opens a rounded spotlight on one or more target regions in turn, each with an outline ring and a connected label card; use in tutorials and SaaS walkthroughs to focus attention on a UI element.",
+  "category": "callouts",
+  "tags": ["callout", "spotlight", "focus", "highlight", "tutorial", "walkthrough", "ui", "saas", "scrim"],
+  "duration": 7
+}

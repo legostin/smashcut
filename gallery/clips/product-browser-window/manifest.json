@@ -1,0 +1,9 @@
+{
+  "id": "product-browser-window",
+  "kind": "clip",
+  "name": "Browser window reveal",
+  "description": "A minimal browser window tilts up into place, types its URL, loads with a skeleton shimmer and then auto-scrolls a long landing page (built-in mock site or your own tall screenshot) with pauses at chosen sections; use for SaaS launches, website showcases and landing-page hero videos.",
+  "category": "product",
+  "tags": ["product", "browser", "website", "mockup", "saas", "landing page", "scroll", "url", "launch"],
+  "duration": 9
+}

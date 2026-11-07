@@ -1,0 +1,9 @@
+{
+  "id": "broadcast-breaking-news",
+  "kind": "clip",
+  "name": "Breaking news strap",
+  "description": "Broadcast lower-third package: an angled red \"breaking\" block that flips to an alternate label, white headline bar, navy subheadline bar with location and running clock, pulsing LIVE bug and channel cube, all unfolding with light sweeps and retracting at the end; use for news-style commentary, announcements and parody bulletins over footage.",
+  "category": "broadcast",
+  "tags": ["broadcast", "news", "breaking", "lower-third", "live", "strap", "tv", "overlay"],
+  "duration": 8
+}

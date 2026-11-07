@@ -1,0 +1,19 @@
+{
+  "schema": {
+    "headline": { "type": "text", "label": "Headline", "default": "Watch next" },
+    "subline": { "type": "text", "label": "Small line above the headline", "default": "Thanks for watching" },
+    "layout": { "type": "select", "label": "Layout", "options": ["2 videos + subscribe", "video + playlist + subscribe", "1 video + subscribe"], "default": "2 videos + subscribe" },
+    "label1": { "type": "text", "label": "Slot 1 label", "default": "Latest upload" },
+    "label2": { "type": "text", "label": "Slot 2 label", "default": "Best for you" },
+    "channel": { "type": "text", "label": "Channel name", "default": "@agentstudio" },
+    "initials": { "type": "text", "label": "Avatar initials (when slots are not holes)", "default": "AS" },
+    "subscribe": { "type": "text", "label": "Subscribe button", "default": "Subscribe" },
+    "background": { "type": "select", "label": "Background", "options": ["gradient", "dark", "transparent"], "default": "gradient" },
+    "holes": { "type": "boolean", "label": "Transparent slot holes (thumbnails go underneath)", "default": false },
+    "bg1": { "type": "color", "label": "Background colour 1", "default": "#0b0c1d" },
+    "bg2": { "type": "color", "label": "Background colour 2", "default": "#2a1468" },
+    "accent": { "type": "color", "label": "Accent", "default": "#ff4d6d" },
+    "glow": { "type": "color", "label": "Secondary glow", "default": "#4f6bff" },
+    "grain": { "type": "number", "label": "Grain amount", "min": 0, "max": 0.2, "step": 0.01, "default": 0.07 }
+  }
+}

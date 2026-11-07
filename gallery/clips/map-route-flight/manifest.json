@@ -1,0 +1,9 @@
+{
+  "id": "map-route-flight",
+  "kind": "clip",
+  "name": "Travel route / flight path map",
+  "description": "Full-frame travel map: a dotted (or flat) world, city pins and a dashed flight arc that draws leg by leg with a plane riding the path, distance chips and a camera that follows the route; use for travel vlogs, logistics and \"where we went\" beats.",
+  "category": "maps",
+  "tags": ["map", "route", "flight", "travel", "plane", "path", "cities", "journey", "fullframe"],
+  "duration": 8
+}

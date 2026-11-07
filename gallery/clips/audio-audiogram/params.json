@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "showName": { "type": "text", "label": "Show name", "default": "Подкаст «Вечерний разговор»" },
+    "episodeTitle": { "type": "textarea", "label": "Episode title", "default": "Выпуск 42. Как научиться отдыхать без чувства вины" },
+    "captions": { "type": "textarea", "label": "Caption text (used when the project has no transcript words)", "default": "Мы привыкли думать, что отдых нужно заслужить. Но на самом деле восстановление — это часть работы, а не награда за неё. Попробуйте завтра запланировать паузу так же серьёзно, как встречу." },
+    "useTranscript": { "type": "boolean", "label": "Use project transcript words when available", "default": true },
+    "wordsPerPage": { "type": "number", "label": "Caption words per page", "min": 2, "max": 12, "step": 1, "default": 6 },
+    "coverImage": { "type": "text", "label": "Cover art (path inside the clip or project asset)", "default": "assets/cover.svg" },
+    "accent": { "type": "color", "label": "Accent", "default": "#ffb547" },
+    "waveStyle": { "type": "select", "label": "Waveform style", "options": ["mirrored", "bars", "line"], "default": "mirrored" },
+    "barCount": { "type": "number", "label": "Bars", "min": 24, "max": 96, "step": 2, "default": 56 },
+    "sensitivity": { "type": "number", "label": "Waveform sensitivity", "min": 0.3, "max": 2.5, "step": 0.05, "default": 1.1 },
+    "grain": { "type": "number", "label": "Film grain", "min": 0, "max": 0.3, "step": 0.01, "default": 0.06 },
+    "episodeLength": { "type": "text", "label": "Total time label (empty = clip length)", "default": "" }
+  }
+}

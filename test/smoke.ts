@@ -31,7 +31,10 @@ server.stdout.on('data', (d) => (log += d));
 server.stderr.on('data', (d) => (log += d));
 
 try {
-  for (let i = 0; i < 60; i++) { try { await fetch(BASE + '/api/state'); break; } catch { await new Promise((r) => setTimeout(r, 500)); } }
+  for (let i = 0; i < 120; i++) {
+    try { const j = await (await fetch(BASE + '/api/state')).json(); if (j.project) break; } catch {}
+    await new Promise((r) => setTimeout(r, 500));
+  }
   const st = await api('GET', '/api/state');
   ok('server up, project open', !!st.project, st.dir);
 

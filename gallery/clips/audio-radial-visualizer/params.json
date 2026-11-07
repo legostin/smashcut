@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "title": { "type": "text", "label": "Track title", "default": "Midnight Drive" },
+    "artist": { "type": "text", "label": "Artist", "default": "Neon Avenue" },
+    "artwork": { "type": "text", "label": "Artwork image (empty = animated vinyl)", "default": "" },
+    "color1": { "type": "color", "label": "Colour 1", "default": "#5ee7ff" },
+    "color2": { "type": "color", "label": "Colour 2", "default": "#b45cff" },
+    "color3": { "type": "color", "label": "Colour 3", "default": "#ff5c9d" },
+    "style": { "type": "select", "label": "Ring style", "options": ["bars", "line", "dots"], "default": "bars" },
+    "barCount": { "type": "number", "label": "Bars", "min": 48, "max": 220, "step": 4, "default": 144 },
+    "sensitivity": { "type": "number", "label": "Sensitivity", "min": 0.3, "max": 2.5, "step": 0.05, "default": 1.15 },
+    "rotationSpeed": { "type": "number", "label": "Ring rotation (deg/s)", "min": -40, "max": 40, "step": 1, "default": 6 },
+    "particles": { "type": "boolean", "label": "Particles", "default": true },
+    "background": { "type": "select", "label": "Background", "options": ["gradient", "transparent"], "default": "gradient" },
+    "bg": { "type": "color", "label": "Background colour", "default": "#0a0714" },
+    "seed": { "type": "number", "label": "Random seed", "min": 1, "max": 9999, "step": 1, "default": 4 }
+  }
+}

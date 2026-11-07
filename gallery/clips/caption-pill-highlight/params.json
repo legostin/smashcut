@@ -1,0 +1,17 @@
+{
+  "schema": {
+    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "Минимализм снова в моде: одна плашка, чистый шрифт и ни одного лишнего движения." },
+    "font": { "type": "select", "label": "Font", "options": ["Inter", "Manrope", "Unbounded"], "default": "Inter" },
+    "size": { "type": "number", "label": "Font size (px at 1080p)", "min": 32, "max": 120, "step": 2, "default": 66 },
+    "pillColor": { "type": "color", "label": "Pill colour", "default": "#7c5cff" },
+    "pillTextColor": { "type": "color", "label": "Text on pill", "default": "#ffffff" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
+    "inactiveOpacity": { "type": "number", "label": "Inactive words opacity", "min": 0.2, "max": 1, "step": 0.05, "default": 0.85 },
+    "radius": { "type": "number", "label": "Pill corner radius (em)", "min": 0, "max": 0.6, "step": 0.02, "default": 0.3 },
+    "maxLines": { "type": "number", "label": "Max lines per page", "min": 1, "max": 3, "step": 1, "default": 2 },
+    "maxChars": { "type": "number", "label": "Max characters per page", "min": 10, "max": 90, "step": 1, "default": 42 },
+    "blurIn": { "type": "boolean", "label": "Soft blur-in on new page", "default": true },
+    "plate": { "type": "boolean", "label": "Dark plate behind text", "default": false },
+    "position": { "type": "select", "label": "Position", "options": ["bottom", "center", "top"], "default": "bottom" }
+  }
+}

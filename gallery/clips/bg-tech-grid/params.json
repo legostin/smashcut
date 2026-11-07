@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "mode": { "type": "select", "label": "Grid", "options": ["both", "dots", "lines"], "default": "both" },
+    "theme": { "type": "select", "label": "Theme", "options": ["dark", "light", "transparent"], "default": "dark" },
+    "spacing": { "type": "number", "label": "Cell size (px at 1080p)", "min": 24, "max": 120, "step": 2, "default": 48 },
+    "color": { "type": "color", "label": "Grid colour", "default": "#ffffff" },
+    "glowColor": { "type": "color", "label": "Glow / pulse colour", "default": "#5b8cff" },
+    "glowColor2": { "type": "color", "label": "Second pulse colour", "default": "#b07cff" },
+    "pulseRate": { "type": "number", "label": "Pulses per second", "min": 0, "max": 6, "step": 0.1, "default": 1.6 },
+    "fadeRadius": { "type": "number", "label": "Radial fade (share of frame)", "min": 0.3, "max": 1.5, "step": 0.05, "default": 0.8 },
+    "perspective": { "type": "boolean", "label": "Perspective floor (synthwave)", "default": false },
+    "drift": { "type": "number", "label": "Drift speed", "min": 0, "max": 2, "step": 0.05, "default": 0.3 },
+    "seed": { "type": "number", "label": "Random seed", "min": 1, "max": 9999, "step": 1, "default": 12 }
+  }
+}

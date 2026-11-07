@@ -1,0 +1,9 @@
+{
+  "id": "lower-third-glass",
+  "kind": "clip",
+  "name": "Liquid glass name plate",
+  "description": "Frosted \"liquid glass\" name plate (iOS 26 look, faked with gradients, edge highlight, chromatic fringe and grain since overlays can't refract the video) that morphs in from a blob, catches a sheen and melts back out; use as a modern lower third for interviews, vlogs and tech videos.",
+  "category": "lower-thirds",
+  "tags": ["lower third", "glass", "liquid glass", "frosted", "name", "title", "ios", "overlay", "modern"],
+  "duration": 6
+}

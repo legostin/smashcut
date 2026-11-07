@@ -1,0 +1,19 @@
+{
+  "schema": {
+    "leftName": { "type": "text", "label": "Left name", "default": "Electric" },
+    "leftSub": { "type": "text", "label": "Left subtitle", "default": "Long-range EV" },
+    "leftColor": { "type": "color", "label": "Left colour", "default": "#2F6BFF" },
+    "leftIcon": { "type": "select", "label": "Left icon", "options": ["bolt", "drop", "flame", "leaf", "star", "chip", "phone", "none"], "default": "bolt" },
+    "leftImage": { "type": "text", "label": "Left image (path relative to the clip, optional — replaces the icon)", "default": "" },
+    "rightName": { "type": "text", "label": "Right name", "default": "Gasoline" },
+    "rightSub": { "type": "text", "label": "Right subtitle", "default": "Mid-size sedan" },
+    "rightColor": { "type": "color", "label": "Right colour", "default": "#FF6A1A" },
+    "rightIcon": { "type": "select", "label": "Right icon", "options": ["bolt", "drop", "flame", "leaf", "star", "chip", "phone", "none"], "default": "drop" },
+    "rightImage": { "type": "text", "label": "Right image (path relative to the clip, optional)", "default": "" },
+    "rows": { "type": "textarea", "label": "Rows — one per line: \"Label: left | right\" (add \"| lower\" when the lower value wins)", "default": "Range, km: 520 | 750\n0–100 km/h, s: 4.2 | 7.8 | lower\nCost per 100 km, $: 4.1 | 11.6 | lower\nCO₂, g/km: 0 | 168 | lower\nService visits / year: 0.5 | 2 | lower" },
+    "showScore": { "type": "boolean", "label": "Running score under the names", "default": true },
+    "seamAngle": { "type": "number", "label": "Seam angle (°)", "min": 0, "max": 30, "step": 1, "default": 12 },
+    "badgeText": { "type": "text", "label": "Badge text", "default": "VS" },
+    "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" }
+  }
+}
