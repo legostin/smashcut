@@ -1,8 +1,8 @@
 {
   "schema": {
-    "text": { "type": "textarea", "label": "Lines (one per row, wrap *words* for accent colour)", "default": "Всё начинается\nс одной *идеи*" },
-    "eyebrow": { "type": "text", "label": "Eyebrow (small label above)", "default": "Глава первая" },
-    "subtitle": { "type": "text", "label": "Subtitle (below the rule)", "default": "Документальный фильм · 2026" },
+    "text": { "type": "textarea", "label": "Lines (one per row, wrap *words* for accent colour)", "default": "It all begins\nwith one *idea*" },
+    "eyebrow": { "type": "text", "label": "Eyebrow (small label above)", "default": "Chapter One" },
+    "subtitle": { "type": "text", "label": "Subtitle (below the rule)", "default": "A documentary film · 2026" },
     "font": { "type": "select", "label": "Font", "options": ["Playfair Display", "Manrope", "Inter", "Unbounded"], "default": "Playfair Display" },
     "weight": { "type": "select", "label": "Weight", "options": ["regular", "bold"], "default": "regular" },
     "size": { "type": "number", "label": "Font size (px)", "min": 60, "max": 280, "step": 2, "default": 176 },

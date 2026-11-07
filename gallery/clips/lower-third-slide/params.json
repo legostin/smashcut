@@ -1,6 +1,6 @@
 {
   "schema": {
-    "name": { "type": "text", "label": "Name", "default": "Алексей Смирнов" },
+    "name": { "type": "text", "label": "Name", "default": "Alex Morgan" },
     "role": { "type": "text", "label": "Role", "default": "Head of Motion · Agent Studio" },
     "accent": { "type": "color", "label": "Accent", "default": "#ff4d2e" },
     "plate": { "type": "color", "label": "Plate", "default": "#111216" },

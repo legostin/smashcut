@@ -1,10 +1,10 @@
 {
   "schema": {
-    "eyebrow": { "type": "text", "label": "Title tile label", "default": "Итоги 2026" },
-    "title": { "type": "textarea", "label": "Title (one line per row)", "default": "Твой год\nв цифрах" },
+    "eyebrow": { "type": "text", "label": "Title tile label", "default": "2026 Recap" },
+    "title": { "type": "textarea", "label": "Title (one line per row)", "default": "Your year\nin numbers" },
     "handle": { "type": "text", "label": "Name / handle", "default": "@anya.listens" },
     "avatar": { "type": "text", "label": "Avatar image (path relative to the clip, optional)", "default": "" },
-    "stats": { "type": "textarea", "label": "Stats — one per line: \"value | label\" (number may have prefix/suffix; text values allowed)", "default": "1 248 ч | музыки за год\n312 | новых исполнителей\nТоп 1% | самых преданных слушателей\n48 | стран в плейлистах\nИнди-поп | главный жанр года" },
+    "stats": { "type": "textarea", "label": "Stats — one per line: \"value | label\" (number may have prefix/suffix; text values allowed)", "default": "1,248 h | of music this year\n312 | new artists\nTop 1% | of most loyal listeners\n48 | countries in your playlists\nIndie pop | your top genre" },
     "mode": { "type": "select", "label": "Mode", "options": ["bento", "sequence"], "default": "bento" },
     "palette": { "type": "text", "label": "Tile colours (comma-separated; first = title tile)", "default": "#C6F432, #FF3D8B, #3D5AFE, #FF8A3D, #F4F1EA, #9B5CFF" },
     "stickers": { "type": "boolean", "label": "Rotating stickers", "default": true },

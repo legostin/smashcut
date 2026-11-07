@@ -1,7 +1,7 @@
 {
   "schema": {
-    "name": { "type": "text", "label": "Name", "default": "Мария Соколова" },
-    "title": { "type": "text", "label": "Title", "default": "Продюсер, подкаст «Тихий час»" },
+    "name": { "type": "text", "label": "Name", "default": "Maria Collins" },
+    "title": { "type": "text", "label": "Title", "default": "Producer, “Quiet Hour” podcast" },
     "tint": { "type": "color", "label": "Glass tint", "default": "#a9c8ff" },
     "frost": { "type": "number", "label": "Frost strength (glass opacity)", "min": 0, "max": 1, "step": 0.05, "default": 0.55 },
     "accentColor": { "type": "color", "label": "Accent dot", "default": "#5ef2c4" },

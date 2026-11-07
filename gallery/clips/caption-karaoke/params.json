@@ -1,6 +1,6 @@
 {
   "schema": {
-    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "Каждое слово подсвечивается ровно тогда, когда оно звучит. Добавьте транскрипт — и субтитры синхронизируются сами." },
+    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "Every word lights up exactly when it is spoken. Add a transcript and the captions sync themselves." },
     "font": { "type": "select", "label": "Font", "options": ["Manrope", "Inter", "Unbounded", "JetBrains Mono"], "default": "Manrope" },
     "size": { "type": "number", "label": "Font size (px)", "min": 32, "max": 140, "step": 2, "default": 72 },
     "uppercase": { "type": "boolean", "label": "Uppercase", "default": false },

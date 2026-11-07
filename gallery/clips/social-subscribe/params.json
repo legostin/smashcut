@@ -1,10 +1,10 @@
 {
   "schema": {
     "channel": { "type": "text", "label": "Channel name", "default": "Agent Studio" },
-    "subscribers": { "type": "text", "label": "Subscribers line", "default": "1,2 млн подписчиков" },
+    "subscribers": { "type": "text", "label": "Subscribers line", "default": "1.2M subscribers" },
     "initials": { "type": "text", "label": "Avatar initials", "default": "AS" },
-    "button": { "type": "text", "label": "Button text", "default": "Подписаться" },
-    "subscribed": { "type": "text", "label": "Button text after click", "default": "Вы подписаны" },
+    "button": { "type": "text", "label": "Button text", "default": "Subscribe" },
+    "subscribed": { "type": "text", "label": "Button text after click", "default": "Subscribed" },
     "accent": { "type": "color", "label": "Button colour", "default": "#ff0033" },
     "avatarColor": { "type": "color", "label": "Avatar colour", "default": "#6d5cff" },
     "cardColor": { "type": "color", "label": "Card colour", "default": "#141418" },

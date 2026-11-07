@@ -1,8 +1,8 @@
 {
   "schema": {
-    "kicker": { "type": "text", "label": "Kicker (above)", "default": "Глава первая" },
-    "title": { "type": "text", "label": "Title", "default": "Последний рассвет" },
-    "subtitle": { "type": "text", "label": "Subtitle (below)", "default": "Скоро на экранах · 2026" },
+    "kicker": { "type": "text", "label": "Kicker (above)", "default": "Chapter One" },
+    "title": { "type": "text", "label": "Title", "default": "The Last Dawn" },
+    "subtitle": { "type": "text", "label": "Subtitle (below)", "default": "Coming soon · 2026" },
     "size": { "type": "number", "label": "Title size (px)", "min": 60, "max": 240, "step": 2, "default": 150 },
     "weight": { "type": "select", "label": "Title weight", "options": ["400", "700", "900"], "default": "400" },
     "textColor": { "type": "color", "label": "Text colour", "default": "#f3ead8" },

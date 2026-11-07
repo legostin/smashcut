@@ -1,8 +1,8 @@
 {
   "schema": {
-    "items": { "type": "textarea", "label": "Milestones — one per line: \"Date | Title | Text\"", "default": "2016 | Идея | Два основателя и прототип на ноутбуке\n2018 | Первые клиенты | 100 компаний за первый год продаж\n2020 | Раунд A | 12 млн долларов на развитие продукта\n2022 | Выход в Европу | Офисы в Берлине и Лиссабоне\n2024 | Миллион пользователей | Каждый день — 40 000 новых видео\n2026 | Что дальше? | ИИ-режиссёр для каждой команды" },
-    "title": { "type": "text", "label": "Title", "default": "Как мы росли" },
-    "subtitle": { "type": "text", "label": "Subtitle", "default": "Десять лет в шести шагах" },
+    "items": { "type": "textarea", "label": "Milestones — one per line: \"Date | Title | Text\"", "default": "2016 | The idea | Two founders and a prototype on a laptop\n2018 | First customers | 100 companies in the first year of sales\n2020 | Series A | $12M to grow the product\n2022 | Into Europe | Offices in Berlin and Lisbon\n2024 | A million users | 40,000 new videos every day\n2026 | What’s next? | An AI director for every team" },
+    "title": { "type": "text", "label": "Title", "default": "How we grew" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "Ten years in six steps" },
     "orientation": { "type": "select", "label": "Orientation", "options": ["auto", "horizontal", "vertical"], "default": "auto" },
     "spacing": { "type": "number", "label": "Distance between milestones (px)", "min": 240, "max": 800, "step": 10, "default": 430 },
     "cameraFollow": { "type": "boolean", "label": "Camera follows progress (when wider than the frame)", "default": true },

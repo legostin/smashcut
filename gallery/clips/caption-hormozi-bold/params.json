@@ -1,6 +1,6 @@
 {
   "schema": {
-    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "Большинство людей сдаются за 3 дня до результата. Не будь большинством!" },
+    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "Most people quit 3 days before the results show up. Don’t be most people!" },
     "font": { "type": "select", "label": "Font", "options": ["Inter", "Unbounded", "Manrope"], "default": "Inter" },
     "size": { "type": "number", "label": "Font size (px at 1080p)", "min": 48, "max": 200, "step": 2, "default": 118 },
     "uppercase": { "type": "boolean", "label": "Uppercase", "default": true },
@@ -9,7 +9,7 @@
     "textColor": { "type": "color", "label": "Text colour", "default": "#ffffff" },
     "highlightColor": { "type": "color", "label": "Active word colour", "default": "#ffe500" },
     "altHighlightColor": { "type": "color", "label": "Emphasis word colour", "default": "#3cff5a" },
-    "emphasis": { "type": "text", "label": "Emphasis words (comma-separated)", "default": "результата, большинством" },
+    "emphasis": { "type": "text", "label": "Emphasis words (comma-separated)", "default": "quit, results" },
     "emphasizeNumbers": { "type": "boolean", "label": "Emphasise numbers automatically", "default": true },
     "strokeWidth": { "type": "number", "label": "Stroke width (px at 1080p)", "min": 0, "max": 24, "step": 1, "default": 12 },
     "shadow": { "type": "boolean", "label": "Drop shadow", "default": true },

@@ -26,10 +26,10 @@ studio.clip({
         || countries.find((c) => c.n.toUpperCase() === u || String(c.ru || '').toUpperCase() === u)
         || countries.find((c) => c.n.toUpperCase().startsWith(u) || String(c.ru || '').toUpperCase().startsWith(u));
     };
-    const c1 = find(p.country) || find('KAZ');
+    const c1 = find(p.country) || find('USA');
     let c2 = find(p.country2);
     if (c2 && c2.id === c1.id) c2 = null;
-    const autoName = (c) => (p.lang === 'en' ? c.n : c.ru || c.n);
+    const autoName = (c) => (p.lang === 'ru' ? c.ru || c.n : c.n);
     const name1 = (p.countryLabel || autoName(c1)).trim();
     const name2 = c2 ? (p.country2Label || autoName(c2)).trim() : '';
 

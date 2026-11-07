@@ -79,11 +79,11 @@ studio.clip({
       body.appendChild(blk);
     });
     // metrics
-    const fmt = new Intl.NumberFormat(p.locale === 'en' ? 'en-US' : 'ru-RU', { notation: 'compact', maximumFractionDigits: 1 });
+    const fmt = new Intl.NumberFormat(p.locale === 'ru' ? 'ru-RU' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 });
     const f = (n) => (n < 1000 ? String(Math.round(n)) : fmt.format(n));
     const mt = $('.mt');
     const defs = P === 'reddit'
-      ? [{ k: 'likes', icon: 'up', like: true, extra: svg(I.down) }, { k: 'replies', icon: 'reply' }, { k: null, icon: 'share', label: p.locale === 'en' ? 'Share' : 'Поделиться' }]
+      ? [{ k: 'likes', icon: 'up', like: true, extra: svg(I.down) }, { k: 'replies', icon: 'reply' }, { k: null, icon: 'share', label: p.locale === 'ru' ? 'Поделиться' : 'Share' }]
       : P === 'threads'
         ? [{ k: 'likes', icon: 'heart', like: true }, { k: 'replies', icon: 'reply' }, { k: 'reposts', icon: 'repost' }, { k: null, icon: 'share', label: '' }]
         : [{ k: 'replies', icon: 'reply' }, { k: 'reposts', icon: 'repost' }, { k: 'likes', icon: 'heart', like: true }, { k: 'views', icon: 'views' }];

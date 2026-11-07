@@ -15,7 +15,7 @@ studio.clip({
     const hi = Math.round(p.highlightIndex) - 1;
     const hasHi = hi >= 0 && hi < segs.length;
     const dec = Math.max(0, Math.min(2, Math.round(p.decimals) || 0));
-    const fmtNum = (v) => v.toFixed(dec).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    const fmtNum = (v) => v.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const fmt = (s, k = 1) => (p.valueFormat === 'value' ? `${p.prefix || ''}${fmtNum(s.value * k)}${p.suffix || ''}` : `${fmtNum((s.value / total) * 100 * k)}%`);
 
     // ---------- geometry ----------
@@ -86,7 +86,7 @@ studio.clip({
 
     // centre stat
     const num = $('.center .num'), lab = $('.center .lab');
-    const target = hasHi ? segs[hi] : { label: 'Всего', value: total };
+    const target = hasHi ? segs[hi] : { label: 'Total', value: total };
     lab.textContent = p.centerLabel || target.label;
     const centerVal = (k) => (hasHi ? fmt(target, k) : p.valueFormat === 'value' ? `${p.prefix || ''}${fmtNum(total * k)}${p.suffix || ''}` : `${fmtNum(100 * k)}%`);
     num.textContent = centerVal(1);

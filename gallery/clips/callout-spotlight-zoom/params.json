@@ -1,6 +1,6 @@
 {
   "schema": {
-    "targets": { "type": "textarea", "label": "Targets — one per line: \"x, y, w, h | Title | Body\" in % of frame (add \"| circle\" for a round cutout)", "default": "8, 18, 30, 22 | Загрузка файлов | Перетащите видео прямо в окно проекта\n60, 56, 26, 24 | Экспорт в один клик | MP4, MOV или GIF — до 4K, без водяных знаков" },
+    "targets": { "type": "textarea", "label": "Targets — one per line: \"x, y, w, h | Title | Body\" in % of frame (add \"| circle\" for a round cutout)", "default": "8, 18, 30, 22 | Upload files | Drag videos straight into the project window\n60, 56, 26, 24 | One-click export | MP4, MOV or GIF — up to 4K, no watermarks" },
     "shape": { "type": "select", "label": "Cutout shape", "options": ["rounded", "circle"], "default": "rounded" },
     "labelSide": { "type": "select", "label": "Label side", "options": ["auto", "left", "right", "above", "below"], "default": "auto" },
     "dimOpacity": { "type": "number", "label": "Dim amount", "min": 0.2, "max": 0.95, "step": 0.05, "default": 0.66 },

@@ -1,8 +1,8 @@
 {
   "schema": {
-    "eyebrow": { "type": "text", "label": "Eyebrow label", "default": "Новое приложение" },
-    "headline": { "type": "textarea", "label": "Headline (one line per row)", "default": "Финансы\nпод контролем" },
-    "bullets": { "type": "textarea", "label": "Feature bullets (one per line)", "default": "Аналитика расходов в реальном времени\nУмные копилки и цели\nПереводы без комиссии" },
+    "eyebrow": { "type": "text", "label": "Eyebrow label", "default": "New app" },
+    "headline": { "type": "textarea", "label": "Headline (one line per row)", "default": "Your money,\nunder control" },
+    "bullets": { "type": "textarea", "label": "Feature bullets (one per line)", "default": "Real-time spending insights\nSmart savings goals\nFee-free transfers" },
     "layout": { "type": "select", "label": "Layout", "options": ["left", "right", "center", "fan3"], "default": "left" },
     "screen1": { "type": "text", "label": "Screen 1 image (path relative to the clip, empty = built-in UI)", "default": "" },
     "screen2": { "type": "text", "label": "Screen 2 image", "default": "" },

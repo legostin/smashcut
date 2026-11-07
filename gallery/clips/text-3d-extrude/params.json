@@ -1,6 +1,6 @@
 {
   "schema": {
-    "text": { "type": "textarea", "label": "Text (one line per row)", "default": "ХИТ\nСЕЗОНА!" },
+    "text": { "type": "textarea", "label": "Text (one line per row)", "default": "HIT OF\nTHE SEASON!" },
     "palette": { "type": "select", "label": "Palette", "options": ["retro", "candy", "mint", "sunset", "custom"], "default": "retro" },
     "faceColor": { "type": "color", "label": "Face colour (custom)", "default": "#fff1d6" },
     "extrudeColor": { "type": "color", "label": "Extrude colour (custom)", "default": "#e8432d" },

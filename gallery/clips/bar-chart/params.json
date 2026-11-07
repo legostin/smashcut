@@ -1,8 +1,8 @@
 {
   "schema": {
-    "data": { "type": "textarea", "label": "Data (one \"Label: value\" per line)", "default": "Янв: 42\nФев: 58\nМар: 51\nАпр: 76\nМай: 89\nИюн: 104" },
-    "title": { "type": "text", "label": "Title", "default": "Выручка по месяцам" },
-    "subtitle": { "type": "text", "label": "Subtitle", "default": "млн ₽, первое полугодие 2026" },
+    "data": { "type": "textarea", "label": "Data (one \"Label: value\" per line)", "default": "Jan: 42\nFeb: 58\nMar: 51\nApr: 76\nMay: 89\nJun: 104" },
+    "title": { "type": "text", "label": "Title", "default": "Monthly revenue" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "$M, first half of 2026" },
     "unit": { "type": "text", "label": "Value suffix", "default": "" },
     "decimals": { "type": "number", "label": "Value decimals", "min": 0, "max": 3, "step": 1, "default": 0 },
     "highlight": { "type": "select", "label": "Highlight bar", "options": ["max", "last", "none"], "default": "max" },

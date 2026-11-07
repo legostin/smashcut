@@ -28,7 +28,7 @@ studio.clip({
       return Number.isFinite(lon) && Number.isFinite(lat) ? { name: name.trim(), lon, lat } : null;
     }).filter(Boolean);
     let stops = parse(p.stops);
-    if (stops.length < 2) stops = [{ name: 'Москва', lon: 37.62, lat: 55.75 }, { name: 'Дубай', lon: 55.27, lat: 25.2 }];
+    if (stops.length < 2) stops = [{ name: 'London', lon: -0.13, lat: 51.51 }, { name: 'Dubai', lon: 55.27, lat: 25.2 }];
     let prevLon = null;
     const P = stops.map((s) => {
       let lon = s.lon;
@@ -135,7 +135,9 @@ studio.clip({
       if (unit === 'none') return '';
       const v = unit === 'mi' ? km * 0.621371 : km;
       const r = v >= 1000 ? Math.round(v / 10) * 10 : Math.round(v);
-      return (unit === 'км' ? r.toLocaleString('ru-RU') : r.toLocaleString('en-US')) + (unit === 'км' ? ' км' : unit === 'mi' ? ' mi' : ' km');
+      // legacy Cyrillic "km" option (older projects) keeps Russian formatting; otherwise en-US
+      if (unit === '\u043a\u043c') return r.toLocaleString('ru-RU') + '\u00a0\u043a\u043c';
+      return r.toLocaleString('en-US') + (unit === 'mi' ? '\u00a0mi' : '\u00a0km');
     };
     const distEls = unit === 'none' ? [] : legs.map((l) => mkChip('dist', fmt(l.km)));
     const pinTimes = P.map((_, i) => (i === 0 ? tPin0 : LE[i - 1]));

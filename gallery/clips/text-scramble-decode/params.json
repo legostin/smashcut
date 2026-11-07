@@ -1,9 +1,9 @@
 {
   "schema": {
-    "text": { "type": "text", "label": "Headline", "default": "ДОСТУП РАЗРЕШЁН" },
-    "subtitle": { "type": "text", "label": "Second line (decodes 0.3 s later)", "default": "протокол 7 · канал зашифрован · 256 бит" },
+    "text": { "type": "text", "label": "Headline", "default": "ACCESS GRANTED" },
+    "subtitle": { "type": "text", "label": "Second line (decodes 0.3 s later)", "default": "protocol 7 · channel encrypted · 256-bit" },
     "label": { "type": "text", "label": "Tag above (small)", "default": "[ SYS://AUTH ]" },
-    "charset": { "type": "text", "label": "Scramble glyphs", "default": "01!<>-_\\/[]{}=+*^?#%$&@ЖЩЯФ" },
+    "charset": { "type": "text", "label": "Scramble glyphs", "default": "01!<>-_\\/[]{}=+*^?#%$&@XQZK" },
     "direction": { "type": "select", "label": "Resolve order", "options": ["ltr", "random", "center-out"], "default": "ltr" },
     "decode": { "type": "number", "label": "Decode duration (s)", "min": 0.3, "max": 4, "step": 0.1, "default": 1.2 },
     "exit": { "type": "select", "label": "Exit", "options": ["scramble", "reverse"], "default": "scramble" },

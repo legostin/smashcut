@@ -1,7 +1,7 @@
 {
   "schema": {
-    "wordmark": { "type": "text", "label": "Wordmark", "default": "ПИКСЕЛЬ" },
-    "tagline": { "type": "text", "label": "Tagline (empty = none)", "default": "креативное агентство" },
+    "wordmark": { "type": "text", "label": "Wordmark", "default": "PIXEL" },
+    "tagline": { "type": "text", "label": "Tagline (empty = none)", "default": "creative agency" },
     "logoSvg": { "type": "textarea", "label": "Logo SVG (full <svg> markup or one path 'd' per line; each path = one piece; empty = built-in mark)", "default": "" },
     "palette": { "type": "text", "label": "Shape colours (comma separated, cycled)", "default": "#ff5a36, #2f5bff, #ffc21a, #141414" },
     "shapeCount": { "type": "number", "label": "Shapes (when the logo has a single path)", "min": 4, "max": 8, "step": 1, "default": 6 },

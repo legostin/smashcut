@@ -13,8 +13,8 @@ studio.clip({
     const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
     const step = [1, 2, 2.5, 5, 10].map((k) => k * mag).find((s) => s >= rawStep);
     const top = Math.ceil((maxV || 1) / step) * step;
-    const fmtAxis = (v) => (step < 1 ? v.toFixed(Math.min(3, -Math.floor(Math.log10(step)))) : String(Math.round(v))).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    const fmt = (v) => v.toFixed(p.decimals).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + (p.unit || '');
+    const fmtAxis = (v) => (step < 1 ? v.toFixed(Math.min(3, -Math.floor(Math.log10(step)))) : String(Math.round(v))).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const fmt = (v) => v.toFixed(p.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (p.unit || '');
     const hi = p.highlight === 'max' ? rows.findIndex((r) => r.value === maxV) : p.highlight === 'last' ? rows.length - 1 : -1;
 
     const el = document.createElement('div');

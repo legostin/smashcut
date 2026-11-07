@@ -1,8 +1,8 @@
 {
   "schema": {
-    "quote": { "type": "textarea", "label": "Quote (wrap *words* to highlight)", "default": "Простота — это *высшая степень* изощрённости." },
-    "author": { "type": "text", "label": "Author", "default": "Леонардо да Винчи" },
-    "role": { "type": "text", "label": "Author role / source", "default": "художник, учёный, изобретатель" },
+    "quote": { "type": "textarea", "label": "Quote (wrap *words* to highlight)", "default": "Simplicity is the *ultimate* sophistication." },
+    "author": { "type": "text", "label": "Author", "default": "Leonardo da Vinci" },
+    "role": { "type": "text", "label": "Author role / source", "default": "artist, scientist, inventor" },
     "font": { "type": "select", "label": "Quote font", "options": ["Playfair Display", "Manrope", "Unbounded", "Inter"], "default": "Playfair Display" },
     "size": { "type": "number", "label": "Quote size (0 = auto)", "min": 0, "max": 160, "step": 2, "default": 0 },
     "align": { "type": "select", "label": "Align", "options": ["left", "center"], "default": "left" },

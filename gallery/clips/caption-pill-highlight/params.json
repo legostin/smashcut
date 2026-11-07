@@ -1,6 +1,6 @@
 {
   "schema": {
-    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "Минимализм снова в моде: одна плашка, чистый шрифт и ни одного лишнего движения." },
+    "text": { "type": "textarea", "label": "Fallback text (used when there is no transcript)", "default": "Minimalism is back in style: one pill, a clean font and not a single wasted motion." },
     "font": { "type": "select", "label": "Font", "options": ["Inter", "Manrope", "Unbounded"], "default": "Inter" },
     "size": { "type": "number", "label": "Font size (px at 1080p)", "min": 32, "max": 120, "step": 2, "default": 66 },
     "pillColor": { "type": "color", "label": "Pill colour", "default": "#7c5cff" },

@@ -15,7 +15,7 @@ studio.clip({
     const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
     const step = [1, 2, 2.5, 5, 10].map((k) => k * mag).find((s) => s >= rawStep);
     const lo = Math.floor(lo0 / step) * step, hi = Math.ceil(vmax / step) * step + (vmax % step === 0 ? 0 : 0);
-    const fmt = (v) => v.toFixed(p.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + (p.unit || '');
+    const fmt = (v) => v.toFixed(p.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (p.unit || '');
     const fmtAxis = (v) => (step < 1 ? v.toFixed(Math.min(3, -Math.floor(Math.log10(step)))) : String(Math.round(v)));
 
     const X0 = 150, X1 = 1440 - 90, Y0 = 820 - 110, Y1 = 250; // plot box in card coords

@@ -1,8 +1,8 @@
 {
   "schema": {
-    "data": { "type": "textarea", "label": "Segments — one \"Label: value\" per line", "default": "Подписки: 46\nРеклама: 24\nМаркетплейс: 18\nПартнёрства: 12" },
-    "title": { "type": "text", "label": "Title", "default": "Структура выручки" },
-    "subtitle": { "type": "text", "label": "Subtitle", "default": "2026 год, доля в процентах" },
+    "data": { "type": "textarea", "label": "Segments — one \"Label: value\" per line", "default": "Subscriptions: 46\nAdvertising: 24\nMarketplace: 18\nPartnerships: 12" },
+    "title": { "type": "text", "label": "Title", "default": "Revenue breakdown" },
+    "subtitle": { "type": "text", "label": "Subtitle", "default": "2026, share in percent" },
     "highlightIndex": { "type": "number", "label": "Highlighted segment (1-based, 0 = none)", "min": 0, "max": 12, "step": 1, "default": 1 },
     "centerLabel": { "type": "text", "label": "Centre label (empty = highlighted segment's name)", "default": "" },
     "valueFormat": { "type": "select", "label": "Values shown as", "options": ["percent", "value"], "default": "percent" },

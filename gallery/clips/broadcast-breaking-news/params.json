@@ -1,11 +1,11 @@
 {
   "schema": {
-    "label": { "type": "text", "label": "Block label", "default": "Срочно" },
-    "altLabel": { "type": "text", "label": "Alternate label (flips every few seconds, empty = off)", "default": "Новости" },
-    "headline": { "type": "text", "label": "Headline", "default": "Учёные впервые сняли на видео рождение айсберга" },
-    "subheadline": { "type": "text", "label": "Subheadline", "default": "Ледник Туэйтса потерял фрагмент размером с город" },
-    "location": { "type": "text", "label": "Location tag", "default": "Антарктида" },
-    "liveText": { "type": "text", "label": "LIVE bug text (empty = hide)", "default": "Прямой эфир" },
+    "label": { "type": "text", "label": "Block label", "default": "Breaking" },
+    "altLabel": { "type": "text", "label": "Alternate label (flips every few seconds, empty = off)", "default": "News" },
+    "headline": { "type": "text", "label": "Headline", "default": "Scientists film the birth of an iceberg for the first time" },
+    "subheadline": { "type": "text", "label": "Subheadline", "default": "Thwaites Glacier sheds a chunk the size of a city" },
+    "location": { "type": "text", "label": "Location tag", "default": "Antarctica" },
+    "liveText": { "type": "text", "label": "LIVE bug text (empty = hide)", "default": "Live" },
     "channel": { "type": "text", "label": "Channel logo text (empty = hide)", "default": "24" },
     "startTime": { "type": "text", "label": "Clock start (HH:MM or HH:MM:SS, empty = hide)", "default": "14:32:40" },
     "palette": { "type": "select", "label": "Palette", "options": ["red", "blue", "custom"], "default": "red" },

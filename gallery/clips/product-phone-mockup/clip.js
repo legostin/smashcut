@@ -12,7 +12,7 @@ studio.clip({
       desert: 'linear-gradient(135deg,#a88c72 0%,#ead5bf 16%,#94785f 38%,#dcc3aa 60%,#9a7e65 82%,#cfb69d 100%)',
     };
     const finish = FINISH[p.deviceColor] || FINISH.natural;
-    const rub = (s) => { const n = Math.round(s); return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); };
+    const usd = (s, d = 0) => '$' + Number(s).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
     // ---------- in-phone app screens ----------
     const icon = (c, d) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -20,28 +20,28 @@ studio.clip({
     const tabs = `<div class="tabs"><i style="border-color:${A}"></i><i></i><i></i><i></i></div><div class="home"></div>`;
     const SCREENS = [
       () => `<div class="app">${status}
-        <div class="hd an"><div><small>Добрый день,</small><strong>Анна</strong></div><div class="av"></div></div>
-        <div class="card an" style="background:linear-gradient(135deg,${A},#b8f5d9)"><small>Общий баланс</small><div class="amt">${rub(248560)} ₽</div><span class="pill">+12,4% за месяц</span>
+        <div class="hd an"><div><small>Good afternoon,</small><strong>Anna</strong></div><div class="av"></div></div>
+        <div class="card an" style="background:linear-gradient(135deg,${A},#b8f5d9)"><small>Total balance</small><div class="amt">${usd(24856.4, 2)}</div><span class="pill">+12.4% this month</span>
           <svg width="120" height="46" viewBox="0 0 120 46"><path d="M2 40 C18 36 22 22 38 26 S58 38 72 20 S96 14 118 4" fill="none" stroke="#062016" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg></div>
-        <div class="qa an">${[['Перевод', '<path d="M5 12h14M13 6l6 6-6 6"/>'], ['Оплата', '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>'], ['Копилка', '<circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/>'], ['Ещё', '<circle cx="6" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="18" cy="12" r="1"/>']].map((q) => `<div><i>${icon(A, q[1])}</i>${q[0]}</div>`).join('')}</div>
-        <div class="sec an">Последние операции<span>Все</span></div>
-        ${[['Кофейня', 'Кафе и рестораны', '−340 ₽', '#f7b267'], ['Такси', 'Транспорт', '−612 ₽', '#5b8cff'], ['Зарплата', 'Поступления', '+120 000 ₽', A], ['Супермаркет', 'Продукты', '−2 184 ₽', '#f25c54'], ['Кинотеатр', 'Развлечения', '−780 ₽', '#9b7bff']].map((r) => `<div class="tx an"><i style="background:${r[3]}2e;box-shadow:inset 0 0 0 2px ${r[3]}"></i><div>${r[0]}<span>${r[1]}</span></div><b style="color:${r[2][0] === '+' ? A : '#fff'}">${r[2]}</b></div>`).join('')}
+        <div class="qa an">${[['Send', '<path d="M5 12h14M13 6l6 6-6 6"/>'], ['Pay', '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>'], ['Save', '<circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/>'], ['More', '<circle cx="6" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="18" cy="12" r="1"/>']].map((q) => `<div><i>${icon(A, q[1])}</i>${q[0]}</div>`).join('')}</div>
+        <div class="sec an">Recent activity<span>See all</span></div>
+        ${[['Coffee shop', 'Cafes & restaurants', '−$4.80', '#f7b267'], ['Taxi', 'Transport', '−$12.60', '#5b8cff'], ['Salary', 'Income', '+$4,200.00', A], ['Supermarket', 'Groceries', '−$86.40', '#f25c54'], ['Cinema', 'Entertainment', '−$24.00', '#9b7bff']].map((r) => `<div class="tx an"><i style="background:${r[3]}2e;box-shadow:inset 0 0 0 2px ${r[3]}"></i><div>${r[0]}<span>${r[1]}</span></div><b style="color:${r[2][0] === '+' ? A : '#fff'}">${r[2]}</b></div>`).join('')}
         ${tabs}</div>`,
       () => {
-        const seg = [[32, A, 'Еда'], [24, '#5b8cff', 'Покупки'], [18, '#f7b267', 'Транспорт'], [14, '#f25c54', 'Развлечения'], [12, '#9b7bff', 'Другое']];
+        const seg = [[32, A, 'Food'], [24, '#5b8cff', 'Shopping'], [18, '#f7b267', 'Transport'], [14, '#f25c54', 'Entertainment'], [12, '#9b7bff', 'Other']];
         let cum = 0;
         const arcs = seg.map((s) => { const c = `<circle class="arc" cx="125" cy="125" r="102" fill="none" stroke="${s[1]}" stroke-width="24" pathLength="100" stroke-dasharray="0 100" stroke-dashoffset="${-cum}" data-v="${s[0] - 1.6}" stroke-linecap="butt"/>`; cum += s[0]; return c; }).join('');
-        return `<div class="app">${status}<div class="ttl an">Расходы</div>
-          <div class="seg an"><div>Неделя</div><div class="on">Месяц</div><div>Год</div></div>
+        return `<div class="app">${status}<div class="ttl an">Spending</div>
+          <div class="seg an"><div>Week</div><div class="on">Month</div><div>Year</div></div>
           <div class="ring an"><svg width="250" height="250" viewBox="0 0 250 250" style="transform:rotate(-90deg)"><circle cx="125" cy="125" r="102" fill="none" stroke="#182039" stroke-width="24"/>${arcs}</svg>
-            <div class="c"><b>${rub(64820)} ₽</b><span>за май</span></div></div>
+            <div class="c"><b>${usd(2482)}</b><span>in May</span></div></div>
           ${seg.map((s) => `<div class="lg an"><i style="background:${s[1]}"></i><span>${s[2]}</span><em>${s[0]}%</em></div>`).join('')}
           ${tabs}</div>`;
       },
-      () => `<div class="app">${status}<div class="ttl an">Копилки</div>
-        <div class="tot an">Накоплено всего<b>${rub(412000)} ₽</b></div>
-        ${[['Отпуск в Японии', '204 000 из 300 000 ₽', 68, A], ['Новый ноутбук', '63 000 из 150 000 ₽', 42, '#5b8cff'], ['Подушка безопасности', '145 000 из 170 000 ₽', 85, '#f7b267']].map((g) => `<div class="goal an"><div class="r1"><i style="background:${g[3]}2e;box-shadow:inset 0 0 0 2px ${g[3]}"></i><div>${g[0]}<span>${g[1].replace(/ 000/g, ' 000')}</span></div><em>${g[2]}%</em></div><div class="trk"><b style="width:${g[2]}%;background:${g[3]}"></b></div></div>`).join('')}
-        <div class="cta an" style="background:${A}">+ Новая цель</div>
+      () => `<div class="app">${status}<div class="ttl an">Savings</div>
+        <div class="tot an">Total saved<b>${usd(12820)}</b></div>
+        ${[['Trip to Japan', '$4,080 of $6,000', 68, A], ['New laptop', '$1,260 of $3,000', 42, '#5b8cff'], ['Emergency fund', '$7,480 of $8,800', 85, '#f7b267']].map((g) => `<div class="goal an"><div class="r1"><i style="background:${g[3]}2e;box-shadow:inset 0 0 0 2px ${g[3]}"></i><div>${g[0]}<span>${g[1]}</span></div><em>${g[2]}%</em></div><div class="trk"><b style="width:${g[2]}%;background:${g[3]}"></b></div></div>`).join('')}
+        <div class="cta an" style="background:${A}">+ New goal</div>
         ${tabs}</div>`,
     ];
     const screenHTML = (k) => {

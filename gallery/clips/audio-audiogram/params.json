@@ -1,8 +1,8 @@
 {
   "schema": {
-    "showName": { "type": "text", "label": "Show name", "default": "Подкаст «Вечерний разговор»" },
-    "episodeTitle": { "type": "textarea", "label": "Episode title", "default": "Выпуск 42. Как научиться отдыхать без чувства вины" },
-    "captions": { "type": "textarea", "label": "Caption text (used when the project has no transcript words)", "default": "Мы привыкли думать, что отдых нужно заслужить. Но на самом деле восстановление — это часть работы, а не награда за неё. Попробуйте завтра запланировать паузу так же серьёзно, как встречу." },
+    "showName": { "type": "text", "label": "Show name", "default": "The Evening Talk podcast" },
+    "episodeTitle": { "type": "textarea", "label": "Episode title", "default": "Episode 42. How to rest without feeling guilty" },
+    "captions": { "type": "textarea", "label": "Caption text (used when the project has no transcript words)", "default": "We are used to thinking that rest has to be earned. But in fact, recovery is part of the work, not a reward for it. Tomorrow, try scheduling a break as seriously as a meeting." },
     "useTranscript": { "type": "boolean", "label": "Use project transcript words when available", "default": true },
     "wordsPerPage": { "type": "number", "label": "Caption words per page", "min": 2, "max": 12, "step": 1, "default": 6 },
     "coverImage": { "type": "text", "label": "Cover art (path inside the clip or project asset)", "default": "assets/cover.svg" },

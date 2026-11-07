@@ -1,7 +1,7 @@
 {
   "schema": {
     "from": { "type": "number", "label": "Count from", "min": 1, "max": 10, "step": 1, "default": 3 },
-    "finalText": { "type": "text", "label": "Final word (empty = none)", "default": "Поехали!" },
+    "finalText": { "type": "text", "label": "Final word (empty = none)", "default": "Let's go!" },
     "font": { "type": "select", "label": "Font", "options": ["Unbounded", "Inter", "Manrope", "Bebas Neue"], "default": "Unbounded" },
     "size": { "type": "number", "label": "Number size (px)", "min": 100, "max": 500, "step": 10, "default": 300 },
     "color": { "type": "color", "label": "Number colour", "default": "#ffffff" },

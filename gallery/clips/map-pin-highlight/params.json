@@ -1,12 +1,12 @@
 {
   "schema": {
-    "country": { "type": "text", "label": "Country (ISO code like KAZ / KZ, or English name)", "default": "KAZ" },
+    "country": { "type": "text", "label": "Country (ISO code like USA / US, or English or Russian name)", "default": "USA" },
     "countryLabel": { "type": "text", "label": "Country label (empty = automatic name)", "default": "" },
-    "pinLabel": { "type": "text", "label": "Pin label", "default": "Астана" },
-    "pinLonLat": { "type": "text", "label": "Pin position \"lon, lat\" (empty = country centre)", "default": "71.43, 51.13" },
+    "pinLabel": { "type": "text", "label": "Pin label", "default": "Washington, D.C." },
+    "pinLonLat": { "type": "text", "label": "Pin position \"lon, lat\" (empty = country centre)", "default": "-77.04, 38.91" },
     "country2": { "type": "text", "label": "Second country (optional, highlighted while the camera reframes)", "default": "" },
     "country2Label": { "type": "text", "label": "Second country label (empty = automatic)", "default": "" },
-    "lang": { "type": "select", "label": "Automatic names language", "options": ["ru", "en"], "default": "ru" },
+    "lang": { "type": "select", "label": "Automatic names language", "options": ["en", "ru"], "default": "en" },
     "mapStyle": { "type": "select", "label": "Map style", "options": ["paper", "dark", "flat"], "default": "paper" },
     "accent": { "type": "color", "label": "Highlight colour", "default": "#d7263d" },
     "accent2": { "type": "color", "label": "Second country colour", "default": "#f2a541" },

@@ -3,42 +3,42 @@
     "eyebrow": {
       "type": "text",
       "label": "Eyebrow",
-      "default": "Спикер"
+      "default": "Speaker"
     },
     "name": {
       "type": "text",
       "label": "Name",
-      "default": "Анна Ковалёва"
+      "default": "Anna Kovalenko"
     },
     "role": {
       "type": "text",
       "label": "Role",
-      "default": "Арт-директор, студия «Север»"
+      "default": "Art Director, North Studio"
     },
     "talkLabel": {
       "type": "text",
       "label": "Talk label",
-      "default": "Доклад"
+      "default": "Talk"
     },
     "talkTitle": {
       "type": "textarea",
       "label": "Talk title",
-      "default": "Как дизайн-системы ускоряют видеопродакшн в 10 раз"
+      "default": "How design systems make video production 10× faster"
     },
     "date": {
       "type": "text",
       "label": "Date (big)",
-      "default": "14 дек"
+      "default": "Dec 14"
     },
     "weekday": {
       "type": "text",
       "label": "Date subline",
-      "default": "Суббота"
+      "default": "Saturday"
     },
     "time": {
       "type": "text",
       "label": "Time chip",
-      "default": "19:00 МСК"
+      "default": "7:00 PM EST"
     },
     "event": {
       "type": "text",
@@ -48,12 +48,12 @@
     "location": {
       "type": "text",
       "label": "Location / URL",
-      "default": "Москва · онлайн-трансляция"
+      "default": "New York · live stream"
     },
     "badge": {
       "type": "text",
       "label": "Rotating sticker text",
-      "default": "Вход свободный"
+      "default": "Free entry"
     },
     "photo": {
       "type": "text",

@@ -1,7 +1,7 @@
 {
   "schema": {
-    "text": { "type": "text", "label": "Main text", "default": "открыто" },
-    "subtitle": { "type": "text", "label": "Second line (smaller, second colour)", "default": "всю ночь" },
+    "text": { "type": "text", "label": "Main text", "default": "open" },
+    "subtitle": { "type": "text", "label": "Second line (smaller, second colour)", "default": "all night" },
     "font": { "type": "select", "label": "Font", "options": ["Unbounded", "Manrope", "Playfair Display", "Inter", "JetBrains Mono"], "default": "Unbounded" },
     "size": { "type": "number", "label": "Main size (px)", "min": 60, "max": 320, "step": 2, "default": 210 },
     "color": { "type": "color", "label": "Main neon colour", "default": "#ff3fb4" },

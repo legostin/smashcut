@@ -1,6 +1,6 @@
 {
   "schema": {
-    "text": { "type": "textarea", "label": "Text (one line per row, wrap *words* to highlight)", "default": "Делай видео\n*кодом,*\nа не мышкой" },
+    "text": { "type": "textarea", "label": "Text (one line per row, wrap *words* to highlight)", "default": "Make videos\n*with code,*\nnot a mouse" },
     "eyebrow": { "type": "text", "label": "Eyebrow (small line above)", "default": "Agent Video Studio" },
     "font": { "type": "select", "label": "Font", "options": ["Unbounded", "Manrope", "Inter"], "default": "Unbounded" },
     "uppercase": { "type": "boolean", "label": "Uppercase", "default": true },
