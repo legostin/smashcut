@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { runOk } from '../util.ts';
+import { bin } from '../bin.ts';
 
 /** decode any audio/video file to mono float32 PCM */
 export function decodePcm(file: string, sampleRate = 22050, from?: number, dur?: number): Promise<Float32Array> {
@@ -10,7 +11,7 @@ export function decodePcm(file: string, sampleRate = 22050, from?: number, dur?:
     if (from != null) args.push('-ss', String(from));
     if (dur != null) args.push('-t', String(dur));
     args.push('-i', file, '-vn', '-ac', '1', '-ar', String(sampleRate), '-f', 'f32le', 'pipe:1');
-    const p = spawn('ffmpeg', args);
+    const p = spawn(bin('ffmpeg'), args);
     const chunks: Buffer[] = [];
     let err = '';
     p.stdout.on('data', (d) => chunks.push(d));

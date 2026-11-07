@@ -3,3 +3,4 @@ web/dist/
 gallery/**/preview.png
 gallery/**/preview.wav
 .DS_Store
+dist/

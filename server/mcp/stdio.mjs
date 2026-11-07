@@ -180,7 +180,7 @@ server.registerTool('message_subagent', {
 }, safe(async (a) => text(await api('POST', '/api/agent/subagents/message', a))));
 
 server.registerTool('get_script', {
-  description: 'The video script / storyboard (script.json): brief, production stage (brief→script→storyboard→production→review→export) and scenes [{id,title,start,duration,voiceover,visual,notes,status todo|doing|done,itemIds}]. Read it before producing a video.',
+  description: 'The video script / storyboard (script.json): brief, production stage (brief→script→storyboard→production→review→export) and scenes [{id,title,start,duration,voiceover,visual,notes,status todo|doing|review|done|approved, locked?, itemIds}]. Read it before producing a video. Scenes that are approved or locked belong to the user: do not change them (items, clips, timing, copy) unless the task explicitly names them.',
   inputSchema: {},
 }, safe(async () => text(await api('GET', '/api/script'))));
 
@@ -189,12 +189,12 @@ server.registerTool('set_script', {
   inputSchema: {
     brief: z.string().optional(),
     stage: z.enum(['brief', 'script', 'storyboard', 'production', 'review', 'export']).optional(),
-    scenes: z.array(z.object({ id: z.string().optional(), title: z.string(), start: z.number(), duration: z.number(), voiceover: z.string().optional(), visual: z.string().optional(), notes: z.string().optional(), status: z.enum(['todo', 'doing', 'done']).optional(), itemIds: z.array(z.string()).optional() })).optional(),
+    scenes: z.array(z.object({ id: z.string().optional(), title: z.string(), start: z.number(), duration: z.number(), voiceover: z.string().optional(), visual: z.string().optional(), notes: z.string().optional(), status: z.enum(['todo', 'doing', 'review', 'done', 'approved']).optional(), locked: z.boolean().optional(), itemIds: z.array(z.string()).optional() })).optional(),
   },
 }, safe(async (a) => text(await api('PUT', '/api/script', a))));
 
 server.registerTool('update_scene', {
-  description: 'Patch one scene (title, start, duration, voiceover, visual, notes, status, itemIds). Set status "doing" when you start a scene and "done" when it is finished and verified — the user watches progress live.',
+  description: 'Patch one scene (title, start, duration, voiceover, visual, notes, status, itemIds). Set status "doing" when you start a scene and "done" when it is finished and verified — the user watches progress live. Use "review" when you need the user to decide something about the scene (say what in notes). Never set "approved" or change "locked" — those are the user\'s.',
   inputSchema: { id: z.string(), patch: z.record(z.string(), z.any()) },
 }, safe(async ({ id, patch }) => text(await api('PATCH', `/api/script/scenes/${id}`, patch))));
 
@@ -240,12 +240,18 @@ server.registerTool('list_voices', {
 }, safe(async () => text(await api('GET', '/api/voice/voices'))));
 
 server.registerTool('generate_voiceover', {
-  description: 'Generate voice-over with ElevenLabs and (by default) place it on the audio track. Pass sceneId to voice a scene from the script (uses its voiceover text, starts at the scene start, replaces a previous take of that scene, links the item to the scene) — or text + start. Returns duration and overflow (seconds the voice runs past the scene) so you can re-time scenes. Word timestamps become studio.words for captions automatically.',
+  description: 'Generate voice-over with ElevenLabs and place it on the audio track. ALWAYS voice scenes by sceneId, after preparing each scene\'s speech text (update_scene {speech}) per the studio-voiceover skill: numbers/dates/units/abbreviations as words in the right grammatical form, {display|spoken} so captions keep the digits, stress marks (U+0301) on ambiguous words, [pause 0.4] where a speaker would breathe. The scene take is generated with steady settings and the neighbours\' speech as context, checked for pace (syllables/s per sentence vs the project\'s voice pace) and re-rolled if it speeds up/slows down. Returns duration, overflow (seconds past the scene end) and pace {rate, projectRate, flagged sentences, gaps}. If sentences are still flagged: simplify/split them or add pauses in speech, then regenerate. Word timestamps become studio.words for captions (display text).',
   inputSchema: {
     sceneId: z.string().optional(), text: z.string().optional(), start: z.number().optional(), place: z.boolean().optional(),
     voiceId: z.string().optional(), modelId: z.string().optional(), speed: z.number().min(0.7).max(1.2).optional(), stability: z.number().min(0).max(1).optional(), style: z.number().min(0).max(1).optional(), name: z.string().optional(),
+    takes: z.number().int().min(1).max(4).optional().describe('max takes when the pace check fails (default from settings, 2)'),
   },
 }, safe(async (a) => text(await api('POST', '/api/voice/tts', a))));
+
+server.registerTool('voice_report', {
+  description: 'Pace check of every scene\'s voice-over: syllables/s, the project\'s voice pace, sentences that run fast/slow (>15%), unexpected gaps, and whether the scene has prepared speech text. Use after voicing to find scenes to fix.',
+  inputSchema: {},
+}, safe(async () => text(await api('GET', '/api/voice/report'))));
 
 server.registerTool('approve_permission', {
   description: 'Internal: permission prompt bridge. Claude Code calls this (via --permission-prompt-tool) when an action needs approval; the user approves or denies it in the editor UI.',
@@ -267,5 +273,44 @@ server.registerTool('approve_permission', {
     return reply({ allow: false, message: 'Editor unreachable, permission denied: ' + e.message });
   }
 });
+
+// ---------- media toolkit (server/toolkit; REST /api/toolkit) ----------
+const fmtParam = (k, s) => {
+  const range = s.type === 'enum' ? (s.values || []).join('|') : s.min != null || s.max != null ? `${s.min ?? ''}..${s.max ?? ''}` : '';
+  return `${k}${s.required ? '*' : ''}:${s.type === 'file' ? 'file(' + (s.accept || []).join('/') + ')' : s.type}${s.default !== undefined && s.default !== '' ? '=' + JSON.stringify(s.default) : ''}${range ? ' [' + range + ']' : ''}`;
+};
+
+server.registerTool('list_media_tools', {
+  description: 'Catalog of programmatic media operations you can run with run_media_tool: cut out backgrounds (photo & video), sticker outlines, colour palettes, resize/crop/adjust/convert images, chroma key green screen → transparent WebM/ProRes, trim, speed/reverse/boomerang, reframe to 9:16/1:1, smooth slow-mo, frame extraction, GIF, seamless loops, image/clip morphs, audio extract/normalize (−14 LUFS)/denoise/remove silence/duck music under voice. Compact by default (* = required); pass op for the full spec of one tool.',
+  inputSchema: { category: z.enum(['image', 'video', 'audio', 'convert', 'generate']).optional(), op: z.string().optional().describe('one op id → full JSON spec') },
+}, safe(async ({ category, op }) => {
+  const { ops } = await api('GET', '/api/toolkit');
+  if (op) { const o = ops.find((x) => x.id === op); if (!o) throw new Error(`unknown op ${op}; known: ${ops.map((x) => x.id).join(', ')}`); return text(o); }
+  return text(ops.filter((o) => !category || o.category === category).map((o) =>
+    `${o.id} [${o.category}${o.cost ? ', ' + o.cost : ''}] — ${o.description}${o.limits ? ' Limits: ' + o.limits + '.' : ''}\n  params: ${Object.entries(o.inputs).map(([k, s]) => fmtParam(k, s)).join(', ')}\n  outputs: ${Object.entries(o.outputs).map(([k, s]) => `${k}:${s.kind}${s.optional ? '?' : ''}`).join(', ')}`).join('\n\n')
+    + '\n\nFile params are project-relative paths (media/photo.png; a bare name means media/<name>). Run with run_media_tool {op, params}.');
+}));
+
+server.registerTool('run_media_tool', {
+  description: 'Run one media toolkit operation (see list_media_tools) and wait for it. File params are project paths like media/photo.png. Results are NEW files in media/ (originals are never changed; names derive from the input, e.g. media/photo.nobg.png) and appear in the media library; json outputs come back inline. Identical re-runs return cached results instantly. Image results are shown to the user in your feed — Read the file to look at it yourself. Slow ops (remove_background_video, slowmo) can take minutes.',
+  inputSchema: { op: z.string(), params: z.record(z.string(), z.any()).optional() },
+}, safe(async ({ op, params }) => {
+  let job = await api('POST', '/api/toolkit/run', { op, params: params || {} });
+  const t0 = Date.now();
+  while (job.status === 'running') {
+    if (Date.now() - t0 > 40 * 60 * 1000) return text({ status: 'running', jobId: job.id, note: 'Still running after 40 min — check GET /api/toolkit/jobs/' + job.id });
+    await new Promise((r) => setTimeout(r, 1000));
+    job = await api('GET', `/api/toolkit/jobs/${job.id}`);
+  }
+  if (job.status === 'error') throw new Error(`${op} failed: ${job.error}`);
+  const files = [];
+  const walk = (v) => { if (typeof v === 'string' && v.startsWith('media/')) files.push(v); else if (v && typeof v === 'object') Object.values(v).forEach(walk); };
+  walk(job.outputs);
+  const secs = ((Date.parse(job.endedAt || '') - Date.parse(job.startedAt)) / 1000 || 0).toFixed(1);
+  return text({
+    outputs: job.outputs,
+    note: `${job.cached ? 'Cached result (identical earlier run).' : `Done in ${secs}s.`} ${files.length ? `Files (relative to the project folder): ${files.join(', ')}. To place one: timeline_add {kind:'media', ref:'${(files[0] || '').replace(/^media\//, '')}', start, track?}. Transparent results (PNG / WebM alpha) go on a track above the background.` : ''}`.trim(),
+  });
+}));
 
 await server.connect(new StdioServerTransport());

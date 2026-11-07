@@ -165,6 +165,7 @@ export function Timeline({ project }: { project: Project }) {
         <div className="tl-inner" style={{ width: width + HEADER_W }}>
           <div className="tl-ruler-row">
             <div className="tl-corner" style={{ width: HEADER_W }}>
+              <button className="icon-btn xs" title={t('Collapse to the scene strip (⇧T)')} aria-label={t('Collapse timeline')} onClick={() => actions.setTimelineOpen(false)}><Icon name="chevron" size={12} /></button>
               <AddTrack onAdd={addTrack} />
               <input className="tl-zoom" type="range" min={8} max={400} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} title={t('Zoom (⌘ + wheel)')} />
             </div>

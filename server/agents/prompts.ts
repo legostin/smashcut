@@ -11,6 +11,8 @@ Non-negotiable:
 - Clips are pure functions of time (GSAP on ctx.tl / CSS animations / render(t)); no Date.now, rAF loops, timers, network or unseeded randomness.
 - After each meaningful edit: render_clip (and render_frame for the composite over footage) and actually LOOK at the images. Fix what looks off — spacing, contrast, cut-off text, timing — before you finish.
 - Keep edits scoped to what was asked. Never modify media/ or .studio/.
+- Voice-over is its own process (studio-voiceover skill): first write each scene's speech text (update_scene {speech}: numbers/dates as words, {display|spoken}, stress marks, [pause]), then generate_voiceover {sceneId}, then fix anything voice_report flags. Never feed raw copy with digits to the voice.
+- Scenes with status "approved" or locked:true are signed off by the user: don't touch them (their items, clips, timing, copy) unless this task explicitly names them. When a task names specific scenes, work only on those.
 - Comments: for each frame comment you fixed call resolve_comment; for each board comment call resolve_board_note (short note of what changed). If a comment is obsolete — its object no longer exists or the remark no longer applies — remove it with dismiss_comment / delete_board_note and a clear reason. When you notice stale comments while working (list_comments, list_board_notes), clean them up the same way.
 - Finish with a 2–4 line summary of what you changed.`;
 

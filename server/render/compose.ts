@@ -6,6 +6,7 @@ import type { ExportJob, Item, Project } from '../../shared/types.ts';
 import { cur, pbase } from '../project.ts';
 import { bus } from '../bus.ts';
 import { nid, slug, sha1, runOk } from '../util.ts';
+import { bin, filterComplexFileArgs } from '../bin.ts';
 import { BASE_URL, getSettings } from '../config.ts';
 
 import { withPage } from './browser.ts';
@@ -305,7 +306,7 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
   const out = path.join(outDir, `${slug(o.name)}-${stamp}${alphaOut ? '-alpha' : ''}.${oext}`);
   const filterFile = path.join(store.p('.studio'), `filter-${nid()}.txt`);
   fs.writeFileSync(filterFile, filters.join(';\n'));
-  args.push('-/filter_complex', filterFile, '-map', '[vout]');
+  args.push(...filterComplexFileArgs(filterFile), '-map', '[vout]');
   if (format !== 'gif') args.push('-map', '[aout]');
   const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
   if (format === 'mp4') args.push('-c:v', 'libx264', '-preset', o.quality === 'small' ? 'medium' : 'slow', '-crf', String(QUALITY[o.quality || 'standard']), '-profile:v', 'high', ...tags, '-r', String(fps), '-c:a', 'aac', '-b:a', '256k', '-movflags', '+faststart');
@@ -315,7 +316,7 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
   args.push('-t', D.toFixed(3), out);
 
   await new Promise<void>((resolve, reject) => {
-    const proc = spawn('ffmpeg', args);
+    const proc = spawn(bin('ffmpeg'), args);
     signal.kill = () => proc.kill('SIGKILL');
     let err = '';
     proc.stderr.on('data', (d) => (err += d));

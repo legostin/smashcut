@@ -213,7 +213,8 @@ export interface DesignSystem {
 }
 
 export type StageId = 'brief' | 'script' | 'storyboard' | 'production' | 'review' | 'export';
-export type SceneStatus = 'todo' | 'doing' | 'done';
+/** todo → doing (agent works) → review (waits for the user) / done (agent finished) → approved (user signed off) */
+export type SceneStatus = 'todo' | 'doing' | 'review' | 'done' | 'approved';
 export interface Scene {
   id: string;
   title: string;
@@ -222,10 +223,16 @@ export interface Scene {
   duration: number;
   /** narration / on-screen copy */
   voiceover?: string;
+  /** speech text for the voice (numbers/dates as words, stress marks, [pause 0.5], {display|spoken}) — see server/voice/speech.ts */
+  speech?: string;
+  /** last voice-over check: pace (syllables/s), flagged sentences, takes */
+  vo?: { file: string; rate: number; flagged: number; takes: number; at: string };
   /** what we see: visual idea, motion, style */
   visual?: string;
   notes?: string;
   status: SceneStatus;
+  /** locked by the user: agents must not change this scene (its items, clips, timing, copy) */
+  locked?: boolean;
   /** timeline items that realise this scene */
   itemIds?: string[];
 }
@@ -270,6 +277,8 @@ export interface Settings {
   elevenlabsKey?: string;
   elevenlabsVoiceId?: string;
   elevenlabsModel?: string;
+  /** voice-over: max takes per scene when the pace check fails (each take costs ElevenLabs characters) */
+  voiceMaxTakes?: number;
 }
 
 export interface Voice { id: string; name: string; category?: string; labels?: Record<string, string>; preview?: string; languages?: string[] }
@@ -312,4 +321,82 @@ export type ServerEvent = (
   | { type: 'design'; design: DesignSystem }
   | { type: 'board'; notes: BoardNote[] }
   | { type: 'record'; job: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string } }
+  | { type: 'toolkit-job'; job: ToolkitJob }
   | { type: 'notice'; level: 'info' | 'error'; text: string; key?: string; params?: Record<string, string | number> }) & { pid?: string };
+
+// ---------- media toolkit (server/toolkit) ----------
+// JSON-serialisable descriptions of the programmatic media operations, so the UI can render forms
+// and a node-pipeline engine can type-check connections.
+
+export type ToolMediaKind = 'image' | 'video' | 'audio';
+export type ToolCategory = 'image' | 'video' | 'audio' | 'convert' | 'generate';
+
+/** one input parameter of a toolkit op */
+export interface ToolParamSpec {
+  type: 'file' | 'number' | 'string' | 'boolean' | 'color' | 'enum';
+  label: string;
+  default?: string | number | boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  /** allowed values for type=enum */
+  values?: string[];
+  /** media kinds a type=file param accepts */
+  accept?: ToolMediaKind[];
+  required?: boolean;
+  description?: string;
+}
+
+/** one output of a toolkit op; file outputs are project-relative paths (media/…), json outputs are objects */
+export interface ToolOutputSpec {
+  kind: ToolMediaKind | 'file' | 'json';
+  /** the output's media kind follows this file input (e.g. trim: audio in → audio out) */
+  sameAs?: string;
+  /** not produced for every parameter combination */
+  optional?: boolean;
+  description?: string;
+}
+
+/** the serialisable part of a ToolOp (GET /api/toolkit) */
+export interface ToolOpInfo {
+  id: string;
+  title: string;
+  category: ToolCategory;
+  description: string;
+  inputs: Record<string, ToolParamSpec>;
+  outputs: Record<string, ToolOutputSpec>;
+  /** hard limits worth showing (e.g. max input seconds) */
+  limits?: string;
+  /** rough cost hint for schedulers/UI: fast (< 2 s) · medium · slow (ML / frame interpolation) */
+  cost?: 'fast' | 'medium' | 'slow';
+}
+
+export interface ToolkitJob {
+  id: string;
+  op: string;
+  /** id of the project it runs in */
+  project: string;
+  status: 'running' | 'done' | 'error';
+  progress: number;
+  stage: string;
+  params: Record<string, unknown>;
+  outputs?: Record<string, string | object>;
+  error?: string;
+  /** outputs reused from an identical earlier run */
+  cached?: boolean;
+  startedAt: string;
+  endedAt?: string;
+}
+
+/** GET /api/doctor — one entry per machine requirement (also printed at boot and by `agent-videostudio doctor`) */
+export type DoctorStatus = 'ok' | 'warn' | 'missing';
+export interface DoctorCheck {
+  /** node | ffmpeg | ffprobe | git | browser | claude | codex | home | disk | port */
+  id: string;
+  title: string;
+  status: DoctorStatus;
+  /** what was found (version, path, free space…) */
+  detail: string;
+  /** human instruction or a shell command that fixes it; present when status ≠ ok */
+  fix?: string;
+}

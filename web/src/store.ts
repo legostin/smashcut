@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { t, tn, getLocale, fmtNumber } from './i18n';
-import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script, DesignSystem, BoardNote } from '../../shared/types';
+import type { Project, Comment, ClipInfo, MusicInfo, MediaInfo, Task, Settings, ExportJob, GalleryItem, Timing, ServerEvent, Item, AgentKind, PermissionRequest, Script, DesignSystem, BoardNote, Scene } from '../../shared/types';
 
 export interface SkillInfo { name: string; description: string; origin: string; path: string }
 export interface State {
@@ -26,7 +26,11 @@ export interface State {
   repo?: string;
   script: Script;
   design: DesignSystem;
-  view: 'edit' | 'board';
+  view: View;
+  /** scenes selected on the storyboard / scene strip (ids) */
+  sceneSelection: string[];
+  /** full timeline expanded (otherwise the compact scene strip) */
+  timelineOpen: boolean;
   sideTab: 'agent' | 'script';
   followAgent: boolean;
   lightbox: string | null;
@@ -60,7 +64,8 @@ const initial: State = {
   connected: false, project: null, comments: [], clips: [], music: [], media: [], tasks: [], skills: [], jobs: [], exports: [], gallery: [], recents: [],
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
-  view: (() => { try { return localStorage.getItem('view') === 'board' ? 'board' : 'edit'; } catch { return 'edit'; } })() as 'edit' | 'board', sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
+  view: (() => { try { const v = localStorage.getItem('view'); return v === 'board' || v === 'edit' || v === 'nodes' ? v : 'story'; } catch { return 'story'; } })() as View,
+  sceneSelection: [], timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -143,6 +148,8 @@ function setProjectId(id?: string) {
 export function openInNewTab(id: string) { window.open(`${location.pathname}?p=${id}`, '_blank'); }
 
 // ---------- API ----------
+export type View = 'story' | 'edit' | 'board' | 'nodes';
+
 export async function api<T = any>(method: string, url: string, body?: unknown, opts: { stay?: boolean } = {}): Promise<T> {
   const headers: Record<string, string> = { ...projectHeaders() };
   if (body !== undefined) headers['content-type'] = 'application/json';
@@ -316,7 +323,19 @@ export const actions = {
   followUp(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/message`, { prompt, lang: getLocale() }); },
   interrupt(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/interrupt`, { prompt, lang: getLocale() }); },
   cancelTask(taskId: string) { return api('POST', `/api/tasks/${taskId}/cancel`); },
-  setView(v: 'edit' | 'board') { try { localStorage.setItem('view', v); } catch {} setState({ view: v }); },
+  setView(v: View) { try { localStorage.setItem('view', v); } catch {} setState({ view: v }); },
+  setTimelineOpen(open: boolean) { try { localStorage.setItem('tlopen', open ? '1' : '0'); } catch {} setState({ timelineOpen: open }); },
+  /** select scenes: plain click = only this one (or clear if it was the only one), shift/cmd = toggle */
+  selectScene(id: string, additive: boolean) {
+    setState((s) => {
+      const has = s.sceneSelection.includes(id);
+      if (additive) return { sceneSelection: has ? s.sceneSelection.filter((x) => x !== id) : [...s.sceneSelection, id] };
+      return { sceneSelection: has && s.sceneSelection.length === 1 ? [] : [id] };
+    });
+  },
+  async patchScenes(ids: string[], patch: Partial<Scene>) {
+    for (const id of ids) await api('PATCH', `/api/script/scenes/${id}`, patch);
+  },
   setFollow(v: boolean) { try { localStorage.setItem('follow', v ? '1' : '0'); } catch {} setState({ followAgent: v }); },
   saveScript(patch: Partial<Script>) { setState((s) => ({ script: { ...s.script, ...patch } })); return api('PATCH', '/api/script', patch); },
   patchScene(id: string, patch: Partial<Script['scenes'][number]>) {
@@ -327,6 +346,7 @@ export const actions = {
     const st = getState().settings as any;
     if (!st?.hasElevenlabsKey || !st?.elevenlabsVoiceId) { notify('error', t('Set up ElevenLabs: key and voice in Settings')); setState({ dialog: 'settings' }); throw new Error('no voice'); }
     const r = await api<any>('POST', '/api/voice/tts', { sceneId });
+    if (r.pace?.flagged > 0) notify('error', t('Voice pace is uneven in {n} places — ask the agent to fix the speech text', { n: r.pace.flagged }));
     notify(r.overflow > 0 ? 'error' : 'info', r.overflow > 0 ? t('Voiceover is {s}s longer than the scene — lengthen the scene or shorten the text', { s: fmtNumber(r.overflow, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) }) : t(r.cached ? 'Voiced: {s}s (cached)' : 'Voiced: {s}s', { s: fmtNumber(r.duration, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) }));
     return r;
   },

@@ -3,13 +3,14 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { customAlphabet } from 'nanoid';
+import { resolveCmd } from './bin.ts';
 
 export const nid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 8);
 
 export interface RunResult { code: number; stdout: string; stderr: string }
 export function run(cmd: string, args: string[], opts: { cwd?: string; input?: string | Buffer; env?: NodeJS.ProcessEnv; onStderr?: (s: string) => void } = {}): Promise<RunResult> {
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, args, { cwd: opts.cwd, env: { ...process.env, ...opts.env } });
+    const p = spawn(resolveCmd(cmd), args, { cwd: opts.cwd, env: { ...process.env, ...opts.env } });
     let stdout = '', stderr = '';
     p.stdout.on('data', (d) => (stdout += d));
     p.stderr.on('data', (d) => { stderr += d; opts.onStderr?.(String(d)); });

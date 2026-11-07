@@ -38,6 +38,15 @@ const P: Record<string, string> = {
   grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
   external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
+  lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+  story: 'M3 5h8v6H3zM13 5h8v6h-8zM3 14h8v6H3zM13 14h8v6h-8z',
+  edit: 'M3 5h18v10H3zM3 19h4M10 19h11',
+  canvas: 'M5 3v18M19 3v18M3 5h18M3 19h18',
+  star: 'M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6-5.3-3-5.3 3 1.2-6L3.4 9.3l6-.7z',
+  tool: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z',
+  plug: 'M9 7V3M15 7V3M6 7h12v4a6 6 0 0 1-12 0zM12 17v4',
+  nodes: 'M5 6a2.5 2.5 0 1 0 0 .01M19 12a2.5 2.5 0 1 0 0 .01M5 18a2.5 2.5 0 1 0 0 .01M7.5 6c6 0 4 6 9 6M7.5 18c6 0 4-6 9-6',
+  image: 'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9h.01',
 };
 export function Icon({ name, size = 16 }: { name: string; size?: number }) {
   const filled = ['play', 'pause', 'skipBack', 'stepBack', 'stepFwd', 'send', 'sparkle', 'stop'].includes(name);

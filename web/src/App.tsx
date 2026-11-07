@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScriptPanel } from './components/ScriptPanel';
 import { Board } from './components/Board';
-import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo, actions, projectBase, projectHeaders, openInNewTab } from './store';
+import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo, actions, projectBase, projectHeaders, openInNewTab, type View } from './store';
 import { Viewer } from './components/Viewer';
 import { Timeline } from './components/Timeline';
 import { Library } from './components/Library';
@@ -9,6 +9,8 @@ import { Chat } from './components/Chat';
 import { ItemPanel } from './components/ItemPanel';
 import { Icon } from './components/Icon';
 import { VersionDialog } from './components/VersionDialog';
+import { Storyboard, SelectionBar } from './components/Storyboard';
+import { SceneStrip, useTimelineHotkey } from './components/SceneStrip';
 import type { Project, Settings, Voice } from '../../shared/types';
 import { t, tn, LANGS, setLocale, useLocale, fmtNumber, type Lang } from './i18n';
 
@@ -35,6 +37,8 @@ export function App() {
   const dialog = useStore((s) => s.dialog);
   const view = useStore((s) => s.view);
   const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 240));
+  const tlOpen = useStore((s) => s.timelineOpen);
+  useTimelineHotkey();
   if (!project) return (
     <div className="app-empty">
       {!connected ? <div className="muted">{t('Connecting to the server…')}</div> : <div className="sheet"><ProjectsDialog /></div>}
@@ -42,17 +46,20 @@ export function App() {
     </div>
   );
   return (
-    <div className={'app view-' + view} style={{ gridTemplateRows: view === 'board' ? '48px minmax(0, 1fr) 0px' : `48px minmax(0, 1fr) ${tlHeight}px` }}>
+    <div className={'app view-' + view + (tlOpen ? ' tl-open' : '')} style={{ gridTemplateRows: `52px minmax(0, 1fr) ${tlOpen ? tlHeight + 'px' : '56px'}` }}>
       <TopBar />
+      <Rail />
       <div className="main">
         <div className="stage-swap">
+          <div className={'swap-layer' + (view === 'story' ? '' : ' off')}>{view === 'story' && <Storyboard project={project} />}</div>
           <div className={'swap-layer' + (view === 'edit' ? '' : ' off')}><Viewer project={project} /></div>
           <div className={'swap-layer' + (view === 'board' ? '' : ' off')}>{view === 'board' && <Board project={project} />}</div>
+          {view !== 'board' && <SelectionBar />}
         </div>
         <Side project={project} />
         <Library />
       </div>
-      <div className="bottom">
+      {!tlOpen ? <div className="bottom collapsed"><SceneStrip project={project} /></div> : <div className="bottom">
         <div className="resizer" onPointerDown={(e) => {
           const y0 = e.clientY, h0 = tlHeight;
           const mv = (ev: PointerEvent) => { const h = Math.min(window.innerHeight - 300, Math.max(120, h0 - (ev.clientY - y0))); setTlHeight(h); localStorage.setItem('tlh', String(h)); };
@@ -60,7 +67,7 @@ export function App() {
           window.addEventListener('pointerup', () => window.removeEventListener('pointermove', mv), { once: true });
         }} />
         <Timeline project={project} />
-      </div>
+      </div>}
       <Modal open={dialog === 'projects'}><ProjectsDialog /></Modal>
       <Modal open={dialog === 'settings'}><SettingsDialog /></Modal>
       <Modal open={dialog === 'export'}><ExportDialog /></Modal>
@@ -141,37 +148,57 @@ function TopBar() {
   const project = useStore((s) => s.project)!;
   const connected = useStore((s) => s.connected);
   const job = useStore((s) => s.jobs.find((j) => j.status === 'running'));
-  const libraryOpen = useStore((s) => s.libraryOpen);
+  const running = useStore((s) => s.tasks.filter((x) => x.status === 'running').length);
+  const [family, setFamily] = useState<{ dir: string; label?: string; width: number; height: number; current?: boolean }[]>([]);
   useEffect(() => { document.title = /Agent Video Studio/.test(project.name) ? project.name : `${project.name} — Agent Video Studio`; }, [project.name]);
+  useEffect(() => { api<typeof family>('GET', '/api/variants').then(setFamily).catch(() => setFamily([])); }, [project.name, project.width, project.height]);
+  const openVariant = async (dir: string) => { await api('POST', '/api/projects/open', { path: dir }); await refresh(); time.set(0); setState({ selectedItemId: null, selectedTaskId: null, sceneSelection: [] }); };
   return (
     <header className="topbar">
-      <div className="row gap8">
-        <ViewSwitch />
-        <button className={'tb-btn' + (libraryOpen ? ' on' : '')} onClick={() => setState({ libraryOpen: !libraryOpen })} title={t('Templates, media, assets')}>
-          <Icon name="plus" size={14} /> {t('Add')}
+      <div className="row gap10 minw0">
+        <span className="logo" aria-hidden><Icon name="play" size={13} /></span>
+        <button className="project-name" onClick={() => setState({ dialog: 'projects' })} title={t('Projects')}>
+          <span className={'conn' + (connected ? '' : ' off')} /><span className="ellipsis">{project.name.replace(/ — .*$/, '')}</span><Icon name="chevron" size={12} />
         </button>
+        <nav className="versions" aria-label={t('Versions of this video')}>
+          {(family.length > 1 ? family : [{ dir: '', label: 'Original', width: project.width, height: project.height, current: true }]).map((v) => (
+            <button key={v.dir || 'cur'} className={'ver' + (v.current ? ' on' : '')} onClick={() => !v.current && v.dir && openVariant(v.dir)} title={v.dir}>
+              <span className="ver-ratio" style={{ aspectRatio: `${v.width} / ${v.height}` }} />{v.label === 'Original' || !v.label ? t('Original') : v.label}
+            </button>
+          ))}
+          <button className="ver add" onClick={() => setState({ dialog: 'version' })} title={t('A copy in another language, format or length — the agent adapts it')}><Icon name="plus" size={11} /> {t('version')}</button>
+        </nav>
       </div>
-      <button className="project-name" onClick={() => setState({ dialog: 'projects' })} title={t('Projects')}>
-        <span className={'conn' + (connected ? '' : ' off')} />{project.name}<Icon name="chevron" size={12} />
-      </button>
       <div className="row gap8 end">
+        {running > 0 && <button className="agents-pill" onClick={() => setState({ sideTab: 'agent' })}><span className="pulse" />{tn(running, '{n} agent working', '{n} agents working')}</button>}
         {job && <div className="tb-progress"><div style={{ width: `${Math.round(job.progress * 100)}%` }} /><span>{t('Export {p}%', { p: Math.round(job.progress * 100) })}</span></div>}
-        <button className="icon-btn" title={t('Settings')} onClick={() => setState({ dialog: 'settings' })}><Icon name="gear" size={15} /></button>
-        <button className="btn sm ghost" title={t('A copy in another language, format or length — the agent adapts it')} onClick={() => setState({ dialog: 'version' })}><Icon name="copy" size={13} /> {t('New version')}</button>
-        <button className="btn sm primary" onClick={() => setState({ dialog: 'export' })}>{t('Export')}</button>
+        <button className="btn sm accent" onClick={() => setState({ dialog: 'export' })}>{t('Export')}</button>
       </div>
     </header>
   );
 }
 
-function ViewSwitch() {
+/** left navigation rail: main views + libraries/settings */
+function Rail() {
   const view = useStore((s) => s.view);
+  const libraryOpen = useStore((s) => s.libraryOpen);
+  const libraryTab = useStore((s) => s.libraryTab);
+  const lib = (tab: 'templates' | 'media' | 'project') => setState({ libraryOpen: !(libraryOpen && libraryTab === tab), libraryTab: tab });
+  const V = ({ v, icon, label }: { v: View; icon: string; label: string }) => (
+    <button className={'rail-btn' + (view === v ? ' on' : '')} onClick={() => actions.setView(v)} aria-label={label} data-tip={label}><Icon name={icon} size={19} /></button>
+  );
   return (
-    <div className="view-switch">
-      <span className="vs-thumb" style={{ transform: `translateX(${view === 'edit' ? 0 : 100}%)` }} />
-      <button className={view === 'edit' ? 'on' : ''} onClick={() => actions.setView('edit')}>{t('Edit')}</button>
-      <button className={view === 'board' ? 'on' : ''} onClick={() => actions.setView('board')}>{t('Canvas')}</button>
-    </div>
+    <nav className="rail" aria-label={t('Sections')}>
+      <V v="story" icon="story" label={t('Storyboard')} />
+      <V v="edit" icon="edit" label={t('Edit')} />
+      <V v="board" icon="canvas" label={t('Canvas')} />
+      <span className="rail-sep" />
+      <button className={'rail-btn' + (libraryOpen && libraryTab === 'templates' ? ' on' : '')} onClick={() => lib('templates')} aria-label={t('Templates')} data-tip={t('Templates')}><Icon name="sparkle" size={18} /></button>
+      <button className={'rail-btn' + (libraryOpen && libraryTab === 'media' ? ' on' : '')} onClick={() => lib('media')} aria-label={t('Media')} data-tip={t('Media')}><Icon name="image" size={19} /></button>
+      <button className={'rail-btn' + (libraryOpen && libraryTab === 'project' ? ' on' : '')} onClick={() => lib('project')} aria-label={t('Edit library')} data-tip={t('Transitions, effects, masks')}><Icon name="wand" size={19} /></button>
+      <div className="grow" />
+      <button className="rail-btn" onClick={() => setState({ dialog: 'settings' })} aria-label={t('Settings')} data-tip={t('Settings')}><Icon name="gear" size={18} /></button>
+    </nav>
   );
 }
 

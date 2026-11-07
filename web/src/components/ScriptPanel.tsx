@@ -12,8 +12,8 @@ const STAGES: { id: StageId; label: string }[] = [
   { id: 'review', label: 'Review' },
   { id: 'export', label: 'Export' },
 ];
-const STATUS: Record<Scene['status'], string> = { todo: 'Not started', doing: 'In progress', done: 'Done' };
-const NEXT: Record<Scene['status'], Scene['status']> = { todo: 'doing', doing: 'done', done: 'todo' };
+const STATUS: Record<Scene['status'], string> = { todo: 'Not started', doing: 'In progress', review: 'Needs review', done: 'Done', approved: 'Approved' };
+const NEXT: Record<Scene['status'], Scene['status']> = { todo: 'doing', doing: 'done', review: 'done', done: 'approved', approved: 'todo' };
 
 /** Script & production pipeline: stage stepper, brief, scene cards (storyboard). */
 export function ScriptPanel() {
@@ -93,6 +93,12 @@ function VoiceAll() {
   const scenes = useStore((s) => s.script.scenes);
   const [prog, setProg] = useState<string | null>(null);
   const run = async () => {
+    // without prepared speech text the agent runs the whole voice process (speech → voice → pace check)
+    if (scenes.some((x) => x.voiceover?.trim() && !x.speech?.trim())) {
+      actions.startTask('Voice-over for the whole video following the studio-voiceover skill: write the speech text for every narrated scene (update_scene speech: numbers/dates/units/abbreviations as words in the right form, {display|spoken}, stress marks, pauses), then generate_voiceover per scene in order, then voice_report and fix every flagged sentence or overflow. Finish with the report.');
+      setState({ sideTab: 'agent' });
+      return;
+    }
     const list = scenes.filter((x) => x.voiceover?.trim());
     for (let i = 0; i < list.length; i++) {
       setProg(`${i + 1}/${list.length}`);
@@ -123,6 +129,7 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
         <span className="scene-time mono">{fmtTime(sc.start, fps)}</span>
       </div>
       {(sc.voiceover || open) && <Field label={t('Text')} value={sc.voiceover || ''} onSave={(v) => actions.patchScene(sc.id, { voiceover: v })} open={open} placeholder={t('Voiceover or on-screen text')} />}
+      {(sc.speech || (open && sc.voiceover)) && <Field label={t('Speech (what the narrator says)')} value={sc.speech || ''} onSave={(v) => actions.patchScene(sc.id, { speech: v })} open={open} placeholder={t('Numbers as words, {2026|two thousand twenty-six}, stress á, [pause 0.4]')} />}
       {(sc.visual || open) && <Field label={t('Visual')} value={sc.visual || ''} onSave={(v) => actions.patchScene(sc.id, { visual: v })} open={open} placeholder={t('What is in the frame: composition, motion, style')} />}
       {open && (
         <div className="scene-timing">
@@ -136,6 +143,8 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
         </button>
         <span className="grow" />
         <button className="link" onClick={() => setOpen(!open)}>{open ? t('Collapse') : t('More')}</button>
+        {sc.vo && <span className={'vo-pace' + (sc.vo.flagged ? ' warn' : '')} title={t('Voice pace: {r} syllables/s · {n} flagged', { r: sc.vo.rate.toFixed(1), n: sc.vo.flagged })}>{sc.vo.flagged ? '⚠' : '✓'} {sc.vo.rate.toFixed(1)}</span>}
+        {sc.voiceover?.trim() && !sc.speech && <button className="link" onClick={() => actions.startTask(`Prepare the speech text for scene ${n} "${sc.title}" (id ${sc.id}) following the studio-voiceover skill: update_scene {speech} with numbers/dates as words, {display|spoken}, stress marks and pauses. Don't generate the voice yet; show me the speech text.`)}>{t('Prepare speech')}</button>}
         {sc.voiceover?.trim() && <VoiceButton sc={sc} />}
         <button className="link" onClick={make}>{t('Make')}</button>
         {open && <button className="link danger" onClick={() => actions.deleteScene(sc.id)}>{t('Delete')}</button>}

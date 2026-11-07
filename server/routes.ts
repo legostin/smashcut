@@ -9,6 +9,7 @@ import { ROOT, GALLERY_DIR, LIBRARY_DIR, PROJECTS_DIR, getSettings, saveSettings
 import { cur, hasProject, openProject, ProjectStore, MEDIA_EXT, pbase, runIn, openStores, projectId } from './project.ts';
 import { bus } from './bus.ts';
 import { nid, readJson, writeJson, copyDir, slug, safeJoin, run } from './util.ts';
+import { bin } from './bin.ts';
 import { log as gitLog, restore as gitRestore, exportAt, commit } from './git.ts';
 import { listGallery, galleryThumb, useTemplate, saveToLibrary, deleteFromLibrary } from './gallery.ts';
 import { listSkills, syncSkills } from './skills.ts';
@@ -23,12 +24,15 @@ import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
 import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
+import { voiceScene, cleanupTakes, voicePace } from './voice/voiceover.ts';
+import { paceReport } from './voice/speech.ts';
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
 import { recordWeb, defaultWebActions, recordJobs, emitJob, type RecordJob } from './record/web.ts';
 import { recordScreen, listApps } from './record/screen.ts';
 import { createVariant, family, variantPrompt } from './variants.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
+import { registerToolkitRoutes } from './toolkit/routes.ts'; // media toolkit (server/toolkit)
 
 const SKELETONS = path.join(ROOT, 'server', 'skeletons');
 
@@ -138,7 +142,7 @@ async function renderFrames(times: number[]) {
 async function pixelDiff(a: Buffer, b: Buffer): Promise<number> {
   if (a.equals(b)) return 0;
   const raw = async (png: Buffer) => (await new Promise<Buffer>((resolve, reject) => {
-    const p = spawn('ffmpeg', ['-v', 'error', '-i', 'pipe:0', '-vf', 'scale=480:-1', '-f', 'rawvideo', '-pix_fmt', 'rgba', 'pipe:1']);
+    const p = spawn(bin('ffmpeg'), ['-v', 'error', '-i', 'pipe:0', '-vf', 'scale=480:-1', '-f', 'rawvideo', '-pix_fmt', 'rgba', 'pipe:1']);
     const out: Buffer[] = [];
     p.stdout.on('data', (d) => out.push(d));
     p.on('error', reject);
@@ -520,9 +524,16 @@ export async function registerRoutes(app: FastifyInstance) {
     const sc = b.sceneId ? script.scenes.find((x) => x.id === b.sceneId) : undefined;
     if (b.sceneId && !sc) throw Object.assign(new Error('scene not found'), { statusCode: 404 });
     if (sc) { text = text || sc.voiceover || ''; start = start ?? sc.start; name = name || `scene-${script.scenes.indexOf(sc) + 1}`; if (tid) setFocus(tid, { kind: 'script', id: sc.id, at: Date.now() }); }
-    const i = sc ? script.scenes.indexOf(sc) : -1;
-    const r = await tts({ text, voiceId: b.voiceId, modelId: b.modelId, name, speed: b.speed, stability: b.stability, style: b.style,
-      previousText: i > 0 ? script.scenes[i - 1].voiceover : undefined, nextText: i >= 0 && i < script.scenes.length - 1 ? script.scenes[i + 1].voiceover : undefined });
+    let r: Awaited<ReturnType<typeof tts>>;
+    let pace: Awaited<ReturnType<typeof voiceScene>> | undefined;
+    if (sc && !b.text) {
+      // scene: speech text + takes + pace check (see server/voice/voiceover.ts)
+      pace = await voiceScene(sc, script.scenes, { voiceId: b.voiceId, modelId: b.modelId, name, speed: b.speed, stability: b.stability, style: b.style, maxTakes: b.takes });
+      r = pace.take;
+      cleanupTakes(r.file, pace.takes);
+    } else {
+      r = await tts({ text, voiceId: b.voiceId, modelId: b.modelId, name, speed: b.speed, stability: b.stability, style: b.style });
+    }
     await probeMedia(r.file, true);
     let item: Item | undefined;
     if (b.place !== false && start != null) {
@@ -543,7 +554,21 @@ export async function registerRoutes(app: FastifyInstance) {
       recomputeTiming();
     }
     const overflow = sc ? +(r.duration - sc.duration).toFixed(2) : 0;
-    return { file: r.file, duration: r.duration, words: r.words.length, cached: r.cached, voiceId: r.voiceId, modelId: r.modelId, item, sceneDuration: sc?.duration, overflow: overflow > 0 ? overflow : 0 };
+    if (sc && pace) await patchScene(sc.id, { vo: { file: r.file, rate: pace.report.rate, flagged: pace.report.flagged, takes: pace.takes.length, at: new Date().toISOString() } });
+    return {
+      file: r.file, duration: r.duration, words: r.words.length, cached: r.cached, voiceId: r.voiceId, modelId: r.modelId, item, sceneDuration: sc?.duration, overflow: overflow > 0 ? overflow : 0,
+      ...(pace ? { pace: { rate: pace.report.rate, projectRate: pace.ref, flagged: pace.report.flagged, takes: pace.takes, sentences: pace.report.sentences.filter((x) => x.flag).map((x) => ({ text: x.text, rate: x.rate, dev: x.dev, flag: x.flag })), gaps: pace.report.gaps, usedSpeechText: !!sc?.speech } } : {}),
+    };
+  });
+  /** pace report for the voice-over already generated for each scene (from the saved word timings) */
+  app.get('/api/voice/report', async () => {
+    need();
+    const ref = voicePace();
+    return getScript().scenes.map((sc, n) => {
+      const tr = sc.vo ? readJson<any>(cur().p('.studio', 'transcripts', sc.vo.file + '.json'), null) : null;
+      const rep = tr ? paceReport(tr.spokenWords || tr.words, ref) : null;
+      return { sceneId: sc.id, n: n + 1, title: sc.title, hasSpeech: !!sc.speech, file: sc.vo?.file, rate: rep?.rate, projectRate: ref, flagged: rep?.flagged, sentences: rep?.sentences.filter((x) => x.flag), gaps: rep?.gaps };
+    });
   });
 
   // ---------- design system ----------
@@ -686,7 +711,17 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- script / storyboard ----------
   app.get('/api/script', async () => { need(); return { ...getScript(), stages: STAGES }; });
-  app.put<{ Body: any }>('/api/script', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', at: Date.now() }); return saveScript(req.body as any); });
+  /** agents can't approve or (un)lock scenes — those are the user's; keep them when an agent rewrites the script */
+  const guardScenes = (body: any) => {
+    if (!Array.isArray(body?.scenes)) return body;
+    const prev = new Map(getScript().scenes.map((s) => [s.id, s]));
+    return { ...body, scenes: body.scenes.map((s: any) => {
+      const old = s.id ? prev.get(s.id) : undefined;
+      const { locked, ...rest } = s;
+      return { ...rest, ...(old?.locked ? { locked: true } : {}), status: old?.status === 'approved' ? 'approved' : (rest.status === 'approved' ? 'done' : rest.status) };
+    }) };
+  };
+  app.put<{ Body: any }>('/api/script', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', at: Date.now() }); return saveScript(tid ? guardScenes(req.body) : (req.body as any)); });
   app.patch<{ Body: any }>('/api/script', async (req) => { need(); return saveScript(req.body as any); });
   app.post<{ Body: any }>('/api/script/scenes', async (req) => {
     need();
@@ -696,7 +731,19 @@ export async function registerRoutes(app: FastifyInstance) {
     const scene = { id: 's' + nid(), title: b.title || `Scene ${s.scenes.length + 1}`, start: b.start ?? (last ? last.start + last.duration : 0), duration: b.duration ?? 4, voiceover: b.voiceover || '', visual: b.visual || '', notes: '', status: 'todo' as const, itemIds: [] };
     return saveScript({ scenes: [...s.scenes, scene] });
   });
-  app.patch<{ Params: { id: string }; Body: any }>('/api/script/scenes/:id', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', id: req.params.id, at: Date.now() }); return patchScene(req.params.id, req.body as any); });
+  app.patch<{ Params: { id: string }; Body: any }>('/api/script/scenes/:id', async (req) => {
+    need();
+    const tid = taskOf(req);
+    let body = req.body as any;
+    if (tid) {
+      setFocus(tid, { kind: 'script', id: req.params.id, at: Date.now() });
+      const { locked, ...rest } = body || {};
+      const cur0 = getScript().scenes.find((s) => s.id === req.params.id);
+      body = rest;
+      if (body.status === 'approved' || cur0?.status === 'approved') delete body.status;
+    }
+    return patchScene(req.params.id, body);
+  });
   app.delete<{ Params: { id: string } }>('/api/script/scenes/:id', async (req) => { need(); const s = getScript(); return saveScript({ scenes: s.scenes.filter((x) => x.id !== req.params.id) }); });
 
   // ---------- versions ----------
@@ -818,4 +865,7 @@ export async function registerRoutes(app: FastifyInstance) {
     return { bpm: t.bpm, beats: t.beats.filter(inR).slice(0, 400), bars: t.bars.filter(inR), sections: t.sections, markers: t.markers.filter((m) => inR(m.time)), words: t.words.filter((w) => inR(w.start)).slice(0, 600) };
   });
   void HOME_DIR;
+
+  // ---------- media toolkit (server/toolkit/routes.ts: /api/toolkit, /run, /jobs) ----------
+  await registerToolkitRoutes(app);
 }

@@ -4,7 +4,7 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyWebsocket from '@fastify/websocket';
 import fastifyMultipart from '@fastify/multipart';
-import { ROOT, RUNTIME_DIR, GALLERY_DIR, LIBRARY_DIR, WEB_DIST, PORT, HOST, PROJECTS_DIR, getRecents, BASE_URL } from './config.ts';
+import { RUNTIME_DIR, GALLERY_DIR, LIBRARY_DIR, WEB_DIST, PORT, HOST, PROJECTS_DIR, getRecents, BASE_URL, moduleDir } from './config.ts';
 import { bus } from './bus.ts';
 import { cur, hasProject, openProject, onProjectOpen, ProjectStore, projectCtx, storeById } from './project.ts';
 import { taskProject } from './agents/runner.ts';
@@ -14,11 +14,15 @@ import { loadTasks } from './agents/runner.ts';
 import { renderMusic } from './render/music.ts';
 import { probeMedia } from './media.ts';
 import { recomputeTiming } from './timing.ts';
-import { closeBrowser } from './render/browser.ts';
+import { closeBrowser, ensureBrowser } from './render/browser.ts';
+import { runDoctor, formatDoctor } from './doctor.ts';
+import { exposeBundledBins } from './bin.ts';
 import { resumeExport } from './render/compose.ts';
 import { createDemoProject } from './demo.ts';
 import { onScriptFileChanged } from './script.ts';
 import { onDesignFileChanged } from './design.ts';
+
+exposeBundledBins();
 
 const app = Fastify({ logger: false, bodyLimit: 50 * 1024 * 1024 });
 await app.register(fastifyWebsocket);
@@ -62,10 +66,14 @@ function serveFrom(prefix: string, root: () => string, headers: Record<string, s
 serveFrom('/runtime/', () => RUNTIME_DIR);
 serveFrom('/gallery/', () => GALLERY_DIR);
 serveFrom('/library/', () => LIBRARY_DIR);
-serveFrom('/fonts/', () => path.join(ROOT, 'node_modules', '@fontsource'), { 'cache-control': 'max-age=86400' });
-serveFrom('/vendor/gsap/', () => path.join(ROOT, 'node_modules', 'gsap', 'dist'), { 'cache-control': 'max-age=86400' });
-app.get('/vendor/gsap.min.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').sendFile('gsap.min.js', path.join(ROOT, 'node_modules', 'gsap', 'dist')));
-app.get('/vendor/Tone.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').sendFile('Tone.js', path.join(ROOT, 'node_modules', 'tone', 'build')));
+const FONTS_DIR = path.dirname(moduleDir('@fontsource/inter'));
+const GSAP_DIST = path.join(moduleDir('gsap'), 'dist');
+const TONE_BUILD = path.join(moduleDir('tone'), 'build');
+serveFrom('/fonts/', () => FONTS_DIR, { 'cache-control': 'max-age=86400' });
+serveFrom('/vendor/gsap/', () => GSAP_DIST, { 'cache-control': 'max-age=86400' });
+app.get('/vendor/gsap.min.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').sendFile('gsap.min.js', GSAP_DIST));
+app.get('/vendor/Tone.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').sendFile('Tone.js', TONE_BUILD));
+app.get('/api/doctor', async () => runDoctor({ serverRunning: true }));
 // project files: /p/<projectId>/… (legacy /p/… resolves through the request's project)
 app.get('/p/*', (req, reply) => {
   let rel = decodeURIComponent((req.params as any)['*'] || '');
@@ -141,6 +149,9 @@ openProject(target);
 
 console.log(`\n  Agent Video Studio  →  ${BASE_URL}\n  project: ${cur().dir}\n`);
 if (!fs.existsSync(path.join(WEB_DIST, 'index.html'))) console.log('  (web UI not built — run `npm run dev` and open http://localhost:5173, or `npm start`)\n');
+// first-run checks: compact summary; fetch the render browser in the background if there is none
+runDoctor({ serverRunning: true }).then((checks) => console.log(formatDoctor(checks, { compact: true }) + '\n')).catch(() => {});
+ensureBrowser().catch((e) => console.error('  render browser:', e.message));
 
 // agents run detached and keep working while the editor restarts; only the render browser closes
 const shutdown = async () => { await closeBrowser(); process.exit(0); };

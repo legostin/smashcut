@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AgentEvent, PermissionRequest, Task } from '../../../shared/types';
-import { useStore, setState, actions } from '../store';
+import { useStore, setState, actions, api } from '../store';
+import { sceneChip } from './Storyboard';
 import { Icon } from './Icon';
 import { Markdown } from './Markdown';
 import { t, tn } from '../i18n';
@@ -259,6 +260,54 @@ function PermissionCard({ p }: { p: PermissionRequest }) {
 }
 
 // ---------- composer ----------
+// ---------- @ / # / slash suggestions in the composer ----------
+type Suggest = { key: string; label: string; hint?: string; icon: string; chip?: { key: string; label: string; text: string }; insert?: string };
+const COMMANDS: { cmd: string; hint: string; text: string }[] = [
+  { cmd: 'script', hint: 'Write or rework the script', text: 'Write (or rework) the script: scenes with timing, copy and visual notes.' },
+  { cmd: 'make', hint: 'Make the video scene by scene', text: 'Make the video from the script, scene by scene, and verify each scene with render_frame.' },
+  { cmd: 'design', hint: 'Design system → apply to clips', text: 'Design a design system (palette, type, motion) for this video and apply it to every clip.' },
+  { cmd: 'music', hint: 'Score a track to the script', text: 'Write a music track for the script and sync the scene cuts to its beats.' },
+  { cmd: 'voiceover', hint: 'Voice-over from the script copy', text: 'Prepare the voice-over: turn the script copy into speakable text, generate it per scene and check the pace.' },
+  { cmd: 'captions', hint: 'Animated captions from the voice', text: 'Add animated captions synced to the voice-over words.' },
+  { cmd: 'variations', hint: '3 alternatives to compare', text: 'Make 3 variations of the selection so I can compare them.' },
+  { cmd: 'translate', hint: 'Translate all on-screen text', text: 'Translate all on-screen text and the script to ' },
+  { cmd: 'polish', hint: 'Review and fix rough spots', text: 'Review the whole video frame by frame and fix spacing, contrast, timing and anything that looks off.' },
+];
+function useSuggestions(draft: string, caret: number) {
+  const scenes = useStore((s) => s.script.scenes);
+  const project = useStore((s) => s.project);
+  const clips = useStore((s) => s.clips);
+  const media = useStore((s) => s.media);
+  const [tools, setTools] = useState<{ id: string; title: string; description?: string }[] | null>(null);
+  const m = /(^|\s)([@#/])([^\s@#/]*)$/u.exec(draft.slice(0, caret));
+  const trigger = m ? (m[2] as '@' | '#' | '/') : null;
+  const q = (m?.[3] || '').toLowerCase();
+  useEffect(() => {
+    if (trigger === '/' && tools === null) api<any>('GET', '/api/toolkit').then((r) => setTools(Array.isArray(r) ? r : r?.ops || [])).catch(() => setTools([]));
+  }, [trigger, tools]);
+  const items = useMemo<Suggest[]>(() => {
+    if (!trigger) return [];
+    const match = (s: string) => !q || s.toLowerCase().includes(q);
+    if (trigger === '@') {
+      const out: Suggest[] = [];
+      scenes.forEach((sc, i) => { if (match(`${i + 1} ${sc.title} scene`)) out.push({ key: 'scene:' + sc.id, label: `${t('Scene {n}', { n: i + 1 })} · ${sc.title}`, icon: 'story', chip: sceneChip(sc, i + 1) }); });
+      for (const it of project?.items || []) {
+        if (it.kind !== 'clip' && it.kind !== 'media') continue;
+        const name = it.label || clips.find((c) => c.id === it.ref)?.name || it.ref;
+        if (match(name + ' ' + it.ref)) out.push({ key: 'item:' + it.id, label: name, hint: `${it.start.toFixed(1)}–${(it.start + it.duration).toFixed(1)}s`, icon: it.kind === 'media' ? 'film' : 'sparkle', chip: { key: 'item:' + it.id, label: name, text: `timeline item ${it.id} (${it.kind} “${name}”, ref ${it.ref}, ${it.start.toFixed(2)}–${(it.start + it.duration).toFixed(2)} s, track ${it.track})` } });
+      }
+      return out.slice(0, 12);
+    }
+    if (trigger === '#') {
+      return media.filter((x) => match(x.file)).slice(0, 12).map((x) => ({ key: 'media:' + x.file, label: x.file, hint: x.type, icon: x.type === 'audio' ? 'music' : x.type === 'image' ? 'image' : 'film', chip: { key: 'media:' + x.file, label: x.file, text: `media file media/${x.file} (${x.type}${x.duration ? `, ${x.duration.toFixed(1)} s` : ''}${x.width ? `, ${x.width}×${x.height}` : ''})` } }));
+    }
+    const out: Suggest[] = COMMANDS.filter((c) => match(c.cmd + ' ' + c.hint)).map((c) => ({ key: 'cmd:' + c.cmd, label: '/' + c.cmd, hint: t(c.hint), icon: 'sparkle', insert: c.text }));
+    for (const op of tools || []) if (match(op.id + ' ' + op.title)) out.push({ key: 'tool:' + op.id, label: '/' + op.id.replace(/_/g, '-'), hint: op.title, icon: 'tool', insert: `Use the media tool ${op.id} (run_media_tool) ` });
+    return out.slice(0, 14);
+  }, [trigger, q, scenes, project, clips, media, tools]);
+  return { trigger, items, start: m ? caret - (m[3]?.length || 0) - 1 : -1 };
+}
+
 function Composer({ task }: { task: Task | null }) {
   const draft = useStore((s) => s.chatDraft);
   const agent = useStore((s) => s.agent);
@@ -284,6 +333,24 @@ function Composer({ task }: { task: Task | null }) {
   };
   const missing = agents && !agents[agent];
   const empty = !draft.trim() && !ctx.length;
+  const [caret, setCaret] = useState(0);
+  const [hi, setHi] = useState(0);
+  const [dismissed, setDismissed] = useState('');
+  const sug = useSuggestions(draft, caret);
+  const open = sug.items.length > 0 && dismissed !== draft;
+  useEffect(() => setHi(0), [sug.trigger, sug.items.length]);
+  const pick = (s: Suggest) => {
+    const before = draft.slice(0, sug.start), after = draft.slice(caret);
+    if (s.chip) {
+      setState((st) => ({ chatDraft: (before + after).replace(/\s{2,}/g, ' '), chatContext: st.chatContext.some((c) => c.key === s.chip!.key) ? st.chatContext : [...st.chatContext, s.chip!] }));
+      setCaret(before.length);
+    } else {
+      const text = before + (s.insert || '') + after;
+      setState({ chatDraft: text });
+      setCaret((before + (s.insert || '')).length);
+    }
+    setTimeout(() => { const el = ref.current; if (el) { el.focus(); const pos = s.chip ? before.length : (before + (s.insert || '')).length; el.setSelectionRange(pos, pos); } }, 0);
+  };
   return (
     <div className={'composer' + (busy ? ' busy' : '')}>
       {missing && <div className="composer-warn">{t('CLI “{agent}” not found in PATH', { agent })}</div>}
@@ -294,10 +361,29 @@ function Composer({ task }: { task: Task | null }) {
           ))}
         </div>
       )}
+      {open && (
+        <div className="suggest" role="listbox">
+          <div className="suggest-head">{sug.trigger === '@' ? t('Scenes and clips') : sug.trigger === '#' ? t('Media') : t('Commands and tools')}</div>
+          {sug.items.map((s, i) => (
+            <button key={s.key} role="option" aria-selected={i === hi} className={'suggest-item' + (i === hi ? ' on' : '')} onMouseEnter={() => setHi(i)} onMouseDown={(e) => { e.preventDefault(); pick(s); }}>
+              <Icon name={s.icon} size={13} /><span className="ellipsis">{s.label}</span>{s.hint && <span className="suggest-hint ellipsis">{s.hint}</span>}
+            </button>
+          ))}
+        </div>
+      )}
       <textarea ref={ref} rows={1} value={draft}
-        placeholder={busy ? t('Interrupt the agent: write what to change (Enter)…') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do')}
-        onChange={(e) => setState({ chatDraft: e.target.value })}
-        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} />
+        placeholder={busy ? t('Interrupt the agent: write what to change (Enter)…') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do · @ scenes · # media · / commands')}
+        onChange={(e) => { setState({ chatDraft: e.target.value }); setCaret(e.target.selectionStart ?? e.target.value.length); }}
+        onSelect={(e) => setCaret((e.target as HTMLTextAreaElement).selectionStart ?? 0)}
+        onKeyDown={(e) => {
+          if (open) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); setHi((h) => (h + 1) % sug.items.length); return; }
+            if (e.key === 'ArrowUp') { e.preventDefault(); setHi((h) => (h - 1 + sug.items.length) % sug.items.length); return; }
+            if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pick(sug.items[hi]); return; }
+            if (e.key === 'Escape') { e.preventDefault(); setDismissed(draft); return; }
+          }
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        }} />
       <div className="composer-bar">
         {!task
           ? <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>
@@ -317,5 +403,5 @@ function Composer({ task }: { task: Task | null }) {
 /** append the board selection to the message so the agent knows exactly what is meant */
 export function withContext(text: string, ctx: { label: string; text: string }[]) {
   if (!ctx.length) return text;
-  return `${text || 'Look at the selection and suggest improvements.'}\n\nContext — selected on the canvas:\n${ctx.map((c) => '- ' + c.text).join('\n')}`;
+  return `${text || 'Look at the selection and suggest improvements.'}\n\nContext — what the user selected / referenced (work on exactly these):\n${ctx.map((c) => '- ' + c.text).join('\n')}`;
 }

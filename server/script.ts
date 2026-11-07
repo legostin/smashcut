@@ -30,9 +30,12 @@ function normalize(s: Partial<Script>): Script {
     start: Math.max(0, Number(x.start) || 0),
     duration: Math.max(0.1, Number(x.duration) || 3),
     voiceover: x.voiceover || '',
+    ...(x.speech ? { speech: x.speech } : {}),
+    ...(x.vo ? { vo: x.vo } : {}),
     visual: x.visual || '',
     notes: x.notes || '',
-    status: (['todo', 'doing', 'done'].includes(x.status as string) ? x.status : 'todo') as Scene['status'],
+    status: (['todo', 'doing', 'review', 'done', 'approved'].includes(x.status as string) ? x.status : 'todo') as Scene['status'],
+    ...(x.locked ? { locked: true } : {}),
     itemIds: x.itemIds || [],
   }));
   scenes.sort((a, b) => a.start - b.start);

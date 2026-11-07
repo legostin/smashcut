@@ -59,8 +59,12 @@ export interface TtsOptions {
   speed?: number;
   previousText?: string;
   nextText?: string;
+  /** fixed seed → reproducible takes (different seed = another take) */
+  seed?: number;
+  /** map the voice's word timings to caption words (speech markup → display text) */
+  mapWords?: (words: { text: string; start: number; end: number }[]) => { text: string; start: number; end: number }[];
 }
-export interface TtsResult { file: string; duration: number; words: { text: string; start: number; end: number }[]; cached: boolean; voiceId: string; modelId: string }
+export interface TtsResult { file: string; duration: number; words: { text: string; start: number; end: number }[]; spokenWords: { text: string; start: number; end: number }[]; cached: boolean; voiceId: string; modelId: string }
 
 /** generate speech; cached by (text, voice, model, settings) */
 export async function tts(o: TtsOptions): Promise<TtsResult> {
@@ -72,27 +76,30 @@ export async function tts(o: TtsOptions): Promise<TtsResult> {
   const text = o.text.trim();
   if (!text) throw uerr('Nothing to voice: the text is empty');
   const voiceSettings = { stability: o.stability ?? 0.45, similarity_boost: o.similarity ?? 0.8, style: o.style ?? 0.15, use_speaker_boost: true, ...(o.speed ? { speed: o.speed } : {}) };
-  const key = sha1(JSON.stringify({ text, voiceId, modelId, voiceSettings, p: o.previousText, n: o.nextText }));
+  const key = sha1(JSON.stringify({ text, voiceId, modelId, voiceSettings, p: o.previousText, n: o.nextText, seed: o.seed }));
   const file = `vo-${slug(o.name || text.slice(0, 32))}-${key.slice(0, 6)}.mp3`;
   const dst = store.p('media', file);
   const trFile = store.p('.studio', 'transcripts', file + '.json');
   if (fs.existsSync(dst) && fs.existsSync(trFile)) {
     const tr = JSON.parse(fs.readFileSync(trFile, 'utf8'));
-    return { file, duration: tr.duration, words: tr.words, cached: true, voiceId, modelId };
+    return { file, duration: tr.duration, words: tr.words, spokenWords: tr.spokenWords || tr.words, cached: true, voiceId, modelId };
   }
   const body: any = { text, model_id: modelId, voice_settings: voiceSettings };
   if (o.previousText) body.previous_text = o.previousText;
   if (o.nextText) body.next_text = o.nextText;
+  if (o.seed != null) body.seed = o.seed;
   const res = await call(`/text-to-speech/${encodeURIComponent(voiceId)}/with-timestamps?output_format=mp3_44100_128`, { method: 'POST', body: JSON.stringify(body) });
   const j: any = await res.json();
   if (!j.audio_base64) throw uerr('ElevenLabs returned an empty response');
   fs.mkdirSync(path.dirname(dst), { recursive: true });
   fs.writeFileSync(dst, Buffer.from(j.audio_base64, 'base64'));
   const al = j.alignment || j.normalized_alignment;
-  const words = al ? alignmentToWords(al.characters, al.character_start_times_seconds, al.character_end_times_seconds) : [];
+  const spokenWords = al ? alignmentToWords(al.characters, al.character_start_times_seconds, al.character_end_times_seconds) : [];
+  const words = o.mapWords ? o.mapWords(spokenWords) : spokenWords;
   const duration = al?.character_end_times_seconds?.length ? al.character_end_times_seconds[al.character_end_times_seconds.length - 1] : 0;
-  writeJson(trFile, { text, words, model: `elevenlabs:${modelId}`, voiceId, duration });
-  return { file, duration, words, cached: false, voiceId, modelId };
+  // `words` (display text) feed captions via studio.words; `spokenWords` are what the voice actually said
+  writeJson(trFile, { text, words, spokenWords, model: `elevenlabs:${modelId}`, voiceId, duration });
+  return { file, duration, words, spokenWords, cached: false, voiceId, modelId };
 }
 
 export function alignmentToWords(chars: string[], starts: number[], ends: number[]) {
