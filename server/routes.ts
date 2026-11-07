@@ -14,7 +14,7 @@ import { listSkills, syncSkills } from './skills.ts';
 import { probeMedia, analyzeMedia, transcribeMedia } from './media.ts';
 import { renderMusic, musicPeaks } from './render/music.ts';
 import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
-import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport } from './render/compose.ts';
+import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport, getManifest } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
 import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus } from './agents/runner.ts';
@@ -22,6 +22,7 @@ import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
 import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
+import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
 
@@ -505,6 +506,15 @@ export async function registerRoutes(app: FastifyInstance) {
   // ---------- design system ----------
   app.get('/api/design', async () => (hasProject() ? getDesign() : { colors: [], type: [], motion: [], spacing: [] }));
   app.put<{ Body: any }>('/api/design', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'design', at: Date.now() }); return saveDesign(req.body as any); });
+
+  app.get('/api/fx', async () => ({ transitions: TRANSITIONS, effects: EFFECTS.map((e) => ({ type: e.type, name: e.name, group: e.group, params: e.params.map((p) => ({ key: p.key, min: p.min, max: p.max, default: p.def })), options: e.options })), masks: MASKS, blends: BLENDS.map((b) => b.mode) }));
+
+  // ---------- renderer manifests (headless Player) ----------
+  app.get<{ Params: { id: string } }>('/api/render/manifest/:id', async (req) => {
+    const m = getManifest(req.params.id);
+    if (!m) throw Object.assign(new Error('manifest not found'), { statusCode: 404 });
+    return m;
+  });
 
   // ---------- board (canvas) frames ----------
   app.get<{ Querystring: { t: string; w?: string } }>('/api/board/frame', async (req, reply) => {

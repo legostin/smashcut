@@ -2,17 +2,19 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { GalleryItem } from '../../../shared/types';
 import { useStore, setState, actions, time, api, notify, refreshGallery } from '../store';
 import { Icon } from './Icon';
+import { TransitionsGrid, EffectsGrid, MasksGrid } from './FxLibrary';
+import { TRANSITIONS, EFFECTS, MASKS } from '../../../shared/fx';
 
 const close = () => setState({ libraryOpen: false });
 
 const CATEGORY: Record<string, string> = {
   titles: 'Титры', 'lower-thirds': 'Плашки', captions: 'Субтитры', infographics: 'Инфографика', callouts: 'Выноски',
-  logos: 'Логотипы', transitions: 'Переходы', backgrounds: 'Фоны', social: 'Соцсети', product: 'Продукт и UI', maps: 'Карты',
+  logos: 'Логотипы', transitions: 'Графические переходы', backgrounds: 'Фоны', social: 'Соцсети', product: 'Продукт и UI', maps: 'Карты',
   audio: 'Подкасты и аудио', broadcast: 'Новости и эфир', 'text-effects': 'Текстовые эффекты', custom: 'Своё', other: 'Другое',
 };
 const catLabel = (c?: string) => CATEGORY[c || 'other'] || (c ? c[0].toUpperCase() + c.slice(1) : 'Другое');
 
-type Section = { kind: 'graphics'; cat: string } | { kind: 'music' } | { kind: 'mine' } | { kind: 'media' } | { kind: 'project' };
+type Section = { kind: 'graphics'; cat: string } | { kind: 'music' } | { kind: 'mine' } | { kind: 'media' } | { kind: 'project' } | { kind: 'transitions' } | { kind: 'effects' } | { kind: 'masks' };
 const same = (a: Section, b: Section) => a.kind === b.kind && (a.kind !== 'graphics' || a.cat === (b as any).cat);
 
 /** Big modal library: categories on the left, a roomy grid of live previews on the right. */
@@ -47,7 +49,7 @@ export function Library() {
       {icon && <Icon name={icon} size={14} />}<span className="grow ellipsis">{label}</span>{count != null && <span className="lib-count">{count}</span>}
     </button>
   );
-  const searchable = section.kind === 'graphics' || section.kind === 'music' || section.kind === 'mine';
+  const searchable = ['graphics', 'music', 'mine', 'transitions', 'effects'].includes(section.kind);
 
   return (
     <div className={'modal-back lib-back' + (open ? ' open' : '')} onPointerDown={(e) => e.target === e.currentTarget && close()}>
@@ -56,6 +58,10 @@ export function Library() {
           <div className="lib-nav-title">Графика</div>
           {nav({ kind: 'graphics', cat: 'all' }, 'Все шаблоны', clips.length)}
           {cats.map(([c, n]) => <div key={c}>{nav({ kind: 'graphics', cat: c }, catLabel(c), n)}</div>)}
+          <div className="lib-nav-title">Монтаж</div>
+          {nav({ kind: 'transitions' }, 'Переходы', TRANSITIONS.length, 'layers')}
+          {nav({ kind: 'effects' }, 'Эффекты и цвет', EFFECTS.length, 'sparkle')}
+          {nav({ kind: 'masks' }, 'Маски', MASKS.length, 'grid')}
           <div className="lib-nav-title">Звук</div>
           {nav({ kind: 'music' }, 'Музыка', musicCount, 'music')}
           <div className="lib-nav-title">Моё</div>
@@ -67,7 +73,7 @@ export function Library() {
           <header className="lib-top">
             {searchable
               ? <div className="lib-searchbox"><Icon name="search" size={14} /><input autoFocus placeholder="Поиск по шаблонам" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-              : <div className="lib-heading">{section.kind === 'media' ? 'Медиафайлы' : 'В этом проекте'}</div>}
+              : <div className="lib-heading">{section.kind === 'media' ? 'Медиафайлы' : section.kind === 'masks' ? 'Маски' : 'В этом проекте'}</div>}
             <button className="icon-btn" onClick={close} title="Закрыть (Esc)"><Icon name="x" size={15} /></button>
           </header>
           <div className="lib-scroll">
@@ -76,8 +82,11 @@ export function Library() {
             {section.kind === 'music' && <MusicList items={gallery.filter((g) => g.kind === 'music')} q={q} />}
             {section.kind === 'media' && <Media />}
             {section.kind === 'project' && <ProjectAssets />}
+            {section.kind === 'transitions' && <TransitionsGrid q={q} />}
+            {section.kind === 'effects' && <EffectsGrid q={q} />}
+            {section.kind === 'masks' && <MasksGrid />}
           </div>
-          <footer className="lib-foot">Клик — добавить на плейхед ({fmt(time.get())})</footer>
+          <footer className="lib-foot">{['transitions', 'effects', 'masks'].includes(section.kind) ? 'Клик — применить к выбранному клипу · переход можно перетащить на край клипа' : `Клик — добавить на плейхед (${fmt(time.get())})`}</footer>
         </section>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Item, ParamSpec, Project } from '../../../shared/types';
 import { useStore, actions, api, setState, notify, refreshGallery, getState } from '../store';
 import { Icon } from './Icon';
+import { FxPanel } from './FxPanel';
 
 /** Contextual panel for the selected timeline item: the few controls that matter + "ask the agent". */
 export function ItemPanel({ item, project }: { item: Item; project: Project }) {
@@ -51,6 +52,8 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
           {visual && <Slider label="Прозрачность" value={item.opacity ?? 1} max={1} onChange={(v) => up({ opacity: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
           {audible && <Slider label="Громкость" value={item.volume ?? 1} max={1.5} onChange={(v) => up({ volume: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
         </Section>
+
+        {item.kind !== 'music' && <FxPanel item={item} />}
 
         {(item.kind === 'clip' || item.kind === 'music') && <History path={item.kind === 'clip' ? `clips/${item.ref}` : `music/${item.ref}`} clipId={item.kind === 'clip' ? item.ref : undefined} />}
       </div>

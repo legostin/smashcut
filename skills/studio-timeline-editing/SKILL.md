@@ -24,3 +24,19 @@ If you do edit project.json directly, keep it valid JSON and keep ids stable.
 - **Check the cut:** `render_frame {times:[...]}` at boundaries (item starts/ends, section changes).
 
 Export is done by the user from the UI (or POST /api/export); you can't watch video — verify with frames.
+
+## Transitions, effects, masks (item.fx)
+`list_fx` gives the catalog. Set `fx` on any visual item via `timeline_update {id, patch:{fx:{...}}}` (whole object):
+```json
+{ "in":  { "type": "dip-white", "duration": 0.4 },
+  "out": { "type": "whip-left", "duration": 0.35 },
+  "effects": [ { "type": "look", "params": { "preset": "teal-orange", "amount": 0.8 } },
+               { "type": "vignette", "params": { "amount": 0.5, "size": 0.6 } },
+               { "type": "ken-burns", "params": { "from": 1, "to": 1.12, "x": -3, "y": -2 } } ],
+  "mask": { "shape": "rounded", "x": 0.1, "y": 0.1, "w": 0.8, "h": 0.8, "radius": 0.05, "feather": 0 },
+  "blend": "screen" }
+```
+- Cut between two shots: `out` on A + `in` on B with the same type/duration; for a dissolve make B start `duration` seconds before A ends (overlap on another track or the same track).
+- Fades/dips also fade the item's audio. Ken Burns brings stills to life; `look` presets: teal-orange, film, noir, warm, cool, vivid, fade, cyber.
+- Rhythm: transitions 0.25–0.6 s; land them on beats (`get_timing`). Don't stack many different transition types in one video — pick 1–2 that fit the style.
+- Verify with `render_frame` mid-transition (it uses the same renderer as export).

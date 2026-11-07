@@ -11,5 +11,5 @@ export default defineConfig({
     port: 5173,
     proxy: Object.fromEntries([...proxied.map((p) => [p, { target, changeOrigin: false }]), ['/ws', { target: target.replace('http', 'ws'), ws: true }]]),
   },
-  build: { outDir: 'dist', emptyOutDir: true, chunkSizeWarningLimit: 2000 },
+  build: { outDir: 'dist', emptyOutDir: true, chunkSizeWarningLimit: 2000, rollupOptions: { input: { main: 'web/index.html', render: 'web/render.html' } } },
 });

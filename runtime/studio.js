@@ -318,7 +318,11 @@
   window.addEventListener('message', async (e) => {
     const m = e.data;
     if (!m || !m.__studio) return;
-    if (m.type === 'seek') { if (isReady) applyTime(m.t); }
+    if (m.type === 'seek') {
+      if (isReady) applyTime(m.t);
+      // render mode: confirm once this time is fully applied (incl. <video> seeks inside the clip)
+      if (m.ack != null) { if (isReady) await seekVideos(m.t); post({ type: 'seeked', ack: m.ack }); }
+    }
     if (m.type === 'input') {
       input = { ...input, ...m.input };
       if (!isReady) return;
@@ -339,7 +343,7 @@
 
   // safety: if clip never calls studio.clip()
   setTimeout(() => {
-    if (!def) { reportError('clip.js never called studio.clip({...}) — syntax error or exception at load?'); def = { duration: 1 }; isReady = true; readyResolve(); }
+    if (!def) { reportError('clip.js never called studio.clip({...}) — syntax error or exception at load?'); def = { duration: 1 }; isReady = true; readyResolve(); post({ type: 'ready', duration: null, schema, errors }); }
   }, 4000);
   void nativeRaf; void nativeNow;
 })();

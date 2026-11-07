@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-if (!fs.existsSync(path.join(root, 'web', 'dist', 'index.html'))) {
+if (!fs.existsSync(path.join(root, 'web', 'dist', 'index.html')) || !fs.existsSync(path.join(root, 'web', 'dist', 'render.html'))) {
   console.log('Building the editor UI…');
   const r = spawnSync('npx', ['vite', 'build'], { cwd: root, stdio: 'inherit' });
   if (r.status !== 0) process.exit(r.status || 1);

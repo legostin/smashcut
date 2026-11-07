@@ -4,11 +4,12 @@ import { spawn } from 'node:child_process';
 import type { ExportJob, Item, Project } from '../../shared/types.ts';
 import { cur } from '../project.ts';
 import { bus } from '../bus.ts';
-import { nid, slug } from '../util.ts';
-import { clipUrl, itemInput, renderClipFrames, renderItemSequence } from './clips.ts';
+import { nid, slug, sha1, runOk } from '../util.ts';
+import { BASE_URL, getSettings } from '../config.ts';
+
 import { withPage } from './browser.ts';
 import { renderMusic } from './music.ts';
-import { extractVideoFrame } from '../media.ts';
+
 
 const VISUAL = new Set(['video', 'graphics']);
 
@@ -26,48 +27,78 @@ export function visualLayers(p: Project, t?: number): Item[] {
 function mediaFile(i: Item) { return i.kind === 'generated' ? i.generated!.output! : i.ref; }
 function isImage(f: string) { return /\.(png|jpe?g|webp|gif|svg)$/i.test(f); }
 
-/** composite the whole timeline at project time t → PNG buffer (what the viewer shows) */
-export async function compositeFrame(t: number): Promise<{ png: Buffer; errors: string[] }> {
+// ---------------- browser compositor (same Player as the editor) ----------------
+interface Manifest { project: Project; frames: Record<string, { base: string; srcIn: number; fps: number; count: number }>; transparent?: boolean; clips: unknown[]; music: unknown[]; media: unknown[] }
+const manifests = new Map<string, Manifest>();
+export function getManifest(id: string) { return manifests.get(id); }
+
+/** extract JPEG frames of a video item for the window [srcIn, srcIn+dur] (cached by content) */
+async function videoFrames(it: Item, p: Project, srcIn: number, dur: number) {
   const store = cur();
-  const p = store.project;
-  const layers = visualLayers(p, t);
-  const errors: string[] = [];
-  const imgs: { src: string; item: Item; full: boolean }[] = [];
-  for (const it of layers) {
-    const local = t - it.start + it.in;
-    if (it.kind === 'clip') {
-      const r = await renderClipFrames(clipUrl(it.ref, itemInput(it, p)), { width: p.width, height: p.height }, [local]);
-      errors.push(...r.errors.map((e) => `[${it.ref}] ${e}`));
-      imgs.push({ src: 'data:image/png;base64,' + r.frames[0].toString('base64'), item: it, full: true });
-    } else {
-      const f = mediaFile(it);
-      const src = store.p('media', f);
-      if (!fs.existsSync(src)) continue;
-      if (isImage(f)) {
-        const ext = path.extname(f).slice(1).replace('jpg', 'jpeg').replace('svg', 'svg+xml');
-        imgs.push({ src: `data:image/${ext};base64,` + fs.readFileSync(src).toString('base64'), item: it, full: false });
-      } else {
-        const out = store.p('.studio', 'frames', `v-${nid()}.png`);
-        try {
-          await extractVideoFrame(f, local, out);
-          imgs.push({ src: 'data:image/png;base64,' + fs.readFileSync(out).toString('base64'), item: it, full: false });
-        } catch (e) { errors.push((e as Error).message); }
-        fs.rmSync(out, { force: true });
-      }
-    }
+  const f = mediaFile(it);
+  const src = store.p('media', f);
+  const st = fs.statSync(src);
+  const key = sha1(JSON.stringify([f, st.mtimeMs, +srcIn.toFixed(3), +dur.toFixed(3), p.fps, p.width, p.height]));
+  const rel = `.studio/cache/vframes/${key}`;
+  const dir = store.p(rel);
+  const doneFile = path.join(dir, '.done');
+  if (!fs.existsSync(doneFile)) {
+    fs.mkdirSync(dir, { recursive: true });
+    await runOk('ffmpeg', ['-y', '-v', 'error', '-ss', srcIn.toFixed(3), '-t', Math.max(1 / p.fps, dur).toFixed(3), '-i', src,
+      '-vf', `fps=${p.fps},scale=${p.width}:${p.height}:force_original_aspect_ratio=decrease:flags=lanczos`, '-q:v', '2', '-start_number', '1', path.join(dir, '%06d.jpg')]);
+    fs.writeFileSync(doneFile, '1');
   }
-  const png = await withPage({ width: p.width, height: p.height }, async (page) => {
-    const html = `<body style="margin:0;width:${p.width}px;height:${p.height}px;overflow:hidden;position:relative;background:${p.background}">${imgs.map(({ src, item, full }) => {
-      const tr = item.transform || {};
-      const style = full
-        ? `position:absolute;inset:0;width:100%;height:100%;opacity:${item.opacity ?? 1}`
-        : `position:absolute;left:0;top:0;width:100%;height:100%;object-fit:${tr.fit || 'contain'};transform:translate(${tr.x || 0}px,${tr.y || 0}px) scale(${tr.scale ?? 1});opacity:${item.opacity ?? 1}`;
-      return `<img style="${style}" src="${src}">`;
-    }).join('')}</body>`;
-    await page.setContent(html, { waitUntil: 'load' });
-    return page.screenshot({ type: 'png' });
+  const count = fs.readdirSync(dir).filter((x) => x.endsWith('.jpg')).length;
+  return { base: `/p/${rel}`, srcIn, fps: p.fps, count };
+}
+
+/** build a render manifest for the time window [from, to] */
+async function makeManifest(from: number, to: number, opts: { transparent?: boolean } = {}): Promise<string> {
+  const store = cur();
+  const p0 = store.project;
+  // transparent output = graphics only (to composite over footage elsewhere)
+  // only layers that touch the window are mounted in the renderer (fast single frames)
+  const touches = (i: Item) => i.start < to + 0.25 && i.start + i.duration > from - 0.25;
+  const project: Project = { ...p0, items: p0.items.filter((i) => touches(i) && (!opts.transparent || i.kind === 'clip')) };
+  const frames: Manifest['frames'] = {};
+  for (const it of visualLayers(project)) {
+    if (it.kind !== 'media' && it.kind !== 'generated') continue;
+    const f = mediaFile(it);
+    if (isImage(f)) continue;
+    const s = Math.max(it.start, from), e = Math.min(it.start + it.duration, to);
+    if (e < s) continue;
+    frames[it.id] = await videoFrames(it, project, it.in + (s - it.start), e - s + 1 / project.fps);
+  }
+  const id = nid();
+  manifests.set(id, { project, frames, transparent: opts.transparent, clips: store.listClips(), music: store.listMusic(), media: store.listMedia() });
+  setTimeout(() => manifests.delete(id), 6 * 3600_000);
+  return id;
+}
+
+/** open the renderer page for a manifest and run fn with a frame grabber */
+async function withRenderer<T>(manifestId: string, size: { width: number; height: number }, fn: (seek: (t: number) => Promise<void>, grab: (fmt: 'png' | 'jpeg') => Promise<Buffer>, errors: string[]) => Promise<T>): Promise<T> {
+  return withPage(size, async (page, errors) => {
+    await page.goto(`${BASE_URL}/render.html?m=${manifestId}`, { waitUntil: 'load', timeout: 60000 });
+    await page.waitForFunction(() => (window as any).__render, null, { timeout: 20000 });
+    await page.evaluate(() => (window as any).__render.ready);
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
+    const grab = async (fmt: 'png' | 'jpeg') => Buffer.from((await cdp.send('Page.captureScreenshot', { format: fmt, quality: fmt === 'jpeg' ? 95 : undefined, optimizeForSpeed: true, fromSurface: true, captureBeyondViewport: false })).data, 'base64');
+    const seek = (t: number) => page.evaluate((t) => (window as any).__render.seek(t), t);
+    return fn(seek, grab, errors);
   });
-  return { png, errors };
+}
+
+/** composite the whole timeline at project time t → PNG (exactly what the viewer and export show) */
+export async function compositeFrame(t: number): Promise<{ png: Buffer; errors: string[] }> {
+  const p = cur().project;
+  const id = await makeManifest(t, t + 1 / p.fps);
+  try {
+    return await withRenderer(id, { width: p.width, height: p.height }, async (seek, grab, errors) => {
+      await seek(t);
+      return { png: await grab('png'), errors };
+    });
+  } finally { manifests.delete(id); }
 }
 
 /** grid of images with captions → PNG (used for contact sheets, before/after) */
@@ -174,106 +205,82 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
   const format: ExportFormat = o.format || 'mp4';
   const alphaOut = (format === 'prores' || format === 'webm') && !!o.transparent;
   const N = Math.max(1, Math.min(16, Math.round(o.motionBlur || 1)));
+  const shutter = 0.5;
   const scale = o.scale && o.scale > 0 ? o.scale : 1;
   const D = Math.max(1 / p.fps, to - from);
-  const W = p.width, H = p.height, fps = format === 'gif' ? Math.min(p.fps, 20) : p.fps;
+  const fps = p.fps;
   const check = () => { if (signal.aborted) throw new Error('cancelled'); };
 
-  // clip an item to the export window
-  const win = (it: Item) => {
-    const s = Math.max(it.start, from), e = Math.min(it.start + it.duration, to);
-    if (e <= s) return null;
-    return { start: s - from, dur: e - s, srcIn: it.in + (s - it.start) };
-  };
-
-  // 1) music
+  // 1) music + video frames
   progress('музыка', 0.02);
-  for (const it of p.items.filter((i) => i.kind === 'music' && win(i))) { check(); await renderMusic(it.ref); }
-
-  // 2) clip sequences (with sub-frames for motion blur)
-  // transparent export = graphics only (to composite over footage in another editor)
-  const layers = visualLayers(p).filter((i) => win(i) && (!alphaOut || i.kind === 'clip'));
-  const clipItems = layers.filter((i) => i.kind === 'clip');
-  const seqs = new Map<string, { dir: string; count: number; subframes: number }>();
-  const totalFrames = clipItems.reduce((a, i) => a + Math.round(i.duration * p.fps) * N, 0) || 1;
-  const prog = new Map<string, number>();
-  await Promise.all(clipItems.map(async (it) => {
-    const r = await renderItemSequence(it, p, (d) => {
-      prog.set(it.id, d);
-      const sum = [...prog.values()].reduce((a, b) => a + b, 0);
-      progress(`графика ${sum}/${totalFrames} кадров${N > 1 ? ` (motion blur ×${N})` : ''}`, 0.04 + 0.62 * (sum / totalFrames));
-    }, { subframes: N, signal });
-    seqs.set(it.id, r);
-  }));
+  const inWin = (it: Item) => it.start < to && it.start + it.duration > from;
+  for (const it of p.items.filter((i) => i.kind === 'music' && inWin(i))) { check(); await renderMusic(it.ref); }
+  progress('видеокадры', 0.04);
+  const manifestId = await makeManifest(from, to, { transparent: alphaOut });
   check();
 
-  // 3) ffmpeg graph
-  progress('кодирование', 0.66);
+  // 2) compose every frame with the editor's own Player (parallel pages, resumable)
+  const total = Math.max(1, Math.round(D * fps)) * N;
+  const ext = alphaOut || format === 'gif' ? 'png' : 'jpg';
+  const workDir = store.p('.studio', 'cache', 'composite', sha1(JSON.stringify({ from, to, N, alphaOut, ext, p: JSON.stringify(p), m: manifests.get(manifestId)?.frames, design: fs.existsSync(store.p('design.json')) ? fs.readFileSync(store.p('design.json'), 'utf8') : '' })));
+  fs.mkdirSync(workDir, { recursive: true });
+  const timeOf = (j: number) => from + Math.floor(j / N) / fps + (N > 1 ? ((j % N) / N) * (shutter / fps) : 0);
+  const workers = Math.max(1, getSettings().renderWorkers);
+  const chunk = Math.ceil(total / workers);
+  let done = 0;
+  const report = () => progress(`кадры ${done}/${total}${N > 1 ? ` (motion blur ×${N})` : ''}`, 0.06 + 0.64 * (done / total));
+  const renderChunk = async (a: number, b: number, attempt = 0): Promise<void> => {
+    let s0 = a;
+    while (s0 < b && fs.existsSync(path.join(workDir, `${String(s0).padStart(6, '0')}.${ext}`))) { s0++; if (attempt === 0) done++; }
+    if (s0 >= b) return;
+    try {
+      await withRenderer(manifestId, { width: p.width, height: p.height }, async (seek, grab) => {
+        for (let j = s0; j < b; j++) {
+          check();
+          await seek(timeOf(j));
+          const buf = await grab(ext === 'png' ? 'png' : 'jpeg');
+          const f = path.join(workDir, `${String(j).padStart(6, '0')}.${ext}`);
+          fs.writeFileSync(f + '.tmp', buf);
+          fs.renameSync(f + '.tmp', f);
+          done++;
+          if (done % 5 === 0) report();
+        }
+      });
+    } catch (e) {
+      if ((e as Error).message === 'cancelled' || attempt >= 2) throw e;
+      return renderChunk(a, b, attempt + 1);
+    }
+  };
+  await Promise.all(Array.from({ length: workers }, (_, w) => renderChunk(w * chunk, Math.min(total, (w + 1) * chunk))));
+  manifests.delete(manifestId);
+  check();
+
+  // 3) encode (+ audio mix with fades)
+  progress('кодирование', 0.72);
   const args: string[] = ['-y', '-v', 'error', '-progress', 'pipe:1', '-nostats'];
   const filters: string[] = [];
-  let n = 0;
-  // note: lavfi `color=c=black@0` is NOT transparent — zero the alpha explicitly
-  const bg = alphaOut ? 'black' : p.background.replace('#', '0x');
-  args.push('-f', 'lavfi', '-i', `color=c=${bg}:s=${W}x${H}:r=${p.fps}:d=${D.toFixed(3)}`);
-  let base = alphaOut ? '[0:v]format=rgba,colorchannelmixer=aa=0[base0]' : '[0:v]format=rgba[base0]';
-  filters.push(base);
-  base = '[base0]';
-  n++;
-  let li = 0;
-  for (const it of layers) {
-    const w = win(it)!;
-    const op = it.opacity ?? 1;
-    const idx = n++;
-    let chain = '';
-    if (it.kind === 'clip') {
-      const seq = seqs.get(it.id)!;
-      const S = seq.subframes;
-      const startNum = Math.round((w.srcIn - it.in) * p.fps) * S;
-      args.push('-framerate', String(p.fps * S), '-start_number', String(startNum), '-i', path.join(seq.dir, '%06d.png'));
-      chain = `[${idx}:v]format=rgba`;
-      // accumulate sub-frames in premultiplied space (no dark fringes), keep the last sample of each group
-      if (S > 1) chain += `,premultiply=inplace=1,tmix=frames=${S},select='eq(mod(n\\,${S})\\,${S - 1})',unpremultiply=inplace=1`;
-      chain += `,setpts=PTS-STARTPTS,fps=${p.fps},trim=duration=${w.dur.toFixed(3)},setpts=PTS-STARTPTS+${w.start.toFixed(3)}/TB`;
-    } else {
-      const f = mediaFile(it);
-      const src = store.p('media', f);
-      const tr = it.transform || {};
-      if (isImage(f)) args.push('-loop', '1', '-framerate', String(p.fps), '-t', w.dur.toFixed(3), '-i', src);
-      else args.push('-ss', w.srcIn.toFixed(3), '-t', w.dur.toFixed(3), '-i', src);
-      const fit = tr.fit === 'cover' ? 'increase' : 'decrease';
-      const s = tr.scale ?? 1;
-      chain = `[${idx}:v]fps=${p.fps},scale=${W}:${H}:force_original_aspect_ratio=${fit}:flags=lanczos${s !== 1 ? `,scale=iw*${s}:ih*${s}:flags=lanczos` : ''},format=rgba,setpts=PTS-STARTPTS+${w.start.toFixed(3)}/TB`;
-    }
-    if (op < 1) chain += `,colorchannelmixer=aa=${op}`;
-    const tr = it.transform || {};
-    const x = it.kind === 'clip' ? '0' : `(main_w-overlay_w)/2+${tr.x || 0}`;
-    const y = it.kind === 'clip' ? '0' : `(main_h-overlay_h)/2+${tr.y || 0}`;
-    filters.push(`${chain}[l${li}]`);
-    filters.push(`${base}[l${li}]overlay=x=${x}:y=${y}:format=rgb:eof_action=pass:enable='between(t,${w.start.toFixed(3)},${(w.start + w.dur).toFixed(3)})'[b${li}]`);
-    base = `[b${li}]`;
-    li++;
-  }
-  const outW = Math.round((W * scale) / 2) * 2, outH = Math.round((H * scale) / 2) * 2;
-  const scaleF = scale !== 1 ? `scale=${outW}:${outH}:flags=lanczos,` : '';
-  // colour: convert RGB → YUV with BT.709 (HD) and tag it, so every player shows what the preview showed
-  if (format === 'mp4') filters.push(`${base}${scaleF}scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv[vout]`);
-  else if (format === 'prores') filters.push(`${base}${scaleF}scale=out_color_matrix=bt709:out_range=tv,format=${alphaOut ? 'yuva444p10le' : 'yuv422p10le'},setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv[vout]`);
-  else if (format === 'webm') filters.push(`${base}${scaleF}scale=out_color_matrix=bt709:out_range=tv,format=${alphaOut ? 'yuva420p' : 'yuv420p'},setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv[vout]`);
-  else filters.push(`${base}${scaleF}fps=${fps},split[g1][g2];[g1]palettegen=stats_mode=diff:max_colors=256[pal];[g2][pal]paletteuse=dither=sierra2_4a:diff_mode=rectangle[vout]`);
+  args.push('-framerate', String(fps * N), '-start_number', '0', '-i', path.join(workDir, `%06d.${ext}`));
+  let v = '[0:v]format=rgba';
+  if (N > 1) v += `${alphaOut ? ',premultiply=inplace=1' : ''},tmix=frames=${N},select='eq(mod(n\\,${N})\\,${N - 1})'${alphaOut ? ',unpremultiply=inplace=1' : ''},setpts=PTS-STARTPTS,fps=${fps}`;
+  const outW = Math.round((p.width * scale) / 2) * 2, outH = Math.round((p.height * scale) / 2) * 2;
+  if (scale !== 1) v += `,scale=${outW}:${outH}:flags=lanczos`;
+  const tags709 = ',setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv';
+  if (format === 'mp4') filters.push(`${v},scale=out_color_matrix=bt709:out_range=tv,format=yuv420p${tags709}[vout]`);
+  else if (format === 'prores') filters.push(`${v},scale=out_color_matrix=bt709:out_range=tv,format=${alphaOut ? 'yuva444p10le' : 'yuv422p10le'}${tags709}[vout]`);
+  else if (format === 'webm') filters.push(`${v},scale=out_color_matrix=bt709:out_range=tv,format=${alphaOut ? 'yuva420p' : 'yuv420p'}${tags709}[vout]`);
+  else filters.push(`${v},fps=${Math.min(fps, 20)},split[g1][g2];[g1]palettegen=stats_mode=diff:max_colors=256[pal];[g2][pal]paletteuse=dither=sierra2_4a:diff_mode=rectangle[vout]`);
 
-  // audio
+  let n = 1;
   const audioIns: string[] = [];
   if (format !== 'gif') {
     const mutedTracks = new Set(p.tracks.filter((t) => t.muted).map((t) => t.id));
     for (const it of p.items) {
-      if (mutedTracks.has(it.track)) continue;
-      const w = win(it);
-      if (!w) continue;
+      if (mutedTracks.has(it.track) || !inWin(it)) continue;
+      const s = Math.max(it.start, from), e = Math.min(it.start + it.duration, to);
+      const w = { start: s - from, dur: e - s, srcIn: it.in + (s - it.start) };
       let src: string | null = null;
-      if (it.kind === 'music') {
-        const info = store.musicInfo(it.ref);
-        if (info.rendered) src = store.p(info.rendered);
-      } else if (it.kind === 'media' || it.kind === 'generated') {
+      if (it.kind === 'music') { const info = store.musicInfo(it.ref); if (info.rendered) src = store.p(info.rendered); }
+      else if (it.kind === 'media' || it.kind === 'generated') {
         const f = mediaFile(it);
         const mi = store.mediaInfo(f);
         if (mi.type === 'audio' || (mi.type === 'video' && mi.hasAudio)) src = store.p('media', f);
@@ -282,29 +289,26 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
       const idx = n++;
       args.push('-ss', w.srcIn.toFixed(3), '-t', w.dur.toFixed(3), '-i', src);
       const ms = Math.round(w.start * 1000);
-      filters.push(`[${idx}:a]aresample=48000,aformat=channel_layouts=stereo,volume=${it.volume ?? 1},adelay=${ms}:all=1[a${audioIns.length}]`);
+      filters.push(`[${idx}:a]aresample=48000,aformat=channel_layouts=stereo,volume=eval=frame:volume='${gainExpr(it, s - it.start)}',adelay=${ms}:all=1[a${audioIns.length}]`);
       audioIns.push(`[a${audioIns.length}]`);
     }
     if (audioIns.length) filters.push(`${audioIns.join('')}amix=inputs=${audioIns.length}:normalize=0:dropout_transition=0,alimiter=limit=0.97,apad,atrim=0:${D.toFixed(3)}[aout]`);
-    else {
-      args.push('-f', 'lavfi', '-t', D.toFixed(3), '-i', 'anullsrc=r=48000:cl=stereo');
-      filters.push(`[${n++}:a]anull[aout]`);
-    }
+    else { args.push('-f', 'lavfi', '-t', D.toFixed(3), '-i', 'anullsrc=r=48000:cl=stereo'); filters.push(`[${n++}:a]anull[aout]`); }
   }
 
   const outDir = store.p('.studio', 'exports');
   fs.mkdirSync(outDir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const ext = { mp4: 'mp4', prores: 'mov', webm: 'webm', gif: 'gif' }[format];
-  const out = path.join(outDir, `${slug(o.name)}-${stamp}${alphaOut ? '-alpha' : ''}.${ext}`);
+  const oext = { mp4: 'mp4', prores: 'mov', webm: 'webm', gif: 'gif' }[format];
+  const out = path.join(outDir, `${slug(o.name)}-${stamp}${alphaOut ? '-alpha' : ''}.${oext}`);
   const filterFile = path.join(store.p('.studio'), `filter-${nid()}.txt`);
   fs.writeFileSync(filterFile, filters.join(';\n'));
   args.push('-/filter_complex', filterFile, '-map', '[vout]');
   if (format !== 'gif') args.push('-map', '[aout]');
   const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
-  if (format === 'mp4') args.push('-c:v', 'libx264', '-preset', o.quality === 'small' ? 'medium' : 'slow', '-crf', String(QUALITY[o.quality || 'standard']), '-profile:v', 'high', ...tags, '-r', String(p.fps), '-c:a', 'aac', '-b:a', '256k', '-movflags', '+faststart');
-  if (format === 'prores') args.push('-c:v', 'prores_ks', '-profile:v', alphaOut ? '4444' : '3', '-vendor', 'apl0', ...(alphaOut ? ['-alpha_bits', '16'] : []), ...tags, '-r', String(p.fps), '-c:a', 'pcm_s16le');
-  if (format === 'webm') args.push('-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(o.quality === 'small' ? 38 : o.quality === 'high' ? 24 : 30), '-row-mt', '1', '-deadline', 'good', '-cpu-used', '2', ...(alphaOut ? ['-auto-alt-ref', '0'] : []), ...tags, '-r', String(p.fps), '-c:a', 'libopus', '-b:a', '192k');
+  if (format === 'mp4') args.push('-c:v', 'libx264', '-preset', o.quality === 'small' ? 'medium' : 'slow', '-crf', String(QUALITY[o.quality || 'standard']), '-profile:v', 'high', ...tags, '-r', String(fps), '-c:a', 'aac', '-b:a', '256k', '-movflags', '+faststart');
+  if (format === 'prores') args.push('-c:v', 'prores_ks', '-profile:v', alphaOut ? '4444' : '3', '-vendor', 'apl0', ...(alphaOut ? ['-alpha_bits', '16'] : []), ...tags, '-r', String(fps), '-c:a', 'pcm_s16le');
+  if (format === 'webm') args.push('-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(o.quality === 'small' ? 38 : o.quality === 'high' ? 24 : 30), '-row-mt', '1', '-deadline', 'good', '-cpu-used', '2', ...(alphaOut ? ['-auto-alt-ref', '0'] : []), ...tags, '-r', String(fps), '-c:a', 'libopus', '-b:a', '192k');
   if (format === 'gif') args.push('-loop', '0');
   args.push('-t', D.toFixed(3), out);
 
@@ -315,12 +319,25 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
     proc.stderr.on('data', (d) => (err += d));
     proc.stdout.on('data', (d) => {
       const m = /out_time_ms=(\d+)/.exec(String(d));
-      if (m) progress('кодирование', 0.66 + 0.34 * Math.min(1, Number(m[1]) / 1e6 / D));
+      if (m) progress('кодирование', 0.72 + 0.28 * Math.min(1, Number(m[1]) / 1e6 / D));
     });
     proc.on('error', reject);
     proc.on('close', (code) => (code === 0 ? resolve() : reject(new Error(signal.aborted ? 'cancelled' : 'ffmpeg failed: ' + err.slice(-3000)))));
   });
   fs.rmSync(filterFile, { force: true });
   if (signal.aborted) { fs.rmSync(out, { force: true }); throw new Error('cancelled'); }
+  if (!process.env.STUDIO_KEEP_FRAMES) fs.rmSync(workDir, { recursive: true, force: true });
   return path.relative(store.dir, out).split(path.sep).join('/');
+}
+
+/** ffmpeg volume expression reproducing audioGain(): fades / dips of in/out transitions (t is window-local) */
+function gainExpr(it: Item, offset: number): string {
+  const vol = (it.volume ?? 1).toFixed(4);
+  const parts = [vol];
+  const x = (expr: string) => `max(0,min(1,${expr}))`;
+  const gainy = (tp?: string) => tp === 'fade' || tp === 'dip-black' || tp === 'dip-white';
+  const fin = it.fx?.in, fout = it.fx?.out;
+  if (fin && gainy(fin.type) && fin.duration > 0) { const d = Math.min(fin.duration, it.duration); parts.push(`(1-pow(1-${x(`(t+${offset.toFixed(4)})/${d.toFixed(4)}`)},3))`); }
+  if (fout && gainy(fout.type) && fout.duration > 0) { const d = Math.min(fout.duration, it.duration); parts.push(`pow(${x(`(${it.duration.toFixed(4)}-(t+${offset.toFixed(4)}))/${d.toFixed(4)}`)},3)`); }
+  return parts.join('*').replace(/,/g, '\\,');
 }

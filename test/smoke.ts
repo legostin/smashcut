@@ -93,6 +93,11 @@ try {
     pr.stdout.on('data', (d) => out.push(d)); pr.stderr.on('data', (d) => (err += d)); pr.on('close', () => res({ out: Buffer.concat(out), err }));
   });
 
+  // effects + transitions on the first item, so parity covers the fx pipeline too
+  const first = (await api('GET', '/api/project')).items.find((i: any) => i.kind === 'clip');
+  await api('PATCH', `/api/items/${first.id}`, { fx: { in: { type: 'iris', duration: 0.8 }, effects: [{ type: 'look', params: { preset: 'teal-orange', amount: 1 } }, { type: 'vignette', params: { amount: 0.6, size: 0.5 } }, { type: 'chromatic', params: { px: 4 } }] } });
+  const fxList = await api('GET', '/api/fx');
+  ok('fx catalog', fxList.transitions.length >= 20 && fxList.effects.length >= 15, `${fxList.transitions.length} transitions, ${fxList.effects.length} effects`);
   const mp4 = await runExport({ from: 0, to: 2, format: 'mp4' });
   const mp4File = mp4 && path.join(st.dir, mp4.output || '');
   ok('export mp4', mp4?.status === 'done' && fs.existsSync(mp4File), mp4?.error || mp4?.output);
@@ -100,12 +105,15 @@ try {
     const probe = (await sh('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=color_space,color_primaries,color_transfer', '-of', 'csv=p=0', mp4File])).out.toString().trim();
     ok('mp4 tagged BT.709', probe.split(',').every((x) => x === 'bt709'), probe);
     // preview ↔ export parity: the composite frame the agent/viewer sees vs the decoded export frame
-    const ref = Buffer.from((await api('POST', '/api/agent/render-frame', { times: [1.0] })).png, 'base64');
+    const ref = Buffer.from((await api('POST', '/api/agent/render-frame', { times: [0.5] })).png, 'base64');
     const refFile = path.join(tmp, 'ref.png');
     fs.writeFileSync(refFile, ref);
-    const psnr = await sh('ffmpeg', ['-v', 'info', '-i', refFile, '-ss', '1.0', '-i', mp4File, '-frames:v', '1', '-lavfi', '[0:v]format=rgb24[a];[1:v]format=rgb24[b];[a][b]psnr', '-f', 'null', '-']);
+    // extract the export frame to PNG first (feeding the video straight into psnr pairs frames by timestamp)
+    const expFile = path.join(tmp, 'exp.png');
+    await sh('ffmpeg', ['-y', '-v', 'error', '-ss', '0.5', '-i', mp4File, '-frames:v', '1', expFile]);
+    const psnr = await sh('ffmpeg', ['-v', 'info', '-i', refFile, '-i', expFile, '-lavfi', '[0:v]format=rgb24[a];[1:v]format=rgb24[b];[a][b]psnr', '-f', 'null', '-']);
     const db = Number(/average:([\d.]+|inf)/.exec(psnr.err)?.[1]?.replace('inf', '99'));
-    ok('preview ↔ export parity (PSNR ≥ 32 dB)', db >= 32, `${db} dB`);
+    ok('preview ↔ export parity incl. transition+effects (PSNR ≥ 30 dB; chromatic fringes lose ~10 dB to 4:2:0)', db >= 30, `${db} dB`);
   }
   // transparency: export the window of an overlay template (lower third) only
   const lt = (await api('GET', '/api/project')).items.find((i: any) => i.ref === 'lower-third-slide');

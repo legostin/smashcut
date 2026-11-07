@@ -174,6 +174,11 @@ server.registerTool('set_design', {
   },
 }, safe(async (a) => text(await api('PUT', '/api/design', a))));
 
+server.registerTool('list_fx', {
+  description: 'Catalog of editing transitions, effects (colour looks, blur, vignette, grain, chromatic aberration, ken burns, shake, letterbox…), masks and blend modes. Apply with timeline_update {id, patch:{fx:{in:{type,duration}, out:{…}, effects:[{type, params}], mask:{shape,x,y,w,h,feather,invert,radius,angle}, blend}}} — fx replaces the whole object, so send all of it. Preview, agent frames and export render fx identically.',
+  inputSchema: {},
+}, safe(async () => text(await api('GET', '/api/fx'))));
+
 server.registerTool('list_voices', {
   description: 'ElevenLabs voices available to the user (id, name, labels: accent/gender/age/use case) and TTS models. Needs an API key in the editor settings.',
   inputSchema: {},

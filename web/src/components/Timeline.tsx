@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Item, Project, Track } from '../../../shared/types';
-import { useStore, usePlayhead, setState, getState, actions, seek, time, projectEnd, api, fmtTime } from '../store';
+import { useStore, usePlayhead, setState, getState, actions, seek, time, projectEnd, api, fmtTime, notify } from '../store';
 import { Icon } from './Icon';
+import { applyTransition } from './FxLibrary';
 
 const HEADER_W = 132;
 const ROW_H: Record<string, number> = { graphics: 40, video: 48, audio: 40, music: 40 };
@@ -122,6 +123,15 @@ export function Timeline({ project }: { project: Project }) {
     }
     if (!raw) return;
     const d = JSON.parse(raw);
+    if (d.type === 'transition') {
+      // dropped on a lane: apply to the item under the cursor, edge decides in/out
+      const t = xToT(e.clientX);
+      const it = project.items.find((i) => i.track === track.id && t >= i.start && t <= i.start + i.duration);
+      if (!it) { notify('error', 'Бросьте переход на клип'); return; }
+      applyTransition(d.transition, t - it.start < it.duration / 2 ? 'in' : 'out', it);
+      setState({ selectedItemId: it.id });
+      return;
+    }
     const start = +snapT(xToT(e.clientX)).toFixed(3);
     const kind = d.type === 'gallery' ? d.item.kind : d.type;
     const okTrack = COMPAT[kind === 'clip' ? 'clip' : kind === 'music' ? 'music' : 'media']?.includes(track.kind) ? track.id : undefined;
@@ -233,10 +243,13 @@ function TlItem({ item, zoom, selected, dragging, onDown }: { item: Item; zoom: 
       onPointerDown={(e) => onDown(e, 'move')}
       title={`${label}\n${item.start.toFixed(2)}s → ${(item.start + item.duration).toFixed(2)}s${errors?.length ? '\n⚠ ' + errors.join('\n') : ''}`}>
       {peaksUrl && <Wave url={peaksUrl} k={peaksKey} item={item} zoom={zoom} />}
+      {item.fx?.in && <div className="tl-tr in" style={{ width: Math.min(w, item.fx.in.duration * zoom) }} title={`Вход: ${item.fx.in.type} · ${item.fx.in.duration}s`} />}
+      {item.fx?.out && <div className="tl-tr out" style={{ width: Math.min(w, item.fx.out.duration * zoom) }} title={`Выход: ${item.fx.out.type} · ${item.fx.out.duration}s`} />}
       <div className="tl-item-label">
         {running && <span className="tl-dot live" title="Агент работает" />}
         {errors?.length ? <span className="tl-dot err" title="Ошибка в клипе" /> : null}
         <span className="ellipsis">{label}</span>
+        {(item.fx?.effects?.length || item.fx?.mask) ? <span className="tl-fx" title="Эффекты / маска">fx</span> : null}
         {openComments > 0 && <span className="tl-count">{openComments}</span>}
       </div>
       <div className="tl-handle left" onPointerDown={(e) => onDown(e, 'left')} />

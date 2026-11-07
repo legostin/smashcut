@@ -197,6 +197,8 @@ function Transport({ project }: { project: Project }) {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable) return;
+      const st = getState();
+      if (st.libraryOpen || st.dialog || st.lightbox) return; // modals own the keyboard (Esc closes only them)
       if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); step(e.shiftKey ? -10 : -1); }
       else if (e.key === 'ArrowRight') { e.preventDefault(); step(e.shiftKey ? 10 : 1); }

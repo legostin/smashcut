@@ -1,4 +1,6 @@
 // Shared types between server and web.
+import type { ItemFx } from './fx';
+export type { ItemFx } from './fx';
 
 export type TrackKind = 'video' | 'graphics' | 'audio' | 'music';
 export type ItemKind = 'clip' | 'media' | 'music' | 'generated';
@@ -31,6 +33,8 @@ export interface Item {
   volume?: number;
   /** media placement: fit + scale + offset in px of the project frame */
   transform?: { fit?: 'contain' | 'cover'; scale?: number; x?: number; y?: number };
+  /** transitions in/out, effects, mask, blend mode (see shared/fx.ts) */
+  fx?: ItemFx;
   /** reserved for video generators (Higgsfield & co) */
   generated?: { provider: string; prompt: string; jobId?: string; status?: string; output?: string };
 }
