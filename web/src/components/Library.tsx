@@ -3,6 +3,7 @@ import type { GalleryItem } from '../../../shared/types';
 import { useStore, setState, actions, time, api, notify, refreshGallery } from '../store';
 import { Icon } from './Icon';
 import { TransitionsGrid, EffectsGrid, MasksGrid } from './FxLibrary';
+import { RecordPanel } from './RecordPanel';
 import { TRANSITIONS, EFFECTS, MASKS } from '../../../shared/fx';
 
 const close = () => setState({ libraryOpen: false });
@@ -166,11 +167,17 @@ function MusicRow({ g }: { g: GalleryItem }) {
 
 function Media() {
   const media = useStore((s) => s.media);
+  const [rec, setRec] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const add = (file: string) => { close(); actions.addItem({ kind: 'media', ref: file, start: +time.get().toFixed(3) }); };
   return (
     <>
+      <div className="row gap8" style={{ marginBottom: 12 }}>
+        <button className={'btn sm' + (rec ? ' primary' : '')} onClick={() => setRec(!rec)}><span className="rec-dot" /> Записать футаж</button>
+        <span className="muted xsmall">веб-страницы со сценарием и курсором или окна приложений</span>
+      </div>
+      {rec && <RecordPanel />}
       <button className={'lib-drop' + (over ? ' over' : '')} onClick={() => input.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); if (e.dataTransfer.files.length) actions.upload(e.dataTransfer.files); }}>

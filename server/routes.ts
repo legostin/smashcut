@@ -23,6 +23,8 @@ import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
 import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
+import { recordWeb, defaultWebActions, recordJobs, emitJob, type RecordJob } from './record/web.ts';
+import { recordScreen, listApps } from './record/screen.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
 
@@ -574,6 +576,72 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get('/api/agent/board-notes', async () => {
     need();
     return readNotes().map((n) => ({ ...n, status: n.status || 'open' }));
+  });
+
+  // ---------- footage recording (web pages, macOS apps) ----------
+  const placeRecording = async (file: string, duration: number, place?: { start?: number; track?: string }) => {
+    if (!place) return undefined;
+    const store = cur();
+    const iid = 'i' + nid();
+    await store.update((p) => {
+      const track = place.track || trackFor(p, 'media', file);
+      p.items.push({ id: iid, kind: 'media', ref: file, track, start: Math.max(0, place.start ?? 0), in: 0, duration: +duration.toFixed(3) });
+      p.duration = Math.max(p.duration, Math.ceil((place.start ?? 0) + duration));
+    });
+    return store.project.items.find((i) => i.id === iid);
+  };
+  const runRecording = (kind: 'web' | 'screen', label: string, fn: (job: RecordJob) => Promise<{ file: string; duration: number }>, place?: { start?: number; track?: string }) => {
+    const job: RecordJob = { id: 'r' + nid(), kind, status: 'running', stage: 'подготовка', label };
+    emitJob(job);
+    const done = (async () => {
+      try {
+        const r = await fn(job);
+        job.status = 'done'; job.stage = 'готово'; job.file = r.file; job.duration = r.duration;
+        const item = await placeRecording(r.file, r.duration, place);
+        emitJob(job);
+        bus.send({ type: 'notice', level: 'info', text: `Футаж записан: ${r.file} (${r.duration.toFixed(1)} с)${item ? ' — добавлен на таймлайн' : ''}` });
+        return { ...r, item };
+      } catch (e) {
+        job.status = 'error'; job.error = (e as Error).message; emitJob(job);
+        bus.send({ type: 'notice', level: 'error', text: `Запись не удалась: ${job.error}` });
+        throw e;
+      }
+    })();
+    return { job, done };
+  };
+  app.get('/api/record/apps', async () => ({ apps: await listApps() }));
+  app.get('/api/record/jobs', async () => recordJobs());
+  app.post<{ Body: any }>('/api/record/web', async (req) => {
+    need();
+    const b = { ...(req.body as any) };
+    if (!b.url) throw Object.assign(new Error('укажите url'), { statusCode: 400 });
+    if (!/^https?:\/\//.test(b.url)) b.url = 'https://' + b.url;
+    if (!b.actions || !b.actions.length) b.actions = defaultWebActions(b.seconds || 10);
+    const { job, done } = runRecording('web', b.url, (j) => recordWeb(b, j), b.place);
+    done.catch(() => {});
+    return job;
+  });
+  app.post<{ Body: any }>('/api/record/screen', async (req) => {
+    need();
+    const b = req.body as any;
+    const { job, done } = runRecording('screen', b.app || 'экран', () => recordScreen(b), b.place);
+    done.catch(() => {});
+    return job;
+  });
+  // MCP: synchronous variants (the agent waits for the file)
+  app.post<{ Body: any }>('/api/agent/record-web', async (req) => {
+    need();
+    const b = { ...(req.body as any) };
+    if (!/^https?:\/\//.test(b.url)) b.url = 'https://' + b.url;
+    if (!b.actions || !b.actions.length) b.actions = defaultWebActions(b.seconds || 10);
+    const { done } = runRecording('web', b.url, (j) => recordWeb(b, j), b.place);
+    return done;
+  });
+  app.post<{ Body: any }>('/api/agent/record-screen', async (req) => {
+    need();
+    const b = req.body as any;
+    const { done } = runRecording('screen', b.app || 'экран', () => recordScreen(b), b.place);
+    return done;
   });
 
   // ---------- renderer manifests (headless Player) ----------

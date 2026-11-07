@@ -199,6 +199,20 @@ server.registerTool('list_fx', {
   inputSchema: {},
 }, safe(async () => text(await api('GET', '/api/fx'))));
 
+server.registerTool('record_web', {
+  description: 'Record footage of a web page (any URL) with a scripted demo: load, waits, smooth scrolls, clicks (with an animated demo cursor + click ripple), typing, hovers, highlights. Produces an MP4 in media/ at the project size (or device=mobile for a phone layout) and optionally places it on the timeline. actions: [{type:"wait",ms}|{type:"scroll",to:"bottom"|"top"|px,selector?,by?,duration?}|{type:"click",selector|text|x,y}|{type:"hover",…}|{type:"type",selector?,text,delay?}|{type:"press",key}|{type:"highlight",selector|text,ms?}|{type:"goto",url}|{type:"move",x,y,duration?}] (coordinates in CSS px of the viewport). Without actions: load → slow scroll down and back.',
+  inputSchema: {
+    url: z.string(), actions: z.array(z.record(z.string(), z.any())).optional(), seconds: z.number().optional(),
+    device: z.enum(['desktop', 'mobile']).optional(), zoom: z.number().optional(), dark: z.boolean().optional(), cursor: z.boolean().optional(), name: z.string().optional(),
+    place: z.object({ start: z.number().optional(), track: z.string().optional() }).optional(),
+  },
+}, safe(async (a) => text(await api('POST', '/api/agent/record-web', a))));
+
+server.registerTool('record_app', {
+  description: 'macOS: record the front window of a running app (or the whole screen) for N seconds, optionally running AppleScript lines in the app meanwhile. Needs Screen Recording permission for the editor host. Result: MP4 in media/, optionally placed on the timeline.',
+  inputSchema: { app: z.string().optional(), seconds: z.number(), script: z.string().optional(), name: z.string().optional(), padding: z.number().optional(), place: z.object({ start: z.number().optional(), track: z.string().optional() }).optional() },
+}, safe(async (a) => text(await api('POST', '/api/agent/record-screen', a))));
+
 server.registerTool('list_voices', {
   description: 'ElevenLabs voices available to the user (id, name, labels: accent/gender/age/use case) and TTS models. Needs an API key in the editor settings.',
   inputSchema: {},

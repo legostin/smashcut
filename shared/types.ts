@@ -292,4 +292,5 @@ export type ServerEvent =
   | { type: 'script'; script: Script }
   | { type: 'design'; design: DesignSystem }
   | { type: 'board'; notes: BoardNote[] }
+  | { type: 'record'; job: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string } }
   | { type: 'notice'; level: 'info' | 'error'; text: string };

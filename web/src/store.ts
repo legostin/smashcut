@@ -33,6 +33,7 @@ export interface State {
   chatContext: { key: string; label: string; text: string }[];
   boardSelection: string[];
   boardNotes: BoardNote[];
+  recordJobs: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string }[];
   // ui
   libraryOpen: boolean;
   libraryTab: 'templates' | 'media' | 'project';
@@ -58,7 +59,7 @@ const initial: State = {
   connected: false, project: null, comments: [], clips: [], music: [], media: [], tasks: [], skills: [], jobs: [], exports: [], gallery: [], recents: [],
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
-  view: (() => { try { return localStorage.getItem('view') === 'board' ? 'board' : 'edit'; } catch { return 'edit'; } })() as 'edit' | 'board', sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [],
+  view: (() => { try { return localStorage.getItem('view') === 'board' ? 'board' : 'edit'; } catch { return 'edit'; } })() as 'edit' | 'board', sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -202,6 +203,7 @@ function onEvent(ev: ServerEvent) {
     case 'script': setState({ script: ev.script }); break;
     case 'design': setState({ design: ev.design }); break;
     case 'board': setState({ boardNotes: ev.notes }); break;
+    case 'record': setState((s) => ({ recordJobs: [...s.recordJobs.filter((j) => j.id !== ev.job.id), ev.job] })); if (ev.job.status === 'done') scheduleLists(); break;
     case 'permissions': {
       const prev = new Set(getState().permissions.map((p) => p.id));
       setState({ permissions: ev.permissions });

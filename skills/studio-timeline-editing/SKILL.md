@@ -45,3 +45,8 @@ Export is done by the user from the UI (or POST /api/export); you can't watch vi
 - Move/scale/rotate any visual item: `timeline_update {id, patch:{transform:{x, y, scale, rotate, ox, oy}}}` (x/y in project px, ox/oy pivot in % of the frame — use the content centre).
 - Faster or calmer animation without touching code: `patch:{params:{__energy: 1.6}}` (1 = as authored).
 - `params.__style: "own"` stops a clip following the design system; omit it to follow tokens.
+
+## Recording footage (web pages, apps)
+- `record_web {url, actions?, seconds?, device?, zoom?, dark?, cursor?, place?}` — product/website demos: the page is driven by a script with a smooth demo cursor and click ripples. Write actions like a director: wait → hover the thing you'll talk about → click → let it load → smooth scroll (1.5–3 s per screen) → highlight the key element. Prefer `text` targets (visible labels) over brittle selectors. `zoom` 1.5 (default) gives readable UI at 1080p; `device:"mobile"` for 9:16.
+- `record_app {app, seconds, script?, padding?}` (macOS) — records an app's window; AppleScript `script` can drive simple interactions. Needs the Screen Recording permission.
+- Then cut it: place with `place:{start}` or `timeline_add`, trim with `in`/`duration`, frame it with `transform` + mask "rounded" + shadow effect for a polished "device card" look, and add callouts (callout-spotlight-zoom, callout-hand-drawn) over the key moments.
