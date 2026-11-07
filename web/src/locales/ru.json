@@ -746,5 +746,10 @@
   "EEVEE — materials and light (about a second per frame)": "EEVEE — материалы и свет (около секунды на кадр)",
   "High samples + motion blur — slow, for the approved shot": "Высокое качество и размытие в движении — медленно, для утверждённого кадра",
   "Rendering {q} · {p}%": "Рендер: {q} · {p}%",
-  "The scene is code in scenes3d/{id}/scene.py — ask the agent for changes; the timeline position is kept between stages.": "Сцена — это код в scenes3d/{id}/scene.py. Правки просите у агента; место на таймлайне сохраняется между этапами."
+  "The scene is code in scenes3d/{id}/scene.py — ask the agent for changes; the timeline position is kept between stages.": "Сцена — это код в scenes3d/{id}/scene.py. Правки просите у агента; место на таймлайне сохраняется между этапами.",
+  "Shots & rhythm: find the cuts": "Планы и ритм: найти склейки",
+  "Finding the cuts in {file}…": "Ищу склейки в {file}…",
+  "{n} shots · avg {avg}s · {cpm} cuts/min{beat}": "Планов: {n} · в среднем {avg} с · {cpm} склеек/мин{beat}",
+  "on beat {x}": "в долю {x}",
+  "What exactly should be done or changed? Enter — send": "Что именно сделать или изменить? Enter — отправить"
 }

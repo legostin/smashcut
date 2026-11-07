@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Inspiration, GalleryItem } from '../../../shared/types';
-import { useStore, setState, getState, actions, time, api, notify, refreshGallery, projectBase } from '../store';
+import { useStore, setState, getState, actions, time, api, notify, refreshGallery, projectBase, pfile } from '../store';
 import { Icon } from './Icon';
 import { TransitionsGrid, EffectsGrid, MasksGrid } from './FxLibrary';
 import { RecordPanel } from './RecordPanel';
@@ -126,6 +126,19 @@ function ClipGrid({ items, q, empty }: { items: GalleryItem[]; q: string; empty?
  * Techniques, not templates: the agent studies the technique (TECHNIQUE.md + reference code) and makes an original
  * clip in the project's design system — for the selected scenes, or the scene under the playhead.
  */
+/** find the cuts of a video: contact sheet in the lightbox + a one-line rhythm summary */
+async function analyzeShots(file: string) {
+  notify('info', t('Finding the cuts in {file}…', { file }));
+  try {
+    const r = await api<any>('POST', '/api/toolkit/run', { op: 'detect_shots', params: { video: file }, wait: true });
+    const job = r.job || r;
+    const o = job.outputs || {};
+    const rh = o.shots?.rhythm || {};
+    if (o.sheet) setState({ lightbox: pfile(o.sheet) });
+    notify('info', t('{n} shots · avg {avg}s · {cpm} cuts/min{beat}', { n: rh.shots, avg: rh.avgShot, cpm: rh.cutsPerMinute, beat: rh.cutsOnBeat ? ' · ' + t('on beat {x}', { x: rh.cutsOnBeat }) : '' }));
+  } catch { /* api() already showed the error */ }
+}
+
 /** techniques are references: clicking one attaches it to the project (and the selected scenes) */
 export function addTechniqueRef(g: GalleryItem) {
   actions.addReference({ kind: g.kind === 'music' ? 'music-technique' : 'technique', ref: g.id, origin: g.origin as any, title: g.name, thumb: g.thumb });
@@ -348,6 +361,7 @@ function Media() {
                 {m.thumb ? <img src={`${projectBase()}/${m.thumb}`} alt="" /> : <div className="lib-thumb-icon"><Icon name={m.type === 'audio' ? 'music' : 'film'} size={22} /></div>}
                 <span className="lib-add"><Icon name="plus" size={13} /> {t('Add')}</span>
                 {m.duration > 0 && m.type !== 'image' && <span className="lib-dur">{fmt(m.duration)}</span>}
+                {m.type === 'video' && <button className="lib-insert shots" title={t('Shots & rhythm: find the cuts')} onClick={async (e) => { e.stopPropagation(); await analyzeShots(m.file); }}><Icon name="scissors" size={12} /></button>}
                 {m.type !== 'audio' && <button className="lib-insert" title={t('Add to references')} onClick={(e) => { e.stopPropagation(); actions.addReference({ kind: 'media', ref: m.file, title: m.file }); }}><Icon name="star" size={12} /></button>}
               </div>
               <div className="lib-card-name ellipsis">{m.file}</div>

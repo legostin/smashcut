@@ -357,7 +357,7 @@ function Composer({ task }: { task: Task | null }) {
       {ctx.length > 0 && (
         <div className="ctx-chips">
           {ctx.map((c) => (
-            <span key={c.key} className="ctx-chip" title={c.text}>{c.label}<button onClick={() => setState((s) => ({ chatContext: s.chatContext.filter((x) => x.key !== c.key) }))}><Icon name="x" size={9} /></button></span>
+            <span key={c.key} className={'ctx-chip' + (c.key.startsWith('action:') ? ' action' : '')} title={c.text}>{c.label}<button onClick={() => setState((s) => ({ chatContext: s.chatContext.filter((x) => x.key !== c.key) }))}><Icon name="x" size={9} /></button></span>
           ))}
         </div>
       )}
@@ -372,7 +372,7 @@ function Composer({ task }: { task: Task | null }) {
         </div>
       )}
       <textarea ref={ref} rows={1} value={draft}
-        placeholder={busy ? t('Interrupt the agent: write what to change (Enter)…') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do · @ scenes · # media · / commands')}
+        placeholder={busy ? t('Interrupt the agent: write what to change (Enter)…') : ctx.some((c) => c.key.startsWith('action:')) ? t('What exactly should be done or changed? Enter — send') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do · @ scenes · # media · / commands')}
         onChange={(e) => { setState({ chatDraft: e.target.value }); setCaret(e.target.selectionStart ?? e.target.value.length); }}
         onSelect={(e) => setCaret((e.target as HTMLTextAreaElement).selectionStart ?? 0)}
         onKeyDown={(e) => {
@@ -401,7 +401,10 @@ function Composer({ task }: { task: Task | null }) {
 }
 
 /** append the board selection to the message so the agent knows exactly what is meant */
-export function withContext(text: string, ctx: { label: string; text: string }[]) {
+export function withContext(text: string, ctx: { key?: string; label: string; text: string }[]) {
   if (!ctx.length) return text;
-  return `${text || 'Look at the selection and suggest improvements.'}\n\nContext — what the user selected / referenced (work on exactly these):\n${ctx.map((c) => '- ' + c.text).join('\n')}`;
+  const action = ctx.find((c) => c.key?.startsWith('action:'));
+  const rest = ctx.filter((c) => c !== action);
+  const head = text || (action ? 'Do the action below.' : 'Look at the selection and suggest improvements.');
+  return `${head}${action ? `\n\n${action.text}` : ''}${rest.length ? `\n\nContext — what the user selected / referenced (work on exactly these):\n${rest.map((c) => '- ' + c.text).join('\n')}` : ''}`;
 }

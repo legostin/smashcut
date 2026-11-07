@@ -114,7 +114,7 @@ try {
   }
   const cat = await api('GET', '/api/toolkit');
   const ids = cat.ops.map((o: any) => o.id);
-  const expected = ['remove_background', 'transform', 'adjust', 'sticker', 'palette', 'convert', 'chroma_key', 'remove_background_video', 'trim', 'speed', 'reframe', 'slowmo', 'extract_frames', 'to_gif', 'loop', 'morph_images', 'morph_video_cut', 'extract_audio', 'normalize', 'denoise', 'remove_silence', 'duck'];
+  const expected = ['remove_background', 'transform', 'adjust', 'sticker', 'palette', 'convert', 'chroma_key', 'remove_background_video', 'trim', 'speed', 'reframe', 'slowmo', 'extract_frames', 'to_gif', 'loop', 'morph_images', 'morph_video_cut', 'extract_audio', 'normalize', 'denoise', 'remove_silence', 'duck', 'detect_shots', 'split_shots'];
   ok('catalog lists all ops', expected.every((x) => ids.includes(x)), ids.join(','));
   ok('catalog is JSON-serialisable form specs', cat.ops.every((o: any) => o.title && o.description && Object.values(o.inputs).every((s: any) => s.type && s.label)));
 
@@ -334,6 +334,24 @@ try {
   });
 
   // ---------- MCP ----------
+  await step('shots', async () => {
+    // 5 shots with cuts at 1, 2, 3.5 (a colour-matched, soft cut) and 5 s
+    const segs = ['color=c=0x1b2a6b:s=640x360:r=30:d=1', 'testsrc2=s=640x360:r=30:d=1', 'color=c=0xff5a36:s=640x360:r=30:d=1.5'];
+    for (let i = 0; i < segs.length; i++) await ff([...L(segs[i]), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', path.join(tmp, `seg${i}.mp4`)]);
+    await ff([...L('mandelbrot=s=640x360:r=30'), '-t', '1.5', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', path.join(tmp, 'seg3.mp4')]);
+    await ff([...L('color=c=0x0f3b3a:s=640x360:r=30:d=1.5'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', path.join(tmp, 'seg4.mp4')]);
+    fs.writeFileSync(path.join(tmp, 'segs.txt'), [0, 1, 2, 3, 4].map((i) => `file '${path.join(tmp, `seg${i}.mp4`)}'`).join('\n'));
+    await ff(['-f', 'concat', '-safe', '0', '-i', path.join(tmp, 'segs.txt'), '-c', 'copy', path.join(MEDIA, 'edit.mp4')]);
+    const d = await run('detect_shots', { video: 'edit.mp4' });
+    const starts = d.outputs.shots.shots.map((x: any) => x.start);
+    ok('detect_shots finds hard and soft cuts', starts.length === 5 && [0, 1, 2, 3.5, 5].every((t, i) => near(starts[i], t, 0.05)), JSON.stringify(starts));
+    ok('detect_shots rhythm + sheet', d.outputs.shots.rhythm.shots === 5 && fs.existsSync(path.join(PROJ, d.outputs.sheet)), JSON.stringify(d.outputs.shots.rhythm));
+    const sp = await run('split_shots', { video: 'edit.mp4', only: '2,4' });
+    const files = sp.outputs.files.files;
+    const durs = await Promise.all(files.map(async (f: string) => +(await sh('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path.join(PROJ, f)])).out.toString().trim()));
+    ok('split_shots exports selected shots', files.length === 2 && near(durs[0], 1 - 0.08, 0.1) && near(durs[1], 1.5 - 0.08, 0.1), JSON.stringify({ files, durs }));
+  });
+
   await step('mcp', async () => {
     const tr = new StdioClientTransport({ command: process.execPath, args: [path.join(ROOT, 'server/mcp/stdio.mjs')], env: { ...process.env, STUDIO_URL: BASE } as Record<string, string> });
     const mcp = new Client({ name: 'toolkit-test', version: '1' });

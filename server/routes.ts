@@ -646,7 +646,7 @@ export async function registerRoutes(app: FastifyInstance) {
       scenes: (r.sceneIds || []).map((id) => { const i = scenes.findIndex((s) => s.id === id); return i >= 0 ? `${i + 1}:${scenes[i].title} (${id})` : id; }),
       appliesTo: r.sceneIds?.length ? 'listed scenes' : 'the whole video',
       ...(r.kind === 'inspiration' ? (() => { const x = getInspiration(r.ref); return x ? { by: x.by, year: x.year, url: x.url, techniques: x.techniques, breakdown: x.breakdown } : {}; })() : {}),
-      howToRead: r.kind === 'inspiration' ? 'The breakdown above describes the piece and its techniques — apply the techniques in the project style (never copy the brand/assets). The URL is for the user; you cannot watch the video.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? `Read media/${r.ref} (look at it; for video, extract_frames via run_media_tool)` : `WebFetch ${r.ref}`,
+      howToRead: r.kind === 'inspiration' ? 'The breakdown above describes the piece and its techniques — apply the techniques in the project style (never copy the brand/assets). The URL is for the user; you cannot watch the video.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? (/\.(mp4|mov|webm|mkv|m4v)$/i.test(r.ref) ? `video: run_media_tool {op:"detect_shots", params:{video:"${r.ref}"}} — shots, contact sheet and the rhythm of the edit` : `Read media/${r.ref} (look at it)`) : `WebFetch ${r.ref}`,
     }));
   });
 

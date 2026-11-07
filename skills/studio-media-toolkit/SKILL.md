@@ -29,6 +29,8 @@ description: Programmatic media operations on photos, footage and audio (list_me
 | Faster / reverse / boomerang | `speed` | factor 2 = 2× faster; reverse & boomerang ≤ 30 s. |
 | Smooth slow motion | `slowmo` | motion-interpolated (minterpolate mci); ≤ 15 s source — trim first. |
 | 16:9 → 9:16 / 1:1 / 4:5 | `reframe` | `crop` around `focusX/focusY` (0…1), `pad`, or `blur` (blurred fill bars). Works on images too. |
+| Shots of an edit + its rhythm | `detect_shots` | cut list with timecodes, contact sheet (one numbered frame per shot), avg/median shot length, cuts per minute, pacing, dominant colour per shot, bpm and cuts on the beat. `threshold` 0.2 = sensitive, 0.4 = hard cuts only. |
+| One file per shot | `split_shots` | detected cuts or your own `ranges:"0-2.4, 5.1-7"`; `only:"1,3,5-7"`; `handles` trims flash frames. Then `timeline_add` the shots you need. |
 | Stills from a video | `extract_frames` | `count`, `every` s, or exact `times:"0.5,2"`; + contact sheet. |
 | GIF | `to_gif` | 480 px, 12 fps, ≤ 6 s keeps it small. |
 | Repeat / seamless loop | `loop` | `crossfade` > 0 makes the cycle seamless (end dissolves into start). |
@@ -72,3 +74,10 @@ description: Programmatic media operations on photos, footage and audio (list_me
 - WebM with alpha is the transparent video format for the editor; MP4 never has alpha.
 - Ops that take video+audio and only change sound (normalize, denoise) keep the picture untouched (stream copy).
 - Errors are explicit (wrong file kind, out-of-range values, too long) — read them and adjust params rather than retrying unchanged.
+
+## Recipe: cut it like the reference
+
+1. The user's reference video is in media (or a reference of kind media): `run_media_tool {op:"detect_shots", params:{video}}` → look at the sheet; read `rhythm` (avg shot, cuts per minute, cuts on beat, colours).
+2. Translate it into the edit: scene/shot durations ≈ the reference's median shot (in beats of our music: `beatsPerShot`), cut on beats if the reference does, reuse its colour progression in the design system or grades.
+3. To reuse the user's own footage shot by shot: `split_shots` (check with detect_shots first), then place the shots on the timeline at the planned cut points.
+4. Never re-upload or re-cut someone else's video into the user's video unless the user owns it — study the rhythm, don't copy the footage.

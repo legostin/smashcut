@@ -976,3 +976,8 @@ button.chip:hover { filter: brightness(1.25); }
 .stage3d-prog > div { position: absolute; inset: 0 auto 0 0; background: rgba(212, 255, 58, .22); transition: width 300ms var(--ease); }
 .stage3d-prog span { position: relative; font-size: 11.5px; line-height: 22px; padding-left: 8px; color: var(--fg2); }
 .err { color: var(--err); white-space: pre-wrap; }
+
+.lib-insert.shots { right: 42px; }
+
+.ctx-chip.action { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.ctx-chip.action button { color: var(--accent-ink); }

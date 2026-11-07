@@ -186,23 +186,30 @@ export function SelectionBar() {
   if (!picked.length) return null;
   const allLocked = picked.every((x) => x.s.locked);
   const allApproved = picked.every((x) => x.s.status === 'approved');
-  const list = picked.map((x) => `scene ${x.n} “${x.s.title}” (id ${x.s.id}, ${x.s.start.toFixed(2)}–${(x.s.start + x.s.duration).toFixed(2)} s)`).join('; ');
   const many = picked.length > 1;
   const parallel = many && subagents ? ' Use one sub-agent per scene (delegate_task) so they are built in parallel, then review and assemble.' : '';
-  const run = (prompt: string) => { actions.startTask(prompt); setState({ sideTab: 'agent', sceneSelection: [] }); };
-  const ask = () => {
-    setState((s) => ({ chatContext: [...s.chatContext.filter((c) => !c.key.startsWith('scene:')), ...picked.map((x) => sceneChip(x.s, x.n))], sideTab: 'agent', selectedTaskId: s.selectedTaskId }));
+  /** put the selection (+ an action) into the composer — the user adds what exactly to do, then sends */
+  const prep = (action?: { key: string; label: string; text: string }) => {
+    setState((s) => ({
+      chatContext: [
+        ...(action ? [{ key: 'action:' + action.key, label: action.label, text: action.text }] : []),
+        ...s.chatContext.filter((c) => !c.key.startsWith('scene:') && !c.key.startsWith('action:')),
+        ...picked.map((x) => sceneChip(x.s, x.n)),
+      ],
+      sideTab: 'agent',
+    }));
     setTimeout(() => (document.querySelector('.composer textarea') as HTMLTextAreaElement | null)?.focus(), 30);
   };
+  const ask = () => prep();
   return (
     <div className="sel-bar" role="region" aria-label={t('Actions for the selection')}>
       <span className="sel-count">{tn(picked.length, '{n} scene', '{n} scenes')}</span>
       <span className="sel-sep" />
       <button className="sel-primary" onClick={ask}><Icon name="sparkle" size={13} /> {t('Ask the agent')}</button>
-      <button onClick={() => run(`Make ${many ? 'these scenes' : 'this scene'} from the script: ${list}. Work only on ${many ? 'them' : 'it'}: get_script → update_scene status doing → clips/music/timeline → verify with render_frame → update_scene done with itemIds.${parallel}`)}>{t('Make')}</button>
-      <button onClick={() => run(`Redo ${many ? 'these scenes' : 'this scene'} with a fresh, stronger take — keep the script's intent, timing and the design system: ${list}. Work only on ${many ? 'them' : 'it'}; verify with render_frame.${parallel}`)}>{t('Redo')}</button>
-      <button onClick={() => run(`Make 3 visual variations for ${many ? 'each of these scenes' : 'this scene'} as separate clips (don't replace the current one; put them on a spare track, muted/hidden) so I can compare: ${list}. Then set the scene status to review and describe the variants in its notes.${parallel}`)}>{t('Variations')}</button>
-      <button onClick={() => run(`Voice-over for ${many ? 'these scenes' : 'this scene'} following the studio-voiceover skill: write the speech text (numbers/dates as words, {display|spoken}, stress marks, pauses), generate_voiceover per scene, then voice_report and fix flagged sentences: ${list}.`)}>{t('Voice-over')}</button>
+      <button onClick={() => prep({ key: 'make', label: t('Make'), text: `ACTION — make the selected scene(s) from the script, following the user's notes in the message. Work only on them: get_script → update_scene status doing → clips/music/timeline → verify with render_frame → update_scene done with itemIds.${parallel}` })}>{t('Make')}</button>
+      <button onClick={() => prep({ key: 'redo', label: t('Redo'), text: `ACTION — redo the selected scene(s): change exactly what the user's message says (if it says nothing specific, make a fresh, stronger take keeping the script's intent, timing and the design system). Work only on them; verify with render_frame.${parallel}` })}>{t('Redo')}</button>
+      <button onClick={() => prep({ key: 'variations', label: t('Variations'), text: `ACTION — make visual variations of the selected scene(s) in the direction the user's message gives (default 3) as separate clips; don't replace the current one — put them on a spare track, hidden, so the user can compare. Then set the scene status to review and describe the variants in its notes.${parallel}` })}>{t('Variations')}</button>
+      <button onClick={() => prep({ key: 'voice', label: t('Voice-over'), text: 'ACTION — voice-over for the selected scene(s) following the studio-voiceover skill (voice, tone, pace per the user\'s message): write the speech text (numbers/dates as words, {display|spoken}, stress marks, pauses), generate_voiceover per scene, then voice_report and fix flagged sentences.' })}>{t('Voice-over')}</button>
       <button onClick={() => { actions.patchScenes(picked.map((x) => x.s.id), { status: allApproved ? 'done' : 'approved' }); }}>{allApproved ? t('Unapprove') : t('Approve')}</button>
       <button onClick={() => actions.patchScenes(picked.map((x) => x.s.id), { locked: !allLocked })} title={t('Locked scenes are off-limits for agents')}><Icon name="lock" size={12} /> {allLocked ? t('Unlock') : t('Lock')}</button>
       <button className="sel-x" aria-label={t('Clear selection')} onClick={() => setState({ sceneSelection: [] })}><Icon name="x" size={12} /></button>
