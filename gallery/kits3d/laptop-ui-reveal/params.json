@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "studio": { "type": "select", "label": "Studio preset", "options": ["daylight", "white_cyc", "product_softbox", "dark_luxe", "neon", "abstract_void"], "default": "daylight" },
+    "backdrop": { "type": "boolean", "label": "Backdrop (off = transparent, lights only)", "default": true },
+    "screen": { "type": "text", "label": "Screen image / video (empty = built-in dashboard)", "default": "" },
+    "title": { "type": "text", "label": "Dashboard title", "default": "Overview" },
+    "kpi1": { "type": "text", "label": "KPI 1 label", "default": "Revenue" },
+    "value1": { "type": "number", "label": "KPI 1 value", "min": 0, "max": 99999999, "step": 1, "default": 184200 },
+    "kpi2": { "type": "text", "label": "KPI 2 label", "default": "Active users" },
+    "value2": { "type": "number", "label": "KPI 2 value", "min": 0, "max": 99999999, "step": 1, "default": 12480 },
+    "accent": { "type": "color", "label": "Accent", "default": "#d4ff3a", "token": "accent" },
+    "finish": { "type": "select", "label": "Laptop finish", "options": ["space", "silver", "black", "gold"], "default": "space" }
+  }
+}

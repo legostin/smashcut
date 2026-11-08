@@ -28,8 +28,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import opentype from 'opentype';
+import { installKit, studioPreset, makeComposer, makeBokeh } from './studio3js-kit.js';
 
 export { THREE, SVGLoader, GLTFLoader, RoundedBoxGeometry, BufferGeometryUtils };
+// studio kit: presets (S.studio), materials, podiums, devices, camera moves, framing — see studio3js-kit.js
+export { STUDIO_PRESETS, materials, podium, device, screenTexture, turntable, frame, envMap, cycloramaGeometry, gradientVoid, reflectiveFloor, contactShadow, roundedRect } from './studio3js-kit.js';
 
 const studio = () => window.studio;
 
@@ -65,9 +68,14 @@ export function color(c, fallback = '#ffffff') {
   if (typeof c === 'number') return new THREE.Color(c);
   let v = c || fallback;
   if (typeof v === 'string' && !/^#|^rgb|^hsl/i.test(v)) {
-    const tok = studio()?.design?.color?.(v);
-    const css = getComputedStyle(document.documentElement).getPropertyValue('--' + v).trim();
-    v = tok || css || ROLE_DEFAULTS[v] || fallback;
+    // 'accent2' and 'accent-2' are the same role (design tokens use the hyphenated name)
+    const names = v === 'accent2' || v === 'accent-2' ? ['accent-2', 'accent2'] : [v];
+    let tok = null, css = '';
+    for (const n of names) {
+      tok = tok || studio()?.design?.color?.(n);
+      css = css || getComputedStyle(document.documentElement).getPropertyValue('--' + n).trim();
+    }
+    v = tok || css || ROLE_DEFAULTS[v] || ROLE_DEFAULTS.accent2 && v === 'accent-2' && ROLE_DEFAULTS.accent2 || fallback;
   }
   try { return new THREE.Color(v); } catch { return new THREE.Color(fallback); }
 }
@@ -288,7 +296,10 @@ let current = null;
  *  background=null (transparent) | token | css colour,
  *  light='studio' | 'rim' | 'neon' | 'soft' | 'none', env=1 (environment reflections intensity, 0 = off),
  *  exposure=1, tone='neutral' | 'aces' | 'agx' | 'none', shadows=false,
- *  bloom=null | true | { strength=0.5, radius=0.4, threshold=1 } (glow for emissive parts; alpha is kept), fog=null | { color, near, far }
+ *  bloom=null | true | { strength=0.5, radius=0.4, threshold=1 } (glow for emissive parts; alpha is kept), fog=null | { color, near, far },
+ *  studio=null | 'white_cyc' | 'dark_luxe' | 'product_softbox' | 'neon' | 'daylight' | 'abstract_void' | { kind, …opts }
+ *    (a complete studio set: lights + backdrop + environment + tone — see S.studio(); replaces light/env defaults;
+ *     options in studioOptions or inline in the object form; the handle is S.studioHandle)
  */
 export async function stage(root, o = {}) {
   const st = studio();
@@ -323,33 +334,43 @@ export async function stage(root, o = {}) {
   camera.lookAt(target);
 
   // image-based lighting (soft studio reflections) — cheap and makes PBR materials read
-  const envIntensity = o.env ?? ({ neon: 0.2, rim: 0.35 }[o.light] ?? 0.7);
+  const preset = o.studio ? (typeof o.studio === 'string' ? { kind: o.studio, ...(o.studioOptions || {}) } : { ...o.studio }) : null;
+  const envIntensity = preset ? 0 : o.env ?? ({ neon: 0.2, rim: 0.35 }[o.light] ?? 0.7);
   let pmrem = null;
   if (envIntensity > 0) {
     pmrem = new THREE.PMREMGenerator(renderer);
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environmentIntensity = envIntensity;
   }
-  const lights = lightRig(scene, o.light ?? 'studio', !!o.shadows);
+  const lights = lightRig(scene, preset ? (o.light ?? 'none') : o.light ?? 'studio', !!o.shadows);
 
   let composer = null;
-  if (o.bloom) {
-    composer = new EffectComposer(renderer);
-    composer.setPixelRatio(1);
-    composer.setSize(W, H);
-    composer.addPass(new RenderPass(scene, camera));
-    const b = o.bloom === true ? {} : o.bloom;
-    // threshold 1: only what is brighter than lit white glows — give glowing parts emissive + emissiveIntensity 2…6
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), b.strength ?? 0.5, b.radius ?? 0.4, b.threshold ?? 1));
-    composer.addPass(new OutputPass());
-  }
-
   const S = {
-    THREE, scene, camera, renderer, lights, target, width: W, height: H,
+    THREE, scene, camera, renderer, lights, target, root, width: W, height: H,
     ease: { ...easeFallback, ...(st?.ease || {}) },
     range, lerp, clamp01, rng, color, mat, text, svg, model, particles,
-    /** draw the frame — call at the end of render(t) */
-    render() { if (composer) composer.render(); else renderer.render(scene, camera); },
+    /** draw the frame — call at the end of render(t) (t defaults to the runtime's current time) */
+    render(t = st?.time ?? 0) {
+      S._lastT = t;
+      S._beforeRender?.(t);
+      if (composer) composer.render(); else renderer.render(scene, camera);
+    },
+    /** redraw the last posed frame (video screens call this once their frame is decoded) */
+    _redraw() { S.render(S._lastT ?? st?.time ?? 0); },
+    _ensureBloom(b = {}) {
+      if (!composer) composer = makeComposer(S);
+      if (!S._bloomPass) {
+        // threshold 1: only what is brighter than lit white glows — give glowing parts emissive + emissiveIntensity 2…6
+        S._bloomPass = new UnrealBloomPass(new THREE.Vector2(W, H), b.strength ?? 0.5, b.radius ?? 0.4, b.threshold ?? 1);
+        composer.insertPass(S._bloomPass, composer.passes.length - 1);
+      } else Object.assign(S._bloomPass, { strength: b.strength ?? S._bloomPass.strength, radius: b.radius ?? S._bloomPass.radius, threshold: b.threshold ?? S._bloomPass.threshold });
+      return S._bloomPass;
+    },
+    _ensureBokeh() {
+      if (!composer) composer = makeComposer(S);
+      if (!S._bokeh) { S._bokeh = makeBokeh(S); composer.insertPass(S._bokeh, 1); }
+      return S._bokeh;
+    },
     /** point the camera: lookAt(target) after you move it */
     look(x = target.x, y = target.y, z = target.z) { target.set(x, y, z); camera.lookAt(target); },
     /** camera on a circle around the target: { radius=10, height=1.5, turns=0.15 per second, start=0 (radians) } */
@@ -370,13 +391,18 @@ export async function stage(root, o = {}) {
     /** make every mesh under obj cast (and optionally receive) shadows */
     shadows(obj, receive = false) { obj.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = receive; } }); return obj; },
     dispose() {
-      scene.traverse((m) => { m.geometry?.dispose?.(); [].concat(m.material || []).forEach((x) => x.dispose?.()); });
+      for (const c of S._contacts || []) c.dispose();
+      scene.traverse((m) => { m.geometry?.dispose?.(); [].concat(m.material || []).forEach((x) => x.dispose?.()); m.dispose?.(); });
+      scene.environment?.dispose?.();
       pmrem?.dispose(); composer?.dispose?.();
       renderer.dispose(); renderer.forceContextLoss();
       canvas.remove();
     },
   };
+  installKit(S);
+  if (o.bloom) S._ensureBloom(o.bloom === true ? {} : o.bloom);
   current = S;
+  if (preset) await studioPreset(S, preset.kind, preset);
   return S;
 }
 

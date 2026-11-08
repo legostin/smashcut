@@ -1,0 +1,9 @@
+{
+  "id": "laptop-ui-reveal",
+  "kind": "clip",
+  "name": "Kit · Laptop UI reveal",
+  "description": "Studio kit starter: a closed procedural laptop on a warm daylight set (S.studio daylight — sun through window mullions, sky fill, soft contact shadow) opens, the display wakes and a dashboard builds itself on screen (sidebar, KPI count-ups, a chart line drawing) — a canvas drawn from t, or your image / video — while the camera cranes down and pushes in. SaaS / product launch / feature demos; 16:9 and 9:16.",
+  "category": "3d-kit",
+  "tags": ["3d", "threejs", "kit", "studio", "laptop", "mockup", "device", "dashboard", "ui", "saas", "daylight", "screen"],
+  "duration": 6
+}

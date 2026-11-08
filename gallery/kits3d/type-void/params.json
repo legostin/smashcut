@@ -1,0 +1,12 @@
+{
+  "schema": {
+    "studio": { "type": "select", "label": "Studio preset", "options": ["abstract_void", "dark_luxe", "neon", "product_softbox", "white_cyc", "daylight"], "default": "abstract_void" },
+    "backdrop": { "type": "boolean", "label": "Backdrop (off = transparent, lights only)", "default": true },
+    "text": { "type": "text", "label": "Text", "default": "Float on" },
+    "weight": { "type": "number", "label": "Weight", "min": 300, "max": 900, "step": 100, "default": 800 },
+    "material": { "type": "select", "label": "Material", "options": ["glossy", "iridescent", "chrome", "clay", "glass"], "default": "glossy" },
+    "color": { "type": "color", "label": "Type colour", "default": "#d4ff3a", "token": "accent" },
+    "bg": { "type": "color", "label": "Void colour", "default": "#0a0a0b", "token": "bg" },
+    "satellites": { "type": "number", "label": "Satellite shapes", "min": 0, "max": 9, "step": 1, "default": 5 }
+  }
+}

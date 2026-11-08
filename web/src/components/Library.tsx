@@ -12,7 +12,7 @@ const close = () => setState({ libraryOpen: false });
 const CATEGORY: Record<string, string> = {
   titles: 'Titles', 'lower-thirds': 'Lower thirds', captions: 'Captions', infographics: 'Infographics', callouts: 'Callouts',
   logos: 'Logos', transitions: 'Graphic transitions', backgrounds: 'Backgrounds', social: 'Social media', product: 'Product & UI', maps: 'Maps',
-  audio: 'Podcasts & audio', broadcast: 'News & broadcast', 'text-effects': 'Text effects', '3d': '3D (Three.js)', custom: 'Custom', other: 'Other',
+  audio: 'Podcasts & audio', broadcast: 'News & broadcast', 'text-effects': 'Text effects', '3d': '3D (Three.js)', '3d-kit': '3D studio kits', custom: 'Custom', other: 'Other',
 };
 const catLabel = (c?: string) => { const k = CATEGORY[c || 'other']; return k ? t(k) : c ? c[0].toUpperCase() + c.slice(1) : t('Other'); };
 

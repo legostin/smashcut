@@ -1,0 +1,12 @@
+{
+  "schema": {
+    "studio": { "type": "select", "label": "Studio preset", "options": ["product_softbox", "white_cyc", "dark_luxe", "neon", "daylight", "abstract_void"], "default": "product_softbox" },
+    "backdrop": { "type": "boolean", "label": "Backdrop (off = transparent, lights only)", "default": true },
+    "screen": { "type": "text", "label": "Screen image / video (.png .jpg .mp4 .webm; empty = built-in app UI)", "default": "" },
+    "caption": { "type": "text", "label": "Built-in UI caption", "default": "Total balance" },
+    "value": { "type": "number", "label": "Built-in UI value", "min": 0, "max": 9999999, "step": 1, "default": 24830 },
+    "accent": { "type": "color", "label": "Accent (ring, UI)", "default": "#d4ff3a", "token": "accent" },
+    "finish": { "type": "select", "label": "Phone finish", "options": ["titanium", "black", "silver", "gold", "space"], "default": "titanium" },
+    "podium": { "type": "color", "label": "Podium", "default": "#1c1d21", "token": "surface" }
+  }
+}

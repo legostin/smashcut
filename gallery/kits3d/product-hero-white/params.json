@@ -1,0 +1,12 @@
+{
+  "schema": {
+    "studio": { "type": "select", "label": "Studio preset", "options": ["white_cyc", "product_softbox", "dark_luxe", "daylight", "neon", "abstract_void"], "default": "white_cyc" },
+    "backdrop": { "type": "boolean", "label": "Backdrop (off = transparent, lights only)", "default": true },
+    "model": { "type": "text", "label": "Product .glb (empty = built-in bottle)", "default": "" },
+    "label": { "type": "text", "label": "Label name", "default": "Nova" },
+    "color": { "type": "color", "label": "Liquid colour", "default": "#d4ff3a", "token": "accent" },
+    "cap": { "type": "select", "label": "Cap finish", "options": ["gold", "chrome", "black"], "default": "gold" },
+    "podium": { "type": "color", "label": "Podium", "default": "#f2f2f0" },
+    "spin": { "type": "number", "label": "Turn speed (°/s)", "min": 0, "max": 90, "step": 5, "default": 20 }
+  }
+}

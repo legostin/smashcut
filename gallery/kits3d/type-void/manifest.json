@@ -1,0 +1,9 @@
+{
+  "id": "type-void",
+  "kind": "clip",
+  "name": "Kit · Floating type in a void",
+  "description": "Studio kit starter: extruded 3D type rises letter by letter out of an endless gradient void (S.studio abstract_void — no horizon, dithered, tinted by the design tokens), settles into a gentle per-letter float with seeded satellite shapes drifting around; soft key + coloured rims, slow push-in with a handheld drift. Glossy / iridescent / chrome / clay / glass. Titles, statements, openers; 16:9 and 9:16 (wraps words in portrait).",
+  "category": "3d-kit",
+  "tags": ["3d", "threejs", "kit", "studio", "type", "title", "text", "float", "void", "gradient", "iridescent", "abstract"],
+  "duration": 6
+}

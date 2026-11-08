@@ -16,20 +16,21 @@ const urlBase = { builtin: '/gallery', library: '/library' } as const;
 export function listGallery(): GalleryItem[] {
   const out: GalleryItem[] = [];
   for (const origin of Object.keys(roots) as Origin[]) {
-    for (const kind of ['clips', 'music'] as const) {
+    // kits3d: ready-made Three.js studio starters (clips like any other, shown as "3D kits")
+    for (const kind of ['clips', 'kits3d', 'music'] as const) {
       const base = path.join(roots[origin], kind);
       if (!fs.existsSync(base)) continue;
       for (const e of fs.readdirSync(base, { withFileTypes: true })) {
         if (!e.isDirectory()) continue;
         const dir = path.join(base, e.name);
         const m = readJson<Partial<PackageManifest>>(path.join(dir, 'manifest.json'), {});
-        if (kind === 'clips' && !fs.existsSync(path.join(dir, 'index.html'))) continue;
+        if (kind !== 'music' && !fs.existsSync(path.join(dir, 'index.html'))) continue;
         if (kind === 'music' && !fs.existsSync(path.join(dir, 'score.js'))) continue;
         out.push({
-          id: e.name, kind: kind === 'clips' ? 'clip' : 'music', name: m.name || e.name, description: m.description, category: m.category || (kind === 'music' ? 'music' : 'other'),
+          id: e.name, kind: kind === 'music' ? 'music' : 'clip', name: m.name || e.name, description: m.description, category: m.category || (kind === 'music' ? 'music' : kind === 'kits3d' ? '3d-kit' : 'other'),
           tags: m.tags || [], duration: m.duration, origin,
-          url: kind === 'clips' ? `${urlBase[origin]}/clips/${e.name}/index.html` : `${urlBase[origin]}/music/${e.name}/score.js`,
-          thumb: kind === 'clips' ? `/api/gallery/thumb/${origin}/${e.name}` : undefined,
+          url: kind !== 'music' ? `${urlBase[origin]}/${kind}/${e.name}/index.html` : `${urlBase[origin]}/music/${e.name}/score.js`,
+          thumb: kind !== 'music' ? `/api/gallery/thumb/${origin}/${e.name}` : undefined,
         });
       }
     }
@@ -37,9 +38,15 @@ export function listGallery(): GalleryItem[] {
   return out;
 }
 
-export function packageDir(origin: Origin, kind: 'clip' | 'music', id: string) {
-  return path.join(roots[origin], kind === 'clip' ? 'clips' : 'music', id);
+/** folder of a clip package: clips/<id>, or kits3d/<id> for the 3D studio starters */
+function clipFolder(origin: Origin, id: string) {
+  return !fs.existsSync(path.join(roots[origin], 'clips', id)) && fs.existsSync(path.join(roots[origin], 'kits3d', id)) ? 'kits3d' : 'clips';
 }
+export function packageDir(origin: Origin, kind: 'clip' | 'music', id: string) {
+  return path.join(roots[origin], kind === 'clip' ? clipFolder(origin, id) : 'music', id);
+}
+/** URL of a clip package's page */
+const clipPage = (origin: Origin, id: string) => `${urlBase[origin]}/${clipFolder(origin, id)}/${id}/index.html`;
 
 const thumbJobs = new Map<string, Promise<string>>();
 export function galleryThumb(origin: Origin, id: string): Promise<string> {
@@ -53,7 +60,7 @@ export function galleryThumb(origin: Origin, id: string): Promise<string> {
     const m = readJson<Partial<PackageManifest>>(path.join(dir, 'manifest.json'), {});
     const d = m.duration || 5;
     const input = { width: 1920, height: 1080, fps: 30, duration: d, timing: false };
-    const url = `${BASE_URL}${urlBase[origin]}/clips/${id}/index.html#${encodeURIComponent(JSON.stringify(input))}`;
+    const url = `${BASE_URL}${clipPage(origin, id)}#${encodeURIComponent(JSON.stringify(input))}`;
     const r = await renderClipFrames(url, { width: 1920, height: 1080 }, [d * 0.55]);
     const png = await sheet([{ png: r.frames[0], caption: '' }], { cols: 1, width: 480, checker: false, bg: '#16161b' });
     fs.mkdirSync(path.dirname(out), { recursive: true });
@@ -94,7 +101,7 @@ export function galleryPreview(origin: Origin, id: string, front = false): Promi
         const d = m.duration || 5;
         const len = Math.min(d, 6), fps = 24;
         const input = { width: 1920, height: 1080, fps: 30, duration: d, timing: false };
-        const url = `${BASE_URL}${urlBase[origin]}/clips/${id}/index.html#${encodeURIComponent(JSON.stringify(input))}`;
+        const url = `${BASE_URL}${clipPage(origin, id)}#${encodeURIComponent(JSON.stringify(input))}`;
         // the most lively stretch: start a little in so entrances are visible, end before long holds
         const t0 = Math.max(0, Math.min(d - len, d * 0.05));
         const times = Array.from({ length: Math.round(len * fps) }, (_, k) => t0 + k / fps);

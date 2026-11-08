@@ -1,0 +1,9 @@
+{
+  "id": "phone-podium",
+  "kind": "clip",
+  "name": "Kit · Phone mockup on a podium",
+  "description": "Studio kit starter: procedural phone mockup (titanium frame, glossy glass, live screen) rises onto a stepped podium with a glowing accent ring and settles into a gentle sway under product_softbox lighting (graphite seamless, long strip highlights). Screen shows your image or video (seeked frame-exactly) or a built-in app UI animated from t (balance count-up, bars, cards). 16:9 and 9:16.",
+  "category": "3d-kit",
+  "tags": ["3d", "threejs", "kit", "studio", "phone", "mockup", "device", "app", "screen", "video", "podium", "softbox"],
+  "duration": 6
+}

@@ -1,0 +1,9 @@
+{
+  "id": "neon-object",
+  "kind": "clip",
+  "name": "Kit · Neon object",
+  "description": "Studio kit starter: a glossy black / chrome / iridescent object (knot, ring, blob, capsules, your text or SVG logo) hovers and turns above a small pedestal on a black set (S.studio neon): two coloured strip lights from the design tokens strike on like real neon tubes (bloom), coloured washes on the seamless wall, wet reflective floor, light haze, slow camera arc. Night / gaming / music / tech promos; 16:9 and 9:16.",
+  "category": "3d-kit",
+  "tags": ["3d", "threejs", "kit", "studio", "neon", "glow", "bloom", "reflection", "dark", "object", "abstract", "night"],
+  "duration": 6
+}
