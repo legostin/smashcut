@@ -293,6 +293,27 @@ server.registerTool('voice_report', {
   inputSchema: {},
 }, safe(async () => text(await api('GET', '/api/voice/report'))));
 
+server.registerTool('ask_user', {
+  description: 'Ask the user a question and WAIT for the answer (shown as a card in the editor chat). Use it when the direction is genuinely unclear and a wrong guess would waste work: the idea, tone, style, script angle. Best with drafts: make 2–4 cheap options first (short script variants as text; style frames — render_frame / render_clip of quick sketches — passed as option.image) so the user can point instead of describe. Keep it to one clear question with 2–4 options; the user may also answer in free text or tell you to decide. If autopilot is on you get an immediate reply telling you to decide yourself — then do, and say what you chose. Never ask about things you can decide from the brief, the design system or good craft.',
+  inputSchema: {
+    question: z.string(),
+    options: z.array(z.object({ label: z.string(), description: z.string().optional(), image: z.string().optional().describe('project file to show for this option, e.g. a render_frame / render_clip PNG or media/… image') })).max(6).optional(),
+    multi: z.boolean().optional().describe('allow choosing several options'),
+  },
+}, safe(async (a) => {
+  const r = await api('POST', '/api/agent/ask', a);
+  if (r.autopilot) return text(r.autopilot);
+  const until = Date.now() + 55 * 60_000;
+  while (Date.now() < until) {
+    await new Promise((res) => setTimeout(res, 2000));
+    try {
+      const { answer } = await apiOnce('GET', `/api/agent/ask/${r.id}`);
+      if (answer != null) return text(`The user answered: ${answer}`);
+    } catch { /* editor restarting: keep waiting */ }
+  }
+  return text('No answer within an hour — continue with your best judgement and say which option you chose.');
+}));
+
 server.registerTool('approve_permission', {
   description: 'Internal: permission prompt bridge. Claude Code calls this (via --permission-prompt-tool) when an action needs approval; the user approves or denies it in the editor UI.',
   inputSchema: { tool_name: z.string(), input: z.record(z.string(), z.any()), tool_use_id: z.string().optional() },

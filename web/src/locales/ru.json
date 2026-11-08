@@ -883,5 +883,19 @@
   "Use": "Выбрать",
   "Applies to new tasks and to your next message in this one. Sub-agents use the same.": "Действует для новых задач и для следующего сообщения в текущей. Сабагенты используют то же.",
   "Not a valid URL: {url}": "Некорректная ссылка: {url}",
-  "Only http(s) links can be imported": "Можно импортировать только http(s)-ссылки"
+  "Only http(s) links can be imported": "Можно импортировать только http(s)-ссылки",
+  "The agent asks": "Агент спрашивает",
+  "The agent asked": "Агент спрашивал",
+  "Answer": "Ответить",
+  "You decide": "Решай сам",
+  "Let the agent choose and explain why": "Пусть агент выберет сам и объяснит почему",
+  "or type your answer below": "или напишите ответ ниже",
+  "Answer the agent (or pick an option above)…": "Ответьте агенту (или выберите вариант выше)…",
+  "Autopilot": "Автопилот",
+  "Asks": "Спрашивает",
+  "Autopilot: the agent decides everything itself and explains its choices": "Автопилот: агент всё решает сам и объясняет свой выбор",
+  "The agent may ask you and show drafts to choose a direction — click for autopilot": "Агент может спрашивать и показывать черновики, чтобы выбрать направление — нажмите для автопилота",
+  "Asking you": "Спрашивает вас",
+  "No open question": "Нет открытого вопроса",
+  "waiting for your answer": "ждёт вашего ответа"
 }

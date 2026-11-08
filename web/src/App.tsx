@@ -160,7 +160,7 @@ function TopBar() {
   const project = useStore((s) => s.project)!;
   const connected = useStore((s) => s.connected);
   const job = useStore((s) => s.jobs.find((j) => j.status === 'running'));
-  const running = useStore((s) => s.tasks.filter((x) => x.status === 'running' && !x.waiting).length); // a lead waiting for its sub-agents is idle
+  const running = useStore((s) => s.tasks.filter((x) => x.status === 'running' && !x.waiting && !(x.question && x.question.answer == null)).length); // waiting for sub-agents / for your answer = idle
   const [family, setFamily] = useState<{ dir: string; label?: string; width: number; height: number; current?: boolean }[]>([]);
   useEffect(() => { document.title = /Smashcut/.test(project.name) ? project.name : `${project.name} — Smashcut`; }, [project.name]);
   useEffect(() => { api<typeof family>('GET', '/api/variants').then(setFamily).catch(() => setFamily([])); }, [project.name, project.width, project.height]);

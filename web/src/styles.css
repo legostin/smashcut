@@ -1107,3 +1107,27 @@ button.chip:hover { filter: brightness(1.25); }
 /* the model menu spans the whole composer (the side panel is narrow) */
 .composer .model-pick { position: static; }
 .composer .model-menu { left: 8px; right: 8px; width: auto; }
+
+/* ---------- the agent asks (ask_user) ---------- */
+.q-card { margin: 8px 0; padding: 12px; border-radius: 14px; border: 1px solid var(--line2); background: rgba(255, 255, 255, 0.025); }
+.q-card.live { border-color: rgba(212, 255, 58, 0.45); box-shadow: 0 0 0 4px rgba(212, 255, 58, 0.06); }
+.q-head { display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 6px; }
+.q-card:not(.live) .q-head { color: var(--fg3); }
+.q-text { font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+.q-options { display: flex; flex-direction: column; gap: 6px; }
+.q-options.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.q-opt { display: flex; flex-direction: column; align-items: stretch; gap: 4px; text-align: left; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line2); background: rgba(255, 255, 255, 0.03); color: var(--fg); transition: border-color var(--t), background var(--t), transform var(--t); }
+.q-opt:not(:disabled):hover { border-color: var(--accent); background: rgba(212, 255, 58, 0.06); transform: translateY(-1px); }
+.q-opt.on { border-color: var(--accent); background: rgba(212, 255, 58, 0.1); }
+.q-opt:disabled { cursor: default; opacity: 0.75; }
+.q-opt img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 7px; background: #000; cursor: zoom-in; }
+.q-opt-label { font-size: 12.5px; font-weight: 600; }
+.q-opt-label b { color: var(--accent); margin-right: 2px; }
+.q-opt-desc { font-size: 11.5px; color: var(--fg2); line-height: 1.45; }
+.q-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.auto-pill { height: 24px; padding: 0 9px; border-radius: 99px; border: 1px solid var(--line2); color: var(--fg2); font-size: 11.5px; white-space: nowrap; transition: all var(--t); }
+.auto-pill:hover { color: var(--fg); border-color: var(--line3); }
+.auto-pill.on { color: #0a0a0b; background: var(--accent); border-color: var(--accent); font-weight: 600; }
+.composer-bar { flex-wrap: nowrap; align-items: flex-end; gap: 6px; }
+.composer-bar > .row { flex: 1 1 auto; flex-wrap: wrap; min-width: 0; }
+.composer-bar > .send, .composer-bar > .row + .row { flex: none; }

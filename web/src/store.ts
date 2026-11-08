@@ -64,6 +64,8 @@ export interface State {
   /** model per agent and reasoning effort picked in the chat ('' = the Settings default) */
   chatModel: { claude: string; codex: string };
   chatEffort: '' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+  /** autopilot: agents never ask, they decide (else they may ask with drafts) */
+  chatAutopilot: boolean;
   chatDraft: string;
 }
 
@@ -72,7 +74,7 @@ const initial: State = {
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
   view: (() => { try { const v = localStorage.getItem('view'); return v === 'board' || v === 'edit' || v === 'nodes' ? v : 'story'; } catch { return 'story'; } })() as View,
-  screen: new URLSearchParams(location.search).get('p') || /render\.html$/.test(location.pathname) ? 'editor' : 'home', references: [], render3d: [], sceneSelection: [], chatModel: (() => { try { return { claude: '', codex: '', ...JSON.parse(localStorage.getItem('chatModel') || '{}') }; } catch { return { claude: '', codex: '' }; } })(), chatEffort: (() => { try { return (localStorage.getItem('chatEffort') || '') as any; } catch { return ''; } })(), timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
+  screen: new URLSearchParams(location.search).get('p') || /render\.html$/.test(location.pathname) ? 'editor' : 'home', references: [], render3d: [], sceneSelection: [], chatModel: (() => { try { return { claude: '', codex: '', ...JSON.parse(localStorage.getItem('chatModel') || '{}') }; } catch { return { claude: '', codex: '' }; } })(), chatEffort: (() => { try { return (localStorage.getItem('chatEffort') || '') as any; } catch { return ''; } })(), chatAutopilot: (() => { try { return localStorage.getItem('autopilot') === '1'; } catch { return false; } })(), timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -287,7 +289,7 @@ function modelOpts(taskId: string) {
   const task = st.tasks.find((x) => x.id === taskId);
   const agent = task?.agent || st.agent;
   const model = st.chatModel[agent], effort = st.chatEffort;
-  return { ...(model !== undefined ? { model } : {}), ...(effort !== undefined ? { effort } : {}) };
+  return { ...(model !== undefined ? { model } : {}), ...(effort !== undefined ? { effort } : {}), autopilot: st.chatAutopilot };
 }
 
 export const actions = {
@@ -339,7 +341,7 @@ export const actions = {
   },
   async startTask(prompt: string, ctx: { itemId?: string | null; clipId?: string } = {}) {
     const st = getState();
-    const task = await api<Task>('POST', '/api/tasks', { prompt, agent: st.agent, itemId: ctx.itemId || undefined, clipId: ctx.clipId, playhead: time.get(), lang: getLocale(), model: st.chatModel[st.agent] || undefined, effort: st.chatEffort || undefined });
+    const task = await api<Task>('POST', '/api/tasks', { prompt, agent: st.agent, itemId: ctx.itemId || undefined, clipId: ctx.clipId, playhead: time.get(), lang: getLocale(), model: st.chatModel[st.agent] || undefined, effort: st.chatEffort || undefined, autopilot: st.chatAutopilot });
     setState({ selectedTaskId: task.id, selectedItemId: null, sideTab: 'agent' });
     return task;
   },
@@ -347,6 +349,14 @@ export const actions = {
   interrupt(taskId: string, prompt: string) { return api('POST', `/api/tasks/${taskId}/interrupt`, { prompt, lang: getLocale(), ...modelOpts(taskId) }); },
   /** model / effort for the chat (remembered per browser); applies to new tasks and the next message of the current one */
   setChatModel(agent: 'claude' | 'codex', model: string) { const m = { ...getState().chatModel, [agent]: model }; try { localStorage.setItem('chatModel', JSON.stringify(m)); } catch {} setState({ chatModel: m }); },
+  setAutopilot(on: boolean) {
+    try { localStorage.setItem('autopilot', on ? '1' : '0'); } catch {}
+    setState({ chatAutopilot: on });
+    // applies at once to the task open in the chat if it is working
+    const st = getState(), task = st.tasks.find((x) => x.id === st.selectedTaskId);
+    if (task && (task.status === 'running' || task.status === 'queued')) api('POST', `/api/tasks/${task.id}/options`, { autopilot: on }).catch(() => {});
+  },
+  answer(taskId: string, answer: string) { return api('POST', `/api/tasks/${taskId}/answer`, { answer }); },
   setChatEffort(effort: State['chatEffort']) { try { localStorage.setItem('chatEffort', effort); } catch {} setState({ chatEffort: effort }); },
   /** message for a working agent that does not stop it — it sees it at its next step */
   steer(taskId: string, prompt: string, images: string[] = []) { return api('POST', `/api/tasks/${taskId}/steer`, { prompt, images }); },

@@ -20,7 +20,7 @@ import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
 import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport, getManifest } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
-import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus, interruptTask, steerTask, takeSteer, setTaskOptions, delegateTask, waitSubagents, children } from './agents/runner.ts';
+import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus, interruptTask, steerTask, takeSteer, setTaskOptions, askUser, answerOf, answerQuestion, delegateTask, waitSubagents, children } from './agents/runner.ts';
 import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
@@ -259,9 +259,9 @@ async function sendComments(ids: string[] | undefined, agent?: 'claude' | 'codex
 /** model / effort from the chat: aliases or full ids (letters, digits, . - _ :), effort from the known levels */
 const cleanModel = (m?: string) => (m && /^[\w.:-]{1,80}$/.test(m) ? m : undefined);
 const cleanEffort = (e?: string) => (['low', 'medium', 'high', 'xhigh', 'max'].includes(String(e)) ? (e as Task['effort']) : undefined);
-function setTaskModel(id: string, b: { model?: string; effort?: string }) {
-  if (b.model === undefined && b.effort === undefined) return;
-  setTaskOptions(id, { model: b.model === '' ? '' : cleanModel(b.model), effort: b.effort === '' ? '' : cleanEffort(b.effort) });
+function setTaskModel(id: string, b: { model?: string; effort?: string; autopilot?: boolean }) {
+  if (b.model === undefined && b.effort === undefined && b.autopilot === undefined) return;
+  setTaskOptions(id, { model: b.model === undefined ? undefined : b.model === '' ? '' : cleanModel(b.model), effort: b.effort === undefined ? undefined : b.effort === '' ? '' : cleanEffort(b.effort), autopilot: b.autopilot === undefined ? undefined : !!b.autopilot });
 }
 
 export async function registerRoutes(app: FastifyInstance) {
@@ -541,13 +541,28 @@ export async function registerRoutes(app: FastifyInstance) {
     const item = b.itemId ? store.project.items.find((i) => i.id === b.itemId) : undefined;
     const clipId = b.clipId || (item?.kind === 'clip' ? item.ref : undefined);
     const prompt = chatTaskPrompt({ prompt: b.prompt, project: store.project, playhead: b.playhead, item, clipId, hasScript: getScript().scenes.length > 0 });
-    return startTask({ agent: b.agent, title: b.prompt.split('\n')[0].slice(0, 80), prompt: prompt + langLine((b as any).lang), clipId: undefined, model: cleanModel(b.model), effort: cleanEffort(b.effort) });
+    return startTask({ agent: b.agent, title: b.prompt.split('\n')[0].slice(0, 80), prompt: prompt + langLine((b as any).lang), clipId: undefined, model: cleanModel(b.model), effort: cleanEffort(b.effort), autopilot: !!(b as any).autopilot });
   });
   app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[]; lang?: string; model?: string; effort?: Task['effort'] } }>('/api/tasks/:id/message', async (req) => { setTaskModel(req.params.id, req.body); return followUp(req.params.id, req.body.prompt + langLine(req.body.lang), req.body.images || []); });
   app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[]; lang?: string; model?: string; effort?: Task['effort'] } }>('/api/tasks/:id/interrupt', async (req) => { setTaskModel(req.params.id, req.body); return interruptTask(req.params.id, req.body.prompt + langLine(req.body.lang), req.body.images || []); });
   // a message for the running agent that does NOT stop it: delivered at its next step (hook / next studio tool result)
   app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[] } }>('/api/tasks/:id/steer', async (req) => steerTask(req.params.id, req.body.prompt, req.body.images || []));
   app.get('/api/agent/steer', async (req) => { const tid = taskOf(req); return { text: tid ? takeSteer(tid) : '' }; });
+  // ask_user: the agent asks (with draft options); the MCP bridge polls for the answer
+  app.post<{ Body: { question: string; options?: { label: string; description?: string; image?: string }[]; multi?: boolean } }>('/api/agent/ask', async (req) => {
+    const tid = taskOf(req);
+    if (!tid) throw uerr('ask_user works only inside an editor task');
+    return askUser(tid, req.body || ({} as any));
+  });
+  app.get<{ Params: { qid: string } }>('/api/agent/ask/:qid', async (req) => { const tid = taskOf(req); return { answer: tid ? answerOf(tid, req.params.qid) : 'no task' }; });
+  // switch a task to / from autopilot while it runs (an open question is then answered with "you decide")
+  app.post<{ Params: { id: string }; Body: { autopilot?: boolean } }>('/api/tasks/:id/options', async (req) => {
+    setTaskModel(req.params.id, { autopilot: req.body?.autopilot });
+    const t = listTasks().find((x) => x.id === req.params.id);
+    if (req.body?.autopilot && t?.question && t.question.answer == null) answerQuestion(req.params.id, '');
+    return { ok: true };
+  });
+  app.post<{ Params: { id: string }; Body: { answer: string } }>('/api/tasks/:id/answer', async (req) => answerQuestion(req.params.id, String(req.body?.answer ?? '')));
   app.post<{ Params: { id: string } }>('/api/tasks/:id/cancel', async (req) => { cancelTask(req.params.id); return { ok: true }; });
   app.get('/api/agents/check', async () => {
     const check = async (cmd: string) => { try { const r = await run(cmd, ['--version']); return r.code === 0 ? r.stdout.trim().split('\n')[0] : null; } catch { return null; } };

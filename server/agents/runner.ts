@@ -2,7 +2,7 @@ import { msg } from '../i18n.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import type { AgentEvent, AgentKind, Task } from '../../shared/types.ts';
+import type { AgentEvent, AgentKind, AgentQuestion, Task } from '../../shared/types.ts';
 import { BASE_URL, MCP_STDIO, GALLERY_DIR, getSettings, LIBRARY_DIR, HOME_DIR } from '../config.ts';
 import { cur, hasProject, runIn, type ProjectStore } from '../project.ts';
 import { bus } from '../bus.ts';
@@ -77,12 +77,12 @@ export function listTasks() {
 }
 export function getTask(id: string) { return tasks.get(id); }
 
-export interface StartOpts { agent?: AgentKind; title: string; prompt: string; clipId?: string; commentIds?: string[]; images?: string[]; parentId?: string; model?: string; effort?: Task['effort'] }
+export interface StartOpts { agent?: AgentKind; title: string; prompt: string; clipId?: string; commentIds?: string[]; images?: string[]; parentId?: string; model?: string; effort?: Task['effort']; autopilot?: boolean }
 
 export function startTask(o: StartOpts): Task {
   const t: Task = {
     id: 't' + nid(), agent: o.agent || getSettings().defaultAgent, title: o.title, prompt: o.prompt, clipId: o.clipId, commentIds: o.commentIds || [], parentId: o.parentId,
-    ...(o.model ? { model: o.model } : {}), ...(o.effort ? { effort: o.effort } : {}),
+    ...(o.model ? { model: o.model } : {}), ...(o.effort ? { effort: o.effort } : {}), ...(o.autopilot ? { autopilot: true } : {}),
     status: 'queued', events: [], createdAt: new Date().toISOString(),
   };
   tasks.set(t.id, t);
@@ -125,6 +125,7 @@ export function steerTask(taskId: string, prompt: string, images: string[] = [])
   if (!t) throw new Error('task not found');
   if (t.status === 'queued' && queue.some((x) => x.taskId === taskId)) return interruptTask(taskId, prompt, images); // not started: merge
   if (t.status !== 'running' || !t.pid || !alive(t.pid)) return followUp(taskId, prompt, images);
+  if (t.question && t.question.answer == null) return answerQuestion(taskId, prompt); // typed while it asks = the answer
   const id = nid();
   t.steer = [...(t.steer || []), { id, text: prompt, images, at: new Date().toISOString() }];
   pushEvent(t, { kind: 'user', text: prompt, steerId: id } as any);
@@ -133,10 +134,52 @@ export function steerTask(taskId: string, prompt: string, images: string[] = [])
   return t;
 }
 
+/**
+ * ask_user: the agent asks the user (optionally with draft options to compare). In autopilot it gets told to decide
+ * itself. The question lives on the task (survives editor restarts); the MCP bridge polls answerOf().
+ */
+export function askUser(taskId: string, q: { question: string; options?: AgentQuestion['options']; multi?: boolean }): { id: string; autopilot?: string } {
+  const t = tasks.get(taskId);
+  if (!t) throw uerr('Unknown task');
+  if (t.autopilot || t.parentId) return { id: '', autopilot: 'Autopilot is on — do not wait for the user: pick what you would recommend (or try the most promising option), continue, and state the choice and why in your summary.' };
+  // option images: project files (render_frame / render_clip sheets, media) — stored project-relative for the UI
+  const dir = owner.get(t.id)?.dir || cur().dir;
+  const rel = (p?: string) => { if (!p) return undefined; const a = path.isAbsolute(p) ? p : path.join(dir, p); const r = path.relative(dir, a); return r.startsWith('..') || !fs.existsSync(a) ? undefined : r; };
+  const question: AgentQuestion = { id: 'q' + nid(), question: String(q.question || '').slice(0, 2000), options: (q.options || []).slice(0, 6).map((o) => ({ label: String(o.label).slice(0, 120), description: o.description ? String(o.description).slice(0, 800) : undefined, image: rel(o.image) })), multi: !!q.multi, askedAt: new Date().toISOString() };
+  t.question = question;
+  pushEvent(t, { kind: 'question', text: question.question, question });
+  emitTask(t);
+  pump(); // an asking agent is idle: its slot may go to queued work
+  return { id: question.id };
+}
+export function answerOf(taskId: string, qid: string): string | null {
+  const t = tasks.get(taskId);
+  if (!t) return 'The task was closed — continue with your best judgement.';
+  if (t.status === 'cancelled') return 'The task was cancelled.';
+  const q = t.question?.id === qid ? t.question : null;
+  if (!q) return 'The question is no longer open — continue with your best judgement.';
+  if (q.answer == null) return null;
+  // handed to the agent: the question is closed now (the answer stays in the feed as a user message)
+  t.question = undefined;
+  emitTask(t);
+  return q.answer;
+}
+/** the user answers (option labels and/or free text; empty = let the agent choose) */
+export function answerQuestion(taskId: string, answer: string) {
+  const t = tasks.get(taskId);
+  if (!t?.question || t.question.answer != null) throw uerr('No open question');
+  t.question.answer = answer.trim() || 'You decide — pick what you recommend and explain why.';
+  t.question.answeredAt = new Date().toISOString();
+  pushEvent(t, { kind: 'user', text: t.question.answer });
+  emitTask(t);
+  return t;
+}
+
 /** model / effort for the task's next runs ('' = back to the Settings default, undefined = unchanged) */
-export function setTaskOptions(taskId: string, o: { model?: string; effort?: string }) {
+export function setTaskOptions(taskId: string, o: { model?: string; effort?: string; autopilot?: boolean }) {
   const t = tasks.get(taskId);
   if (!t) return;
+  if (o.autopilot !== undefined) t.autopilot = o.autopilot || undefined;
   if (o.model !== undefined) t.model = o.model || undefined;
   if (o.effort !== undefined) t.effort = (o.effort || undefined) as Task['effort'];
   emitTask(t);
@@ -228,7 +271,7 @@ function pump() {
     if (qi < 0) continue;
     if (!t || t.status === 'cancelled') { queue.splice(qi, 1); continue; }
     const r = running();
-    const active = r.filter((x) => !waitingLeads.has(x.id)).length;
+    const active = r.filter((x) => !waitingLeads.has(x.id) && !(x.question && x.question.answer == null)).length; // asking = idle too
     const free = active < cap && (!t.parentId || r.filter((x) => x.parentId === t.parentId).length < Math.max(1, st.maxSubagents || 1));
     if (!free) continue;
     queue.splice(qi, 1);
@@ -256,7 +299,7 @@ export function delegateTask(parentId: string, o: { title: string; prompt: strin
   return inTask(parent, () => {
     // sub-agents inherit the lead's model / effort (same agent kind)
     const same = !o.agent || o.agent === parent.agent;
-    const t = startTask({ agent: o.agent || parent.agent, title: o.title.trim(), prompt: o.prompt.trim(), clipId: o.clipId, parentId, ...(same ? { model: parent.model, effort: parent.effort } : {}) });
+    const t = startTask({ agent: o.agent || parent.agent, title: o.title.trim(), prompt: o.prompt.trim(), clipId: o.clipId, parentId, autopilot: true, ...(same ? { model: parent.model, effort: parent.effort } : {}) }); // sub-agents never ask: the lead does
     pushEvent(parent, { kind: 'status', ...msg('sub-agent started: {title}', { title: t.title }) });
     return t;
   });
@@ -297,7 +340,10 @@ function codexIsolation(): string[] {
 function systemPromptFor(t: Task) {
   const st = getSettings();
   const role = t.parentId ? SUBAGENT_ROLE(tasks.get(t.parentId)?.title || '') : st.subagents ? SUBAGENTS_PROMPT : '';
-  return SYSTEM_PROMPT + houseStylePrompt(st.houseStyle) + role;
+  const mode = t.autopilot || t.parentId
+    ? '\n\nAUTOPILOT is on for this task: never wait for the user — do not call ask_user; make the decisions yourself (when unsure, try the most promising option), build, and explain your choices briefly at the end.'
+    : '';
+  return SYSTEM_PROMPT + houseStylePrompt(st.houseStyle) + role + mode;
 }
 
 function mcpConfigFile(taskId: string) {
@@ -348,7 +394,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '-c', `mcp_servers.studio.args=[${JSON.stringify(MCP_STDIO)}]`,
       '-c', `mcp_servers.studio.env={STUDIO_URL=${JSON.stringify(BASE_URL)},STUDIO_TASK=${JSON.stringify(t.id)},STUDIO_PROJECT=${JSON.stringify(store.id)}}`,
       '-c', 'mcp_servers.studio.startup_timeout_sec=30',
-      '-c', 'mcp_servers.studio.tool_timeout_sec=600',
+      '-c', 'mcp_servers.studio.tool_timeout_sec=3600', // ask_user waits for the user; long renders
       '-c', 'mcp_servers.studio.default_tools_approval_mode="approve"',
       ...(settings.agentUserConfig ? [] : codexIsolation()),
       '-c', `sandbox_workspace_write.writable_roots=[${JSON.stringify(store.dir)}]`];

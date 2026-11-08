@@ -152,7 +152,9 @@ export type TaskStatus = 'queued' | 'running' | 'done' | 'error' | 'cancelled';
 
 export interface AgentEvent {
   t: number;
-  kind: 'user' | 'text' | 'thinking' | 'tool' | 'tool_result' | 'status' | 'error' | 'result' | 'image';
+  kind: 'user' | 'text' | 'thinking' | 'tool' | 'tool_result' | 'status' | 'error' | 'result' | 'image' | 'question';
+  /** kind=question: the question with its options */
+  question?: AgentQuestion;
   /** translatable form of `text` (English key + params) */
   key?: string;
   params?: Record<string, string | number>;
@@ -195,6 +197,10 @@ export interface Task {
   later?: { prompt: string; images: string[]; steered?: boolean }[];
   /** messages the user typed while the agent works — delivered into the running session at its next step (no stop) */
   steer?: { id: string; text: string; images: string[]; at: string; delivered?: string }[];
+  /** autopilot: the agent never asks — it decides itself and explains its choices */
+  autopilot?: boolean;
+  /** an open question to the user (ask_user): the agent waits for the answer */
+  question?: AgentQuestion;
   /** a lead agent blocked in wait_subagents (idle: not counted against the agents-at-once limit) */
   waiting?: boolean;
   /** model / reasoning effort chosen in the chat for this task (else the Settings defaults) */
@@ -338,6 +344,17 @@ export interface Inspiration {
 }
 
 /** a reference attached to the project: a technique from the library, an image/video from media, or a link */
+/** a question an agent asks the user — optionally with draft options (text and/or an image to compare) */
+export interface AgentQuestion {
+  id: string;
+  question: string;
+  options: { label: string; description?: string; image?: string }[];
+  multi?: boolean;
+  askedAt: string;
+  answer?: string;
+  answeredAt?: string;
+}
+
 export interface Reference {
   id: string;
   kind: 'technique' | 'music-technique' | 'media' | 'link' | 'inspiration';

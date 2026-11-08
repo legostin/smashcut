@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AgentEvent, PermissionRequest, Task } from '../../../shared/types';
-import { useStore, setState, actions, api } from '../store';
+import { useStore, setState, actions, api, pfile } from '../store';
 import { sceneChip } from './Storyboard';
 import { Icon } from './Icon';
 import { Markdown } from './Markdown';
@@ -151,14 +151,15 @@ function Feed({ task }: { task: Task }) {
   const perms = useMemo(() => allPerms.filter((p) => p.taskId === task.id), [allPerms, task.id]);
   const blocks = useMemo(() => buildBlocks(task.events), [task.events]);
   const busy = task.status === 'running' || task.status === 'queued';
+  const openQ = !!task.question && task.question.answer == null;
   useEffect(() => { const el = scroller.current; if (el && stick.current) el.scrollTop = el.scrollHeight; }, [task.events.length, perms.length]);
   return (
     <div className="feed" ref={scroller} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40; }}>
       {blocks.map((b, i) => b.kind === 'steps'
         ? <Steps key={i} steps={b.steps} images={b.images} live={busy && i === blocks.length - 1} />
-        : <Message key={i} e={b.e} />)}
+        : <Message key={i} e={b.e} task={task} />)}
       {perms.map((p) => <PermissionCard key={p.id} p={p} />)}
-      {busy && !perms.length && <div className="working"><span className="spinner" /> {task.status === 'queued' ? t('queued') : t('working')}</div>}
+      {busy && !perms.length && !openQ && <div className="working"><span className="spinner" /> {task.status === 'queued' ? t('queued') : t('working')}</div>}
       {!busy && (
         <div className="task-foot">
           <span>{t(STATUS[task.status])}{task.commitAfter ? ' · ' + t('version {v}', { v: task.commitAfter }) : ''}{task.costUsd ? ` · $${task.costUsd.toFixed(2)}` : ''}</span>
@@ -169,8 +170,9 @@ function Feed({ task }: { task: Task }) {
 }
 const STATUS: Record<Task['status'], string> = { queued: 'queued', running: 'working', done: 'Done', error: 'Error', cancelled: 'Stopped' };
 
-function Message({ e }: { e: AgentEvent }) {
+function Message({ e, task }: { e: AgentEvent; task: Task }) {
   const [open, setOpen] = useState(false);
+  if (e.kind === 'question' && e.question) return <QuestionCard q={e.question} task={task} />;
   if (e.kind === 'user') {
     const long = (e.text || '').length > 420;
     return <div className={'msg-user' + (long && !open ? ' clamp' : '')} onClick={() => long && setOpen(!open)}>{e.text}</div>;
@@ -181,6 +183,44 @@ function Message({ e }: { e: AgentEvent }) {
   return <div className="msg-error">{e.text}</div>;
 }
 
+/** the agent asks — options (with draft images) to pick, free text in the composer, or "you decide" */
+function QuestionCard({ q, task }: { q: NonNullable<AgentEvent['question']>; task: Task }) {
+  const live = task.question?.id === q.id && task.question.answer == null && (task.status === 'running' || task.status === 'queued');
+  const [picked, setPicked] = useState<string[]>([]);
+  const [sending, setSending] = useState(false);
+  const answer = async (text: string) => { if (sending) return; setSending(true); try { await actions.answer(task.id, text); } finally { setSending(false); } };
+  const choose = (label: string) => {
+    if (!live) return;
+    if (q.multi) setPicked((p) => (p.includes(label) ? p.filter((x) => x !== label) : [...p, label]));
+    else answer(label);
+  };
+  const withImages = q.options.some((o) => o.image);
+  return (
+    <div className={'q-card' + (live ? ' live' : '')}>
+      <div className="q-head"><Icon name="sparkle" size={13} /> {live ? t('The agent asks') : t('The agent asked')}</div>
+      <div className="q-text"><Markdown text={q.question} /></div>
+      {q.options.length > 0 && (
+        <div className={'q-options' + (withImages ? ' grid' : '')}>
+          {q.options.map((o, i) => (
+            <button key={i} className={'q-opt' + (picked.includes(o.label) ? ' on' : '')} disabled={!live || sending} onClick={() => choose(o.label)}>
+              {o.image && <img src={pfile(o.image)} alt="" onClick={(ev) => { ev.stopPropagation(); setState({ lightbox: pfile(o.image!) }); }} />}
+              <span className="q-opt-label"><b>{String.fromCharCode(65 + i)}.</b> {o.label}</span>
+              {o.description && <span className="q-opt-desc">{o.description}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+      {live && (
+        <div className="q-actions">
+          {q.multi && <button className="btn xs primary" disabled={!picked.length || sending} onClick={() => answer(picked.join('; '))}>{t('Answer')}</button>}
+          <button className="btn xs ghost" disabled={sending} onClick={() => answer('')} title={t('Let the agent choose and explain why')}>{t('You decide')}</button>
+          <span className="muted xsmall">{t('or type your answer below')}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const LABEL: Record<string, string> = {
   Read: 'Reading', Write: 'Creating', Edit: 'Editing', MultiEdit: 'Editing', edit: 'Editing', Glob: 'Finding files', Grep: 'Searching', Bash: 'Command', shell: 'Command',
   WebFetch: 'Opening a page', WebSearch: 'Searching the web', TodoWrite: 'Plan', ToolSearch: 'Tools', Task: 'Subagent', Agent: 'Subagent',
@@ -188,8 +228,10 @@ const LABEL: Record<string, string> = {
   list_comments: 'Reading notes', create_clip: 'Creating a clip', create_music: 'Creating a track', render_music: 'Listening to a track', analyze_audio: 'Analyzing audio',
   transcribe_media: 'Transcribing', get_timing: 'Checking the rhythm', timeline_add: 'Placing on the timeline', timeline_update: 'Moving on the timeline', timeline_remove: 'Removing from the timeline',
   use_template: 'Using a template', list_templates: 'Browsing the gallery', set_project: 'Project settings',
-  delegate_task: 'Starting a sub-agent', wait_subagents: 'Waiting for sub-agents', message_subagent: 'Messaging a sub-agent',
+  delegate_task: 'Starting a sub-agent', wait_subagents: 'Waiting for sub-agents', message_subagent: 'Messaging a sub-agent', ask_user: 'Asking you',
 };
+/** short argument summary of a step (ask_user: just the question — the card shows the rest) */
+const stepText = (e: AgentEvent) => { if (/ask_user$/.test(e.tool || '')) { try { return JSON.parse(e.text || '{}').question || ''; } catch { return ''; } } return e.text; };
 const label = (tool?: string) => { const k = (tool || '').replace(/^(studio\.|mcp__studio__)/, ''); return LABEL[k] ? t(LABEL[k]) : k; };
 
 function Frames({ images }: { images: AgentEvent[] }) {
@@ -215,7 +257,7 @@ function Steps({ steps, live, images }: { steps: Step[]; live: boolean; images?:
       <button className="steps-head" onClick={() => setOpen(!open)}>
         <span className="steps-icon">{live ? <span className="spinner sm" /> : <Icon name="chevron" size={11} />}</span>
         {live
-          ? <span className="ellipsis">{label(last.tool.tool)} <span className="muted">{last.tool.text}</span></span>
+          ? <span className="ellipsis">{label(last.tool.tool)} <span className="muted">{stepText(last.tool)}</span></span>
           : <span>{tn(steps.length, '{n} action', '{n} actions')}{failed ? <span className="muted"> · {t('{n} failed', { n: failed })}</span> : null}</span>}
       </button>
       {open && <div className="steps-list">{steps.map((s, i) => <StepRow key={i} s={s} />)}</div>}
@@ -231,7 +273,7 @@ function StepRow({ s }: { s: Step }) {
     <div className={'step' + (bad ? ' bad' : '')}>
       <button className="step-line" onClick={() => setOpen(!open)}>
         <span className="step-name">{label(s.tool.tool)}</span>
-        <span className="step-sum">{s.tool.text}</span>
+        <span className="step-sum">{stepText(s.tool)}</span>
         {bad && <span className="step-x">{t('failed')}</span>}
       </button>
       {open && (
@@ -341,6 +383,7 @@ function Composer({ task }: { task: Task | null }) {
   const empty = !draft.trim() && !ctx.length;
   const [caret, setCaret] = useState(0);
   const [dropping, setDropping] = useState(false);
+  const autopilot = useStore((s) => s.chatAutopilot);
   const [hi, setHi] = useState(0);
   const [dismissed, setDismissed] = useState('');
   const sug = useSuggestions(draft, caret);
@@ -384,7 +427,7 @@ function Composer({ task }: { task: Task | null }) {
         </div>
       )}
       <textarea ref={ref} rows={1} value={draft}
-        placeholder={busy ? t('Add an instruction — the agent keeps working and takes it into account (Enter)…') : ctx.some((c) => c.key.startsWith('action:')) ? t('What exactly should be done or changed? Enter — send') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do · @ scenes · # media · / commands')}
+        placeholder={task?.question && task.question.answer == null && busy ? t('Answer the agent (or pick an option above)…') : busy ? t('Add an instruction — the agent keeps working and takes it into account (Enter)…') : ctx.some((c) => c.key.startsWith('action:')) ? t('What exactly should be done or changed? Enter — send') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do · @ scenes · # media · / commands')}
         onChange={(e) => { setState({ chatDraft: e.target.value }); setCaret(e.target.selectionStart ?? e.target.value.length); }}
         onSelect={(e) => setCaret((e.target as HTMLTextAreaElement).selectionStart ?? 0)}
         onPaste={(e) => { const files = Array.from(e.clipboardData.files || []).filter((f) => /^(image|video|audio)\//.test(f.type)); if (files.length) { e.preventDefault(); addRefFiles(files); } }}
@@ -401,8 +444,9 @@ function Composer({ task }: { task: Task | null }) {
         <div className="row gap6">
           {!task
             ? <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>
-            : <span className="muted xsmall">{busy ? <><span className="spinner sm" /> {task.waiting ? t('waiting for its sub-agents') : t('{agent} is working', { agent: task.agent })}</> : task.agent}</span>}
+            : <span className="muted xsmall">{busy ? <><span className="spinner sm" /> {task.question && task.question.answer == null ? t('waiting for your answer') : task.waiting ? t('waiting for its sub-agents') : t('{agent} is working', { agent: task.agent })}</> : task.agent}</span>}
           <ModelPicker agent={task?.agent || agent} />
+          <button className={'auto-pill' + (autopilot ? ' on' : '')} onClick={() => actions.setAutopilot(!autopilot)} title={autopilot ? t('Autopilot: the agent decides everything itself and explains its choices') : t('The agent may ask you and show drafts to choose a direction — click for autopilot')}>{autopilot ? t('Autopilot') : t('Asks')}</button>
         </div>
         {busy ? (
           <div className="row gap6">
