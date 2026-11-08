@@ -55,7 +55,8 @@
     "README.md",
     "README.zh-CN.md",
     "README.ru.md",
-    "LICENSE"
+    "LICENSE",
+    "ATTRIBUTIONS.md"
   ],
   "scripts": {
     "dev": "concurrently -k -n server,web -c blue,magenta \"tsx watch --clear-screen=false server/index.ts\" \"vite\"",
