@@ -5,7 +5,7 @@ import { pipeline } from 'node:stream/promises';
 import { spawn } from 'node:child_process';
 import type { FastifyInstance } from 'fastify';
 import type { Comment, Item, Project, PackageManifest, AgentKind, Reference } from '../shared/types.ts';
-import { ROOT, GALLERY_DIR, LIBRARY_DIR, PROJECTS_DIR, getSettings, saveSettings, getRecents, HOME_DIR } from './config.ts';
+import { ROOT, GALLERY_DIR, LIBRARY_DIR, PROJECTS_DIR, getSettings, saveSettings, getRecents, HOME_DIR, maskSettings, unmaskPatch } from './config.ts';
 import { cur, hasProject, openProject, ProjectStore, MEDIA_EXT, pbase, runIn, openStores, projectId } from './project.ts';
 import { bus } from './bus.ts';
 import { nid, readJson, writeJson, copyDir, slug, safeJoin, run } from './util.ts';
@@ -36,6 +36,8 @@ import { createVariant, family, variantPrompt } from './variants.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
 import { registerToolkitRoutes } from './toolkit/routes.ts'; // media toolkit (server/toolkit)
+import { musicReportFor } from './audio/report.ts'; // music QA report (server/audio/report.ts)
+import { registerGenerateRoutes } from './generate/routes.ts'; // generative footage (server/generate)
 
 const SKELETONS = path.join(ROOT, 'server', 'skeletons');
 
@@ -66,7 +68,7 @@ function defaultDuration(kind: Item['kind'], ref: string): number {
 }
 
 export function state() {
-  if (!hasProject()) return { project: null, recents: getRecents(), projectsDir: PROJECTS_DIR, settings: { ...getSettings(), elevenlabsKey: '' } };
+  if (!hasProject()) return { project: null, recents: getRecents(), projectsDir: PROJECTS_DIR, settings: { ...maskSettings(getSettings()), elevenlabsKey: '' } };
   const store = cur();
   return {
     pid: store.id,
@@ -77,7 +79,7 @@ export function state() {
     music: store.listMusic(),
     media: store.listMedia(),
     tasks: listTasks(),
-    settings: (() => { const st = getSettings(); return { ...st, elevenlabsKey: st.elevenlabsKey ? '••••' + st.elevenlabsKey.slice(-4) : '', hasElevenlabsKey: !!apiKey() }; })(),
+    settings: { ...maskSettings(getSettings()), hasElevenlabsKey: !!apiKey() },
     skills: listSkills(),
     jobs: getJobs(),
     permissions: (() => { const own = new Set(listTasks().map((x) => x.id)); return permissions.list().filter((x) => own.has(x.taskId)); })(),
@@ -843,11 +845,11 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get('/api/exports', async () => listExports());
 
   // ---------- settings ----------
-  const publicSettings = () => { const s = getSettings(); const k = s.elevenlabsKey || ''; return { ...s, elevenlabsKey: k ? '••••' + k.slice(-4) : '', hasElevenlabsKey: !!apiKey() }; };
+  const publicSettings = () => ({ ...maskSettings(getSettings()), hasElevenlabsKey: !!apiKey() }); // secrets masked (config.ts SECRET_KEYS)
   app.get('/api/settings', async () => publicSettings());
   app.patch<{ Body: Record<string, unknown> }>('/api/settings', async (req) => {
     const b = { ...(req.body as any) };
-    if (typeof b.elevenlabsKey === 'string' && b.elevenlabsKey.startsWith('••••')) delete b.elevenlabsKey;
+    unmaskPatch(b);
     saveSettings(b);
     return publicSettings();
   });
@@ -952,6 +954,12 @@ export async function registerRoutes(app: FastifyInstance) {
   });
   void HOME_DIR;
 
+  // ---------- music QA report (server/audio/report.ts) ----------
+  // POST {musicId | file, genre?, targetLufs?, vo?} → loudness/spectrum/dynamics/static checks, flags with API fixes, one-line verdict
+  app.post<{ Body: { musicId?: string; file?: string; genre?: string; targetLufs?: number; vo?: boolean } }>('/api/agent/music-report', async (req) => { need(); return musicReportFor(req.body || {}); });
+  // ---------- end music QA report ----------
+
   // ---------- media toolkit (server/toolkit/routes.ts: /api/toolkit, /run, /jobs) ----------
   await registerToolkitRoutes(app);
+  await registerGenerateRoutes(app); // generative footage (server/generate/routes.ts)
 }

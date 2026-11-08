@@ -38,6 +38,10 @@ export interface OpContext {
   /** reserve a unique derived output path in media/: '<stem of the main input>.<name>.<ext>'
    *  (e.g. out('nobg','png') → 'media/photo.nobg.png'; '-2', '-3' … appended if taken). Returns the project-relative path. */
   out(name: string, ext: string): string;
+  /** like out() but with an exact base name: outAs('gen-red-fox','png') → 'media/gen-red-fox.png' ('-2'… if taken) */
+  outAs(base: string, ext: string): string;
+  /** extra fields merged into the provenance of every output (.studio/media/<file>.source.json), e.g. generator/model/seed/cost */
+  provenance(extra: Record<string, unknown>): void;
   /** report progress 0..1 and an optional short English stage key ('decoding', 'segmenting {n}/{total}') */
   progress(p: number, stageKey?: string): void;
   /** aborted on cancel / timeout — kill child processes, stop loops */
@@ -51,6 +55,8 @@ export interface ToolOp<P extends Record<string, any> = Record<string, any>> ext
   version?: number;
   /** hard timeout in seconds (default 900) */
   timeoutSec?: number;
+  /** reuse results of identical runs (default true); a function decides per call (e.g. not for live status / dry runs) */
+  cache?: boolean | ((params: P) => boolean);
   /** params are validated & normalised (defaults applied, numbers clamped, files → 'media/…');
    *  return file outputs as project-relative paths and json outputs as plain objects */
   run(ctx: OpContext, params: P): Promise<Record<string, string | object>>;
@@ -204,7 +210,8 @@ export function runOp(id: string, rawParams: Record<string, unknown> = {}): RunH
   // cache: same op version + params + input file mtimes/sizes, and every output still on disk
   const key = sha1(JSON.stringify({ op: id, v: op.version || 1, params, files: fileInputs.map((k) => { const st = fs.statSync(store.p(params[k])); return [params[k], st.mtimeMs, st.size]; }) }));
   const cache = readJson<Record<string, { outputs: Record<string, string | object>; at: string }>>(cacheFile(), {});
-  const hit = cache[key];
+  const cacheable = typeof op.cache === 'function' ? op.cache(params as any) : op.cache !== false;
+  const hit = cacheable ? cache[key] : undefined;
   if (hit && mediaPaths(hit.outputs).every((f) => fs.existsSync(store.p(f)))) {
     Object.assign(job, { status: 'done', progress: 1, stage: 'cached', outputs: hit.outputs, cached: true, endedAt: now });
     jobs.set(job.id, job);
@@ -225,12 +232,14 @@ export function runOp(id: string, rawParams: Record<string, unknown> = {}): RunH
   const stem = mainInput ? path.basename(mainInput).replace(/\.[^.]+$/, '') : id;
 
   let lastEmit = 0;
+  const extra: Record<string, unknown> = {};
   const ctx: OpContext = {
     dir: store.dir,
     jobId: job.id,
     abs: (rel) => staged.get(rel) ?? safeJoin(store.dir, rel),
-    out: (name, ext) => {
-      const base = `${stem}.${name}`.replace(/[^\w.\-а-яё ]+/gi, '_');
+    out: (name, ext) => ctx.outAs(`${stem}.${name}`, ext),
+    outAs: (rawBase, ext) => {
+      const base = rawBase.replace(/[^\w.\-а-яё ]+/gi, '_');
       ext = ext.replace(/^\./, '');
       for (let n = 1; ; n++) {
         const rel = `media/${base}${n > 1 ? '-' + n : ''}.${ext}`;
@@ -249,6 +258,7 @@ export function runOp(id: string, rawParams: Record<string, unknown> = {}): RunH
     },
     signal: ac.signal,
     tmp: () => { const d = path.join(work, 'tmp'); fs.mkdirSync(d, { recursive: true }); return d; },
+    provenance: (x) => { Object.assign(extra, x); },
   };
 
   const done = (async () => {
@@ -273,12 +283,14 @@ export function runOp(id: string, rawParams: Record<string, unknown> = {}): RunH
         const inputs = Object.fromEntries(fileInputs.map((k) => [k, params[k]]));
         for (const rel of committed) {
           const file = rel.slice('media/'.length);
-          writeJson(store.p('.studio', 'media', file + '.source.json'), { kind: 'toolkit', op: id, params, inputs, at, job: job.id });
+          writeJson(store.p('.studio', 'media', file + '.source.json'), { kind: 'toolkit', op: id, params, inputs, at, job: job.id, ...extra });
           if (MEDIA_EXT[path.extname(file).toLowerCase()]) await probeMedia(file, true).catch(() => {});
         }
-        const c = readJson<typeof cache>(cacheFile(), {});
-        c[key] = { outputs, at };
-        writeJson(cacheFile(), c);
+        if (cacheable) {
+          const c = readJson<typeof cache>(cacheFile(), {});
+          c[key] = { outputs, at };
+          writeJson(cacheFile(), c);
+        }
         Object.assign(job, { status: 'done', progress: 1, stage: 'done', outputs });
       } finally { release(); }
     } catch (e: any) {

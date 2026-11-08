@@ -8,6 +8,7 @@ import { hashDir, writeJson, readJson } from '../util.ts';
 import { withPage } from './browser.ts';
 import { decodePcm, computePeaks, analyzePcm } from '../audio/analyze.ts';
 import { recomputeTiming } from '../timing.ts';
+import { ensureSamples, soundStamp } from '../samples.ts';
 
 const inflight = new Map<string, Promise<MusicInfo>>();
 
@@ -19,7 +20,8 @@ export function renderMusic(id: string, force = false): Promise<MusicInfo> {
     const store = cur();
     const dir = store.p('music', id);
     if (!fs.existsSync(path.join(dir, 'score.js'))) throw new Error('music not found: ' + id);
-    const hash = hashDir(dir);
+    await ensureSamples(); // instrument samples: fetched once, never throws (synth fallbacks when offline)
+    const hash = hashDir(dir, soundStamp());
     const rel = `.studio/cache/music/${id}-${hash}.wav`;
     const stateFile = store.p('.studio', 'music', id + '.json');
     const state = readJson<{ rendered?: string; hash?: string }>(stateFile, {});
@@ -28,9 +30,12 @@ export function renderMusic(id: string, force = false): Promise<MusicInfo> {
     try {
       const r = await withPage({ width: 400, height: 300 }, async (page, errors) => {
         await page.goto(`${BASE_URL}/runtime/music.html?src=${encodeURIComponent(`${pbase()}/music/${id}/score.js`)}`, { waitUntil: 'load' });
+        // render timeout scales with the piece: max(180 s, 4× its length) — offline renders are slower than real time under CPU load
+        const len = await Promise.race([page.evaluate(async () => { const m = await (window as any).__music.meta(); return m.duration + m.tail; }), new Promise<number>((r) => setTimeout(() => r(60), 15000))]).catch(() => 60);
+        const timeoutMs = Math.max(180, 4 * (Number(len) || 60)) * 1000;
         const res = await Promise.race([
           page.evaluate(async () => (window as any).__music.render(48000)),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('music render timeout (did the score call studio.music()?) ' + errors.join('; '))), 120000)),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('music render timeout (did the score call studio.music()?) ' + errors.join('; '))), timeoutMs)),
         ]) as { meta: any; peak: number; wav: string };
         const rtErr: string[] = await page.evaluate(() => (window as any).__music.errors);
         if (rtErr.length || errors.length) throw new Error([...rtErr, ...errors].join('\n'));

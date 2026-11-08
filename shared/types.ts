@@ -281,6 +281,20 @@ export interface Settings {
   blenderPath?: string;
   /** voice-over: max takes per scene when the pace check fails (each take costs ElevenLabs characters) */
   voiceMaxTakes?: number;
+  /** generative footage (server/generate): API keys of the pay-per-use providers (stored locally; masked when sent to the UI) */
+  falKey?: string;
+  runwayKey?: string;
+  replicateKey?: string;
+  openaiKey?: string;
+  googleKey?: string;
+  /** Higgsfield: "KEY_ID:KEY_SECRET" */
+  higgsfieldKey?: string;
+  /** local ComfyUI server (no key), default http://127.0.0.1:8188 */
+  comfyUrl?: string;
+  /** daily spending limit for paid generations in USD (default 10; 0 = paid generation off) */
+  genBudgetUsd?: number;
+  /** default generator per kind: { image: { provider, model }, video: { provider, model } } */
+  genDefaults?: { image?: { provider?: string; model?: string }; video?: { provider?: string; model?: string } };
 }
 
 export interface Voice { id: string; name: string; category?: string; labels?: Record<string, string>; preview?: string; languages?: string[] }
@@ -425,4 +439,71 @@ export interface DoctorCheck {
   detail: string;
   /** human instruction or a shell command that fixes it; present when status ≠ ok */
   fix?: string;
+}
+
+// ---------- generative footage (server/generate) ----------
+export type GenKind = 'image' | 'video';
+/** how a model is priced (USD). All prices are estimates copied from the provider's pricing page. */
+export interface GenPrice {
+  unit: 'image' | 'second' | 'video' | 'megapixel' | 'free';
+  usd: number;
+  /** price per unit by resolution / quality (overrides usd), e.g. { '1080p': 0.5 } */
+  by?: Record<string, number>;
+  /** extra per unit when native audio is generated */
+  audioUsd?: number;
+  note?: string;
+  source?: string;
+}
+export interface GenModelInfo {
+  /** model id to pass as `model` */
+  id: string;
+  provider: string;
+  kind: GenKind;
+  title: string;
+  /** text → image/video, and/or (reference/first-frame) image → image/video */
+  text: boolean;
+  image: boolean;
+  /** first + last frame */
+  endImage?: boolean;
+  negative?: boolean;
+  seed?: boolean;
+  /** allowed durations in seconds (video) */
+  durations?: number[];
+  aspects?: string[];
+  resolutions?: string[];
+  /** max images per call */
+  maxCount?: number;
+  /** native camera presets (otherwise camera text is added to the prompt) */
+  cameras?: string[];
+  /** generates sound with the picture */
+  audio?: boolean;
+  price: GenPrice;
+  notes?: string;
+}
+export interface GenProviderInfo {
+  id: string;
+  title: string;
+  needsKey: boolean;
+  /** key configured (settings or env) */
+  hasKey: boolean;
+  keySource?: 'settings' | 'env';
+  /** where to get a key / docs */
+  keyUrl?: string;
+  docs?: string;
+  models: GenModelInfo[];
+  note?: string;
+}
+export interface GenSpendEntry {
+  at: string;
+  day: string;
+  provider: string;
+  model: string;
+  kind: GenKind;
+  usd: number;
+  /** usd is an estimate from the price table (not the provider's invoice) */
+  estimate: boolean;
+  status: 'done' | 'cancelled' | 'failed';
+  project?: string;
+  job?: string;
+  requestId?: string;
 }

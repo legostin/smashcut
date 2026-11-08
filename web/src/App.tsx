@@ -9,6 +9,7 @@ import { Chat } from './components/Chat';
 import { ItemPanel } from './components/ItemPanel';
 import { Icon } from './components/Icon';
 import { VersionDialog } from './components/VersionDialog';
+import { GeneratorSettings } from './components/GeneratorSettings';
 import { Home } from './components/Home';
 import { Storyboard, SelectionBar } from './components/Storyboard';
 import { SceneStrip, useTimelineHotkey } from './components/SceneStrip';
@@ -301,6 +302,7 @@ function SettingsDialog() {
       <AgentPoolSettings s={s} setS={setS} />
       <HouseStyleSettings s={s} setS={setS} />
       <VoiceSettings s={s} setS={setS} />
+      <GeneratorSettings s={s} setS={setS} />
       <div className="card small col gap4">
         <div><b>Claude Code:</b> {agents?.claude || t('not found')}</div>
         <div><b>Codex:</b> {agents?.codex || t('not found')}</div>

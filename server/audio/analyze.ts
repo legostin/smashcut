@@ -4,13 +4,25 @@ import { spawn } from 'node:child_process';
 import { runOk } from '../util.ts';
 import { bin } from '../bin.ts';
 
-/** decode any audio/video file to mono float32 PCM */
-export function decodePcm(file: string, sampleRate = 22050, from?: number, dur?: number): Promise<Float32Array> {
+/** number of channels of the first audio stream (0 if unknown) */
+function audioChannels(file: string): Promise<number> {
+  return new Promise((resolve) => {
+    const p = spawn(bin('ffprobe'), ['-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels', '-of', 'csv=p=0', file]);
+    let out = '';
+    p.stdout.on('data', (d) => (out += d));
+    p.on('error', () => resolve(0));
+    p.on('close', () => resolve(parseInt(out, 10) || 0));
+  });
+}
+
+/** decode any audio/video file to mono float32 PCM (stereo is averaged (L+R)/2 so levels stay true; ffmpeg's -ac 1 adds +3 dB on correlated stereo) */
+export async function decodePcm(file: string, sampleRate = 22050, from?: number, dur?: number): Promise<Float32Array> {
+  const stereo = (await audioChannels(file)) === 2;
   return new Promise((resolve, reject) => {
     const args = ['-v', 'error'];
     if (from != null) args.push('-ss', String(from));
     if (dur != null) args.push('-t', String(dur));
-    args.push('-i', file, '-vn', '-ac', '1', '-ar', String(sampleRate), '-f', 'f32le', 'pipe:1');
+    args.push('-i', file, '-vn', ...(stereo ? ['-af', 'pan=mono|c0=0.5*c0+0.5*c1'] : ['-ac', '1']), '-ar', String(sampleRate), '-f', 'f32le', 'pipe:1');
     const p = spawn(bin('ffmpeg'), args);
     const chunks: Buffer[] = [];
     let err = '';

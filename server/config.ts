@@ -70,3 +70,17 @@ export function pushRecent(dir: string) {
   const list = [dir, ...getRecents().filter((d) => d !== dir)].slice(0, 12);
   fs.writeFileSync(RECENTS_FILE, JSON.stringify(list, null, 2));
 }
+
+/** settings fields holding secrets: stored locally, never sent to the UI in clear (masked '••••' + last 4) */
+export const SECRET_KEYS = ['elevenlabsKey', 'falKey', 'runwayKey', 'replicateKey', 'openaiKey', 'googleKey', 'higgsfieldKey'] as const;
+export const MASK = '••••';
+export function maskSettings<T extends Record<string, any>>(s: T): T {
+  const out: Record<string, any> = { ...s };
+  for (const k of SECRET_KEYS) { const v = String(s[k] || ''); out[k] = v ? MASK + v.slice(-4) : ''; }
+  return out as T;
+}
+/** drop masked (unchanged) secret values from a settings PATCH so they don't overwrite the stored keys */
+export function unmaskPatch(b: Record<string, any>) {
+  for (const k of SECRET_KEYS) if (typeof b[k] === 'string' && b[k].startsWith(MASK)) delete b[k];
+  return b;
+}

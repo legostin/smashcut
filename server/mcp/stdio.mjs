@@ -340,4 +340,18 @@ server.registerTool('run_media_tool', {
   });
 }));
 
+// ---------- music QA (server/audio/report.ts; REST /api/agent/music-report) ----------
+server.registerTool('music_report', {
+  description: 'Objective QA of a rendered score (or an audio file in media/): integrated LUFS, true peak, LRA, crest factor, spectral balance per band (sub/low/low-mid/mid/presence/air) vs the genre target, low-end mono, per-section loudness (from the score sections), static-arrangement detection, silences and endings. Returns a one-line verdict and flags, each with a concrete fix in the score API. Loop: write score → render_music → music_report → fix the P0/P1 flags → repeat (max 3 passes).',
+  inputSchema: {
+    musicId: z.string().optional(), file: z.string().optional().describe('media file instead of a score'),
+    genre: z.string().optional().describe('pop|corporate|house|techno|trap|hiphop|dnb|lofi|cinematic|ambient (default: from the manifest/title)'),
+    targetLufs: z.number().optional().describe('default −14'), vo: z.boolean().optional().describe('music sits under voice-over: also check the 1–4 kHz speech band'),
+  },
+}, safe(async (a) => {
+  const r = await api('POST', '/api/agent/music-report', a);
+  const lines = [`VERDICT: ${r.verdict}`, ...r.flags.map((f) => `[${f.severity}] ${f.message}\n   fix: ${f.fix}`)];
+  return text(lines.join('\n') + '\n\n' + JSON.stringify({ genre: r.genre, metrics: r.metrics, sections: r.sections, staticRuns: r.staticRuns }, null, 1));
+}));
+
 await server.connect(new StdioServerTransport());

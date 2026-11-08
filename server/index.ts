@@ -22,6 +22,7 @@ import { resumeExport } from './render/compose.ts';
 import { createDemoProject } from './demo.ts';
 import { onScriptFileChanged } from './script.ts';
 import { onDesignFileChanged } from './design.ts';
+import { SAMPLES_DIR, sampleIndexJson } from './samples.ts';
 
 exposeBundledBins();
 
@@ -67,6 +68,9 @@ function serveFrom(prefix: string, root: () => string, headers: Record<string, s
 serveFrom('/runtime/', () => RUNTIME_DIR);
 serveFrom('/gallery/', () => GALLERY_DIR);
 serveFrom('/library/', () => LIBRARY_DIR);
+// instrument samples (downloaded on first music render, see server/samples.ts); the index is always valid JSON
+app.get('/samples/index.json', (_req, reply) => reply.header('cache-control', 'no-store').type('application/json').send(sampleIndexJson()));
+serveFrom('/samples/', () => SAMPLES_DIR, { 'cache-control': 'max-age=86400' });
 const FONTS_DIR = path.dirname(moduleDir('@fontsource/inter'));
 const GSAP_DIST = path.join(moduleDir('gsap'), 'dist');
 const TONE_BUILD = path.join(moduleDir('tone'), 'build');

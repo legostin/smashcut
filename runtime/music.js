@@ -132,6 +132,8 @@
     }, info.duration + info.tail, 2, sampleRate);
     const channels = buffer.toArray();
     const arr = Array.isArray(channels) ? channels : [channels, channels];
+    // mastering hook (runtime/music-ext/mix.js): offline loudness normalisation + true-peak limiting, in place
+    if (window.__musicPost) { try { window.__musicPost(arr, sampleRate, info); } catch (e) { console.warn('master', e); } }
     let peak = 0;
     for (const c of arr) for (let i = 0; i < c.length; i++) { const v = Math.abs(c[i]); if (v > peak) peak = v; }
     if (peak > 0.93) { const g = 0.92 / peak; for (const c of arr) for (let i = 0; i < c.length; i++) c[i] *= g; peak = 0.92; }
