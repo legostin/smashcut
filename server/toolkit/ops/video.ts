@@ -305,7 +305,7 @@ defineOp({
     const files: string[] = [];
     for (let i = 0; i < times.length; i++) {
       const f = ctx.out(`f${String(i + 1).padStart(2, '0')}`, p.format);
-      await ffmpeg(ctx, ['-ss', String(times[i]), ...s.input, '-frames:v', '1', ...(p.width ? ['-vf', `scale=${p.width}:-2`] : []), ...(p.format === 'jpg' ? ['-q:v', '2'] : []), ctx.abs(f)]);
+      await ffmpeg(ctx, ['-ss', String(times[i]), ...s.input, '-frames:v', '1', ...(p.format === 'jpg' ? ['-vf', `${p.width ? `scale=${p.width}:-2:` : 'scale='}out_range=full,format=yuvj420p`, '-q:v', '2'] : p.width ? ['-vf', `scale=${p.width}:-2`] : []), ctx.abs(f)]);
       if (!fs.existsSync(ctx.abs(f))) throw uerr('Could not read a frame at {t}s', { t: times[i] });
       files.push(f);
       ctx.progress(0.9 * ((i + 1) / times.length), `frame ${i + 1}/${times.length}`);

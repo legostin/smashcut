@@ -47,7 +47,7 @@ async function videoFrames(it: Item, p: Project, srcIn: number, dur: number) {
   if (!fs.existsSync(doneFile)) {
     fs.mkdirSync(dir, { recursive: true });
     await runOk('ffmpeg', ['-y', '-v', 'error', '-ss', srcIn.toFixed(3), '-t', Math.max(1 / p.fps, dur).toFixed(3), '-i', src,
-      '-vf', `fps=${p.fps},scale=${p.width}:${p.height}:force_original_aspect_ratio=decrease:flags=lanczos`, '-q:v', '2', '-start_number', '1', path.join(dir, '%06d.jpg')]);
+      '-vf', `fps=${p.fps},scale=${p.width}:${p.height}:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos:out_range=full,format=yuvj420p`, '-q:v', '2', '-strict', 'unofficial', '-start_number', '1', path.join(dir, '%06d.jpg')]);
     fs.writeFileSync(doneFile, '1');
   }
   const count = fs.readdirSync(dir).filter((x) => x.endsWith('.jpg')).length;

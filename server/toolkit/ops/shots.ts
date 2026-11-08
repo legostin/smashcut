@@ -85,7 +85,7 @@ defineOp({
     for (let k = 0; k < show.length; k++) {
       const s = show[k];
       const f = path.join(tmp, `s${k}.jpg`);
-      await ffmpeg(ctx, ['-ss', String(s.start + Math.min(s.duration / 2, 1.5)), ...inputArgs(abs, info), '-frames:v', '1', '-vf', `scale=${tw}:${th}`, '-q:v', '3', f]);
+      await ffmpeg(ctx, ['-ss', String(s.start + Math.min(s.duration / 2, 1.5)), ...inputArgs(abs, info), '-frames:v', '1', '-vf', `scale=${tw}:${th}:out_range=full,format=yuvj420p`, '-q:v', '3', f]);
       if (!fs.existsSync(f)) continue;
       const st = await sharp(f).stats();
       const d = st.dominant; s.color = '#' + [d.r, d.g, d.b].map((x) => x.toString(16).padStart(2, '0')).join('');
