@@ -43,6 +43,19 @@ const server = new McpServer({ name: 'studio', version: '0.1.0' }, {
   instructions: 'Smashcut editor tools. Always verify visual work with render_clip / render_frame and look at the images. Resolve comments you addressed with resolve_comment.',
 });
 
+// messages the user types in the editor chat while the agent works are appended to the next tool result
+// (Codex has no hooks; for Claude this is the fallback next to the PostToolUse hook). approve_permission must stay pure.
+const registerTool = server.registerTool.bind(server);
+server.registerTool = (name, def, handler) => registerTool(name, def, name === 'approve_permission' ? handler : async (args, extra) => {
+  const r = await handler(args, extra);
+  if (!TASK) return r;
+  try {
+    const { text: steer } = await apiOnce('GET', '/api/agent/steer');
+    if (steer) return { ...r, content: [...(r?.content || []), { type: 'text', text: steer }] };
+  } catch { /* editor busy / restarting: deliver later */ }
+  return r;
+});
+
 server.registerTool('get_project', {
   description: 'Overview of the open project: resolution/fps, tracks, timeline items (with ids, times, refs, params), clips, music, media, open comments, timing summary. Call this first.',
   inputSchema: {},

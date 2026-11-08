@@ -4,11 +4,12 @@ import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { spawn } from 'node:child_process';
 import type { FastifyInstance } from 'fastify';
-import type { Comment, Item, Project, PackageManifest, AgentKind, Reference } from '../shared/types.ts';
+import type { Comment, Item, Project, PackageManifest, AgentKind, Reference, Task } from '../shared/types.ts';
 import { ROOT, GALLERY_DIR, LIBRARY_DIR, PROJECTS_DIR, getSettings, saveSettings, getRecents, HOME_DIR, maskSettings, unmaskPatch } from './config.ts';
 import { cur, hasProject, openProject, ProjectStore, MEDIA_EXT, pbase, runIn, openStores, projectId } from './project.ts';
 import { bus } from './bus.ts';
-import { nid, readJson, writeJson, copyDir, slug, safeJoin, run } from './util.ts';
+import { nid, readJson, writeJson, copyDir, slug, safeJoin, run, sha1 } from './util.ts';
+import sharp from 'sharp';
 import { bin } from './bin.ts';
 import { log as gitLog, restore as gitRestore, exportAt, commit } from './git.ts';
 import { listGallery, galleryThumb, galleryPreview, previewPath, useTemplate, saveToLibrary, deleteFromLibrary } from './gallery.ts';
@@ -19,7 +20,7 @@ import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
 import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport, getManifest } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
-import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus, interruptTask, delegateTask, waitSubagents, children } from './agents/runner.ts';
+import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus, interruptTask, steerTask, takeSteer, setTaskOptions, delegateTask, waitSubagents, children } from './agents/runner.ts';
 import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
@@ -36,6 +37,8 @@ import { createVariant, family, variantPrompt } from './variants.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
 import { registerToolkitRoutes } from './toolkit/routes.ts'; // media toolkit (server/toolkit)
+import { runOpAndWait } from './toolkit/index.ts';
+import { pageMedia } from './toolkit/ops/web.ts';
 import { musicReportFor } from './audio/report.ts'; // music QA report (server/audio/report.ts)
 import { registerGenerateRoutes } from './generate/routes.ts'; // generative footage (server/generate)
 
@@ -251,6 +254,14 @@ async function sendComments(ids: string[] | undefined, agent?: 'claude' | 'codex
     created.push(task);
   }
   return created;
+}
+
+/** model / effort from the chat: aliases or full ids (letters, digits, . - _ :), effort from the known levels */
+const cleanModel = (m?: string) => (m && /^[\w.:-]{1,80}$/.test(m) ? m : undefined);
+const cleanEffort = (e?: string) => (['low', 'medium', 'high', 'xhigh', 'max'].includes(String(e)) ? (e as Task['effort']) : undefined);
+function setTaskModel(id: string, b: { model?: string; effort?: string }) {
+  if (b.model === undefined && b.effort === undefined) return;
+  setTaskOptions(id, { model: b.model === '' ? '' : cleanModel(b.model), effort: b.effort === '' ? '' : cleanEffort(b.effort) });
 }
 
 export async function registerRoutes(app: FastifyInstance) {
@@ -524,16 +535,19 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- tasks ----------
   app.get('/api/tasks', async () => listTasks());
-  app.post<{ Body: { prompt: string; agent?: 'claude' | 'codex'; clipId?: string; itemId?: string; playhead?: number } }>('/api/tasks', async (req) => {
+  app.post<{ Body: { prompt: string; agent?: 'claude' | 'codex'; clipId?: string; itemId?: string; playhead?: number; model?: string; effort?: Task['effort'] } }>('/api/tasks', async (req) => {
     const store = need();
     const b = req.body;
     const item = b.itemId ? store.project.items.find((i) => i.id === b.itemId) : undefined;
     const clipId = b.clipId || (item?.kind === 'clip' ? item.ref : undefined);
     const prompt = chatTaskPrompt({ prompt: b.prompt, project: store.project, playhead: b.playhead, item, clipId, hasScript: getScript().scenes.length > 0 });
-    return startTask({ agent: b.agent, title: b.prompt.split('\n')[0].slice(0, 80), prompt: prompt + langLine((b as any).lang), clipId: undefined });
+    return startTask({ agent: b.agent, title: b.prompt.split('\n')[0].slice(0, 80), prompt: prompt + langLine((b as any).lang), clipId: undefined, model: cleanModel(b.model), effort: cleanEffort(b.effort) });
   });
-  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[]; lang?: string } }>('/api/tasks/:id/message', async (req) => followUp(req.params.id, req.body.prompt + langLine(req.body.lang), req.body.images || []));
-  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[]; lang?: string } }>('/api/tasks/:id/interrupt', async (req) => interruptTask(req.params.id, req.body.prompt + langLine(req.body.lang), req.body.images || []));
+  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[]; lang?: string; model?: string; effort?: Task['effort'] } }>('/api/tasks/:id/message', async (req) => { setTaskModel(req.params.id, req.body); return followUp(req.params.id, req.body.prompt + langLine(req.body.lang), req.body.images || []); });
+  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[]; lang?: string; model?: string; effort?: Task['effort'] } }>('/api/tasks/:id/interrupt', async (req) => { setTaskModel(req.params.id, req.body); return interruptTask(req.params.id, req.body.prompt + langLine(req.body.lang), req.body.images || []); });
+  // a message for the running agent that does NOT stop it: delivered at its next step (hook / next studio tool result)
+  app.post<{ Params: { id: string }; Body: { prompt: string; images?: string[] } }>('/api/tasks/:id/steer', async (req) => steerTask(req.params.id, req.body.prompt, req.body.images || []));
+  app.get('/api/agent/steer', async (req) => { const tid = taskOf(req); return { text: tid ? takeSteer(tid) : '' }; });
   app.post<{ Params: { id: string } }>('/api/tasks/:id/cancel', async (req) => { cancelTask(req.params.id); return { ok: true }; });
   app.get('/api/agents/check', async () => {
     const check = async (cmd: string) => { try { const r = await run(cmd, ['--version']); return r.code === 0 ? r.stdout.trim().split('\n')[0] : null; } catch { return null; } };
@@ -639,6 +653,43 @@ export async function registerRoutes(app: FastifyInstance) {
     const r: Reference = { id: 'r' + nid(), kind: b.kind as Reference['kind'], ref: String(b.ref), origin: b.origin, title: b.title || String(b.ref), note: b.note || '', sceneIds: b.sceneIds || [], thumb: b.thumb, addedAt: new Date().toISOString() };
     return writeRefs([...list, r]);
   });
+  /** a link dropped into the chat / references: direct images & videos are downloaded into media/, pages are kept as links (title + share image) */
+  app.post<{ Body: { url: string; sceneIds?: string[]; note?: string } }>('/api/references/link', async (req) => {
+    need();
+    let url: URL;
+    try { url = new URL(String(req.body?.url || '').trim()); } catch { throw uerr('Not a valid URL: {url}', { url: req.body?.url }); }
+    if (!/^https?:$/.test(url.protocol)) throw uerr('Only http(s) links can be imported');
+    const sceneIds = req.body.sceneIds || [];
+    const direct = /\.(png|jpe?g|webp|gif|svg|avif|mp4|webm|mov|m4v|mp3|m4a|wav)$/i.test(url.pathname);
+    const videoPage = /(^|\.)(youtube\.com|youtu\.be|vimeo\.com|tiktok\.com)$/i.test(url.hostname);
+    if (direct) {
+      const j = await runOpAndWait('import_url', { url: url.href });
+      const file = String((j.outputs as any)?.files?.files?.[0] || '').replace(/^media\//, '');
+      if (file) { await probeMedia(file); return writeRefs([...readRefs(), { id: 'r' + nid(), kind: 'media', ref: file, title: file, note: req.body.note || '', sceneIds, addedAt: new Date().toISOString() } as Reference]); }
+    }
+    // a page: keep the link, with its title and share image for the card
+    let title = url.hostname + url.pathname.replace(/\/$/, ''), thumb: string | undefined;
+    try {
+      const res = await fetch(url.href, { headers: { 'user-agent': 'Mozilla/5.0 Smashcut', accept: 'text/html' }, signal: AbortSignal.timeout(8000) });
+      const html = (await res.text()).slice(0, 2_000_000);
+      const t = /<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']+)/i.exec(html)?.[1] || /<title[^>]*>([^<]{1,200})/i.exec(html)?.[1];
+      if (t) title = t.trim().replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').slice(0, 120);
+      const og = pageMedia(html, url.href).og[0];
+      if (og) {
+        // keep a small local copy: many sites refuse hot-linking their share images
+        const img = await fetch(og, { headers: { 'user-agent': 'Mozilla/5.0 Smashcut', referer: url.href }, signal: AbortSignal.timeout(8000) });
+        if (img.ok) {
+          const rel = `.studio/refs/${sha1(og).slice(0, 12)}.jpg`;
+          fs.mkdirSync(cur().p('.studio', 'refs'), { recursive: true });
+          await sharp(Buffer.from(await img.arrayBuffer())).resize(320, 320, { fit: 'inside' }).jpeg({ quality: 82 }).toFile(cur().p(rel));
+          thumb = `/p/${cur().id}/${rel}`;
+        }
+      }
+    } catch { /* offline or blocked: a plain link */ }
+    const list = readRefs();
+    if (list.some((r) => r.kind === 'link' && r.ref === url.href)) return list;
+    return writeRefs([...list, { id: 'r' + nid(), kind: 'link', ref: url.href, title, thumb, note: (videoPage ? 'video page — import_url can download it (yt-dlp) for detect_shots. ' : '') + (req.body.note || ''), sceneIds, addedAt: new Date().toISOString() } as Reference]);
+  });
   app.patch<{ Params: { id: string }; Body: Partial<Reference> }>('/api/references/:id', async (req) => { need(); return writeRefs(readRefs().map((r) => (r.id === req.params.id ? { ...r, ...req.body, id: r.id } : r))); });
   app.delete<{ Params: { id: string } }>('/api/references/:id', async (req) => { need(); return writeRefs(readRefs().filter((r) => r.id !== req.params.id)); });
   /** for agents: references with what to read for each */
@@ -650,7 +701,7 @@ export async function registerRoutes(app: FastifyInstance) {
       scenes: (r.sceneIds || []).map((id) => { const i = scenes.findIndex((s) => s.id === id); return i >= 0 ? `${i + 1}:${scenes[i].title} (${id})` : id; }),
       appliesTo: r.sceneIds?.length ? 'listed scenes' : 'the whole video',
       ...(r.kind === 'inspiration' ? (() => { const x = getInspiration(r.ref); return x ? { by: x.by, year: x.year, url: x.url, techniques: x.techniques, breakdown: x.breakdown } : {}; })() : {}),
-      howToRead: r.kind === 'inspiration' ? 'The breakdown above describes the piece and its techniques — apply the techniques in the project style (never copy the brand/assets). The URL is for the user; you cannot watch the video.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? (/\.(mp4|mov|webm|mkv|m4v)$/i.test(r.ref) ? `video: run_media_tool {op:"detect_shots", params:{video:"${r.ref}"}} — shots, contact sheet and the rhythm of the edit` : `Read media/${r.ref} (look at it)`) : `WebFetch ${r.ref}`,
+      howToRead: r.kind === 'inspiration' ? 'The breakdown above describes the piece and its techniques — apply the techniques in the project style (never copy the brand/assets). The URL is for the user; you cannot watch the video.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? (/\.(mp4|mov|webm|mkv|m4v)$/i.test(r.ref) ? `video: run_media_tool {op:"detect_shots", params:{video:"${r.ref}"}} — shots, contact sheet and the rhythm of the edit` : `Read media/${r.ref} (look at it)`) : `WebFetch ${r.ref} to read the page; run_media_tool {op:"import_url", params:{url:"${r.ref}"}} brings its image (pick=all: every picture, pick=video / video sites: the video) into media/ to look at or use`,
     }));
   });
 

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import type { AgentEvent, AgentKind, Task } from '../../shared/types.ts';
-import { BASE_URL, MCP_STDIO, GALLERY_DIR, getSettings, LIBRARY_DIR } from '../config.ts';
+import { BASE_URL, MCP_STDIO, GALLERY_DIR, getSettings, LIBRARY_DIR, HOME_DIR } from '../config.ts';
 import { cur, hasProject, runIn, type ProjectStore } from '../project.ts';
 import { bus } from '../bus.ts';
 import { nid, readJson, writeJson } from '../util.ts';
@@ -77,11 +77,12 @@ export function listTasks() {
 }
 export function getTask(id: string) { return tasks.get(id); }
 
-export interface StartOpts { agent?: AgentKind; title: string; prompt: string; clipId?: string; commentIds?: string[]; images?: string[]; parentId?: string }
+export interface StartOpts { agent?: AgentKind; title: string; prompt: string; clipId?: string; commentIds?: string[]; images?: string[]; parentId?: string; model?: string; effort?: Task['effort'] }
 
 export function startTask(o: StartOpts): Task {
   const t: Task = {
     id: 't' + nid(), agent: o.agent || getSettings().defaultAgent, title: o.title, prompt: o.prompt, clipId: o.clipId, commentIds: o.commentIds || [], parentId: o.parentId,
+    ...(o.model ? { model: o.model } : {}), ...(o.effort ? { effort: o.effort } : {}),
     status: 'queued', events: [], createdAt: new Date().toISOString(),
   };
   tasks.set(t.id, t);
@@ -95,7 +96,7 @@ export function startTask(o: StartOpts): Task {
 }
 
 /** follow-up message in the same agent session */
-export function followUp(taskId: string, prompt: string, images: string[] = []) {
+export function followUp(taskId: string, prompt: string, images: string[] = [], show = true) {
   const t = tasks.get(taskId);
   if (!t) throw new Error('task not found');
   if (t.status === 'running' || t.status === 'queued') {
@@ -106,12 +107,60 @@ export function followUp(taskId: string, prompt: string, images: string[] = []) 
     return t;
   }
   t.status = 'queued';
-  pushEvent(t, { kind: 'user', text: prompt });
+  if (show) pushEvent(t, { kind: 'user', text: prompt });
   t.pending = { prompt, images };
   emitTask(t);
   queue.push({ taskId, prompt, images });
   pump();
   return t;
+}
+
+/**
+ * Steer a running agent without stopping it: the message is queued on the task and handed to the agent at its
+ * next step — Claude through a PostToolUse / Stop hook (server/mcp/steer-hook.mjs), Codex (and Claude as a fallback)
+ * appended to the result of its next studio tool call. Undelivered messages become a normal follow-up when it ends.
+ */
+export function steerTask(taskId: string, prompt: string, images: string[] = []) {
+  const t = tasks.get(taskId);
+  if (!t) throw new Error('task not found');
+  if (t.status === 'queued' && queue.some((x) => x.taskId === taskId)) return interruptTask(taskId, prompt, images); // not started: merge
+  if (t.status !== 'running' || !t.pid || !alive(t.pid)) return followUp(taskId, prompt, images);
+  const id = nid();
+  t.steer = [...(t.steer || []), { id, text: prompt, images, at: new Date().toISOString() }];
+  pushEvent(t, { kind: 'user', text: prompt, steerId: id } as any);
+  pushEvent(t, { kind: 'status', ...msg('sent — the agent will take it into account at its next step') });
+  emitTask(t);
+  return t;
+}
+
+/** model / effort for the task's next runs ('' = back to the Settings default, undefined = unchanged) */
+export function setTaskOptions(taskId: string, o: { model?: string; effort?: string }) {
+  const t = tasks.get(taskId);
+  if (!t) return;
+  if (o.model !== undefined) t.model = o.model || undefined;
+  if (o.effort !== undefined) t.effort = (o.effort || undefined) as Task['effort'];
+  emitTask(t);
+}
+
+/** hand undelivered steering messages to the agent (called by the hook / the MCP bridge); marks them delivered */
+export function takeSteer(taskId: string): string {
+  const t = tasks.get(taskId);
+  const open = (t?.steer || []).filter((m) => !m.delivered);
+  if (!t || !open.length) return '';
+  const now = new Date().toISOString();
+  for (const m of open) m.delivered = now;
+  pushEvent(t, { kind: 'status', ...msg('the agent received your message') });
+  emitTask(t);
+  const body = open.map((m) => `"${m.text}"${m.images.length ? `\n(attached images — Read them: ${m.images.join(', ')})` : ''}`).join('\n\n');
+  return `[Smashcut chat] The user wrote while you were working (genuine user message, typed in the editor chat — follow it now, adjust your plan; don't restart finished work unless it asks):\n${body}`;
+}
+
+/** Claude Code hooks that deliver steering messages (same file for every task: the task id comes from the env) */
+function steerSettingsFile() {
+  const f = path.join(HOME_DIR, 'agent-hooks.json');
+  const cmd = `${JSON.stringify(process.execPath)} ${JSON.stringify(path.join(path.dirname(MCP_STDIO), 'steer-hook.mjs'))}`;
+  writeJson(f, { hooks: { PostToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: cmd, timeout: 10 }] }], Stop: [{ hooks: [{ type: 'command', command: cmd, timeout: 10 }] }] } });
+  return f;
 }
 
 /**
@@ -160,23 +209,29 @@ export function cancelTask(id: string) {
   emitTask(t);
 }
 
+/** lead agents blocked in wait_subagents: idle, so they don't hold a slot (their sub-agents need it) */
+const waitingLeads = new Set<string>();
+
 /**
- * Start queued work. Two pools: top-level tasks share `parallelTasks` slots; sub-agents run in their parent's
- * own pool (`maxSubagents` per parent), so a lead agent waiting for its sub-agents never blocks them.
+ * Start queued work. `parallelTasks` caps ALL agents working at once — top-level tasks and sub-agents together
+ * (a lead blocked in wait_subagents doesn't count, else it would starve its own sub-agents). `maxSubagents` caps
+ * the sub-agents of one lead. Sub-agents start before new top-level tasks: they finish work already under way.
  */
 function pump() {
   const st = getSettings();
+  const cap = Math.max(1, st.parallelTasks || 1);
   const running = () => [...new Set([...live.keys(), ...starting])].map((id) => tasks.get(id)).filter(Boolean) as Task[];
-  for (let i = 0; i < queue.length; ) {
-    const next = queue[i];
+  const order = () => [...queue].sort((a, b) => Number(!!tasks.get(b.taskId)?.parentId) - Number(!!tasks.get(a.taskId)?.parentId));
+  for (const next of order()) {
     const t = tasks.get(next.taskId);
-    if (!t || t.status === 'cancelled') { queue.splice(i, 1); continue; }
+    const qi = queue.indexOf(next);
+    if (qi < 0) continue;
+    if (!t || t.status === 'cancelled') { queue.splice(qi, 1); continue; }
     const r = running();
-    const free = t.parentId
-      ? r.filter((x) => x.parentId === t.parentId).length < Math.max(1, st.maxSubagents || 1)
-      : r.filter((x) => !x.parentId).length < Math.max(1, st.parallelTasks || 1);
-    if (!free) { i++; continue; }
-    queue.splice(i, 1);
+    const active = r.filter((x) => !waitingLeads.has(x.id)).length;
+    const free = active < cap && (!t.parentId || r.filter((x) => x.parentId === t.parentId).length < Math.max(1, st.maxSubagents || 1));
+    if (!free) continue;
+    queue.splice(qi, 1);
     starting.add(t.id); // holds the slot until attach() registers the live watcher
     void inTask(t, () => runTask(t, next.prompt, next.images)).finally(() => starting.delete(t.id));
   }
@@ -199,7 +254,9 @@ export function delegateTask(parentId: string, o: { title: string; prompt: strin
   if (parent.parentId) throw uerr('A sub-agent cannot start its own sub-agents — do the work yourself.');
   if (!o.title?.trim() || !o.prompt?.trim()) throw uerr('title and prompt are required');
   return inTask(parent, () => {
-    const t = startTask({ agent: o.agent || parent.agent, title: o.title.trim(), prompt: o.prompt.trim(), clipId: o.clipId, parentId });
+    // sub-agents inherit the lead's model / effort (same agent kind)
+    const same = !o.agent || o.agent === parent.agent;
+    const t = startTask({ agent: o.agent || parent.agent, title: o.title.trim(), prompt: o.prompt.trim(), clipId: o.clipId, parentId, ...(same ? { model: parent.model, effort: parent.effort } : {}) });
     pushEvent(parent, { kind: 'status', ...msg('sub-agent started: {title}', { title: t.title }) });
     return t;
   });
@@ -210,7 +267,16 @@ export async function waitSubagents(parentId: string, ids?: string[], timeoutMs 
   const until = Date.now() + Math.min(timeoutMs, 540_000);
   const pick = () => (ids?.length ? ids.map((id) => tasks.get(id)).filter((x): x is Task => !!x && x.parentId === parentId) : children(parentId));
   const busy = (x: Task) => x.status === 'running' || x.status === 'queued';
-  while (Date.now() < until && pick().some(busy)) await new Promise((r) => setTimeout(r, 1000));
+  waitingLeads.add(parentId); // idle while it waits: its slot goes to its sub-agents
+  const lead = tasks.get(parentId);
+  if (lead) { lead.waiting = true; emitTask(lead); }
+  pump();
+  try {
+    while (Date.now() < until && pick().some(busy)) await new Promise((r) => setTimeout(r, 1000));
+  } finally {
+    waitingLeads.delete(parentId);
+    if (lead) { lead.waiting = false; emitTask(lead); }
+  }
   return pick().map((x) => ({ id: x.id, title: x.title, status: x.status, report: busy(x) ? '' : lastReport(x), version: x.commitAfter }));
 }
 
@@ -259,6 +325,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
     cmd = 'claude';
     args = ['-p', prompt, '--output-format', 'stream-json', '--verbose',
       '--mcp-config', mcpConfigFile(t.id),
+      '--settings', steerSettingsFile(),
       '--permission-mode', settings.permissionMode,
       '--permission-prompt-tool', 'mcp__studio__approve_permission',
       '--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)', 'Bash(npm:*)', 'Bash(npx:*)', 'Bash(pnpm:*)', 'Bash(yarn:*)', 'Bash(bun:*)', 'Bash(unzip:*)', 'Bash(tar:*)',
@@ -266,7 +333,9 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '--disallowedTools', 'Task',
       ...(settings.agentUserConfig ? [] : ['--strict-mcp-config', '--setting-sources', 'project,local']),
       '--append-system-prompt', systemPromptFor(t)];
-    if (settings.claudeModel) args.push('--model', settings.claudeModel);
+    const model = t.model || settings.claudeModel, effort = t.effort || (settings as any).claudeEffort;
+    if (model) args.push('--model', model);
+    if (effort) args.push('--effort', effort);
     if (t.sessionId) args.push('--resume', t.sessionId);
     if (images.length) args[1] = prompt + '\n\nAttached images (Read them): ' + images.join(', ');
   } else {
@@ -283,7 +352,9 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '-c', 'mcp_servers.studio.default_tools_approval_mode="approve"',
       ...(settings.agentUserConfig ? [] : codexIsolation()),
       '-c', `sandbox_workspace_write.writable_roots=[${JSON.stringify(store.dir)}]`];
-    if (settings.codexModel) common.push('-m', settings.codexModel);
+    const cmodel = t.model || settings.codexModel, ceffort = t.effort || (settings as any).codexEffort;
+    if (cmodel) common.push('-m', cmodel);
+    if (ceffort) common.push('-c', `model_reasoning_effort="${ceffort === 'max' ? 'xhigh' : ceffort}"`);
     for (const img of images) common.push('-i', img);
     const full = systemPromptFor(t) + '\n\n---\n\n' + prompt;
     args = t.sessionId ? ['exec', ...common, 'resume', t.sessionId, full] : ['exec', ...common, '-C', store.dir, full];
@@ -365,8 +436,11 @@ function attach(t: Task) {
     const finishedThisRun = completed && lastResult && t.events.lastIndexOf(lastResult) > t.events.map((e) => e.kind).lastIndexOf('user');
     if (finishedThisRun) {
       await finish(t, 'done');
+      // steering messages the agent never saw (sent in its last seconds): continue the session with them
+      const unseen = (t.steer || []).filter((m) => !m.delivered);
+      if (unseen.length) { for (const m of unseen) m.delivered = new Date().toISOString(); t.later = [{ prompt: unseen.map((m) => m.text).join('\n\n'), images: unseen.flatMap((m) => m.images), steered: true }, ...(t.later || [])]; }
       const next = t.later?.shift();
-      if (next) { emitTask(t); followUp(t.id, next.prompt, next.images); }
+      if (next) { emitTask(t); followUp(t.id, next.prompt, next.images, !(next as any).steered); }
       pump();
       return;
     }

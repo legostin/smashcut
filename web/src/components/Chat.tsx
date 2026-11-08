@@ -4,6 +4,8 @@ import { useStore, setState, actions, api } from '../store';
 import { sceneChip } from './Storyboard';
 import { Icon } from './Icon';
 import { Markdown } from './Markdown';
+import { ChatRefs, addRefFiles } from './ChatRefs';
+import { ModelPicker } from './ModelPicker';
 import { t, tn } from '../i18n';
 
 /** The agent conversation: task switcher, feed, permission cards, composer. */
@@ -326,17 +328,19 @@ function Composer({ task }: { task: Task | null }) {
   }, [draft]);
   useEffect(() => { if (draft || ctx.length) ref.current?.focus(); }, [draft === '', ctx.length]);
   /** how: send (idle) · interrupt (busy, default) · later (busy, after the current step) */
-  const send = async (how: 'send' | 'interrupt' | 'later' = busy ? 'interrupt' : 'send') => {
+  const send = async (how: 'send' | 'interrupt' | 'later' = 'send') => {
     const text = withContext(draft.trim(), ctx);
     if (!draft.trim() && !ctx.length) return;
     if (!task) await actions.startTask(text);
     else if (how === 'interrupt') await actions.interrupt(task.id, text);
+    else if (busy && how !== 'later') await actions.steer(task.id, text);
     else await actions.followUp(task.id, text);
     setState({ chatDraft: '', chatContext: [] });
   };
   const missing = agents && !agents[agent];
   const empty = !draft.trim() && !ctx.length;
   const [caret, setCaret] = useState(0);
+  const [dropping, setDropping] = useState(false);
   const [hi, setHi] = useState(0);
   const [dismissed, setDismissed] = useState('');
   const sug = useSuggestions(draft, caret);
@@ -355,7 +359,12 @@ function Composer({ task }: { task: Task | null }) {
     setTimeout(() => { const el = ref.current; if (el) { el.focus(); const pos = s.chip ? before.length : (before + (s.insert || '')).length; el.setSelectionRange(pos, pos); } }, 0);
   };
   return (
-    <div className={'composer' + (busy ? ' busy' : '')}>
+    <div className={'composer' + (busy ? ' busy' : '') + (dropping ? ' dropping' : '')}
+      onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDropping(true); } }}
+      onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropping(false); }}
+      onDrop={(e) => { if (!e.dataTransfer.files.length) return; e.preventDefault(); setDropping(false); addRefFiles(Array.from(e.dataTransfer.files)); }}>
+      {dropping && <div className="composer-drop">{t('Drop — it becomes a reference and goes with this message')}</div>}
+      <ChatRefs />
       {missing && <div className="composer-warn">{t('CLI “{agent}” not found in PATH', { agent })}</div>}
       {ctx.length > 0 && (
         <div className="ctx-chips">
@@ -375,9 +384,10 @@ function Composer({ task }: { task: Task | null }) {
         </div>
       )}
       <textarea ref={ref} rows={1} value={draft}
-        placeholder={busy ? t('Interrupt the agent: write what to change (Enter)…') : ctx.some((c) => c.key.startsWith('action:')) ? t('What exactly should be done or changed? Enter — send') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do · @ scenes · # media · / commands')}
+        placeholder={busy ? t('Add an instruction — the agent keeps working and takes it into account (Enter)…') : ctx.some((c) => c.key.startsWith('action:')) ? t('What exactly should be done or changed? Enter — send') : task ? t('Continue…') : ctx.length ? t('What to do with the selection?') : t('Describe what to do · @ scenes · # media · / commands')}
         onChange={(e) => { setState({ chatDraft: e.target.value }); setCaret(e.target.selectionStart ?? e.target.value.length); }}
         onSelect={(e) => setCaret((e.target as HTMLTextAreaElement).selectionStart ?? 0)}
+        onPaste={(e) => { const files = Array.from(e.clipboardData.files || []).filter((f) => /^(image|video|audio)\//.test(f.type)); if (files.length) { e.preventDefault(); addRefFiles(files); } }}
         onKeyDown={(e) => {
           if (open) {
             if (e.key === 'ArrowDown') { e.preventDefault(); setHi((h) => (h + 1) % sug.items.length); return; }
@@ -388,14 +398,17 @@ function Composer({ task }: { task: Task | null }) {
           if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
         }} />
       <div className="composer-bar">
-        {!task
-          ? <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>
-          : <span className="muted xsmall">{busy ? <><span className="spinner sm" /> {t('{agent} is working', { agent: task.agent })}</> : task.agent}</span>}
+        <div className="row gap6">
+          {!task
+            ? <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>
+            : <span className="muted xsmall">{busy ? <><span className="spinner sm" /> {task.waiting ? t('waiting for its sub-agents') : t('{agent} is working', { agent: task.agent })}</> : task.agent}</span>}
+          <ModelPicker agent={task?.agent || agent} />
+        </div>
         {busy ? (
           <div className="row gap6">
             <button className="btn xs ghost" onClick={() => actions.cancelTask(task!.id)} title={t('Stop completely')}><Icon name="stop" size={9} /> {t('Stop')}</button>
-            {!empty && <button className="btn xs ghost" onClick={() => send('later')} title={t('Send when the agent finishes the current step')}>{t('Later')}</button>}
-            <button className="btn xs primary" disabled={empty} onClick={() => send('interrupt')} title={t('The agent stops and immediately continues with your message (Enter)')}>{t('Interrupt')}</button>
+            {!empty && <button className="btn xs ghost" onClick={() => send('interrupt')} title={t('Stop the current step and restart from your message')}>{t('Restart with this')}</button>}
+            <button className="btn xs primary" disabled={empty} onClick={() => send()} title={t('The agent keeps working and takes your message into account at its next step (Enter)')}>{t('Send')}</button>
           </div>
         ) : <button className="send" disabled={empty} onClick={() => send()} title="Enter"><Icon name="arrowUp" size={14} /></button>}
       </div>

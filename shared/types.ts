@@ -192,7 +192,14 @@ export interface Task {
   /** user interrupted the running agent with this message (applied when the process stops) */
   interrupt?: { prompt: string; images: string[] };
   /** messages to send after the current run finishes */
-  later?: { prompt: string; images: string[] }[];
+  later?: { prompt: string; images: string[]; steered?: boolean }[];
+  /** messages the user typed while the agent works — delivered into the running session at its next step (no stop) */
+  steer?: { id: string; text: string; images: string[]; at: string; delivered?: string }[];
+  /** a lead agent blocked in wait_subagents (idle: not counted against the agents-at-once limit) */
+  waiting?: boolean;
+  /** model / reasoning effort chosen in the chat for this task (else the Settings defaults) */
+  model?: string;
+  effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max';
   /** what the agent is working on right now (derived from its tool calls) */
   focus?: { kind: 'clip' | 'music' | 'timeline' | 'script' | 'design'; id?: string; at: number };
 }

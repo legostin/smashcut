@@ -1063,3 +1063,47 @@ button.chip:hover { filter: brightness(1.25); }
 .story-empty.start .hero { margin-top: 18px; }
 
 .chat-empty.quiet { justify-content: flex-end; padding-bottom: 18px; }
+
+/* ---------- references in the chat composer ---------- */
+.composer { position: relative; }
+.composer.dropping { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(212, 255, 58, 0.12); }
+.composer-drop { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; text-align: center; padding: 12px; border-radius: 14px; background: rgba(10, 10, 11, 0.86); color: var(--accent); font-size: 12.5px; font-weight: 600; pointer-events: none; }
+.chat-refs { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 8px; }
+.chat-ref { display: inline-flex; align-items: center; gap: 5px; max-width: 150px; height: 24px; padding: 0 3px 0 3px; border-radius: 7px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); font-size: 11.5px; color: var(--fg2); cursor: pointer; transition: background var(--t), border-color var(--t); }
+.chat-ref:hover { background: rgba(255, 255, 255, 0.09); border-color: var(--line2); color: var(--fg); }
+.chat-ref img { width: 18px; height: 18px; border-radius: 4px; object-fit: cover; flex: none; }
+.chat-ref > svg { margin-left: 3px; flex: none; color: var(--accent); }
+.chat-ref button { width: 16px; height: 16px; display: grid; place-items: center; border-radius: 4px; color: var(--fg3); flex: none; }
+.chat-ref button:hover { color: var(--fg); background: rgba(255, 255, 255, 0.1); }
+.chat-ref-add { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: 7px; border: 1px dashed var(--line3); color: var(--fg3); font-size: 11.5px; transition: color var(--t), border-color var(--t); }
+.chat-ref-add:hover { color: var(--accent); border-color: var(--accent); }
+.chat-ref-menu { position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 20; min-width: 240px; padding: 5px; border-radius: 12px; background: var(--raise2, #1c1c20); border: 1px solid var(--line2); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55); animation: pop 140ms var(--ease); }
+.chat-ref-menu > button { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; color: var(--fg2); text-align: left; }
+.chat-ref-menu > button:hover { background: rgba(255, 255, 255, 0.07); color: var(--fg); }
+.chat-ref-link { display: flex; gap: 6px; padding: 4px; }
+.chat-ref-link input { flex: 1; min-width: 0; height: 28px; padding: 0 9px; border-radius: 7px; background: var(--bg); border: 1px solid var(--line2); outline: none; font-size: 12.5px; }
+.chat-ref-link input:focus { border-color: var(--accent); }
+
+/* ---------- model / thinking picker in the chat ---------- */
+.model-pick { position: relative; }
+.model-pill { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 99px; border: 1px solid var(--line2); color: var(--fg2); font-size: 11.5px; white-space: nowrap; transition: border-color var(--t), color var(--t); }
+.model-pill:hover, .model-pill.on { color: var(--fg); border-color: var(--line3); }
+.model-pill svg { color: var(--accent); }
+.model-sep { opacity: 0.45; }
+.model-menu { position: absolute; left: 0; bottom: calc(100% + 8px); z-index: 30; width: 280px; padding: 6px; border-radius: 12px; background: var(--raise2, #1c1c20); border: 1px solid var(--line2); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55); animation: pop 140ms var(--ease); }
+.model-head { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg3); padding: 8px 8px 4px; }
+.model-opt { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border-radius: 8px; font-size: 12.5px; color: var(--fg2); text-align: left; }
+.model-opt:hover { background: rgba(255, 255, 255, 0.06); color: var(--fg); }
+.model-opt.on { color: var(--fg); }
+.model-opt svg { color: var(--accent); }
+.model-custom { display: flex; gap: 6px; padding: 4px 4px 2px; }
+.model-custom input { flex: 1; min-width: 0; height: 26px; padding: 0 8px; border-radius: 7px; background: var(--bg); border: 1px solid var(--line2); outline: none; font-size: 12px; }
+.model-custom input:focus { border-color: var(--accent); }
+.model-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 2px 4px 4px; }
+.model-seg button { height: 26px; border-radius: 7px; font-size: 11.5px; color: var(--fg2); background: rgba(255, 255, 255, 0.04); }
+.model-seg button:hover { color: var(--fg); background: rgba(255, 255, 255, 0.08); }
+.model-seg button.on { color: #0a0a0b; background: var(--accent); font-weight: 600; }
+.model-note { padding: 6px 8px 4px; line-height: 1.4; }
+/* the model menu spans the whole composer (the side panel is narrow) */
+.composer .model-pick { position: static; }
+.composer .model-menu { left: 8px; right: 8px; width: auto; }

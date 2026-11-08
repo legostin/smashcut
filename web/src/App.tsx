@@ -160,7 +160,7 @@ function TopBar() {
   const project = useStore((s) => s.project)!;
   const connected = useStore((s) => s.connected);
   const job = useStore((s) => s.jobs.find((j) => j.status === 'running'));
-  const running = useStore((s) => s.tasks.filter((x) => x.status === 'running').length);
+  const running = useStore((s) => s.tasks.filter((x) => x.status === 'running' && !x.waiting).length); // a lead waiting for its sub-agents is idle
   const [family, setFamily] = useState<{ dir: string; label?: string; width: number; height: number; current?: boolean }[]>([]);
   useEffect(() => { document.title = /Smashcut/.test(project.name) ? project.name : `${project.name} — Smashcut`; }, [project.name]);
   useEffect(() => { api<typeof family>('GET', '/api/variants').then(setFamily).catch(() => setFamily([])); }, [project.name, project.width, project.height]);
@@ -323,8 +323,8 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
       <div className="section-title">{t('Agents working at once')}</div>
       <div className="set-row">
         <div className="col gap2 grow">
-          <span className="small">{t('Simultaneous tasks')}</span>
-          <span className="muted xsmall">{t('Each message you send to an agent starts a task (a separate agent session). This many tasks run at the same time — across all open projects; the rest wait in the queue.')}</span>
+          <span className="small">{t('Agents at once (maximum)')}</span>
+          <span className="muted xsmall">{t('The most agents working at the same time — tasks and their sub-agents together, across all open projects. The rest wait in the queue. A lead agent that is just waiting for its sub-agents does not take a slot.')}</span>
         </div>
         <Stepper value={s.parallelTasks} min={1} max={8} onChange={(v) => setS({ ...s, parallelTasks: v })} />
       </div>
@@ -346,7 +346,7 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
         <div className="set-row">
           <div className="col gap2 grow">
             <span className="small">{t('Sub-agents per task')}</span>
-            <span className="muted xsmall">{t('How many sub-agents one task may run at the same time. They have their own slots and do not take simultaneous-task slots.')}</span>
+            <span className="muted xsmall">{t('How many sub-agents one task may run at the same time, within the overall limit above. Sub-agents start before new tasks in the queue.')}</span>
           </div>
           <Stepper value={s.maxSubagents ?? 3} min={1} max={6} onChange={(v) => setS({ ...s, maxSubagents: v })} />
         </div>

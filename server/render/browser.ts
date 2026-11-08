@@ -130,7 +130,24 @@ class Semaphore {
 const sem = new Semaphore(() => getSettings().renderWorkers);
 
 /** run fn with a fresh page of the given viewport; limited by renderWorkers */
+/**
+ * A fresh page (own context) in the shared headless browser. If the browser's compositor breaks
+ * ("Unable to capture screenshot", crashed target — e.g. after many software-WebGL frames), the browser is
+ * relaunched and fn runs once more on a new page.
+ */
 export async function withPage<T>(viewport: { width: number; height: number }, fn: (page: Page, errors: string[]) => Promise<T>): Promise<T> {
+  try {
+    return await withPageOnce(viewport, fn);
+  } catch (e) {
+    if (!/Unable to capture screenshot|Target crashed|Target page, context or browser has been closed|Browser has been closed|Page crashed/i.test(String((e as Error)?.message))) throw e;
+    const b = browserP;
+    browserP = null;
+    (await b?.catch(() => null))?.close().catch(() => {});
+    return withPageOnce(viewport, fn);
+  }
+}
+
+async function withPageOnce<T>(viewport: { width: number; height: number }, fn: (page: Page, errors: string[]) => Promise<T>): Promise<T> {
   await sem.acquire();
   let ctx: Awaited<ReturnType<Browser['newContext']>> | undefined;
   try {

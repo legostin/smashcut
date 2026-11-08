@@ -52,7 +52,7 @@ async function download(url: string, file: string, signal: AbortSignal, referer?
 }
 
 /** images (and videos) referenced by an HTML page, best candidates first */
-function pageMedia(html: string, base: string) {
+export function pageMedia(html: string, base: string) {
   const abs = (u: string) => { try { return new URL(u.replace(/&amp;/g, '&').trim(), base).href; } catch { return null; } };
   const attr = (tag: string, name: string) => new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i').exec(tag)?.slice(2).find((x) => x != null) ?? null;
   const og: string[] = [], imgs: { url: string; hint: number; alt: string }[] = [], videos: string[] = [];
