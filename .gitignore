@@ -4,3 +4,8 @@ gallery/**/preview.png
 gallery/**/preview.wav
 .DS_Store
 dist/
+
+# python bytecode
+__pycache__/
+*.pyc
+.DS_Store
