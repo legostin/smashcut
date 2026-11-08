@@ -2,6 +2,8 @@
 <html><head><meta charset="utf-8"><title>music render</title>
 <script src="/vendor/Tone.js"></script>
 <script src="/runtime/music.js"></script>
+<script>window.__musicExt = window.__musicExt || [];</script>
+<script src="/runtime/music-ext/index.js"></script>
 </head><body>
 <script>
   const src = new URLSearchParams(location.search).get('src');
