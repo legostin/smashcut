@@ -21,6 +21,8 @@ description: Programmatic media operations on photos, footage and audio (list_me
 | Die-cut sticker look | `sticker` | outline + drop shadow; opaque input is cut out automatically (`autoCut`). |
 | Brand colours from an image | `palette` | → `{colors:[{hex,share}]}` + swatch; feed into `set_design`. |
 | Resize / crop / rotate / flip a still | `transform` | crop px rect → rotate → flip → resize (fit inside/cover/contain/fill). |
+| Crop a still the easy way: to an aspect (9:16 cover, 1:1 avatar…), to a named thing ("the logo", "her face"), to the main subject, trim borders | `crop` | `mode=aspect aspect=9:16 focus=auto` · `mode=object query="the red car" aspect=1:1 padding=0.1` · `mode=subject` · `mode=trim` · `mode=rect rect="0.2,0.1,0.6,0.8"` (fractions or px). Returns the box it used. |
+| Get an image / video / audio from the web (a link the user gave, a logo from their site, a reference shot) | `import_url` | direct file links; a web page → its share image (pick=auto/og), the largest picture, or all pictures ≥ minSize; video pages (YouTube, Vimeo, TikTok, X…) via yt-dlp (audioOnly for sound). Source URL is kept with the file; mind the rights before publishing. |
 | Colour / blur / sharpen a still | `adjust` | brightness/contrast/saturation −1…1, hue °, blur σ px, sharpen. |
 | PNG ↔ JPG ↔ WebP | `convert` | jpg flattens transparency onto `background`. |
 | Green/blue screen → transparent | `chroma_key` | `color:auto` samples the border; WebM VP9 alpha (editor) and/or ProRes 4444 `.mov`. Tune `similarity` (more = more keyed), `blend` (soft edge). Also keys a still → PNG. |

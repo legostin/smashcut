@@ -3,7 +3,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { defineOp, type OpContext } from '../registry.ts';
 import { uerr } from '../../i18n.ts';
-import { matte, BG_MODELS, type BgModel } from '../ml.ts';
+import { matte, detectObjects, BG_MODELS, type BgModel } from '../ml.ts';
 
 const IMG = ['image'] as ('image')[];
 const sameExt = (rel: string) => { const e = path.extname(rel).toLowerCase().slice(1); return e === 'jpeg' ? 'jpg' : ['png', 'jpg', 'webp'].includes(e) ? e : 'png'; };
@@ -116,6 +116,144 @@ defineOp({
     const image = ctx.out('t', ext);
     await encode(s, ext).toFile(ctx.abs(image));
     return { image };
+  },
+});
+
+type Box = { x: number; y: number; w: number; h: number };
+/** "16:9" / "9:16" / "1.91" / "original" / "free" → width/height ratio (null = keep the box as is) */
+function parseAspect(a: string, W: number, H: number): number | null {
+  const v = String(a || 'free').trim().toLowerCase();
+  if (!v || v === 'free') return null;
+  if (v === 'original') return W / H;
+  const m = /^(\d+(?:\.\d+)?)\s*[:x×/]\s*(\d+(?:\.\d+)?)$/.exec(v);
+  if (m) return +m[1] / +m[2];
+  if (+v > 0) return +v;
+  throw uerr('Bad aspect “{a}” — use e.g. 16:9, 9:16, 1:1, 4:5, original or free', { a });
+}
+/** grow a box to an aspect around its centre, then fit it inside the image (shrinking if needed, keeping the aspect) */
+function toAspect(b: Box, r: number | null, W: number, H: number): Box {
+  let { w, h } = b;
+  if (r) { if (w / h < r) w = h * r; else h = w / r; }
+  const k = Math.min(1, W / w, H / h);
+  w *= k; h *= k;
+  const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+  const x = Math.min(Math.max(0, cx - w / 2), W - w), y = Math.min(Math.max(0, cy - h / 2), H - h);
+  return { x, y, w, h };
+}
+const pad = (b: Box, f: number): Box => ({ x: b.x - b.w * f, y: b.y - b.h * f, w: b.w * (1 + 2 * f), h: b.h * (1 + 2 * f) });
+
+/** where the interesting stuff is: edge energy + saturation on a small copy, best box of (bw,bh) by integral image */
+async function saliencyBox(buf: Buffer, W: number, H: number, bw: number, bh: number): Promise<Box> {
+  const S = 160 / Math.max(W, H);
+  const w = Math.max(8, Math.round(W * S)), h = Math.max(8, Math.round(H * S));
+  const { data } = await sharp(buf).resize(w, h, { fit: 'fill' }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const lum = new Float32Array(w * h), e = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) lum[i] = 0.299 * data[i * 3] + 0.587 * data[i * 3 + 1] + 0.114 * data[i * 3 + 2];
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x;
+    const gx = lum[i + 1] - lum[i - 1], gy = lum[i + w] - lum[i - w];
+    const r = data[i * 3], g = data[i * 3 + 1], b = data[i * 3 + 2];
+    const sat = Math.max(r, g, b) - Math.min(r, g, b);
+    e[i] = Math.hypot(gx, gy) + 0.35 * sat;
+  }
+  const I = new Float64Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) { let row = 0; for (let x = 0; x < w; x++) { row += e[y * w + x]; I[(y + 1) * (w + 1) + x + 1] = I[y * (w + 1) + x + 1] + row; } }
+  const sw = Math.max(1, Math.round(bw * S)), sh = Math.max(1, Math.round(bh * S));
+  let best = -1, bx = 0, by = 0;
+  for (let y = 0; y + sh <= h; y++) for (let x = 0; x + sw <= w; x++) {
+    const sum = I[(y + sh) * (w + 1) + x + sw] - I[y * (w + 1) + x + sw] - I[(y + sh) * (w + 1) + x] + I[y * (w + 1) + x];
+    // slight centre bias so flat images still crop to the middle
+    const cx = (x + sw / 2) / w - 0.5, cy = (y + sh / 2) / h - 0.5;
+    const score = sum * (1 - 0.25 * (cx * cx + cy * cy));
+    if (score > best) { best = score; bx = x; by = y; }
+  }
+  return { x: Math.min(W - bw, bx / S), y: Math.min(H - bh, by / S), w: bw, h: bh };
+}
+
+defineOp({
+  id: 'crop',
+  title: 'Crop (smart)',
+  category: 'image',
+  cost: 'fast',
+  version: 1,
+  description: 'Crop an image the easy way. mode=aspect: the biggest frame of `aspect` (16:9, 9:16, 1:1, 4:5…) placed by `focus` (center, top, bottom, left, right, top-left…, "x,y" as 0–1 fractions, or auto = where the detail is), `zoom` > 1 crops tighter. mode=object: crop to a thing you name in `query` ("the red car", "a person\'s face", "the logo") — zero-shot detection. mode=subject: crop to the main subject (cut-out mask). mode=trim: cut away flat borders / transparent margins. mode=rect: `rect` = "x,y,w,h" in px, or 0–1 fractions. object/subject/trim add `padding` and can be forced to `aspect`. Optional output width/height.',
+  inputs: {
+    image: { type: 'file', label: 'Image', accept: IMG, required: true },
+    mode: { type: 'enum', label: 'Mode', values: ['aspect', 'object', 'subject', 'trim', 'rect'], default: 'aspect' },
+    aspect: { type: 'string', label: 'Aspect', default: '1:1', description: '16:9 · 9:16 · 1:1 · 4:5 · original · free' },
+    focus: { type: 'string', label: 'Focus', default: 'auto', description: 'auto · center · top · bottom · left · right · top-left … · "0.3,0.4"' },
+    zoom: { type: 'number', label: 'Zoom', min: 1, max: 10, step: 0.05, default: 1 },
+    query: { type: 'string', label: 'Object', default: '', description: 'mode=object: what to crop to, in words (English works best)' },
+    rect: { type: 'string', label: 'Rect', default: '', description: 'mode=rect: x,y,w,h (px, or 0–1 fractions)' },
+    padding: { type: 'number', label: 'Padding', min: 0, max: 2, step: 0.01, default: 0.08, description: 'object/subject/trim: margin around the box, as a fraction of its size' },
+    width: { type: 'number', label: 'Out width', min: 0, max: 16384, default: 0, description: '0 = crop size' },
+    height: { type: 'number', label: 'Out height', min: 0, max: 16384, default: 0 },
+    format: { type: 'enum', label: 'Format', values: ['same', 'png', 'jpg', 'webp'], default: 'same' },
+  },
+  outputs: { image: { kind: 'image' }, box: { kind: 'json', description: '{x,y,w,h} of the crop in source pixels, + detection score for mode=object' } },
+  async run(ctx, p: any) {
+    const src = ctx.abs(p.image);
+    const { data: buf, info } = await sharp(src, { animated: false }).rotate().toBuffer({ resolveWithObject: true });
+    const W = info.width, H = info.height;
+    const r = parseAspect(p.mode === 'aspect' && (!p.aspect || p.aspect === 'free') ? 'original' : p.aspect, W, H);
+    let box: Box, extra: Record<string, unknown> = {};
+    if (p.mode === 'rect') {
+      const v = String(p.rect || '').split(/[,\s]+/).map(Number);
+      if (v.length !== 4 || v.some((x) => !(x >= 0))) throw uerr('rect must be x,y,w,h');
+      const frac = v.every((x) => x <= 1);
+      box = frac ? { x: v[0] * W, y: v[1] * H, w: v[2] * W, h: v[3] * H } : { x: v[0], y: v[1], w: v[2], h: v[3] };
+    } else if (p.mode === 'aspect') {
+      // the largest box of that aspect, shrunk by zoom, placed by focus
+      let bw = W, bh = W / r!;
+      if (bh > H) { bh = H; bw = H * r!; }
+      bw /= p.zoom || 1; bh /= p.zoom || 1;
+      const f = String(p.focus || 'auto').trim().toLowerCase();
+      if (f === 'auto') box = await saliencyBox(buf, W, H, bw, bh);
+      else {
+        const xy = /^(\d*\.?\d+)\s*,\s*(\d*\.?\d+)$/.exec(f);
+        const fx = xy ? +xy[1] : f.includes('left') ? 0 : f.includes('right') ? 1 : 0.5;
+        const fy = xy ? +xy[2] : f.includes('top') ? 0 : f.includes('bottom') ? 1 : 0.5;
+        box = { x: (W - bw) * Math.min(1, Math.max(0, fx)), y: (H - bh) * Math.min(1, Math.max(0, fy)), w: bw, h: bh };
+      }
+    } else {
+      check(ctx);
+      if (p.mode === 'object') {
+        if (!String(p.query || '').trim()) throw uerr('mode=object needs query: what to crop to');
+        ctx.progress(0.1, 'detecting');
+        const tmp = ctx.tmp() + '/in.png';
+        await sharp(buf).png().toFile(tmp);
+        const hits = await detectObjects(tmp, [String(p.query).trim()], 0.03);
+        if (!hits.length) throw uerr('Could not find “{q}” in the image — describe it differently or use mode=rect', { q: p.query });
+        const b = hits[0].box;
+        box = { x: b.xmin, y: b.ymin, w: b.xmax - b.xmin, h: b.ymax - b.ymin };
+        extra = { label: hits[0].label, score: +hits[0].score.toFixed(3) };
+      } else if (p.mode === 'subject') {
+        ctx.progress(0.1, 'segmenting');
+        const tmp = ctx.tmp() + '/in.png';
+        await sharp(buf).png().toFile(tmp);
+        const m = await matte(tmp, 'isnet');
+        let x0 = m.width, y0 = m.height, x1 = -1, y1 = -1;
+        for (let y = 0; y < m.height; y++) for (let x = 0; x < m.width; x++) if (m.mask[y * m.width + x] > 128) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        if (x1 < 0) throw uerr('No clear subject found — try mode=object with a query');
+        const sx = W / m.width, sy = H / m.height;
+        box = { x: x0 * sx, y: y0 * sy, w: (x1 - x0 + 1) * sx, h: (y1 - y0 + 1) * sy };
+      } else {
+        const t = await sharp(buf).trim({ threshold: 12 }).toBuffer({ resolveWithObject: true });
+        box = { x: -(t.info.trimOffsetLeft || 0), y: -(t.info.trimOffsetTop || 0), w: t.info.width, h: t.info.height };
+      }
+      box = toAspect(pad(box, p.padding ?? 0.08), p.aspect && p.aspect !== 'free' ? r : null, W, H);
+    }
+    // clamp & round
+    let x = Math.max(0, Math.round(box.x)), y = Math.max(0, Math.round(box.y));
+    let w = Math.round(Math.min(box.w, W - x)), h = Math.round(Math.min(box.h, H - y));
+    if (w < 2 || h < 2) throw uerr('Crop is empty — check the parameters');
+    let s = sharp(buf).extract({ left: x, top: y, width: w, height: h });
+    if (p.width > 0 || p.height > 0) s = sharp(await s.toBuffer()).resize({ width: p.width || undefined, height: p.height || undefined, fit: 'cover' });
+    const ext = p.format === 'same' ? sameExt(p.image) : p.format;
+    if (ext === 'jpg') s = s.flatten({ background: '#000000' });
+    const image = ctx.out('crop', ext);
+    await encode(s, ext).toFile(ctx.abs(image));
+    return { image, box: { x, y, w, h, ...extra } };
   },
 });
 
