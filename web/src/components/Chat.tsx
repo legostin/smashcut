@@ -96,6 +96,9 @@ const Dot = ({ status }: { status: Task['status'] }) => <span className={`dot st
 
 function Empty() {
   const hasScript = useStore((s) => s.script.scenes.length > 0);
+  const blank = useStore((s) => !s.script.scenes.length && !(s.project?.items.length));
+  // an empty project starts from the big composer in the centre — keep the side panel quiet
+  if (blank) return <div className="chat-empty quiet"><div className="muted small">{t('Start from the composer in the centre — or write here.')}</div></div>;
   const examples = hasScript
     ? [t('Make the whole video from the script'), t('Design a design system and apply it to the clips'), t('Write a music track for the script and sync scenes to the beats')]
     : [t('A 30-second product promo for social media'), t('A 1-minute explainer video with subtitles'), t('A podcast intro: 8 seconds, logo and music')];

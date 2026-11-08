@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScriptPanel } from './components/ScriptPanel';
 import { Board } from './components/Board';
-import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo, actions, projectBase, projectHeaders, openInNewTab, type View } from './store';
+import { useStore, setState, api, notify, time, refresh, getState, useSelectedItem, seek as seekTo, actions, projectBase, projectHeaders, openInNewTab, syncUrl, goHome, type View } from './store';
 import { Viewer } from './components/Viewer';
 import { Timeline } from './components/Timeline';
 import { Library } from './components/Library';
@@ -9,6 +9,7 @@ import { Chat } from './components/Chat';
 import { ItemPanel } from './components/ItemPanel';
 import { Icon } from './components/Icon';
 import { VersionDialog } from './components/VersionDialog';
+import { Home } from './components/Home';
 import { Storyboard, SelectionBar } from './components/Storyboard';
 import { SceneStrip, useTimelineHotkey } from './components/SceneStrip';
 import type { Project, Settings, Voice } from '../../shared/types';
@@ -36,9 +37,19 @@ export function App() {
   const connected = useStore((s) => s.connected);
   const dialog = useStore((s) => s.dialog);
   const view = useStore((s) => s.view);
+  const screen = useStore((s) => s.screen);
+  useEffect(() => { syncUrl(); }, [screen]);
   const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 240));
   const tlOpen = useStore((s) => s.timelineOpen);
   useTimelineHotkey();
+  if (screen === 'home') return (
+    <div className="app-home">
+      <Home />
+      <Modal open={dialog === 'settings'}><SettingsDialog /></Modal>
+      <Reconnecting />
+      <Notices />
+    </div>
+  );
   if (!project) return (
     <div className="app-empty">
       {!connected ? <div className="muted">{t('Connecting to the server…')}</div> : <div className="sheet"><ProjectsDialog /></div>}
@@ -156,7 +167,7 @@ function TopBar() {
   return (
     <header className="topbar">
       <div className="row gap10 minw0">
-        <span className="logo" aria-hidden title="Smashcut"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 4h9.5L8 20H4z" fill="currentColor" /><path d="M16 4h4v16h-9.5z" fill="currentColor" transform="translate(1.2 -1.2)" /></svg></span>
+        <span className="logo" role="button" tabIndex={0} title={t('Home')} onClick={goHome} onKeyDown={(e) => e.key === 'Enter' && goHome()}><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 4h9.5L8 20H4z" fill="currentColor" /><path d="M16 4h4v16h-9.5z" fill="currentColor" transform="translate(1.2 -1.2)" /></svg></span>
         <button className="project-name" onClick={() => setState({ dialog: 'projects' })} title={t('Projects')}>
           <span className={'conn' + (connected ? '' : ' off')} /><span className="ellipsis">{project.name.replace(/ — .*$/, '')}</span><Icon name="chevron" size={12} />
         </button>

@@ -3,6 +3,7 @@ import type { Project, Scene, Task, Reference } from '../../../shared/types';
 import { useStore, setState, getState, actions, seek, fmtTime, pfile } from '../store';
 import { t, tn } from '../i18n';
 import { Icon } from './Icon';
+import { HeroComposer } from './HeroComposer';
 import { statusLabel, statusTone, SCENE_STATUS } from '../sceneStatus';
 
 /** cheap stable hash for cache-busting frame thumbnails */
@@ -160,6 +161,13 @@ function ReferencesStrip() {
 }
 
 function StoryEmpty({ hasItems }: { hasItems: boolean }) {
+  if (!hasItems) return (
+    <div className="story-empty start">
+      <h1>{t('What video are we making?')}</h1>
+      <p className="muted">{t('Describe your idea, pick the format, add references. First the agent writes a script — scenes, text, visuals — then builds the graphics, music and edit.')}</p>
+      <HeroComposer mode="project" />
+    </div>
+  );
   const examples = [t('A 30-second product promo for social media'), t('A 1-minute explainer video with subtitles'), t('A podcast intro: 8 seconds, logo and music')];
   return (
     <div className="story-empty">

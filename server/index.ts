@@ -9,6 +9,7 @@ import { bus } from './bus.ts';
 import { cur, hasProject, openProject, onProjectOpen, ProjectStore, projectCtx, storeById } from './project.ts';
 import { taskProject } from './agents/runner.ts';
 import { registerRoutes } from './routes.ts';
+import { registerHomeRoutes } from './home.ts';
 import { syncSkills } from './skills.ts';
 import { loadTasks } from './agents/runner.ts';
 import { renderMusic } from './render/music.ts';
@@ -104,6 +105,7 @@ app.setErrorHandler((err: any, _req, reply) => {
 });
 
 await registerRoutes(app);
+await registerHomeRoutes(app);
 
 // SPA fallback
 app.setNotFoundHandler((req, reply) => {

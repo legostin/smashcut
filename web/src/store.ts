@@ -27,6 +27,8 @@ export interface State {
   script: Script;
   design: DesignSystem;
   view: View;
+  /** home screen (projects, renders, start) or the editor */
+  screen: 'home' | 'editor';
   references: Reference[];
   render3d: Extract<ServerEvent, { type: 'render3d' }>['job'][];
   /** scenes selected on the storyboard / scene strip (ids) */
@@ -67,7 +69,7 @@ const initial: State = {
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
   view: (() => { try { const v = localStorage.getItem('view'); return v === 'board' || v === 'edit' || v === 'nodes' ? v : 'story'; } catch { return 'story'; } })() as View,
-  references: [], render3d: [], sceneSelection: [], timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
+  screen: new URLSearchParams(location.search).get('p') || /render\.html$/.test(location.pathname) ? 'editor' : 'home', references: [], render3d: [], sceneSelection: [], timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -138,14 +140,18 @@ let switching = false;
 function setProjectId(id?: string) {
   if (!id || id === pid) return;
   pid = id;
-  if (!/render\.html$/.test(location.pathname)) {
-    const u = new URL(location.href);
-    u.searchParams.set('p', id);
-    history.replaceState(null, '', u);
-  }
+  if (!/render\.html$/.test(location.pathname) && getState().screen === 'editor') syncUrl();
   // re-subscribe to this project's events
   if (ws && ws.readyState <= 1) { switching = true; ws.close(); }
 }
+/** keep the address bar in sync: ?p=<id> in the editor, / on the home screen */
+export function syncUrl() {
+  if (/render\.html$/.test(location.pathname)) return;
+  const u = new URL(location.href);
+  if (getState().screen === 'home') u.searchParams.delete('p'); else if (pid) u.searchParams.set('p', pid);
+  history.replaceState(null, '', u);
+}
+export function goHome() { setState({ screen: 'home' }); syncUrl(); document.title = 'Smashcut'; }
 /** open a project in a new browser tab */
 export function openInNewTab(id: string) { window.open(`${location.pathname}?p=${id}`, '_blank'); }
 
