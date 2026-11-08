@@ -39,6 +39,8 @@ export interface WebRecordOptions {
   tail?: number;
   name?: string;
   maxSeconds?: number;
+  /** browser locale for the page (sites pick their language from it), default en-US */
+  locale?: string;
 }
 
 export interface RecordJob { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string; project?: string }
@@ -135,7 +137,7 @@ export async function recordWeb(o: WebRecordOptions, job?: RecordJob): Promise<{
   try {
     const ctx = await browser.newContext({
       viewport, deviceScaleFactor: zoom, isMobile: mobile, hasTouch: mobile,
-      colorScheme: o.dark ? 'dark' : 'light', locale: 'ru-RU',
+      colorScheme: o.dark ? 'dark' : 'light', locale: o.locale || 'en-US',
       userAgent: mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' : undefined,
     });
     if (o.cursor !== false && !mobile) await ctx.addInitScript(CURSOR_JS);
