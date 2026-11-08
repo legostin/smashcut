@@ -300,3 +300,8 @@ def orbit(cam, radius=6, height=1.5, start=-90, end=-30, t0=0, t1=5, ease='inOut
 def stagger(objs, fn, t0, each=0.08):
     """call fn(obj, t) for each object with a stagger"""
     for i, o in enumerate(objs): fn(o, t0 + i * each)
+
+# ---------------------------------------------------------------- studio kit (presets, set pieces, devices, materials, rigs)
+# s3.studio('white_cyc' | 'dark_luxe' | 'product_softbox' | 'neon' | 'sunset_window' | 'daylight' | 'abstract_void'), s3.podium,
+# s3.turntable_rig, s3.material('chrome'…), s3.phone / tablet / laptop, s3.title, s3.logo, s3.frame, s3.rig_* — see studiokit.py
+from studiokit import *  # noqa: E402,F401,F403

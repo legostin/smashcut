@@ -19,6 +19,11 @@ def engine(name):
     sc = bpy.context.scene
     sc.render.engine = name
 
+def hints(sc):
+    """render settings a scene asked for via s3.render_hints() / s3.studio() (colour management, raytracing, samples…)"""
+    try: return json.loads(sc.get('s3_hints') or '{}')
+    except Exception: return {}
+
 def preset(ctx, sc):
     q = ctx.quality
     r = sc.render
@@ -56,8 +61,42 @@ def preset(ctx, sc):
         for attr, val in (('use_raytracing', q == 'final'), ('use_shadows', True)):
             if hasattr(ee, attr): setattr(ee, attr, val)
         r.use_motion_blur = q == 'final'
-    sc.view_settings.view_transform = 'AgX' if 'AgX' in [i.identifier for i in sc.view_settings.bl_rna.properties['view_transform'].enum_items] else 'Filmic'
-    sc.view_settings.look = ctx.params.get('look', 'None') if q != 'mock' else 'None'
+    h = hints(sc)
+    if q != 'mock' and sc.render.engine == 'BLENDER_EEVEE':
+        ee = sc.eevee
+        rt = h.get('raytracing')
+        if rt is True or rt == q or (isinstance(rt, list) and q in rt):
+            ee.use_raytracing = True
+            if hasattr(ee, 'ray_tracing_options'):
+                o = ee.ray_tracing_options
+                o.resolution_scale = '1' if q == 'final' else '2'
+                o.screen_trace_quality = 0.5 if q == 'final' else 0.25
+        if h.get('fast_gi') and hasattr(ee, 'use_fast_gi'):
+            ee.use_fast_gi = True; ee.fast_gi_method = 'GLOBAL_ILLUMINATION'
+            ee.fast_gi_resolution = '2' if q == 'final' else '4'
+        if h.get('samples_' + q): ee.taa_render_samples = int(h['samples_' + q])
+        if hasattr(ee, 'shadow_ray_count'):
+            ee.shadow_ray_count = 2 if q == 'final' else 1
+            ee.shadow_step_count = 10 if q == 'final' else 6
+        if h.get('volumetrics') and hasattr(ee, 'volumetric_tile_size'):
+            ee.volumetric_tile_size = '4' if q == 'final' else '8'
+            ee.volumetric_samples = 96 if q == 'final' else 48
+            if hasattr(ee, 'use_volumetric_shadows'): ee.use_volumetric_shadows = True
+        if h.get('soft_shadows') and q == 'final':
+            for ld in bpy.data.lights:
+                if hasattr(ld, 'use_shadow_jitter') and ld.get('s3_jitter', True): ld.use_shadow_jitter = True
+    if sc.render.engine == 'CYCLES' and h.get('cycles_samples') and 'samples' not in ctx.params:
+        sc.cycles.samples = int(h['cycles_samples'])
+    vs = sc.view_settings
+    # the enum list is empty in background mode — set by name and fall back
+    for vt in [v for v in (ctx.params.get('view'), h.get('view')) if v] + ['AgX', 'Filmic']:
+        try: vs.view_transform = vt; break
+        except Exception: pass
+    lk = (ctx.params.get('look') or h.get('look') or 'None') if q != 'mock' else 'None'
+    try: vs.look = lk
+    except Exception: vs.look = 'None'
+    if q != 'mock': vs.exposure = float(ctx.params.get('exposure', h.get('exposure', 0.0)))
+    if 'gamma' in h: vs.gamma = float(h['gamma'])
 
 try:
     s3.clear()

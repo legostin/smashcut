@@ -122,8 +122,8 @@ server.registerTool('list_templates', {
 }, safe(async ({ kind, query }) => text(await api('GET', `/api/agent/templates?kind=${kind || ''}&q=${encodeURIComponent(query || '')}`))));
 
 server.registerTool('create_3d_scene', {
-  description: 'Create (or update the manifest of) a Blender 3D scene: scenes3d/<id>/scene.py (+ manifest). The scene is CODE using the studio3d helper library — read the studio-blender-3d skill first. Pass `code` to write scene.py, or edit the file afterwards with your file tools. transparent:true renders with alpha (WebM) for compositing over other layers.',
-  inputSchema: { id: z.string(), name: z.string().optional(), duration: z.number().optional(), transparent: z.boolean().optional(), code: z.string().optional(), params: z.record(z.string(), z.any()).optional() },
+  description: 'Create (or update the manifest of) a Blender 3D scene: scenes3d/<id>/scene.py (+ manifest). The scene is CODE using the studio3d helper library — read the studio-blender-3d skill first. Pass `code` to write scene.py, or `kit` to start from a ready-made studio scene (product_hero, logo_reveal, phone_podium, floating_type, neon_object, lifestyle_window — lit, framed and animated; tune it with `params` or edit the file), or edit the file afterwards with your file tools. transparent:true renders with alpha (WebM) for compositing over other layers.',
+  inputSchema: { id: z.string(), name: z.string().optional(), duration: z.number().optional(), transparent: z.boolean().optional(), code: z.string().optional(), kit: z.string().optional().describe('start scene.py from runtime/blender/kits/<kit>.py (overwrites scene.py; ignored when code is given)'), params: z.record(z.string(), z.any()).optional() },
 }, safe(async (a) => text(await api('POST', '/api/3d', a))));
 
 server.registerTool('render_3d', {

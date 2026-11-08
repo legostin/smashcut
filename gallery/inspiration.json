@@ -2877,5 +2877,1988 @@
   ],
   "breakdown": "Ariel Costa's lyric video for Green Day's 'Bang Bang' merges punk zine collage with kinetic type: cut-out vintage photographs, hand-lettered and stencil words ('DADDY'S LITTLE PSYCHO'), and lyric lines appear inside organic black-and-white blob mattes that pulse and swallow each other. The look is xerox-punk — high-contrast monochrome with selective spot colour — and everything moves with a slightly crude, cut-paper stop-motion jitter that matches the song's aggression. Words are designed as images, so each lyric gets its own typographic treatment. Reproduce: build lyric cards where each line uses a different display face or hand-drawn SVG lettering; place them inside animated blob masks (SVG paths generated from noise-displaced circles, morphing each beat); apply a threshold/high-contrast filter (CSS contrast(300%) grayscale) to photo cut-outs; hold frames on twos or threes (steps easing) and add 1–3px random position jitter; time each word reveal to lyric timestamps, with harder scale punches on stressed syllables.",
   "durationHint": "3:31"
+ },
+ {
+  "id": "mrbeast-squid-game-irl",
+  "title": "$456,000 Squid Game In Real Life!",
+  "by": "MrBeast",
+  "year": 2021,
+  "url": "https://www.youtube.com/watch?v=0e3GPea1Tyg",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/0e3GPea1Tyg/maxresdefault.jpg",
+  "category": "retention-edit",
+  "tags": [
+   "mrbeast",
+   "challenge",
+   "elimination",
+   "countdown",
+   "youtube-long-form"
+  ],
+  "techniques": [
+   "premise in first sentence",
+   "live counter overlay",
+   "on-screen timer",
+   "caption punch words",
+   "cut every ~1.8 s",
+   "sound-effect stingers",
+   "elimination beats"
+  ],
+  "breakdown": "The first spoken line states the whole premise: every Squid Game set rebuilt, 456 players, last one standing wins $456,000. There is no intro or logo, only a cold open on the set. The first game starts inside 20 seconds. Scene detection finds about 84 cuts in the first 150 seconds, roughly one every 1.8 s, and it alternates wide crowd shots, a giant doll insert, and close-ups of individual players. A persistent overlay system does the bookkeeping. A red or green dot shows the light state, a 'X REMAINING' counter ticks down as players drop, and a countdown clock sits in the top-right corner. Each elimination lands as an audible pop or gunshot with a cut to the reaction. Single huge words ('WINS', 'DOING A') appear on screen as the host says them. The description tells viewers to 'watch until glass bridge', an open loop that promises a bigger payoff later. It works because the viewer always knows the stakes, the score, and the time left, so every cut changes a number they care about. To apply it, define your counter and clock in the first minute, update them on screen at every beat, and make each cut answer 'who's out now?'",
+  "durationHint": "25:41",
+  "group": "edit"
+ },
+ {
+  "id": "mrbeast-50-hours-buried-alive",
+  "title": "I Spent 50 Hours Buried Alive",
+  "by": "MrBeast",
+  "year": 2021,
+  "url": "https://www.youtube.com/watch?v=9bqk6ZUsKyA",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/9bqk6ZUsKyA/maxresdefault.jpg",
+  "category": "retention-edit",
+  "tags": [
+   "mrbeast",
+   "endurance",
+   "countdown",
+   "single-location",
+   "youtube-long-form"
+  ],
+  "techniques": [
+   "countdown clock overlay",
+   "jump cut every ~1.4 s",
+   "time-lapse compression",
+   "caption punch words",
+   "cutaway to outside team",
+   "pointer callouts",
+   "sleep-cam label"
+  ],
+  "breakdown": "The video opens with the stakes in one sentence ('the next 50 hours buried alive in this coffin') and the lid is sealed within seconds. The coffin is visually static, so the edit has to make its own motion. Scene detection counts about 106 cuts in the first 150 seconds, an average shot of around 1.4 s. The cuts swap between a wide-angle camera inside the coffin, a camera by his feet, and the crew topside. The excavator burying him is compressed with a spoken 'All right, time-lapse!' and a sped-up shot, so a long dull process takes seconds. A running countdown ('49:59:58', later 'REMAINING: 45:52:32') is stamped onto the frame and becomes the video's spine. Every time-skip feels like progress. Caption tags ('SLEEP CAM', 'NO.', 'MEDIC') and red arrow callouts ('PEE BOTTLES') label things the low-light footage can't show clearly. Short scenes of friends visiting the grave ('I'M PEEING ON YOUR GRAVE') act as pattern interrupts that break the claustrophobic interior. The lesson: in a single-location endurance video, the clock is the plot, so show it often, jump between time stamps, and cut away to a contrasting location whenever the interior gets repetitive.",
+  "durationHint": "12:39",
+  "group": "edit"
+ },
+ {
+  "id": "mrbeast-1-vs-1m-hotel-room",
+  "title": "$1 vs $1,000,000 Hotel Room!",
+  "by": "MrBeast",
+  "year": 2022,
+  "url": "https://www.youtube.com/watch?v=iogcY_4xGjo",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/iogcY_4xGjo/maxresdefault.jpg",
+  "category": "retention-edit",
+  "tags": [
+   "mrbeast",
+   "price-ladder",
+   "escalation",
+   "travel",
+   "youtube-long-form"
+  ],
+  "techniques": [
+   "price-ladder overlay",
+   "montage preview of payoff",
+   "cut every ~2 s",
+   "clock-time stamps",
+   "map route animation",
+   "caption jokes",
+   "escalating structure"
+  ],
+  "breakdown": "The cold open flashes the payoff first. The $1,000,000 room, a $1,000 cave and a $10,000 underwater palace each appear for about a second with big green price tags, before the video drops to the $1-a-night mat in India. The whole price ladder ($1, $1,000, $10,000, $50,000, $75,000, $150,000, $1,000,000) stacks up beside the host's head, so viewers can see how far there is to climb. That stacked list is an open loop the viewer wants to close. It comes back between levels with the finished tiers struck off. An animated world map with a mileage counter covers the flights, so travel takes seconds instead of minutes. Night scenes get clock stamps ('1:10 AM', '2:38 AM') to show endurance. Small caption jokes ('MY FUNNY BONE???', 'A LITTLE SHRUBBERY?') pay off throwaway lines. The cut rate holds around one cut every two seconds, and each room opens on a reveal shot and the price title. It works because the structure is a ladder that only goes up, and the edit keeps the top rung visible the whole way. To apply it, sort your segments by escalating value, preview the final rung in the first 10 seconds, and keep a progress graphic on screen.",
+  "durationHint": "15:40",
+  "group": "edit"
+ },
+ {
+  "id": "mrbeast-7-days-stranded-island",
+  "title": "7 Days Stranded On An Island",
+  "by": "MrBeast",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=erLbbextvlY",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/erLbbextvlY/maxresdefault.jpg",
+  "category": "retention-edit",
+  "tags": [
+   "mrbeast",
+   "survival",
+   "time-stamps",
+   "objectives",
+   "youtube-long-form"
+  ],
+  "techniques": [
+   "hour/day stamp overlay",
+   "objective tracker lower-left",
+   "aerial establishing shots",
+   "danger icon insert",
+   "cut every ~2 s",
+   "animated map/graphic inserts",
+   "stakes stated up front"
+  ],
+  "breakdown": "The cold open puts the crew on the beach as the boat leaves, and the first lines lay out the whole contract: deserted island, seven days, the boat was the only way out, about four hours until dark. Two drone aerials of the island set the isolation before any dialogue scene. From then on a persistent time stamp in the top-left ('HOUR 1', 'HOUR 3', 'HOUR 8', 'DAY 2') turns hours of footage into a readable progression. A small objective tag in the lower-left ('CREATE SHELTER', 'FIND FOOD') tells the viewer what the current scene is for. A red skull-and-crossbones warning graphic is cut in when a hazard is mentioned, a graphic pattern interrupt inside natural footage. The chapter-like stamps let the editor skip large chunks of time without confusing anyone. The cut rate stays near one cut every two seconds even in quiet scenes, mixing selfie-style talking shots with wides. It works because the clock and the to-do list give the viewer a built-in way to measure progress, which is what keeps them watching a long survival video. To apply it, add a time stamp and a current-goal label to every segment and let them carry the transitions.",
+  "durationHint": "20:44",
+  "group": "edit"
+ },
+ {
+  "id": "mark-rober-glitter-bomb-1",
+  "title": "Glitter Bomb 1.0 vs Porch Pirates",
+  "by": "Mark Rober",
+  "year": 2018,
+  "url": "https://www.youtube.com/watch?v=xoxhDk-hwuo",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/xoxhDk-hwuo/maxresdefault.jpg",
+  "category": "retention-edit",
+  "tags": [
+   "mark-rober",
+   "engineering",
+   "revenge",
+   "flashback",
+   "payoff"
+  ],
+  "techniques": [
+   "in-medias-res cold open",
+   "'rewind' flashback",
+   "security-cam footage",
+   "build montage",
+   "CAD/diagram inserts",
+   "delayed payoff",
+   "talking head to camera"
+  ],
+  "breakdown": "The video opens at the climax: 'This guy took a package from my porch and now he's about to open it in his car.' Mark then explains the bait package (four cameras, a pound of glitter, more surprises) and cuts away just before the payoff with 'to understand how we got to this point, first we need to rewind a bit.' That is a textbook in-medias-res open loop. The rewind uses grainy doorbell-cam footage of the original theft, so the viewer has a villain and a motive before any engineering appears. The build section alternates a workshop talking head with fast macro inserts of circuit boards, a hand-drawn sketch, phones mounted in the box, and a red-and-yellow CAD exploded view. Scene detection finds about 60 cuts in the first 150 seconds, roughly one every 2.5 s. The structure is hook (the payoff teased) → why (the crime) → how (the build) → payoff (the reactions), so the viewer sits through technical content because they've been promised the glitter. To apply it, open on the most satisfying moment, stop just before it resolves, and say aloud that you're rewinding.",
+  "durationHint": "8:10",
+  "group": "edit"
+ },
+ {
+  "id": "mark-rober-squirrel-maze-1",
+  "title": "Backyard Squirrel Maze 1.0- Ninja Warrior Course",
+  "by": "Mark Rober",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=hFZFjoX2cGg",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/hFZFjoX2cGg/maxresdefault.jpg",
+  "category": "retention-edit",
+  "tags": [
+   "mark-rober",
+   "backyard",
+   "villain-arc",
+   "slow-motion",
+   "narrative"
+  ],
+  "techniques": [
+   "show-the-whole-course hook",
+   "record-scratch rewind",
+   "'REWIND' VHS overlay",
+   "binocular POV mask",
+   "slow-motion hero shots",
+   "sports-style commentary",
+   "characterized antagonist"
+  ],
+  "breakdown": "The first frames show the finished eight-part obstacle course in one sweeping move, so the viewer knows the scale of the payoff before any backstory. Mark admits up front that he 'completely underestimated my adversary', which plants a twist. The backstory then starts with an audible flashback device: a peaceful birdwatching montage with chirping birds is cut off by a record scratch as the squirrels arrive, and a 'REWIND' VHS-style overlay marks the jump back eight weeks. A binocular-shaped vignette mask gives a birdwatcher's POV. Product-page screenshots of the 'squirrel-proof' feeders he bought are cut in as quick visual punchlines. The squirrels are edited like athletes, with low-angle slow-motion shots of leaps and fur in extreme close-up. Throughout, the animals are framed as a rival, which turns an engineering project into a story with a villain. Scene detection finds about 62 cuts in the first 150 seconds. To apply it, give the viewer the end state first, then use a sound cue (record scratch) plus an on-screen rewind label to jump back, and cut your non-human subjects with the slow motion and close-ups usually reserved for heroes.",
+  "durationHint": "20:20",
+  "group": "edit"
+ },
+ {
+  "id": "sidemen-100k-vs-100-holiday-usa",
+  "title": "SIDEMEN $100,000 vs $100 HOLIDAY (USA EDITION)",
+  "by": "Sidemen",
+  "year": 2022,
+  "url": "https://www.youtube.com/watch?v=EE6YRQABzEI",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/EE6YRQABzEI/maxresdefault.jpg",
+  "category": "retention-edit",
+  "tags": [
+   "sidemen",
+   "group-challenge",
+   "team-format",
+   "long-form",
+   "comedy"
+  ],
+  "techniques": [
+   "animated title sequence",
+   "team ID graphics",
+   "cut every ~1.3 s",
+   "silhouette color-fill gag",
+   "rules in one sentence",
+   "comparison format",
+   "crash zooms on reactions"
+  ],
+  "breakdown": "A two-hour video, and the edit is built so you can watch it like a TV show. It opens with a branded animated title sequence (US flag, the two price points, the hotel swinging over a fire backdrop) that establishes the format in seconds. The host then gives the rules in one breath: two teams, one $100,000 holiday, one $100 holiday. Team selection is cut as a mini-event, with reaction close-ups after every name and a split title card that puts the members' faces under 'ORANGE TEAM' and 'PURPLE TEAM' headers so viewers can keep track. A recurring visual gag fills a person's silhouette with solid color to tag them to their team. Scene detection finds about 117 cuts in the first 150 seconds, a shot every 1.3 s, mostly fast reaction cutaways in a large ensemble. A sponsor segment is clearly boxed off with its own graphics so it doesn't break the flow of the episode. The comparison format ('rich vs poor') gives every scene built-in contrast, so the edit can cross-cut between teams indefinitely. The lesson for long ensemble videos: brand the format with a title sequence, give viewers ID cards for the cast, and cross-cut between contrasting groups.",
+  "durationHint": "2:09:07",
+  "group": "edit"
+ },
+ {
+  "id": "beast-games-episode-1",
+  "title": "Beast Games | Episode 1 (Full Episode)",
+  "by": "MrBeast",
+  "year": 2025,
+  "url": "https://www.youtube.com/watch?v=C9Qfcjf7L-I",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/C9Qfcjf7L-I/maxresdefault.jpg",
+  "category": "retention-edit",
+  "tags": [
+   "mrbeast",
+   "competition-show",
+   "prime-video",
+   "cold-open",
+   "stakes"
+  ],
+  "techniques": [
+   "prize reveal cold open",
+   "'COMING UP' preview montage",
+   "contestant number IDs",
+   "name supers",
+   "crowd-to-close-up cutting",
+   "money pile hero shot",
+   "stakes counter"
+  ],
+  "breakdown": "The episode opens on a spotlit pile of cash with a '$5,000,000' tag, cut to a reverse of a thousand contestants in numbered blue jerseys, so the prize and the scale are both set in seconds. A green neon '$5,000,000' graphic repeats the number. Within the first two minutes a 'COMING UP:' card starts a fast preview montage of later moments (the money pile, an island, named contestants), a TV device used as an open loop on YouTube. Contestants are tracked by jersey number and big gold name supers ('NOLAN'), so viewers can follow individuals in a crowd of 1,000. The cutting alternates huge symmetrical wides of the arena with tight confessional-style close-ups, which keeps the scale and keeps it personal. Prize money is shown physically (stacks of bills, bags with dollar signs) rather than just stated. It works because a viewer always knows what is at stake, who to watch, and that something bigger is coming. To apply it, start on the prize, preview the season's biggest moments before the first challenge, and give characters persistent visual IDs.",
+  "durationHint": "35:35",
+  "group": "edit"
+ },
+ {
+  "id": "pogo-alice",
+  "title": "Alice",
+  "by": "Pogo",
+  "year": 2007,
+  "url": "https://www.youtube.com/watch?v=pAwR6w2TgxY",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/pAwR6w2TgxY/hqdefault.jpg",
+  "category": "music-video",
+  "tags": [
+   "pogo",
+   "remix",
+   "sampling",
+   "disney",
+   "fan-edit"
+  ],
+  "techniques": [
+   "film audio as instruments",
+   "picture cut to sample hits",
+   "loop-based visual repetition",
+   "cut every ~1.5 s",
+   "character close-up rhythm",
+   "source-only material"
+  ],
+  "breakdown": "Pogo built a whole track from sounds sampled out of Disney's 1951 'Alice in Wonderland' (dialogue fragments, sound effects, musical stings) and cut the matching picture to every sample. When a syllable or chime plays, you see the shot it came from, so the edit is the rhythm section. Scene detection finds about 97 cuts in 150 seconds, roughly one every 1.5 s, and the frames show the same handful of shots (Alice's close-ups, the singing flowers, Tweedledee and Tweedledum, a firework burst) coming back in rotation. That repetition reads as a visual chorus. Because every shot is shown when its sound is heard, sound and picture stay in sync, and audiences who would never notice a music edit can feel the hook. Uploaded in 2007, it helped popularize the 'movie remix' format, now at more than 40 million views. To apply it, pick 6–10 short sound moments from your footage, loop them into a beat, and always cut to the shot that produced each sound when it plays, so repetition in the music becomes repetition on screen.",
+  "durationHint": "2:45",
+  "group": "edit"
+ },
+ {
+  "id": "hormozi-number-one-productivity-hack",
+  "title": "#1 Productivity Hack",
+  "by": "Alex Hormozi",
+  "year": 2025,
+  "url": "https://www.youtube.com/shorts/X7QmaNpl4P4",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/X7QmaNpl4P4/maxresdefault.jpg",
+  "category": "short-form",
+  "tags": [
+   "hormozi",
+   "talking-head",
+   "captions",
+   "business",
+   "shorts"
+  ],
+  "techniques": [
+   "one-sentence promise hook",
+   "word-by-word captions",
+   "keyword bolding",
+   "single locked-off shot",
+   "prop in hand",
+   "12-second runtime",
+   "no intro"
+  ],
+  "breakdown": "The whole short is 12 seconds and essentially one locked-off shot, with a single cut around 7.6 s. It shows how far a strong line plus captions can go with almost no editing. The first words are the hook and the promise together: 'Let me give you the biggest productivity hack in the world.' The answer comes immediately ('Do nothing besides the task that you set to accomplish') and ends on an aphorism built to be rewatched. Captions appear one or two words at a time in the vertical frame's center, at chest height so they never cover the face. Key words ('productivity', 'do nothing', 'the task', 'doing') get a heavier white weight than the filler words around them. The black background and white tank top give maximum contrast for the white text. A pen in his hand adds small movement in a shot that otherwise wouldn't change. It works because the frame offers nothing to scan, so attention goes to the words, and the short loops cleanly because the last line restates the first. To apply it, cut your talking-head short down to a single claim, open on the promise, and caption word by word with emphasis on the nouns and verbs that carry the idea.",
+  "durationHint": "0:12",
+  "group": "edit"
+ },
+ {
+  "id": "ali-abdaal-halo-effect-short",
+  "title": "The Halo Effect #shorts",
+  "by": "Ali Abdaal",
+  "year": 2023,
+  "url": "https://www.youtube.com/shorts/Ksjt_I8rDrE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/Ksjt_I8rDrE/maxresdefault.jpg",
+  "category": "short-form",
+  "tags": [
+   "ali-abdaal",
+   "explainer",
+   "collage",
+   "captions",
+   "psychology"
+  ],
+  "techniques": [
+   "title card over talking head",
+   "cut-out collage illustrations",
+   "label-maker typography",
+   "phrase captions in lower third",
+   "talking head ↔ graphic alternation",
+   "doodle overlays",
+   "reverse-case beat"
+  ],
+  "breakdown": "A 57-second explainer that keeps a phrase caption box in the lower third the whole time and alternates the talking head with collage illustrations. Scene detection logs no hard cuts because everything moves through graphic transitions rather than straight cuts. It opens on the talking head with a 'THE HALO EFFECT' title card in mixed serif and label-maker type and a white doodled halo drawn over his head. The definition plays over a cut-out bust of Michelangelo's David that gets sunglasses, then a halo, then label-maker words ('intelligent', 'kind', 'successful') stacking beside it. Each example (a student, a politician) gets its own collage scene with chalk-style doodles (an A+, question marks, a ringed math book). The reverse case ('dirty clothes') swaps to a shirt cut-out with a hand-drawn frown and words like 'disorganized' and 'lazy'. It returns to the talking head for the practical takeaway, so the face bookends the abstract part. It works because every abstract noun in the voice-over gets a concrete, slightly playful picture at the moment it is spoken. To apply it, script one visual metaphor per clause and alternate face, graphic, face so the speaker's credibility frames the illustration.",
+  "durationHint": "0:57",
+  "group": "edit"
+ },
+ {
+  "id": "mrbeast-dont-turn-around-short",
+  "title": "Don’t Turn Around, Win $10k",
+  "by": "MrBeast",
+  "year": 2025,
+  "url": "https://www.youtube.com/shorts/zxuICI0kL3s",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/zxuICI0kL3s/maxresdefault.jpg",
+  "category": "short-form",
+  "tags": [
+   "mrbeast",
+   "challenge",
+   "shorts",
+   "countdown",
+   "temptation"
+  ],
+  "techniques": [
+   "rule stated in first second",
+   "money graphic pop",
+   "temptation cutaways behind subject",
+   "on-screen countdown numbers",
+   "word captions",
+   "reveal of what was missed",
+   "escalated stakes at end"
+  ],
+  "breakdown": "The title is spoken as the first line ('Don't turn around, win $10,000'), and a green '$10,000' graphic pops over the shot within a second, so the rules are clear before a viewer can swipe. The setup is a static two-shot of host and contestant in a suburban street. The edit then cuts away to what is happening behind the contestant: a marching band, a truck, a giraffe, a celebrity cameo. The viewer can see the temptations; the contestant can't. That dramatic irony is the whole hook. A 10-second countdown is shown as big numbers ('5', '4', '3', '2') each laid over a different distraction, so the timer and the gags share the same beats. Single-word captions in the upper middle keep the dialogue readable on mute. The ending flips the stakes: the contestant refuses to turn, gets the $10,000, and learns he 'would have actually won 100 grand', shown with a '$100,000' sign that was behind him all along. It runs 31 seconds with about 16 cuts. To apply it, tell the audience something the subject doesn't know, cut between the subject's face and the hidden thing, and put the countdown over the cutaways.",
+  "durationHint": "0:31",
+  "group": "edit"
+ },
+ {
+  "id": "trahan-drawing-random-person-short",
+  "title": "drawing a random person then finding them",
+  "by": "Ryan Trahan",
+  "year": 2023,
+  "url": "https://www.youtube.com/shorts/-nmFn4COiiU",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/-nmFn4COiiU/maxresdefault.jpg",
+  "category": "short-form",
+  "tags": [
+   "ryan-trahan",
+   "quest",
+   "street",
+   "shorts",
+   "payoff"
+  ],
+  "techniques": [
+   "'I've always wondered' hook",
+   "artifact as through-line",
+   "'HAVE YOU SEEN THIS MAN?' title",
+   "false-positive beat",
+   "tension caption ('close…')",
+   "handheld follow cam",
+   "reveal hold"
+  ],
+  "breakdown": "The opening line states a curiosity question ('I've always wondered if I could draw a random person and then find them in real life'), and the first seconds show the pencil sketch being made. The sketch becomes the visual through-line. A yellow 'HAVE YOU SEEN THIS MAN?' wanted-poster title frames it as a hunt, and the drawing is held up in nearly every scene. The search is cut fast, about 26 cuts in 43 seconds, with whip-pans and handheld follow shots as he asks strangers. The story includes a deliberate false positive: a man who matches the beard and hat but wears sunglasses, labeled with a red 'no' and a 'close...' caption. That fake-out raises the stakes before the real match. The final find is set up with 'And then, a few minutes later, this happened', and the frame holds on the match beside the drawing. It works as a complete three-act story (premise, failed attempts, payoff) in under a minute. To apply it, give a short a physical object to carry through every shot, include one near-miss before the payoff, and announce the turn verbally before showing it.",
+  "durationHint": "0:43",
+  "group": "edit"
+ },
+ {
+  "id": "casey-neistat-bike-lanes",
+  "title": "Bike Lanes by Casey Neistat",
+  "by": "Casey Neistat",
+  "year": 2011,
+  "url": "https://www.youtube.com/watch?v=bzE-IMaegzQ",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/bzE-IMaegzQ/hqdefault.jpg",
+  "category": "vlog",
+  "tags": [
+   "casey-neistat",
+   "nyc",
+   "comedy",
+   "activism",
+   "run-and-gun"
+  ],
+  "techniques": [
+   "confrontation cold open",
+   "burned-in yellow subtitles",
+   "deadpan repetition gag",
+   "POV crash cam",
+   "escalating list structure",
+   "news-audio sound bridge",
+   "handheld street coverage"
+  ],
+  "breakdown": "It opens mid-incident. Through a car window, Casey is being written a $50 ticket for not riding in the bike lane, and the first lines are his protest to the officer. The cop's dialogue is printed as large burned-in subtitles. Casey's own narration then comes in as a block of yellow on-screen text ('he said I ALWAYS needed to be in the bike lane') instead of voice-over, which makes it read like an exhibit. A short news-radio clip about the crackdown acts as a sound bridge from the personal grievance to the citywide issue. The body is a single repeated gag. He rides in the bike lane exactly as ordered and crashes, on camera, into every obstruction in it: construction, a taxi, a moving truck, a parked police car. Each crash is shot from a head or handlebar POV and cut right on impact. The repetition escalates, and the last obstacle (a police car) is the punchline that reframes the whole video. It works because the argument is made entirely with picture, not exposition. To apply it, turn a complaint into a rule, show yourself obeying the rule literally, and cut each consequence on the impact frame.",
+  "durationHint": "3:03",
+  "group": "edit"
+ },
+ {
+  "id": "peter-mckinnon-epic-coffee-b-roll",
+  "title": "HOW TO FILM THE MOST EPIC COFFEE B ROLL",
+  "by": "Peter McKinnon",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=S3JMwz3LCvc",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/S3JMwz3LCvc/maxresdefault.jpg",
+  "category": "vlog",
+  "tags": [
+   "peter-mckinnon",
+   "b-roll",
+   "coffee",
+   "creator-tutorial",
+   "cinematic"
+  ],
+  "techniques": [
+   "b-roll montage cold open",
+   "macro product shots",
+   "speed ramp to music",
+   "hard cut from vlog to cinematic",
+   "on-screen recreation breakdown",
+   "collab reveal",
+   "split comparison of styles"
+  ],
+  "breakdown": "The video starts as a handheld wide-angle vlog in his office ('I haven't had coffee today') and promises 'the most epic' coffee b-roll. Then it hard-cuts into a dark, music-driven montage of macro coffee beans, a grinder, a pour-over filter, steam, and a light-leak flash, all on the beat. The tonal shift from loose vlog to tight commercial is itself the hook. After the montage he admits the twist on camera: the b-roll 'was kind of an exact clone' because Daniel Schiffer actually shot it. Schiffer then appears in a two-shot. That reveal turns the rest of the video into a craft breakdown, with Schiffer's earlier product spots shown as framed clips with channel credits as reference. The opening has almost no cuts for the first 50 seconds of talk, then about 20 cuts in the next 25 seconds of b-roll, a deliberate contrast in density. To apply it, put your best b-roll first as a sizzle, keep the talking segment loose, and let the change in cut rate signal 'this part is the show'.",
+  "durationHint": "15:04",
+  "group": "edit"
+ },
+ {
+  "id": "a-quiet-place-official-trailer",
+  "title": "A Quiet Place (2018) - Official Trailer - Paramount Pictures",
+  "by": "Paramount Pictures",
+  "year": 2018,
+  "url": "https://www.youtube.com/watch?v=WR7cc5t7tv8",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/WR7cc5t7tv8/maxresdefault.jpg",
+  "category": "sound-design",
+  "tags": [
+   "trailer",
+   "horror",
+   "silence",
+   "title-cards",
+   "tension"
+  ],
+  "techniques": [
+   "title cards as rhythm",
+   "near-silence drops",
+   "hard sound stinger after silence",
+   "barefoot detail inserts",
+   "fade-to-black beats",
+   "rule-based premise lines"
+  ],
+  "breakdown": "The trailer is organized around white serif title cards on black that spell out the premise a phrase at a time: 'IF THEY HEAR YOU', 'THOSE WHO HAVE SURVIVED', 'LIVE BY ONE RULE', 'NEVER MAKE A SOUND', 'THEY HUNT YOU'. The cards act as rests in a musical phrase between short live-action sequences. Inserts like bare feet on a sand path and a family walking in silence show the rule before anyone states it. An audio-level scan of the upload shows the mix falling to near-silence (below about −50 dBFS) several times, around 40 s, 68 s and 102 s, and each drop is followed by a sharp jump back to loud. So the edit uses silence as the set-up and sound as the scare, which matches the film's premise. The last third gets darker, with more fades to black, before the title. It works because, in a trailer about sound, the quiet parts make viewers lean in and the stinger then lands much harder. To apply it, mute the mix fully (not just duck it) for a second or two before your biggest hit, and use text cards to pace the premise between scenes.",
+  "durationHint": "1:56",
+  "group": "edit"
+ },
+ {
+  "id": "casey-neistat-snowboarding-nypd",
+  "title": "SNOWBOARDING WITH THE NYPD",
+  "by": "Casey Neistat",
+  "year": 2016,
+  "url": "https://www.youtube.com/watch?v=qRv7G7WpOoU",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/qRv7G7WpOoU/hqdefault.jpg",
+  "category": "vlog",
+  "tags": [
+   "casey-neistat",
+   "nyc",
+   "blizzard",
+   "action",
+   "music-driven"
+  ],
+  "techniques": [
+   "news-clip cold open",
+   "music-led montage",
+   "towed tracking shots",
+   "landmark establishing beats",
+   "POV handlebar cam",
+   "crash/bail inserts",
+   "night police-light ending"
+  ],
+  "breakdown": "The video opens on a live TV news 'BLIZZARD ALERT' banner ('New York City and Long Island roads to close at 2:30 PM'), which sets the stakes and the context in three seconds without any narration. From there it is pure music-driven montage. A snowboarder in red is towed by a Jeep through empty, snow-buried Manhattan avenues, shot from the car, from the board, and from the sidewalk. Shots average around six seconds, much longer than a retention edit, because the motion inside each shot does the work. Recognizable landmarks (Times Square billboards, yellow cabs sliding by) are cut in as establishing beats, so the stunt reads as 'only in NYC'. Bails and wipeouts are left in as punctuation between clean runs, keeping it human. The title sets up the payoff: a police cruiser appears behind the riders, and the video ends at night inside a car lit by flashing police lights. It works because one absurd image (snowboarding down a city avenue) is repeated at growing scale and capped by authority showing up. To apply it, open with found context footage instead of explaining, then let a single track carry an otherwise dialogue-free montage of one escalating action.",
+  "durationHint": "2:42",
+  "group": "edit"
+ },
+ {
+  "id": "daniel-mac-lamborghini-what-do-you-do",
+  "title": "Lamborghini Driver Sells What For A Living?",
+  "by": "Daniel Mac",
+  "year": 2021,
+  "url": "https://www.youtube.com/shorts/MFhPLaeg5X0",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/MFhPLaeg5X0/maxresdefault.jpg",
+  "category": "short-form",
+  "tags": [
+   "daniel-mac",
+   "street-interview",
+   "cars",
+   "format",
+   "shorts"
+  ],
+  "techniques": [
+   "question as hook",
+   "single uncut take",
+   "car name + price lower-third",
+   "dialogue subtitles",
+   "answer as punchline",
+   "11-second runtime",
+   "repeatable series format"
+  ],
+  "breakdown": "This is the 'What do you do for a living?' format at its smallest: an 11-second single take with zero cuts. Daniel Mac walks up to a Lamborghini at a traffic light, compliments the car and asks the series question. The whole edit lives in the graphics. A serif lower-third names the car ('Lamborghini Urus') and then adds the price ('$240,000') in yellow, so the viewer is primed to expect a big answer. White subtitle boxes transcribe every line, so it works fully on mute. The answer ('I sell roses') is the punchline, and it flips the expectation the price tag just set up. There is no intro, outro or branding inside the clip, because the repeated question is the brand. It works because the format promises a reveal in the first sentence and pays it off in under 10 seconds, which drives completion and rewatches. To apply it, design a one-question format, add an on-screen fact that sets an expectation, and end on the answer with no tail.",
+  "durationHint": "0:11",
+  "group": "edit"
+ },
+ {
+  "id": "khaby-lame-i-promise-it-works",
+  "title": "I promise it works #learnfromkhaby #comedy",
+  "by": "Khaby Lame",
+  "year": 2024,
+  "url": "https://www.youtube.com/shorts/p0apqXIlitE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/p0apqXIlitE/maxresdefault.jpg",
+  "category": "short-form",
+  "tags": [
+   "khaby-lame",
+   "stitch",
+   "life-hack",
+   "silent-comedy",
+   "shorts"
+  ],
+  "techniques": [
+   "stitch: original clip first",
+   "locked-off reply shot",
+   "no dialogue",
+   "signature hand gesture",
+   "deadpan hold",
+   "props escalate the joke",
+   "loopable ending"
+  ],
+  "breakdown": "The short uses the stitch format. The first 15 seconds are someone else's overcomplicated 'life hack' (cutting a jerry can into a makeshift funnel to pour orange liquid into a drum), shown as-is with handheld close-ups. Then it cuts to a locked-off medium shot of Khaby in a plain kitchen with a simple plastic funnel. From there the edit barely moves, with only about three cuts in 51 seconds. He demonstrates the obvious solution silently, then does his signature open-palm 'that's it' gesture straight to camera. The joke escalates through props instead of cuts: more and more funnels appear on the counter as he keeps deadpanning. There are no words, captions or music cues needed to understand it, which is why the format travels across languages. It works because the contrast between the frantic original and the static, silent reply is the punchline, and the stable frame forces the viewer to watch his face. To apply it, put the 'problem' footage first at its own messy pace, then answer it with a single calm shot and a repeatable gesture that becomes your signature.",
+  "durationHint": "0:51",
+  "group": "edit"
+ },
+ {
+  "id": "joshua-weissman-best-blt-short",
+  "title": "The Best BLT Ever",
+  "by": "Joshua Weissman",
+  "year": 2024,
+  "url": "https://www.youtube.com/shorts/0Uz8Mk8_J4k",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/0Uz8Mk8_J4k/maxresdefault.jpg",
+  "category": "short-form",
+  "tags": [
+   "joshua-weissman",
+   "cooking",
+   "asmr",
+   "fast-cut",
+   "shorts"
+  ],
+  "techniques": [
+   "finished-dish cold open",
+   "superlative caption hook",
+   "cut every ~1.2 s",
+   "top-down/medium action inserts",
+   "foley-forward mix",
+   "bite reaction payoff",
+   "tagline to camera"
+  ],
+  "breakdown": "The first frame is the finished sandwich held to camera with the caption 'the greatest BLT OF ALL TIME', so the payoff is shown before the process. Then the recipe runs as a relentless action montage: about 31 cuts in 38 seconds, an average shot of about 1.2 s. Every cut is a verb (slicing a tomato, dredging, frying, cutting pork belly, mincing garlic, emulsifying mayo with an immersion blender, slicing bread, toasting, stacking). The camera holds a consistent chest-height frame on the wooden board with the chef's apron framing the action, so shots cut together smoothly despite the speed. Narration is minimal ('this is the greatest BLT of all time', exclamations), and the mix leans on the crunch, sizzle and knife sounds, which carry the montage. The ending switches to a wider shot for the big bite and a deadpan reaction to camera, giving the montage a human punchline. To apply it, open on the hero result with a superlative caption, cut the process one action per shot at a steady rhythm, keep the framing consistent so speed doesn't confuse, and close on a reaction.",
+  "durationHint": "0:38",
+  "group": "edit"
+ },
+ {
+  "id": "duolingo-rip-duo-bear-short",
+  "title": "Pour one out for the bear. #RIPDuo #RIPeveryone",
+  "by": "Duolingo",
+  "year": 2025,
+  "url": "https://www.youtube.com/shorts/J8efz1F8Ts8",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/J8efz1F8Ts8/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "duolingo",
+   "mascot",
+   "brand-tiktok",
+   "campaign",
+   "dark-humor"
+  ],
+  "techniques": [
+   "repeating vignette structure",
+   "name super → 'CAUSE OF DEATH' card",
+   "mascot slapstick",
+   "trending audio",
+   "14-second runtime",
+   "serialized campaign tie-in"
+  ],
+  "breakdown": "Posted during Duolingo's 'Duo is dead' stunt in February 2025, this 14-second short treats the brand's other mascots as the next victims. It uses a rigid three-beat template repeated three times: a name super introduces a costumed character ('FALSTAFF', 'ZARI', 'LILY'), a few seconds of slapstick set-up, then a two-line card 'CAUSE OF DEATH: ...' ('Illegal hunting', 'No bidet', 'Sincere hug by cute child') as the character collapses. The repetition teaches the joke on the first vignette and lets the next two land faster. Shot in what looks like the real office (bathroom stall, open-plan floor), it feels lo-fi and staff-made rather than produced. A looping trending audio ('round and round we go') runs underneath, so the cut points match the sound's rhythm. The hashtags tie it to the larger campaign, so each short is an episode in a story viewers are following. It works because the format is a template the brand can reuse endlessly, and the absurd captions do the comedy. To apply it, build a short from a repeatable card template (name, setup, caption punchline) and run the same template three times with escalating absurdity.",
+  "durationHint": "0:14",
+  "group": "edit"
+ },
+ {
+  "id": "kold-my-year-2016",
+  "title": "KOLD - My Year 2016",
+  "by": "Sam Kolder",
+  "year": 2017,
+  "url": "https://www.youtube.com/watch?v=QJbpJQscn9E",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/QJbpJQscn9E/maxresdefault.jpg",
+  "category": "trend-transitions",
+  "tags": [
+   "sam-kolder",
+   "travel-film",
+   "transitions",
+   "music-driven",
+   "cinematic"
+  ],
+  "techniques": [
+   "whip-pan transitions",
+   "rotation/roll transitions",
+   "motion-matched cuts",
+   "cut every ~1.7 s",
+   "speed ramps",
+   "aerial drone inserts",
+   "teal-orange grade"
+  ],
+  "breakdown": "Sam Kolder's 2016 year-in-review is one of the travel edits that made 'seamless transitions' a style a generation of creators copied. Scene detection finds about 88 cuts in the first 150 seconds, a shot every 1.7 s. Most cuts are hidden inside motion: camera rolls and spins, whip pans, hands sweeping across the lens. Footage from different countries is joined by matching direction and speed of movement, so a rotating city skyline lands in a rotating aerial and a downward tilt continues into a downward drone shot. The opening shows an upside-down, rolling Dubai skyline, the film's signature disorientation. Titles ('a film by SAM KOLDER', 'MY YEAR 2016') are small, spaced lettering laid over moving shots rather than on cards, so momentum never stops. A heavy teal-and-amber grade unifies wildly different locations (waterfalls, deserts, Tokyo crosswalks, rooftops). It works because each transition carries momentum from one shot into the next, so the film plays as one continuous camera move set to music. To apply it, shoot every clip with intentional in and out motion (whip, roll, push), then cut where the motion blur peaks and match the direction of travel across the cut.",
+  "durationHint": "5:09",
+  "group": "edit"
+ },
+ {
+  "id": "peter-mckinnon-in-camera-transitions",
+  "title": "MAKE YOUR OWN CAMERA TRANSITIONS!!",
+  "by": "Peter McKinnon",
+  "year": 2017,
+  "url": "https://www.youtube.com/watch?v=_bwfAPXlFu8",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/_bwfAPXlFu8/maxresdefault.jpg",
+  "category": "trend-transitions",
+  "tags": [
+   "peter-mckinnon",
+   "tutorial",
+   "whip-pan",
+   "in-camera",
+   "b-roll"
+  ],
+  "techniques": [
+   "in-camera whip transitions",
+   "motion-blur bridge clip",
+   "on-screen countdown clock",
+   "talking head + demo cutaways",
+   "before/after demo",
+   "music-driven example reel"
+  ],
+  "breakdown": "It's a 'Two Minute Tuesday' episode, and an on-screen countdown clock ('2:00', '1:57', '1:08', '0:34') ticks down in the corner while he talks. That's a retention device that makes the tutorial feel like a challenge. The technique he teaches is the in-camera transition: shake or whip the camera very fast up, down or sideways to create a clip that is almost pure motion blur. Then cut the most chaotic part of that clip between two normal shots that are already moving. He explains that, cut between a fast whip-out of one scene and a whip-in to the next on fast music, the blur reads as 'a seamless, completely animated transition' with no post effects. He proves it by playing his short film about Kenya and pointing out where the transitions were hidden (the clothesline, the marketplace, a bird leaving a tree). The episode then moves to a simple b-roll demo shot on the spot. It works as a teaching edit because it alternates claim, proof, then the method in a real setting. To apply it, record a few seconds of deliberate camera whips at every location and keep them in a bin as transition clips.",
+  "durationHint": "7:09",
+  "group": "edit"
+ },
+ {
+  "id": "jordan-orme-hardest-kpop-transitions",
+  "title": "Editor Reacts To HARDEST Kpop Transitions",
+  "by": "Jordan Orme",
+  "year": 2022,
+  "url": "https://www.youtube.com/watch?v=0zSvcZzX_0k",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/0zSvcZzX_0k/maxresdefault.jpg",
+  "category": "trend-transitions",
+  "tags": [
+   "jordan-orme",
+   "kpop",
+   "match-cut",
+   "reaction",
+   "breakdown"
+  ],
+  "techniques": [
+   "shape match cut",
+   "3D/particle morph transitions",
+   "ranked least-to-most crazy",
+   "reaction picture-in-picture",
+   "pause-and-explain",
+   "date-stamp comparison"
+  ],
+  "breakdown": "A professional music-video editor reacts to viewer-submitted K-pop transitions, ranked 'from least crazy to most crazy', which is the retention structure: each clip promises the next will top it. The video shows the clips in a framed window with his circular face cam overlapping one corner, a common reaction layout. The first example sets up the core idea, a shape match cut: a nebula becomes an eyeball 'because this nebula kind of looks like an eyeball, so why not make it into an eyeball'. Later clips show 3D shatters where a face breaks into particles, animated scene morphs, and perspective illusions ('like those art installations where when you change the angle it changes the picture'). He pauses to compare two videos' upload dates with red arrows to ask who copied whom, a mini-mystery inside the review. Scene detection finds about 93 cuts in the first 150 seconds, a shot every 1.6 s, with frequent punch-ins on his reactions. The useful takeaway for an editor: the best transitions connect shapes, colors or motion that already exist in both shots, so the cut feels inevitable rather than decorative.",
+  "durationHint": "8:34",
+  "group": "edit"
+ },
+ {
+  "id": "dont-rush-challenge-compilation",
+  "title": "Best Don’t rush challenge",
+  "by": "Mamus Koka (compilation)",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=oUoBoQnJ9jE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/oUoBoQnJ9jE/maxresdefault.jpg",
+  "category": "trend-transitions",
+  "tags": [
+   "dont-rush",
+   "tiktok-trend",
+   "glow-up",
+   "object-pass",
+   "2020"
+  ],
+  "techniques": [
+   "object-to-lens pass transition",
+   "before/after glow-up",
+   "beat-matched swap",
+   "multi-creator relay",
+   "blur frame as cut point",
+   "outfit change reveal"
+  ],
+  "breakdown": "The 2020 Don't Rush Challenge became one of the defining TikTok transition trends, and this compilation shows its grammar clearly. Each participant starts 'before' (bathrobe, hair towel, no makeup), then pushes a makeup brush toward the lens. The brush fills the frame in a blur, and the next shot opens out of that blur with the participant fully styled. Each person passes the brush to the next creator in the relay. The cut hides inside the frame where the object covers the lens, so the scene change, the outfit change and the hand-off to a new person all happen in one frame. The swap is timed to the song's beat, which gives the reveal its punch. In this upload the brush passes come about every 2 s, with blurred brush-in-lens frames clearly visible between looks. It works because it combines a glow-up (before/after) with a physical hand-off that feels collaborative, and anyone can do it with one prop. To apply it, shoot both clips with the same object moving toward and away from the lens at the same screen position, cut on the frame of maximum coverage, and land the 'after' on a downbeat.",
+  "durationHint": "1:39",
+  "group": "edit"
+ },
+ {
+  "id": "gaku-lange-how-to-whip-pan-short",
+  "title": "How to Whip Pan🎥✨#filmmaking #transition #tutorial",
+  "by": "Gaku Lange",
+  "year": 2024,
+  "url": "https://www.youtube.com/shorts/ZHhwZLkWvmM",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/ZHhwZLkWvmM/maxresdefault.jpg",
+  "category": "trend-transitions",
+  "tags": [
+   "whip-pan",
+   "tutorial",
+   "travel",
+   "shorts",
+   "japan"
+  ],
+  "techniques": [
+   "whip pan transition",
+   "directional continuity",
+   "location hopping",
+   "kinetic word captions",
+   "sound-effect sweetening",
+   "body-locked camera move"
+  ],
+  "breakdown": "The tutorial is built out of the technique itself. Each sentence is said in a different Japanese location (a pagoda street, a forest path, a torii gate on the beach), and every location change is a whip pan, so the short shows the effect about seven times in 21 seconds while explaining it. The spoken rules are compact and correct: 'you can whip any way you want, but you always need continuity', and 'make sure your in and out points connect directionally'. In other words, if the camera whips left out of shot A it must arrive whipping left into shot B. He adds his own method ('lock my wrists and move my upper body together') and the finishing touch ('add a few sound effects'). Captions are kinetic and mixed-weight, with key words like 'MOVEMENT', 'CONTINUITY', 'IN' and 'OUT' set large and placed around the frame instead of in a fixed subtitle bar. To apply it, match the direction and speed of the whip on both sides, cut in the middle of the blur, layer a whoosh sound under the cut, and teach a technique by using it in every transition of the explainer.",
+  "durationHint": "0:21",
+  "group": "edit"
+ },
+ {
+  "id": "emma-persson-hand-swipe-transition",
+  "title": "Hand swipe transition tutorial",
+  "by": "Emma Persson",
+  "year": 2024,
+  "url": "https://www.youtube.com/shorts/wwsWObnFmak",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/wwsWObnFmak/maxresdefault.jpg",
+  "category": "trend-transitions",
+  "tags": [
+   "hand-transition",
+   "tutorial",
+   "phone",
+   "shorts",
+   "smooth-moves"
+  ],
+  "techniques": [
+   "hand-cover wipe",
+   "swipe-out / swipe-in pairing",
+   "picture-in-picture demo",
+   "bold center captions",
+   "series branding ('Smooth Moves')",
+   "17-second tutorial"
+  ],
+  "breakdown": "A 17-second tutorial for the hand-swipe transition, one of the most copied phone-edit tricks. It opens with the effect itself: her hand sweeps across the lens and the scene has changed by the time it clears. Then she explains it in one sentence ('swipe your camera to one side, and then in your next clip swipe the camera into your hand'). While she talks, small picture-in-picture windows in the upper right play the two raw clips, so the viewer sees the ingredients and the result at once. The cut happens on the frame where the palm fully covers the lens, so the edit point can't be seen. Bold white captions sit centered over her torso, and a yellow 'TRANSITION' title plus a 'SMOOTH MOVES' series name brand it as an episode. It works because the payoff comes before the explanation, and the explanation is short enough to try right away. To apply it, end clip A with a hand or object moving into the lens, start clip B with it moving out in the same direction, and cut at full coverage.",
+  "durationHint": "0:17",
+  "group": "edit"
+ },
+ {
+  "id": "daniel-schiffer-b-roll-101-transitions",
+  "title": "How I Plan Shots & Transitions | B ROLL 101",
+  "by": "Daniel Schiffer",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=3mZuJAWH1Ow",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/3mZuJAWH1Ow/maxresdefault.jpg",
+  "category": "trend-transitions",
+  "tags": [
+   "daniel-schiffer",
+   "b-roll",
+   "product-video",
+   "planning",
+   "tutorial"
+  ],
+  "techniques": [
+   "BTS cold open",
+   "numbered step titles",
+   "action-per-object planning",
+   "object-match transitions",
+   "product cut-out inserts",
+   "shot list on paper"
+  ],
+  "breakdown": "Daniel Schiffer's product-video style (fast, transition-heavy b-roll for things like coffee and blenders) became a widely imitated YouTube look, and this video explains how he plans it. It opens with behind-the-scenes footage of him filming a smoothie shoot (strawberries poured, a blender, softbox lighting), intercut with the finished shots, so the viewer sees the method and the result together. Then a 'B ROLL 101 / TRANSITIONS' title card leads into a desk talk where he writes the plan on paper. Numbered on-screen steps structure it: '1. List ingredients & tools' (illustrated with clean cut-out product shots of the blender parts), then '2. Assign actions to each object', meaning every object gets a verb (pour, drop, twist, blend). That action list becomes the transition list, because an action that exits one shot (a hand pushing an object out of frame, a pour) can continue into the next. Scene detection finds about 50 cuts in the first 150 seconds. To apply it, before shooting, list every object, give each one a motion, and design shot pairs where the motion leaving shot A enters shot B.",
+  "durationHint": "10:16",
+  "group": "edit"
+ },
+ {
+  "id": "zach-king-magical-mischief-universal",
+  "title": "The Magical Mischief Of Zach King",
+  "by": "Zach King",
+  "year": 2021,
+  "url": "https://www.youtube.com/watch?v=3gJ4cBdUkPo",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/3gJ4cBdUkPo/maxresdefault.jpg",
+  "category": "trend-transitions",
+  "tags": [
+   "zach-king",
+   "illusion",
+   "invisible-cut",
+   "branded",
+   "harry-potter"
+  ],
+  "techniques": [
+   "invisible cut",
+   "outfit swap on movement",
+   "mirror-rig illusion",
+   "hidden-cut prop handoff",
+   "establishing landmark shots",
+   "branded vlog structure"
+  ],
+  "breakdown": "A branded video shot at the Wizarding World of Harry Potter at Universal Orlando. It strings together Zach King's trademark invisible-cut gags inside a loose vlog. It opens on the broom-flying illusion, and an off-screen friend immediately half-reveals it ('Oh, I see what you did there. It's a mirror'), which works as a cold open and a wink. Each later gag uses a cut hidden in motion or occlusion. He swings a cloak and goes from a denim jacket to Hogwarts robes. Wands and props are handed across the frame edge and come back changed. Objects 'pass' through windows. Landmark shots (the castle, the Hogwarts Express engine, the Hogsmeade arch) stand in for transitions and announce each new zone. Cuts are sparse in the dialogue (about 32 in 150 seconds), because each gag needs a continuous-looking take to sell the trick. It works because the magic always lands inside an ordinary moment (shopping, buying a wand), so the cut feels like reality glitching. To apply it, keep the camera and framing identical across the cut, hide the cut behind a body or prop crossing the lens, and change just one thing.",
+  "durationHint": "3:43",
+  "group": "edit"
+ },
+ {
+  "id": "kurzgesagt-loneliness",
+  "title": "Loneliness",
+  "by": "Kurzgesagt – In a Nutshell",
+  "year": 2019,
+  "url": "https://www.youtube.com/watch?v=n3Xv_g3g-mA",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/n3Xv_g3g-mA/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "kurzgesagt",
+   "explainer",
+   "narration",
+   "flat-illustration",
+   "psychology"
+  ],
+  "techniques": [
+   "relatable-moment cold open",
+   "stat as on-screen number",
+   "continuous animated transitions",
+   "numbered chapter cards",
+   "visual metaphor per sentence",
+   "warm/cool palette shift"
+  ],
+  "breakdown": "The opening lists everyday moments of loneliness (no one to sit with at lunch, moving to a new city, an empty weekend), each a quick illustrated vignette, before widening to the data: '60%' of UK 18–34-year-olds and '46%' of Americans, shown as huge numbers set into the scene. Scene detection logs no hard cuts in the first 150 seconds. Every change is an animated transition (a spotlight narrows to isolate one figure, a room's walls slide away, a head turns into a brain cross-section), so the narration never pauses for an edit. The narration moves fast but evenly, and every clause gets a picture: 'being lonely and being alone are not the same thing' is shown as one figure content alone and another miserable in a crowd. Structure comes from numbered chapter cards ('1 WHAT IS LONELINESS?'). Color carries emotion: warm yellow scenes for connection, deep purple for isolation, so the mood shifts without a word. It works because the abstract topic is always attached to a character the viewer just met. To apply it, open on a universal moment, convert each statistic into one big on-screen number, and transition by transforming the picture rather than cutting away.",
+  "durationHint": "13:06",
+  "group": "edit"
+ },
+ {
+  "id": "johnny-harris-how-i-make-my-maps",
+  "title": "How I Make My Maps",
+  "by": "Johnny Harris",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=GsojLuJpe_0",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/GsojLuJpe_0/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "johnny-harris",
+   "maps",
+   "after-effects",
+   "process",
+   "video-essay"
+  ],
+  "techniques": [
+   "sizzle-reel cold open",
+   "then-vs-now humility beat",
+   "screen-recorded process",
+   "desk-and-paper map style",
+   "label kinetic type",
+   "sponsor segment with brand graphics"
+  ],
+  "breakdown": "It opens with a rapid sizzle of his signature map shots (Iraq highlighted in red, a 3D globe, an old paper map labeled 'BRITISH' and 'RUSSIAN', a 'YOU / HOST' world map), about 13 cuts in the first 15 seconds. Then it admits 'it wasn't always this way' and plays the first map he ever made in 2012, a humility beat that makes the polished examples feel earned. The bulk of the video alternates a talking head at his desk with full-screen After Effects screen captures showing how layers, masks and paper textures build up a map. Running lower-thirds ('MY JOURNEY', 'EXPENSIVE', 'CHEAP') label each segment, and a laptop sponsor read is boxed off with its own product graphics. The style he teaches (maps that look like real paper on a desk, bold color fills for countries, labels that animate on, real-world camera moves over flat maps) became a template widely copied by other explainer channels. To apply it, use a map whenever a story has geography, highlight only the one region being discussed, give the map a physical texture, and move the camera across it instead of cutting between static maps.",
+  "durationHint": "29:29",
+  "group": "edit"
+ },
+ {
+  "id": "johnny-harris-iran-iraq-war-mapped",
+  "title": "The Iran-Iraq War, Mapped",
+  "by": "Johnny Harris",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=7PNCdOQvrRM",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/7PNCdOQvrRM/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "johnny-harris",
+   "history",
+   "maps",
+   "geopolitics",
+   "long-form"
+  ],
+  "techniques": [
+   "thesis-first cold open",
+   "persistent base map",
+   "flag/portrait badge icons",
+   "connection lines between actors",
+   "archival in circular vignettes",
+   "long holds on animated map"
+  ],
+  "breakdown": "The opening states the thesis in four sentences: an under-discussed war, eight years of trench and chemical warfare, a conflict that 'fractured the Middle East into lines that still play out' and set the US on a path to invading Iraq. Only after that does it jump to 1979. The edit is built on a single, persistent textured base map of the region rather than a series of cuts. Scene detection finds just 9 cuts in the first 150 seconds, while the map is constantly animating. Countries and actors appear as circular badges (national flags, portraits of the Shah and Khomeini) that move, grow, and get connected by red or dotted lines to show alliances and hostility. Archival photos and film appear inside circular vignettes placed on the map, so history footage always stays anchored to a location. Arcs radiate out from Iran to show influence, which explains a network argument visually. It works because a stable map gives viewers a fixed frame, and every new idea changes only one part of it. To apply it, choose one base map for the whole video, represent people and countries as consistent icons, and show relationships as animated lines rather than narration alone.",
+  "durationHint": "19:34",
+  "group": "edit"
+ },
+ {
+  "id": "casey-neistat-make-it-count",
+  "title": "Make It Count",
+  "by": "Casey Neistat",
+  "year": 2012,
+  "url": "https://www.youtube.com/watch?v=WxfZkMm3wcg",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/WxfZkMm3wcg/maxresdefault.jpg",
+  "category": "vlog",
+  "tags": [
+   "casey-neistat",
+   "nike",
+   "travel-montage",
+   "branded",
+   "2012"
+  ],
+  "techniques": [
+   "text-card setup on black",
+   "quote title cards over footage",
+   "cut every ~1.1 s",
+   "run-and-gun selfie cam",
+   "airport/arrival signage as chapters",
+   "music-driven montage",
+   "map flight inserts"
+  ],
+  "breakdown": "It opens with plain white text on black explaining the twist: 'Nike asked me to make a movie about what it means to #makeitcount. Instead of making their movie I spent the entire budget traveling around the world with my friend Max. We'd keep going until the money ran out. It took 10 days.' That confession is the hook. It flips a brand brief into an adventure the viewer wants to see. From there it is one of the fastest-cut vlogs of its era. Scene detection finds about 135 cuts in the first 150 seconds, roughly one per 1.1 s. It mixes handheld selfie shots, plane windows, street scenes and landmarks (the pyramids, Buckingham Palace, Victoria Falls). Inspirational quotes in bold white sans-serif with attributions ('Life is either a daring adventure or nothing at all – Helen Keller', 'Buy the ticket, take the ride – Hunter S. Thompson') are laid over moving footage as chapter breaks. Arrival signs ('Doha Arrival') and map-route shots stand in for narration about where they are. It works because the pace matches the premise: ten days and a dozen countries in four and a half minutes. To apply it, set up a constraint in text before the first shot, let found signage and quotes carry structure, and match the cut rate to the energy of the story.",
+  "durationHint": "4:38",
+  "group": "edit"
+ },
+ {
+  "id": "matt-davella-day-in-life-minimalist",
+  "title": "A Day in the Life of a Minimalist",
+  "by": "Matt D'Avella",
+  "year": 2018,
+  "url": "https://www.youtube.com/watch?v=tG2GJZcBKOE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/tG2GJZcBKOE/maxresdefault.jpg",
+  "category": "vlog",
+  "tags": [
+   "matt-davella",
+   "parody",
+   "minimalism",
+   "day-in-the-life",
+   "comedy"
+  ],
+  "techniques": [
+   "deadpan voice-over",
+   "symmetrical wide framing",
+   "top-down insert shots",
+   "fake-out then reveal",
+   "BTS reveal of camera crew",
+   "clock-time opening"
+  ],
+  "breakdown": "It opens like a sincere day-in-the-life: '6:00 a.m. I've trained myself to wake up at the same time every day.' The images are clean, symmetrical wides of a nearly empty white apartment and top-down inserts (one bowl, three forks in a drawer). The joke escalates in the same deadpan tone. A cereal bowl 'to the non-minimalist' is also a coffee cup, and things that 'bring joy' are 'gotten rid of as well'. Then the format breaks on purpose: 'This isn't what my day actually looks like.' The second half shows his real routine, with an alarm going off, coffee made in a messy kitchen, and the camera rig and tripod visible in shot. So the video parodies the genre and then delivers it honestly. The cutting is unhurried, about 41 cuts in 150 seconds, letting the composed frames carry the irony. It works because viewers expect the genre's polish, the parody exaggerates it, and the reveal makes the creator relatable. To apply it, shoot the 'ideal' version in an exaggerated aesthetic, then break the fourth wall with a hard tonal turn and show the real version with BTS details left in.",
+  "durationHint": "7:33",
+  "group": "edit"
+ },
+ {
+  "id": "ken-burns-american-revolution-trailer",
+  "title": "The American Revolution | A Film by Ken Burns, Sarah Botstein & David Schmidt | Official Trailer",
+  "by": "PBS / Ken Burns",
+  "year": 2025,
+  "url": "https://www.youtube.com/watch?v=lruEtNTN9oY",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/lruEtNTN9oY/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "ken-burns",
+   "pbs",
+   "archival",
+   "history",
+   "trailer"
+  ],
+  "techniques": [
+   "Ken Burns pan-and-zoom on stills",
+   "archival paintings and documents",
+   "interview soundbites over B-roll",
+   "reenactment silhouettes",
+   "narrator quote open",
+   "map and print inserts"
+  ],
+  "breakdown": "The trailer opens with the narrator reading a period quote ('From a small spark kindled in America, a flame has arisen, not to be extinguished') over dark reenactment shots of candles, musket fire and silhouettes, before the 'A FILM BY KEN BURNS' card. Most of what follows is the technique named after Burns: slow pans and push-ins across still images (oil paintings of battles and the signing of the Declaration, the 'JOIN, or DIE.' snake woodcut, tax stamps, engravings), which give still archives camera movement. Interview soundbites from historians are laid over those stills as voice-over, then cut to briefly on camera, so the argument comes from expert voices instead of a host. Atmospheric reenactment shots (feet marching in a field, a horse's silhouette, campfires) fill the gaps between archives without showing actors' faces. Scene detection finds about 81 cuts in 140 seconds, faster than the series itself because it is a trailer. It works because movement across stills keeps the frame alive while the voices carry the meaning. To apply it, give every still a slow, motivated move (toward a face, across a crowd), lay interview audio over it, and use faceless reenactments only as texture.",
+  "durationHint": "2:20",
+  "group": "edit"
+ },
+ {
+  "id": "every-frame-a-painting-editor-think-feel",
+  "title": "How Does an Editor Think and Feel?",
+  "by": "Every Frame a Painting",
+  "year": 2016,
+  "url": "https://www.youtube.com/watch?v=3Q3eITC01Fg",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/3Q3eITC01Fg/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "every-frame-a-painting",
+   "video-essay",
+   "editing-theory",
+   "film-analysis",
+   "tony-zhou"
+  ],
+  "techniques": [
+   "personal-anecdote cold open",
+   "expert soundbite as proof",
+   "clip with editor credit super",
+   "freeze/replay to show cut point",
+   "side-by-side comparison",
+   "measured narration pacing"
+  ],
+  "breakdown": "Tony Zhou opens with a personal anecdote: someone asked how he knows when to cut, and he couldn't explain it. That frames the essay as an attempt to put instinct into words. He backs it immediately with an archival soundbite from editor Michael Kahn ('I don't cut from what I call knowledge... I have to feel it'), so the claim has an authority behind it within 30 seconds. Every film clip carries a small serif super naming the film and its editor ('F for Fake (1973) Edited by Marie-Sophie Dubus', 'Hannah and Her Sisters (1986) Edited by Susan E. Morse', 'In the Mood for Love (2000) Edited by William Chang Suk-ping'), which credits the craft and gives the viewer a reference trail. Examples are played, then replayed and discussed, so the viewer sees the cut twice: once as an audience member and once as an editor. Scene detection finds about 21 cuts in the first 150 seconds, a calm pace that leaves time to think. The idea it argues, that an editor cuts on emotion and on the moment an image's information has been absorbed, is the most transferable lesson in the catalog. To apply it, play an example, name what it does, then replay it so the viewer can see the technique.",
+  "durationHint": "9:24",
+  "group": "edit"
+ },
+ {
+  "id": "emma-chamberlain-dollar-store-apology",
+  "title": "we all owe the dollar store an apology",
+  "by": "Emma Chamberlain",
+  "year": 2017,
+  "url": "https://www.youtube.com/watch?v=Y5-6f1T9qsc",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/Y5-6f1T9qsc/maxresdefault.jpg",
+  "category": "vlog",
+  "tags": [
+   "emma-chamberlain",
+   "talking-head",
+   "jump-cut",
+   "punch-in",
+   "gen-z-vlog"
+  ],
+  "techniques": [
+   "mock-serious rant opener",
+   "jump cuts mid-sentence",
+   "extreme punch-in zooms",
+   "props as visual jokes",
+   "self-aware asides",
+   "unpolished color and framing"
+  ],
+  "breakdown": "Emma Chamberlain's 2017-era vlogs helped define a looser, self-aware YouTube style that many later creators copied, and this one shows the toolkit. It opens with a mock-serious rant ('Listen here... I'm disappointed in everybody as the human race'), a dramatic tone that the subject (the dollar store) deflates. The frame is a plain bedroom with a static wide talking head, and the edit makes the comedy. Jump cuts drop the pauses and land mid-thought. Every few lines a sudden extreme punch-in on her face (often blurry, often a grimace) works as a visual rim-shot. Props from the haul (a headband and wristbands, a cheap face cream, a Frozen-themed item) are held right up to the lens. She keeps the asides and imperfections a polished channel would cut. Scene detection finds about 34 hard cuts in the first 150 seconds, plus many digital zooms inside shots that it doesn't count. It works because the editing has a personality of its own, with the zooms and cuts acting like a second comedian. To apply it, cut every pause, then pick a few moments per minute to punch in hard on a reaction, and keep the awkward beats that make the person feel real.",
+  "durationHint": "10:28",
+  "group": "edit"
+ },
+ {
+  "id": "one-second-everyday-age-30",
+  "title": "1 Second Everyday - Age 30",
+  "by": "Cesar Kuriyama",
+  "year": 2012,
+  "url": "https://www.youtube.com/watch?v=lyx6O_WFJhU",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/lyx6O_WFJhU/maxresdefault.jpg",
+  "category": "vlog",
+  "tags": [
+   "1-second-everyday",
+   "diary",
+   "montage",
+   "time",
+   "rule-based-edit"
+  ],
+  "techniques": [
+   "one second per day",
+   "strict metronomic cut rate",
+   "chronological sequencing",
+   "source-audio snippets",
+   "music bed under fragments",
+   "constraint-driven format"
+  ],
+  "breakdown": "Cesar Kuriyama recorded one second of video every day for a year and cut them together in order. The rule is the whole edit. Scene detection finds a cut almost exactly every 1.0 s (143 cuts in 150 seconds, at 2.0, 3.0, 4.0 s and so on), a metronomic rhythm that makes the passage of time something you can feel. Each one-second clip keeps a scrap of its own audio, so fragments of speech, laughter and street noise flicker over a music bed and add up to the texture of a life. Because the clips are chronological, seasons, haircuts and places change gradually, and the viewer starts reading the story from small differences between seconds. The project went viral in 2012, became a TED talk and an app, and the 'one second a day' format is still widely copied. It works because the fixed constraint turns ordinary footage into a measurable passage of time, and the brevity forces you to choose the most meaningful second of each day. To apply it, pick a fixed clip length and a strict order, keep each clip's natural sound, and let the regular rhythm carry the emotion.",
+  "durationHint": "6:09",
+  "group": "edit"
+ },
+ {
+  "id": "ryan-trahan-crossed-america-penny",
+  "title": "I crossed America with $0.01",
+  "by": "Ryan Trahan",
+  "year": 2024,
+  "url": "https://www.youtube.com/watch?v=Py_tOOG99Hw",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/Py_tOOG99Hw/maxresdefault.jpg",
+  "category": "storytelling",
+  "tags": [
+   "ryan-trahan",
+   "penny-challenge",
+   "rules",
+   "constraint",
+   "long-form"
+  ],
+  "techniques": [
+   "mock-epic voice-over open",
+   "rule cards",
+   "persistent money counter",
+   "route map overlay",
+   "news clip as stakes",
+   "subtitle captions",
+   "chapter title cards"
+  ],
+  "breakdown": "It opens in a mock-epic register: a spinning Earth and slow-motion pennies over a narration that 'pennies are going extinct', backed by a real news clip about the death of the penny, which ties a silly premise to a real story. Then the rules appear as clean black cards: 'RULE 1 all profit must come from penny', 'RULE 2 all grub, boarding, transportation must come from profit from penny', 'RULE 3 30 day time limit to cross America'. A small green money counter in the lower-left corner starts at '$0.01' and updates with every trade, giving a long video a running score. A hand-drawn route map tracks progress across the country. Chapter cards ('BUT I HAVE A THEORY', '6 STATES', 'THE PENNY MOVIE') divide it like a film, and yellow subtitles keep dialogue readable. It works because the constraint creates a problem in every scene, and the counter turns each small win or loss into visible progress. To apply it, write two or three hard rules on screen before the journey starts, keep one number on screen that the rules affect, and update it at every turn.",
+  "durationHint": "4:42:31",
+  "group": "edit"
+ },
+ {
+  "id": "chemical-brothers-star-guitar",
+  "title": "The Chemical Brothers - Star Guitar (Official Music Video)",
+  "by": "The Chemical Brothers / Michel Gondry",
+  "year": 2009,
+  "url": "https://www.youtube.com/watch?v=0S43IwBF0uM",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/0S43IwBF0uM/maxresdefault.jpg",
+  "category": "music-video",
+  "tags": [
+   "michel-gondry",
+   "music-video",
+   "sync",
+   "train-window",
+   "visual-music"
+  ],
+  "techniques": [
+   "landscape objects as instruments",
+   "one-take illusion",
+   "beat-synced compositing",
+   "repetition mirrors musical loops",
+   "build-up density",
+   "train-window POV"
+  ],
+  "breakdown": "Michel Gondry's video appears to be one continuous shot out of a train window, but every object that passes (pylons, water towers, factory buildings, a lone house, bridges, a passing train) arrives exactly on a sound in the track. Scene detection finds almost no conventional cuts in the first two minutes. The 'editing' happens inside the frame, as compositing that places each object on its beat. Repeating musical elements are mapped to repeating objects, so a recurring synth hit becomes a recurring tower, and when the track adds layers the landscape gets denser and busier. Breakdowns in the song turn into open fields, and big sections into industrial clutter. The viewer feels the music before figuring out why, then starts predicting the next object, which keeps them engaged. It works because it turns arrangement into geography: the song structure becomes a route you can watch. To apply it, map each recurring sound in your track to a recurring visual element, place those elements on their beats (by cutting or compositing), and let visual density follow the arrangement.",
+  "durationHint": "3:59",
+  "group": "edit"
+ },
+ {
+  "id": "kutiman-thru-you-mother-of-all-funk-chords",
+  "title": "Kutiman - Thru-you - 01 - Mother of All Funk Chords",
+  "by": "Kutiman",
+  "year": 2009,
+  "url": "https://www.youtube.com/watch?v=tprMEs-zfQA",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/tprMEs-zfQA/hqdefault.jpg",
+  "category": "music-video",
+  "tags": [
+   "kutiman",
+   "thru-you",
+   "youtube-remix",
+   "multi-screen",
+   "2009"
+  ],
+  "techniques": [
+   "found-footage musicianship",
+   "multi-window grid",
+   "picture follows the playing part",
+   "chord-label overlay",
+   "solo spotlight full-frame",
+   "cheeky caption ('Showoff!')"
+  ],
+  "breakdown": "Kutiman built a complete funk track from unrelated amateur YouTube clips (a drum lesson, a bass tutorial, a harmonica player, a conga demo, a kid on trumpet) and synced every clip to the part it plays. The edit is a musical score you can see. When an instrument plays, its window appears or grows. Ensemble sections show grids of 2 to 8 clips, and solos cut to a single full-frame performer. The opening uses a drum teacher's spoken intro ('take it, play that sixteenth-note groove'), so the source material introduces itself. A chord-diagram overlay ('E9 chord X76777') and a playful 'Showoff!' caption on a flashy guitar fill add personality. Scene detection finds about 46 layout changes in the first 150 seconds, each on a musical phrase. It works because the viewer can always see what they hear, and the 'strangers who never met jamming together' idea is emotionally satisfying. To apply it, when combining many sources, make the layout follow the arrangement: one window per active part, full-frame for a solo, and change layout on phrase boundaries.",
+  "durationHint": "3:36",
+  "group": "edit"
+ },
+ {
+  "id": "baby-driver-opening-bellbottoms",
+  "title": "Baby Driver Opening Scene (2017) | Movieclips Coming Soon",
+  "by": "Edgar Wright (Sony Pictures)",
+  "year": 2017,
+  "url": "https://www.youtube.com/watch?v=7ARFyrM6gVs",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/7ARFyrM6gVs/maxresdefault.jpg",
+  "category": "music-video",
+  "tags": [
+   "edgar-wright",
+   "baby-driver",
+   "music-sync",
+   "action",
+   "opening-scene"
+  ],
+  "techniques": [
+   "action choreographed to track",
+   "diegetic music via earbuds",
+   "lip-sync and air-drum performance",
+   "cuts on drum hits",
+   "inside-car single-location coverage",
+   "music-driven car chase"
+  ],
+  "breakdown": "The opening of 'Baby Driver' plays the whole of 'Bellbottoms' by the Jon Spencer Blues Explosion as a diegetic track. Baby presses play on an iPod, and the camera stays with him in the getaway car while the robbery happens off-screen in the background. He lip-syncs, air-drums on the wheel, and works the wipers on the beat, so the music is shown through performance before any action starts. The film was edited to a pre-chosen soundtrack, with cuts and actions placed on drum hits and riffs. When the crew return and the chase starts, the car's swerves, gear changes and near-misses line up with accents in the song. Scene detection finds about 45 cuts in the first 150 seconds, fewer in the waiting section and faster as the track and chase build. The audio-level trace of this upload climbs steadily, quieter at the start and loudest in the final minute, matching the song's build. It works because the audience experiences the music through the character's ears, so every beat feels caused by the story. To apply it, pick the track first, edit to its accents, and find actions inside the scene (taps, doors, wipers) that can hit those accents.",
+  "durationHint": "5:57",
+  "group": "edit"
+ },
+ {
+  "id": "whiplash-final-performance-caravan",
+  "title": "Whiplash Amazing Final Performance (Caravan) (Part 1) | Whiplash (2014) | 1080p HD",
+  "by": "Whiplash (Sony Pictures Classics)",
+  "year": 2016,
+  "url": "https://www.youtube.com/watch?v=ZZY-Ytrw2co",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/ZZY-Ytrw2co/maxresdefault.jpg",
+  "category": "sound-design",
+  "tags": [
+   "whiplash",
+   "drumming",
+   "rhythmic-montage",
+   "climax",
+   "tom-cross"
+  ],
+  "techniques": [
+   "cuts on drum hits",
+   "extreme close-up inserts (cymbal, sticks, sweat)",
+   "shot/reverse-shot rivalry",
+   "dead-silence opening beat",
+   "escalating cut rate",
+   "sheet-music insert"
+  ],
+  "breakdown": "The film's climax (Oscar-winning editing by Tom Cross) is a performance of 'Caravan', cut almost entirely to the drums. It starts in near-silence. The audio-level trace of this upload sits close to silent for roughly the first 15 seconds as Andrew walks out and sits at the kit, so the first beats land like an attack. From there the edit is built from a small set of shots repeated in rhythm: macro inserts of a cymbal, sticks, the snare skin and sheet music, then the drummer's face, then the bandleader's face. Shot/reverse-shot between the two men turns a jazz number into a duel, so it plays as a fight between them. The cutting follows the music, with accents and fills getting quick inserts and sustained passages getting wider shots of the band. The exhausted, sweat-soaked close-ups grow tighter as the piece goes on. It works because the cutting pattern tracks the drum part, so the audience feels the rhythm in the edit. To apply it, build a small set of rhythmic inserts, cut them on accents, and keep returning to the two faces whose conflict gives the music meaning.",
+  "durationHint": "4:50",
+  "group": "edit"
+ },
+ {
+  "id": "vox-dunkirk-shepard-tone",
+  "title": "The sound illusion that makes Dunkirk so intense",
+  "by": "Vox",
+  "year": 2017,
+  "url": "https://www.youtube.com/watch?v=LVWTQcZbLgY",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/LVWTQcZbLgY/maxresdefault.jpg",
+  "category": "sound-design",
+  "tags": [
+   "vox",
+   "hans-zimmer",
+   "shepard-tone",
+   "tension",
+   "video-essay"
+  ],
+  "techniques": [
+   "Shepard tone (endless rise)",
+   "waveform overlay on footage",
+   "animated diagram of pitch layers",
+   "barber-pole visual analogy",
+   "cross-media examples",
+   "clip + score credit supers"
+  ],
+  "breakdown": "Vox explains why 'Dunkirk' feels relentlessly tense: Hans Zimmer's score uses a Shepard tone, an auditory illusion of a pitch that keeps rising and never resolves. The video starts on film clips with a live waveform drawn across the frame and track credits ('The Mole', 'Mountains', 'Tick Tock', Hans Zimmer), so the viewer is told to listen before the explanation. It then cuts to a dark animated diagram with three colored lines (green, red, blue) rising in parallel at different octaves while a playhead moves across. As the top layer fades out, a new bottom layer fades in, so the overall pitch seems to climb forever. A barber-pole graphic gives the same illusion in picture. Other examples follow (the endless staircase in 'Super Mario 64', Pink Floyd's 'Echoes', 'The Prestige', 'The Dark Knight'), each with a title super, to prove the device is a general tool. It works as an essay because each claim is heard, then seen as a diagram, then shown in context. For editors the principle is useful: an unresolved rising sound keeps tension climbing across many cuts, and a resolution will feel huge when it finally arrives.",
+  "durationHint": "3:02",
+  "group": "edit"
+ },
+ {
+  "id": "every-frame-a-painting-marvel-symphonic-universe",
+  "title": "The Marvel Symphonic Universe",
+  "by": "Every Frame a Painting",
+  "year": 2016,
+  "url": "https://www.youtube.com/watch?v=7vfqkvwW2fs",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/7vfqkvwW2fs/maxresdefault.jpg",
+  "category": "sound-design",
+  "tags": [
+   "every-frame-a-painting",
+   "film-score",
+   "temp-music",
+   "video-essay",
+   "marvel"
+  ],
+  "techniques": [
+   "vox-pop street interview hook",
+   "rhetorical question cold open",
+   "scene replayed with alternate score",
+   "temp-track comparison",
+   "clip credit supers",
+   "counterexample montage"
+  ],
+  "breakdown": "The essay opens with a man-on-the-street test titled 'SOMEWHERE IN VANCOUVER'. People hum Star Wars, James Bond and Harry Potter instantly, then fail to hum anything from Marvel ('I'm like the biggest Marvel fan... I can't think of any of the songs'). That is a vox-pop hook that proves the thesis before it's stated. The narration then makes the argument: Marvel scores rarely create an emotional response or a memorable theme. It backs this by playing scenes (Tony Stark's workshop in 'Iron Man') and analyzing what the music does there, which is mostly nothing. The video's best-known move is showing how temp music, the placeholder score editors cut to, gets imitated by composers. It plays the cues back to back, so the viewer can hear how close the finished score stays to the temp. Scene detection finds about 24 cuts in the first 150 seconds, slow enough for the audio comparisons to register. For editors the lesson is direct: music chosen safely to sit under the picture adds no meaning, and a score that states a theme and lands on emotional beats makes a scene memorable. To apply it, when choosing music, ask what feeling the cue adds that the picture doesn't already carry.",
+  "durationHint": "13:35",
+  "group": "edit"
+ },
+ {
+  "id": "lemmino-vanishing-of-flight-370",
+  "title": "The Vanishing of Flight 370",
+  "by": "LEMMiNO",
+  "year": 2019,
+  "url": "https://www.youtube.com/watch?v=kd2KEHvK-q8",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/kd2KEHvK-q8/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "lemmino",
+   "mystery",
+   "reconstruction",
+   "minimal-graphics",
+   "long-form"
+  ],
+  "techniques": [
+   "real-time reconstruction cold open",
+   "on-screen clock",
+   "ATC transcript captions",
+   "dark minimalist map tracking",
+   "portrait cards for people",
+   "no cuts, slow camera drift"
+  ],
+  "breakdown": "LEMMiNO opens the 25-minute documentary as a quiet, real-time reconstruction rather than a summary. A slow push on a 777 at a gate in the dark, with small spaced captions ('KUALA LUMPUR, MALAYSIA', the date), then an on-screen timestamp ('00:25:48') that sets the clock. The cockpit-to-ATC exchanges are shown as two-line transcripts labeled 'AIR TRAFFIC CONTROL' / 'MH370 COCKPIT' on near-black frames, so the viewer reads the last words in silence. The crew and passengers are introduced as a row of small portrait cards. The flight path is drawn as a thin red line crawling across a desaturated dark map with minimal labels. Scene detection finds no hard cuts in the first 150 seconds. Everything happens through slow camera drift, fades and graphics, which gives a forensic, unsettling calm. The restraint is the style: monochrome palette, tiny type, long holds, so the real dialogue and the line on the map carry the tension. To apply it, for a true-story mystery, reconstruct events in real time with transcripts and a clock, strip the graphics to one accent color, and let silence and slow movement build dread instead of fast cutting.",
+  "durationHint": "24:54",
+  "group": "edit"
+ },
+ {
+  "id": "tiger-king-official-trailer",
+  "title": "Tiger King: Murder, Mayhem and Madness | Official Trailer | Netflix",
+  "by": "Netflix",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=acTdxsoa428",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/acTdxsoa428/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "netflix",
+   "true-crime",
+   "trailer",
+   "character-driven",
+   "2020"
+  ],
+  "techniques": [
+   "shocking-fact first line",
+   "character intro soundbites",
+   "cut every ~1.5 s",
+   "one-word chapter cards",
+   "archival home video and news",
+   "comparison credit ('from the studio that brought you FYRE')"
+  ],
+  "breakdown": "The first line is the hook: 'It's not every day that a zookeeper went to prison for murder for hire.' A statistic follows ('more captive tigers in the US than there are in the wild throughout the world'), so the trailer moves from the bizarre to the real in two sentences. Then it introduces characters by their own words ('My name's Joe Exotic', 'Tell me you love me'), each paired with an iconic image (tigers on a leash, an elephant on a lawn, a gun store, an explosion). Single-word title cards ('RIVALRIES', 'DRUG LORDS', 'CULTS') work as chapter beats that escalate the genre promise. A 'from the studio that brought you FYRE' card borrows credibility from a previous hit. Archival home video, local news clips and a newspaper headline ('THE BIG CAT FIGHT') mix with polished interviews. Scene detection finds about 93 cuts in 137 seconds, a shot every 1.5 s. It works because it sells characters and escalation rather than plot, and each card raises the 'this can't be real' factor. To apply it, open a doc trailer on the most unbelievable true fact, introduce characters in their own words, and use one-word genre cards to escalate.",
+  "durationHint": "2:17",
+  "group": "edit"
+ },
+ {
+  "id": "vox-borders-hong-kong",
+  "title": "China is erasing its border with Hong Kong",
+  "by": "Vox (Johnny Harris)",
+  "year": 2018,
+  "url": "https://www.youtube.com/watch?v=MQyxG4vTyZ8",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/MQyxG4vTyZ8/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "vox-borders",
+   "johnny-harris",
+   "travel-doc",
+   "geopolitics",
+   "explainer"
+  ],
+  "techniques": [
+   "first-person POV cold open",
+   "host-on-location stand-ups",
+   "map with date callouts",
+   "archival news inserts",
+   "interview lower-thirds",
+   "series title card mid-video"
+  ],
+  "breakdown": "It opens on Johnny Harris himself mid-crossing ('This is me in the middle of crossing one of the weirdest borders I've ever crossed') with fast inserts of the facial-recognition gates, a guard tower and the station. The viewer is put inside the experience before any context. The second beat delivers the twist that makes it a story: a border that 'divides China from China' and 'has an expiration date: July 1st 2047', shown on a paper-textured map with that date as a callout. The video then mixes the host's on-location stand-ups (a rocky hillside overlooking the new sea bridge), drone shots of infrastructure, archival TV news of protests, and seated interviews with clean name supers ('Claudia Mo'). The 'Vox BORDERS / HONG KONG' series title card arrives only after the hook and setup, so the episode has already earned the viewer's attention. Scene detection finds about 79 cuts in the first 150 seconds, fast for an explainer, mostly in the cold open. To apply it, start with yourself inside the place, state the paradox in a single line, put the key date or number on a map, and hold the title card until the hook has landed.",
+  "durationHint": "14:24",
+  "group": "edit"
+ },
+ {
+  "id": "vox-earworm-giant-steps",
+  "title": "The most feared song in jazz, explained",
+  "by": "Vox (Estelle Caswell, Earworm)",
+  "year": 2018,
+  "url": "https://www.youtube.com/watch?v=62tIvfP9A2w",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/62tIvfP9A2w/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "vox",
+   "earworm",
+   "music-theory",
+   "jazz",
+   "animated-explainer"
+  ],
+  "techniques": [
+   "superlative claim open",
+   "annotated score close-ups",
+   "paper-cut collage animation",
+   "musician guests as voices",
+   "notes visualized as shapes",
+   "series bumper"
+  ],
+  "breakdown": "The opening claims Coltrane's 'Giant Steps' is 'one of the most revered and feared compositions in jazz history', with a slow push across album covers and archival photos, kinetic labels ('Most Revered', 'and Feared') pinned to the frame. The answer, 'can be heard in its first few seconds', points the viewer to listen. Music theory, which is hard to show, is made visible in three ways. Annotated lead-sheet close-ups ('COLTRANE CHANGES' on a paper tab) show the chords. Paper-cut animated shapes (a saxophone, colored dots, a floating piano) move in time with phrases. Working musicians on a dark purple set (with name supers) play and explain the passages. The 'Vox EARWORM' bumper comes after the hook, and section titles like 'MUSIC THEORY' fly in as collage letters. It works because each abstract term is heard, seen as notation, and played by a person, three passes that make it stick. To apply it, for any invisible subject (sound, math, code), pair every term with one literal artifact (the score) and one playful visual metaphor, and bring in an expert to demonstrate.",
+  "durationHint": "10:49",
+  "group": "edit"
+ },
+ {
+  "id": "vox-rapping-deconstructed",
+  "title": "Rapping, deconstructed: The best rhymers of all time",
+  "by": "Vox (Estelle Caswell, Earworm)",
+  "year": 2016,
+  "url": "https://www.youtube.com/watch?v=QWveXdj6oZU",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/QWveXdj6oZU/maxresdefault.jpg",
+  "category": "documentary",
+  "tags": [
+   "vox",
+   "earworm",
+   "hip-hop",
+   "lyrics",
+   "data-viz"
+  ],
+  "techniques": [
+   "expert-guest cold open",
+   "color-coded rhyme highlighting",
+   "lyric text as main visual",
+   "timeline with year markers",
+   "archival performance clips",
+   "bar/beat grid diagram"
+  ],
+  "breakdown": "It opens with rapper Open Mike Eagle (introduced by a bold yellow name card) geeking out over MF DOOM's flow, a guest's enthusiasm as the hook. The video's main device is putting lyrics on screen as text and color-coding the rhymes. Words light up in matching yellow, green and cyan highlights in sync with the vocal, and letter labels (A, A, B, B) mark the rhyme scheme beside each bar. A simple four-dot 'BAR' grid explains bars and beats before the analysis needs them. A horizontal yellow timeline with year markers (1980 'The Breaks' by Kurtis Blow, 1986 Eric B. & Rakim) moves between eras to show how rhyming got denser, with archival clips (Soul Train) set behind the text. Scene detection finds only about 14 hard cuts in the first 150 seconds because most changes are animated text on one dark canvas. It works because the viewer reads and hears the rhyme at once, so complexity becomes visible. To apply it, when the content is language, put the words on screen, highlight the pattern in color as it is spoken, and teach the unit of measure (the bar) before measuring anything with it.",
+  "durationHint": "12:43",
+  "group": "edit"
+ },
+ {
+  "id": "old-spice-man-your-man-could-smell-like",
+  "title": "Old Spice | The Man Your Man Could Smell Like",
+  "by": "Old Spice (Wieden+Kennedy)",
+  "year": 2010,
+  "url": "https://www.youtube.com/watch?v=owGykVbfgUE",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/owGykVbfgUE/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "old-spice",
+   "one-take",
+   "direct-address",
+   "comedy",
+   "2010"
+  ],
+  "techniques": [
+   "apparent single take",
+   "in-camera set transitions",
+   "direct address to viewer",
+   "rapid-fire non sequiturs",
+   "prop transformations",
+   "end-line tag on super"
+  ],
+  "breakdown": "This 32-second spot is famous for looking like one continuous take. Scene detection finds just two cuts, at the very start and very end, while the setting changes three times: bathroom to boat deck to beach on a horse. The set changes happen in-camera behind the actor (walls fly away, a towel drops), so the viewer feels they never left the shot. The script talks straight to the viewer ('Hello ladies. Look at your man. Now back to me') and uses those commands as edit points, so each 'look down, back up' resets attention. Props transform on the beat: a hand becomes an oyster with tickets, the tickets become diamonds. Delivery is fast and deadpan, with no pauses, so jokes stack faster than viewers can process and rewatching is rewarded. It closes on 'I'm on a horse' and a small 'SMELL LIKE A MAN, MAN' super with the logo. It works because the unbroken take turns a commercial into a stunt the viewer wants to check, and direct address makes it feel personal. To apply it, if you can stage changes inside one shot, do it. An unbroken take earns trust and rewatches that a cut can't.",
+  "durationHint": "0:32",
+  "group": "edit"
+ },
+ {
+  "id": "dollar-shave-club-our-blades-are-great",
+  "title": "DollarShaveClub.com - Our Blades Are F***ing Great",
+  "by": "Dollar Shave Club",
+  "year": 2012,
+  "url": "https://www.youtube.com/watch?v=ZUG9qYTJMsI",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/ZUG9qYTJMsI/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "dollar-shave-club",
+   "founder-led",
+   "walk-and-talk",
+   "startup",
+   "2012"
+  ],
+  "techniques": [
+   "founder direct-to-camera",
+   "walk-and-talk through warehouse",
+   "sight gags in background",
+   "deadpan Q&A self-interview",
+   "sign insert punchline",
+   "black end card with offer"
+  ],
+  "breakdown": "Founder Mike Dubin opens seated at a desk ('Hi, I'm Mike, founder of DollarShaveClub.com') and answers the obvious questions himself ('Are the blades any good? No. Our blades are f***ing great'). The self-interview structure handles objections as jokes. Then he stands and walks the whole length of a warehouse in long tracking shots. Scene detection finds only 7 cuts in 93 seconds, so the walk-and-talk carries momentum without editing. Sight gags appear in the background and at the frame edges as he passes: a toddler shaving, a man in a bear suit, a worker being pulled on a hand truck, a sign reading 'OUR BLADES ARE F***ING GREAT', a giant American flag with confetti. Each gag lands as a reveal because the camera is already moving. It ends on black cards ('ISN'T IT ABOUT TIME?', logo, 'SHAVE TIME. SHAVE MONEY.'). Shot on a reported budget of around $4,500, it shows that a clear offer plus a personality beats production value. To apply it, script the ad as the founder answering skeptics, stage it as one continuous walk, and hide a visual joke at each new stop.",
+  "durationHint": "1:33",
+  "group": "edit"
+ },
+ {
+  "id": "volvo-trucks-epic-split",
+  "title": "Volvo Trucks - The Epic Split feat. Van Damme",
+  "by": "Volvo Trucks (Forsman & Bodenfors)",
+  "year": 2013,
+  "url": "https://www.youtube.com/watch?v=M7FIvfx5J10",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/M7FIvfx5J10/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "volvo",
+   "van-damme",
+   "one-shot",
+   "stunt",
+   "b2b"
+  ],
+  "techniques": [
+   "single continuous shot",
+   "slow pull-back reveal",
+   "sunrise golden-hour timing",
+   "introspective VO",
+   "Enya soundtrack contrast",
+   "disclaimer super as proof"
+  ],
+  "breakdown": "A B2B truck commercial that went massively viral (over 128 million views on this upload) by doing almost nothing in the edit. Scene detection finds zero cuts in its 77 seconds. It opens on a tight shot of Jean-Claude Van Damme's face at sunrise while he delivers a reflective voice-over ('I've had my ups and downs... a body crafted to perfection, a pair of legs engineered to defy the laws of physics'). The camera then slowly pulls back and rises to reveal he is standing with one foot on each of two trucks reversing side by side, and as they drift apart he settles into a full split. That reveal is the entire structure. The calm music (Enya's 'Only Time') goes against the stunt and makes it feel almost meditative. A closing super explains that 'this test was set up to demonstrate the stability and precision of Volvo Dynamic Steering', turning spectacle into product proof. It works because the single take is evidence. Any cut would make viewers suspect a trick. To apply it, when your claim is precision or reliability, show it in one unbroken shot, start tight and reveal scale by pulling back, and put the product claim in the end super.",
+  "durationHint": "1:17",
+  "group": "edit"
+ },
+ {
+  "id": "squatty-potty-unicorn",
+  "title": "This Unicorn Changed the Way I Poop - #SquattyPotty",
+  "by": "Squatty Potty (Harmon Brothers)",
+  "year": 2015,
+  "url": "https://www.youtube.com/watch?v=YbYWhdLO43Q",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/YbYWhdLO43Q/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "squatty-potty",
+   "harmon-brothers",
+   "absurd-humor",
+   "explainer-ad",
+   "2015"
+  ],
+  "techniques": [
+   "absurd visual hook",
+   "prince narrator direct address",
+   "anatomical cross-section animation",
+   "side-by-side stat comparison",
+   "social-proof badge",
+   "URL bug persistent"
+  ],
+  "breakdown": "The opening image (a unicorn producing rainbow soft-serve) is so absurd that it stops the scroll, and the ad uses it to sneak in a medical explanation. A storybook prince talks to camera in a fairy-tale garden, alternating close-ups with wides of the unicorn on a toilet. The product benefit is taught with a cartoon cross-section of the colon drawn over the unicorn, showing the 'kink' when sitting versus straightened when squatting. That is the visual explainer the whole joke supports. Numbers appear as a side-by-side comparison ('130 sec average sitting time' versus '50 sec average squatting time'). Social proof comes in as an Amazon five-star badge ('OVER 2,000 USERS'). An orange 'SquattyPotty.com' URL bug appears in the lower corner and returns during the pitch. Scene detection finds about 51 cuts in the first 150 seconds. It works because the comedy earns the attention the explanation needs, and every claim gets a picture. To apply it, pair an embarrassing or dull product with one outrageous visual metaphor, keep returning to it, and put proof (stats, reviews, diagrams) on screen while the joke is still running.",
+  "durationHint": "2:53",
+  "group": "edit"
+ },
+ {
+  "id": "purple-mattress-raw-egg-test",
+  "title": "How to Use a Raw Egg to Determine if Your Mattress is Awful - Purple Mattress #goldilocks",
+  "by": "Purple (Harmon Brothers)",
+  "year": 2016,
+  "url": "https://www.youtube.com/watch?v=4BvwpjaGZCQ",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/4BvwpjaGZCQ/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "purple",
+   "harmon-brothers",
+   "demo",
+   "goldilocks",
+   "2016"
+  ],
+  "techniques": [
+   "question hook ('easy way to tell...')",
+   "named test as format",
+   "storybook diagram inserts",
+   "comparison labeling (hard/soft)",
+   "weight-stat supers",
+   "physical demo proof"
+  ],
+  "breakdown": "It opens with a question and an instant promise ('What's a super easy way to tell if your bed is awful? The egg test. Let me prove it'), and the test gets a big branded title ('THE RAW EGG TEST'), so the ad feels like an experiment. Goldilocks (labeled 'Goldilocks, BED EXPERT') walks through the fairy-tale options: 'HARD MATTRESS Papa Bear' and 'SOFT MATTRESS Mama Bear', each labeled in a lower-third and each failing with eggs cracking in slow-motion close-up. Abstract benefits like pressure points and spine alignment are explained with a storybook-style illustrated board she holds up. That keeps the diagram inside the fiction instead of cutting to clinical graphics. The product then passes the same test, followed by escalating proof shots with weight supers ('930 lbs', '1400+ lbs') of plates stacked on the grid. Scene detection finds about 61 cuts in the first 150 seconds. It works because one repeatable test structures the ad as a fair contest, and the product wins the same test the competitors failed. To apply it, invent a simple, visual pass/fail test, run competitors through it first, and let your product pass it last with numbers on screen.",
+  "durationHint": "3:59",
+  "group": "edit"
+ },
+ {
+  "id": "nike-you-cant-stop-us",
+  "title": "You Can’t Stop Us | Nike",
+  "by": "Nike (Wieden+Kennedy, edit by Joint)",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=GbQomqb28os",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/GbQomqb28os/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "nike",
+   "split-screen",
+   "match-cut",
+   "archival",
+   "2020"
+  ],
+  "techniques": [
+   "split-screen match cut",
+   "motion continuity across two clips",
+   "archival athlete footage",
+   "VO manifesto",
+   "72 clips → 36 pairs",
+   "type end card"
+  ],
+  "breakdown": "Released in mid-2020, 'You Can't Stop Us' is built entirely from a split screen. Each frame pairs two different athletes, and the motion, shape or pose continues seamlessly across the center line. A runner's left half becomes another runner's right half, one swimmer's stroke completes another's, and a skateboarder's arc meets a surfer's. Press coverage reported that the agency and editors (Wieden+Kennedy with editorial house Joint) screened about 4,000 action clips and chose 72, combined into 36 split-screen pairs covering 24 sports and 53 athletes. The pairs move the message from individual to collective. Elite and amateur athletes, men and women, and disabled athletes share one body on screen, matching the voice-over ('we're never alone... we'll play as one'). The cut rate stays readable, about 19 pairs in this 60-second Japanese-subtitled cut (the original runs 90 seconds), because each pair needs a beat to register as one motion. It ends on a type card, 'YOU CAN'T STOP SPORT.' It works because the editing technique is the message. To apply it, search footage for matching vectors (direction, speed, body angle), line them up on a center seam, and let the match land on the strongest motion beat.",
+  "durationHint": "1:00",
+  "group": "edit"
+ },
+ {
+  "id": "duolingo-duos-work-day",
+  "title": "Duo's Work Day | behind the scenes of notifications",
+  "by": "Duolingo",
+  "year": 2023,
+  "url": "https://www.youtube.com/watch?v=IEHiY8scAKI",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/IEHiY8scAKI/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "duolingo",
+   "mascot",
+   "3d-animation",
+   "brand-lore",
+   "notifications"
+  ],
+  "techniques": [
+   "meme turned into lore",
+   "dialogue-free storytelling",
+   "UI elements as set pieces",
+   "streak-flame motif",
+   "cut every ~2.4 s",
+   "tagline end card"
+  ],
+  "breakdown": "Duolingo turned an existing internet joke (the owl's aggressive push notifications) into a 90-second animated 'behind the scenes' story, so the audience already knows the premise before it starts. With no dialogue, the piece runs on pantomime and visual gags. Duo sits at a glowing monitor writing reminders, notification cards ('Hi! It's Duo') float like physical objects, and a leaderboard ribbon and '623 XP' badges stream past as part of the world. A recurring motif of streak flames, some lit and some extinguished grey, gives the story stakes. One user's streak goes out, Duo panics, and the climax is the user coming back. Product UI (practice cards, an 'UPDATE' button, a phone screen) is staged as giant tactile props instead of screen recordings. Scene detection finds about 37 cuts in 90 seconds. It closes on 'for the love of learners' and the Duocon 2023 logo. It works because it rewards fans for a joke they already share and makes the mascot sympathetic. To apply it, find the meme your audience already tells about your brand, build a wordless story around it, and turn your product's UI into physical set pieces.",
+  "durationHint": "1:30",
+  "group": "edit"
+ },
+ {
+  "id": "liquid-death-kids-hydrating-big-game",
+  "title": "Liquid Death Big Game Commercial With Kids Hydrating at a Party",
+  "by": "Liquid Death",
+  "year": 2022,
+  "url": "https://www.youtube.com/watch?v=qQwt4rzmVxY",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/qQwt4rzmVxY/maxresdefault.jpg",
+  "category": "ad-edit",
+  "tags": [
+   "liquid-death",
+   "parody",
+   "super-bowl",
+   "shock-humor",
+   "water"
+  ],
+  "techniques": [
+   "beer-ad genre parody",
+   "heavy-metal needle drop",
+   "slow-motion pour/can macros",
+   "escalating 'shock' cutaways",
+   "cut every ~1.6 s",
+   "reassuring punchline card"
+  ],
+  "breakdown": "The 30-second spot borrows the full grammar of a beer commercial (ice-bucket can macros, slow-motion pours, a crowd cheering a chug, euphoric party reactions) and applies it to children at a birthday party drinking canned water. A heavy-metal needle drop, Judas Priest's 'Breaking the Law', makes it feel even more forbidden. Scene detection finds about 18 cuts in 30 seconds, roughly one every 1.6 s. The rhythm alternates glossy product macros with kids' faces screaming in delight, so each cut raises the shock. The escalation peaks with a pregnant woman chugging a can, the most taboo image a beer ad could show. Then the end card resolves the tension: 'DON'T BE SCARED. IT'S JUST WATER.' with '#DeathToPlastic' and an Amazon badge. It works because the audience reads the genre in a second, and the gap between what it looks like and what it is becomes the joke. To apply it, copy a genre's visual and sound clichés exactly, put an unexpected product inside them, escalate until it looks scandalous, and resolve with a one-line card.",
+  "durationHint": "0:30",
+  "group": "edit"
+ },
+ {
+  "id": "dove-real-beauty-sketches-extended",
+  "title": "Dove Real Beauty Sketches (extended) / Directed by John X. Carey",
+  "by": "Dove (dir. John X. Carey)",
+  "year": 2013,
+  "url": "https://www.youtube.com/watch?v=pOq71eKI5Mg",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/pOq71eKI5Mg/maxresdefault.jpg",
+  "category": "storytelling",
+  "tags": [
+   "dove",
+   "social-experiment",
+   "before-after",
+   "emotional",
+   "2013"
+  ],
+  "techniques": [
+   "experiment setup via expert",
+   "separated interviews",
+   "drawing hands inserts",
+   "side-by-side reveal",
+   "reaction close-ups",
+   "thesis super at end"
+  ],
+  "breakdown": "The film sets up a simple experiment explained by its own expert: a former FBI-trained forensic artist (introduced in his own words) sketches women, sight unseen, first from their own descriptions and then from a stranger's description of them. The first act intercuts the women's self-critical descriptions ('I would want fuller lips', 'little crow's feet') with close-ups of his hands drawing, building an unease the viewer recognizes. The location, a bright, airy loft with a curtain separating artist and subject, is shot in soft, shallow-focus close-ups (eyes, profiles, pencil strokes), so the tone stays intimate and the edit cuts on small emotional shifts. Scene detection finds about 60 cuts in the first 150 seconds. The payoff is a reveal: the two sketches of each woman hung side by side, with the self-described version harsher than the stranger's, then the women's reactions held in long close-ups. It closes on a single thesis line on screen. It works because the structure (setup, blind process, side-by-side reveal, reaction) is a reliable before/after shape, and the evidence is something the viewer can see. To apply it, design a fair comparison the subject doesn't see coming, keep the process mysterious, and give the reveal a side-by-side shot and an unhurried reaction.",
+  "durationHint": "7:03",
+  "group": "edit"
+ },
+ {
+  "id": "mrbeast-ages-1-100-fight-500k",
+  "title": "Ages 1 - 100 Fight For $500,000",
+  "by": "MrBeast",
+  "year": 2023,
+  "url": "https://www.youtube.com/watch?v=FM7Z-Xq8Drc",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/FM7Z-Xq8Drc/maxresdefault.jpg",
+  "category": "storytelling",
+  "tags": [
+   "mrbeast",
+   "ensemble",
+   "elimination",
+   "age-ladder",
+   "casting"
+  ],
+  "techniques": [
+   "cast-as-structure (ages 1–100)",
+   "persistent age badge",
+   "X / 100 people-left grid",
+   "one-line character intros",
+   "pull-quote captions",
+   "day counter",
+   "elimination X-out graphic"
+  ],
+  "breakdown": "The structure comes from the casting: one person for every age from 1 to 100, each in their own glass cube, and the last one to leave wins $500,000. The first sentence says all of it. Every contestant wears a big jersey number that matches their age, and a red age badge in the top-right corner of the frame repeats it. So the viewer always knows who they're watching and roots for an age as much as a person. Character intros are one line each ('I'm representing for 31', 'My daughter's turning three this Saturday', 'Sixty-nine'), captioned in big white words so personalities land in seconds. A grid graphic of all 100 cubes with a 'X/100 PEOPLE LEFT' counter (95, 90, ...) comes back after each round of eliminations, and drop-outs are crossed off with a red X. Scene detection finds about 104 cuts in the first 150 seconds, a shot every 1.4 s, as the edit cycles through many faces. It works because the ages create instant contrast (a toddler beside a 100-year-old) and natural storylines. To apply it, pick a casting rule that makes everyone comparable, show each person's label on screen at all times, and return to a single scoreboard graphic between beats.",
+  "durationHint": "25:35",
+  "group": "edit"
+ },
+ {
+  "id": "gordon-ramsay-reacts-pot-noodle-wellington",
+  "title": "Gordon Ramsay Reacts to Lazy Pot Noodle Beef Wellington #shorts",
+  "by": "Lazy Pot Noodle (with Gordon Ramsay duet)",
+  "year": 2023,
+  "url": "https://www.youtube.com/shorts/z03yqFDluuw",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/z03yqFDluuw/maxresdefault.jpg",
+  "category": "storytelling",
+  "tags": [
+   "gordon-ramsay",
+   "duet",
+   "reaction",
+   "split-screen",
+   "cooking"
+  ],
+  "techniques": [
+   "vertical split-screen duet",
+   "reaction top / source bottom",
+   "running commentary as narration",
+   "expectation flip (doubt → praise)",
+   "source speed-ups",
+   "payoff cross-section reveal"
+  ],
+  "breakdown": "This is the TikTok duet format that made Gordon Ramsay's 'Ramsay Reacts' series a hit, reposted by the creator whose video he duetted. The frame is split horizontally: Ramsay's face fills the top half and the original dorm-room cooking video runs in the bottom half. His live commentary is effectively the narration of someone else's footage. The story is an expectation flip. He starts out skeptical ('Oh no, stop it... this is not a dorm room Wellington'), is gradually won over by each step (searing the fillet, mustard, a mushroom duxelles made in a blender, prosciutto, pastry in a toaster oven), and the final cut through the Wellington shows a pink center, the payoff the whole minute builds to. Scene detection finds about 26 cuts in 60 seconds, mostly from the cooking video's own jump cuts, while the reaction half stays continuous. It works because the viewer gets two stories at once (the dish and Ramsay's verdict), and his reputation for harshness makes every compliment feel earned. To apply it, pair source footage with a reactor whose opinion carries stakes, keep the reaction continuous so emotion reads, and make sure the source ends on a visual verdict.",
+  "durationHint": "1:00",
+  "group": "edit"
+ },
+ {
+  "id": "every-frame-a-painting-edgar-wright-visual-comedy",
+  "title": "Edgar Wright - How to Do Visual Comedy",
+  "by": "Every Frame a Painting",
+  "year": 2014,
+  "url": "https://www.youtube.com/watch?v=3FOzD4Sfgag",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/3FOzD4Sfgag/maxresdefault.jpg",
+  "category": "storytelling",
+  "tags": [
+   "every-frame-a-painting",
+   "edgar-wright",
+   "visual-comedy",
+   "video-essay",
+   "editing"
+  ],
+  "techniques": [
+   "contrarian thesis open",
+   "examples as evidence montage",
+   "fast-cut transitions (Wright style)",
+   "sound-led cuts",
+   "bad example vs good example",
+   "chapter-like rule list"
+  ],
+  "breakdown": "Tony Zhou opens with a contrarian claim, that modern American comedies have lost the use of picture and sound to deliver jokes, and then proves it by contrast. A montage of flat shot-reverse-shot dialogue scenes from big-studio comedies, all medium close-ups of people talking, plays against Edgar Wright's films ('Shaun of the Dead', 'Hot Fuzz', 'Scott Pilgrim'), where the joke lives in the framing, the cut or the sound. The essay catalogs Wright's tools: jokes that happen in the edit (a hard cut that undercuts a line), frame-edge entrances and exits, quick-cut montages of mundane actions (a pint pulled, a taxi light snapping on, a door) with exaggerated sound, and transitions that carry momentum from scene to scene. The essay itself is cut in that style, about 65 cuts in the first 150 seconds, with the montage examples fastest. It works because every claim gets an immediate clip that shows it, and the 'boring vs. Wright' comparison makes the principle obvious. To apply it, deliver a joke or point through a cut, a framing choice or a sound effect, not only through dialogue, and compress routine actions into rhythmic quick-cut montages with big foley.",
+  "durationHint": "7:59",
+  "group": "edit"
+ },
+ {
+  "id": "mrbeast-1000-blind-people-see",
+  "title": "1,000 Blind People See For The First Time",
+  "by": "MrBeast",
+  "year": 2023,
+  "url": "https://www.youtube.com/watch?v=TJ2ifmkGGus",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/TJ2ifmkGGus/maxresdefault.jpg",
+  "category": "storytelling",
+  "tags": [
+   "mrbeast",
+   "philanthropy",
+   "emotional",
+   "reaction",
+   "progress-counter"
+  ],
+  "techniques": [
+   "premise in first line",
+   "POV blur simulation",
+   "X / 1000 cured counter",
+   "reaction-first editing",
+   "pull-quote captions",
+   "explainer insert (10-minute surgery)",
+   "cut every ~1.1 s"
+  ],
+  "breakdown": "The first sentence is the whole promise ('In this video, we're curing 1,000 people's blindness'), followed by a drone shot of the crowd to show scale. Then a narrator explains the problem in two shots: 'Most of us see the world like this' (a clear shot), 'but 200 million people see the world like this' (the same shot blurred), a POV simulation that makes the stakes visible. The body is a chain of reveals, each built the same way: bandage removed, a close-up of the face, a quote caption pulled from what they say ('I CAN SEE EVERYTHING!', 'I DON'T NEED THESE!'), and a running counter, '2/1000 PEOPLE CURED', '23/1000', '78/1000'. A short medical insert ('A 10 MINUTE SURGERY' over a macro of an eye) explains why it's possible, which heads off skepticism. Scene detection finds about 132 cuts in the first 150 seconds, a shot every 1.1 s. It works because the emotional beat repeats with variation and the counter shows progress toward a huge number. To apply it, for impact stories, simulate the problem from the subject's POV, then repeat a tight reveal-and-reaction unit with a visible tally.",
+  "durationHint": "8:01",
+  "group": "edit"
+ },
+ {
+  "id": "every-frame-a-painting-f-for-fake-structure",
+  "title": "F for Fake (1973) - How to Structure a Video Essay",
+  "by": "Every Frame a Painting",
+  "year": 2015,
+  "url": "https://www.youtube.com/watch?v=1GXv2C7vwX0",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/1GXv2C7vwX0/maxresdefault.jpg",
+  "category": "storytelling",
+  "tags": [
+   "every-frame-a-painting",
+   "orson-welles",
+   "video-essay",
+   "structure",
+   "editing"
+  ],
+  "techniques": [
+   "fake-out false start",
+   "film clips as dialogue partner",
+   "stated thesis then demonstrated",
+   "structural breakdown on screen",
+   "self-referential editing",
+   "clip interjections"
+  ],
+  "breakdown": "Tony Zhou's essay on Orson Welles' 'F for Fake' starts by imitating the film it analyzes. His own intro is interrupted by clips from the movie answering him ('Time for a confession?' 'Yeah, time for a confession'), then he cuts himself off ('Wait, sorry, I'm doing this wrong. Can we start over?'). That playful false start mirrors Welles' trickery and tells the viewer the essay will show its ideas, not just state them. He then makes his claim plainly ('Everything I know about editing, I learned from this film') and narrows to one lesson: how to structure an argument so each point builds on the last. Welles' clips are cut in as interjections that finish Tony's sentences, a technique he openly credits to the film. Scene detection finds about 52 cuts in the first 150 seconds. The short runtime (4.5 minutes) is part of the lesson: one idea, demonstrated, then stop. It works because the form matches the content, so the viewer learns structure by experiencing it. To apply it, in an essay, let your sources 'answer' your narration by cutting their lines directly against yours, and state one thesis early, then demonstrate it.",
+  "durationHint": "4:31",
+  "group": "edit"
+ },
+ {
+  "id": "kevin-parry-hidden-patterns-tropical-fruit",
+  "title": "Hidden Patterns Inside Tropical Fruit w/ Making Of",
+  "by": "Kevin Parry",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=QVbHRL0rRig",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/QVbHRL0rRig/maxresdefault.jpg",
+  "category": "storytelling",
+  "tags": [
+   "kevin-parry",
+   "stop-motion",
+   "making-of",
+   "result-then-process",
+   "satisfying"
+  ],
+  "techniques": [
+   "finished piece first",
+   "solid-color background per item",
+   "stop-motion layer reveals",
+   "'making of' second act",
+   "time-lapse process shots",
+   "bookend return to result"
+  ],
+  "breakdown": "The video uses the strongest structure for craft content: finished result first, then how it was made. The first act is a short stop-motion piece in which tropical fruits (dragon fruit, kiwi, pineapple, papaya, pomegranate, coconut, guava) appear one at a time on bold solid-color backgrounds (yellow, mint, pink, peach) and 'open' layer by layer to reveal their interior patterns. Each fruit is a tiny reveal, and the background color changes from shot to shot like a beat. Then it hard-cuts to the 'making of': wide handheld shots of Kevin at a cluttered desk cutting thin slices with knives, tweezers and scissors, a light ring visible on the blue cutting mat, and fragments being photographed one at a time. That reveals the patience behind every two-second shot. It ends by bookending back to the polished fruit on color. Scene detection finds about 38 cuts in the first 150 seconds. It works because the result creates wonder, the process creates respect, and the return to the result lets the viewer see it differently. To apply it, put your best finished output first, follow it with a fast but honest process montage, and close by replaying the result.",
+  "durationHint": "3:07",
+  "group": "edit"
+ },
+ {
+  "id": "dramatic-look-chipmunk",
+  "title": "Dramatic Look",
+  "by": "magnets99",
+  "year": 2007,
+  "url": "https://www.youtube.com/watch?v=y8Kyi0WNg40",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/y8Kyi0WNg40/hqdefault.jpg",
+  "category": "sound-design",
+  "tags": [
+   "meme",
+   "dramatic-chipmunk",
+   "sting",
+   "zoom",
+   "2007"
+  ],
+  "techniques": [
+   "music sting on head turn",
+   "crash zoom / punch-in",
+   "5-second runtime",
+   "freeze-like hold at end",
+   "borrowed dramatic score",
+   "loopability"
+  ],
+  "breakdown": "The 2007 'Dramatic Look' clip, a prairie dog (widely called the 'Dramatic Chipmunk') turning its head toward camera, is one of YouTube's earliest viral videos and shows the whole power of a sound sting in five seconds. The footage itself is trivial: an animal on a toy set turns its head. The edit adds just two things. A sudden punch-in from a wide to an extreme close-up of the face (the one cut, at about 5.3 s in this upload), and an ominous orchestral horror sting ('dun dun DUNNN') timed to the turn. The final frame holds on the staring face as the chord resolves. Sound and zoom together turn a neutral movement into something melodramatic, and the mismatch is the joke. It is so short that it loops, and it became a reaction image used everywhere for 'shocking' moments. For editors the lesson is basic and reusable: a hard zoom plus a musical sting on the same frame tells the audience to read a moment as dramatic. Use it to land a reveal, or deliberately against the content for comedy.",
+  "durationHint": "0:06",
+  "group": "edit"
+ },
+ {
+  "id": "to-be-continued-meme-compilation",
+  "title": "To Be Continued Meme Compilation 2018 🔥 | ЛУЧШИЙ СБОРНИК МЕМОВ 2018 🔥",
+  "by": "ArtOfFun (compilation)",
+  "year": 2018,
+  "url": "https://www.youtube.com/watch?v=ZLrGJRUs9Vw",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/ZLrGJRUs9Vw/maxresdefault.jpg",
+  "category": "sound-design",
+  "tags": [
+   "meme",
+   "freeze-frame",
+   "jojo",
+   "roundabout",
+   "cliffhanger"
+  ],
+  "techniques": [
+   "music pre-lap before the freeze",
+   "freeze frame on impact",
+   "sepia/yellow tint",
+   "'To Be Continued' arrow overlay",
+   "cut before the payoff",
+   "anime-ending pastiche"
+  ],
+  "breakdown": "The 'To Be Continued' meme reuses the ending of the 'JoJo's Bizarre Adventure' anime: a clip plays, the guitar intro of Yes's 'Roundabout' fades in as a pre-lap a few seconds before something goes wrong, and on the frame just before impact (a fall, a crash, a slap) the image freezes and turns sepia-yellow. A hand-drawn arrow reading 'To Be Continued' slides in at the bottom-left. This compilation strings dozens of them together, and the grammar never changes, which is why it works as a meme. The pre-lap tells the audience something is coming, and the freeze withholds the payoff at the peak of tension. The audio-level scan shows dips at clip boundaries, where the riff cuts out abruptly before the next clip. The comedy comes from the gap between the cliffhanger treatment and the everyday accidents it's applied to. For editors the transferable idea is that bringing music in early plants anticipation, and freezing before the result lets the audience imagine it, which is often funnier or more tense than showing it. Use a pre-lap sting plus a freeze for cliffhangers, end-of-part teasers or chapter breaks.",
+  "durationHint": "6:00",
+  "group": "edit"
+ },
+ {
+  "id": "curb-your-enthusiasm-meme-compilation",
+  "title": "curb your meme compilation",
+  "by": "yashsrr (compilation)",
+  "year": 2020,
+  "url": "https://www.youtube.com/watch?v=WL0RR-qMDPg",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/WL0RR-qMDPg/maxresdefault.jpg",
+  "category": "sound-design",
+  "tags": [
+   "meme",
+   "curb-your-enthusiasm",
+   "awkward",
+   "outro",
+   "freeze-frame"
+  ],
+  "techniques": [
+   "hard cut to theme on awkward beat",
+   "freeze or slow zoom on face",
+   "black end credit card",
+   "sound-led punchline",
+   "silence before the sting",
+   "compilation pacing"
+  ],
+  "breakdown": "The 'Curb Your Enthusiasm' meme takes any awkward moment (a prom-ask in a car, a confused man-on-the-street interview, a mishap in a backyard) and, on the most uncomfortable frame, cuts to the show's jaunty theme music. Usually there is a slow push-in or freeze on someone's face, then a black card with the show's credit ('Executive Producer LARRY DAVID') in the original's font. The frames in this compilation show that sequence repeatedly: candid footage, a lingering punch-in on a reaction, then the black credit frame. The audio-level trace shows brief dips to near-silence at several clip ends, the dead air of the awkward beat before the theme kicks in. The theme does the commentary: it tells the audience 'this is cringe comedy' without a single word. It works because a well-known sound cue carries meaning that the footage alone doesn't. For editors the transferable rule: end a scene on the reaction, not the action, leave a beat of silence, then let one recognizable sound or music cue be the punchline. It's the same mechanism as a rimshot or a record scratch.",
+  "durationHint": "6:28",
+  "group": "edit"
+ },
+ {
+  "id": "eclectic-method-wolf-of-wall-street-chest-thump",
+  "title": "The Wolf of Wall Street (Eclectic Method Chest Thump Mix)",
+  "by": "Eclectic Method",
+  "year": 2014,
+  "url": "https://www.youtube.com/watch?v=XR9-y4u9mew",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/XR9-y4u9mew/maxresdefault.jpg",
+  "category": "music-video",
+  "tags": [
+   "eclectic-method",
+   "remix",
+   "film-dialogue",
+   "stutter-edit",
+   "audiovisual-sampling"
+  ],
+  "techniques": [
+   "dialogue re-cut as rhythm",
+   "stutter/repeat edits",
+   "picture locked to sampled audio",
+   "chest-thump chant as hook",
+   "white flash frames",
+   "build to group chant"
+  ],
+  "breakdown": "Eclectic Method turns scenes from 'The Wolf of Wall Street' into a dance track by sampling the film's dialogue and sound, with the picture always cut to match. The core hook is Matthew McConaughey's lunch-table chest-thump hum, repeated as a beat loop. Every time it plays, the shot of him thumping his chest plays too, so the viewer sees the drum. Lines are chopped into stutters ('time... time...') with the same frames repeating in sync, a visual stutter edit. Scene detection finds about 73 cuts in 150 seconds, with clusters of very short cuts (0.1–0.4 s) on stutters and longer holds on full phrases. A white flash frame marks a section change, and the climax builds to the trading-floor crowd chanting, the visual equivalent of a drop. It works because audio and picture are locked together, so recognizable movie moments become instruments. To apply it, choose one repeatable sound-and-gesture as the loop, show its source every time it plays, stutter lines with matching frame repeats, and save the biggest crowd shot for the drop.",
+  "durationHint": "2:49",
+  "group": "edit"
+ },
+ {
+  "id": "kendrick-lamar-humble",
+  "title": "Kendrick Lamar - HUMBLE.",
+  "by": "Kendrick Lamar (dir. Dave Meyers & the little homies)",
+  "year": 2017,
+  "url": "https://www.youtube.com/watch?v=tvTRZJ-4EyI",
+  "platform": "youtube",
+  "thumb": "https://i.ytimg.com/vi/tvTRZJ-4EyI/maxresdefault.jpg",
+  "category": "music-video",
+  "tags": [
+   "kendrick-lamar",
+   "dave-meyers",
+   "tableau",
+   "split-screen",
+   "2017"
+  ],
+  "techniques": [
+   "tableau vignettes",
+   "symmetrical one-point framing",
+   "split-screen 'before/after' panels",
+   "cuts on bar changes",
+   "fisheye and top-down inserts",
+   "credits in serif on black"
+  ],
+  "breakdown": "Directed by Dave Meyers and the little homies, the 'HUMBLE.' video is a sequence of striking, mostly symmetrical tableaux, each lasting a few bars. It opens on 'TDE PRESENTS' and 'DIRECTED BY DAVE MEYERS' in serif over a dark, light-shafted room with a robed Kendrick, which gives it a cinematic, almost religious tone. Then it cycles through images that each read as a single poster: a Last Supper parody table, a field of identical bald heads around him, a row of men with flaming heads, a top-down shot of him lying on money, a fisheye shot on a car roof in the LA River. The most-discussed device is a split-screen panel layout for the 'show me something natural' lines, with photos set side by side in film-strip frames, which puts the lyric's argument into the layout. Scene detection finds about 66 cuts in 150 seconds, with cuts placed on bar and phrase changes so each tableau gets a full lyrical thought. It works because each shot is designed to be screenshot-worthy, and the rhythmic cutting lets each image hold just long enough. To apply it, design a handful of bold, centered compositions, give each one a lyrical phrase, and cut on phrase boundaries rather than every beat.",
+  "durationHint": "3:04",
+  "group": "edit"
  }
 ]

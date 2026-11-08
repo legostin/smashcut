@@ -66,14 +66,26 @@ def build(ctx):
     s3.dolly(cam, (0.6, -4.8, 1.2), 0, ctx.duration, 'outCubic')
 `;
 
-export function createScene3d(o: { id: string; name?: string; duration?: number; transparent?: boolean; code?: string; params?: Record<string, unknown> }) {
+/** ready-made studio scenes (runtime/blender/kits/<name>.py) a new scene can start from */
+const KITS_DIR = path.join(ROOT, 'runtime', 'blender', 'kits');
+export function listKits3d(): string[] {
+  return fs.existsSync(KITS_DIR) ? fs.readdirSync(KITS_DIR).filter((f) => /^[a-z0-9_]+\.py$/.test(f)).map((f) => f.slice(0, -3)).sort() : [];
+}
+function kitCode(kit: string): string {
+  if (!listKits3d().includes(kit)) throw uerr('Unknown 3D kit: {kit} (available: {list})', { kit, list: listKits3d().join(', ') });
+  return fs.readFileSync(path.join(KITS_DIR, kit + '.py'), 'utf8');
+}
+
+export function createScene3d(o: { id: string; name?: string; duration?: number; transparent?: boolean; code?: string; kit?: string; params?: Record<string, unknown> }) {
   const id = safeId(o.id);
+  const kitSrc = o.kit && !o.code ? kitCode(o.kit) : null; // validate before touching the folder
   const dir = dirOf(id);
   fs.mkdirSync(dir, { recursive: true });
   const prev = readJson<Scene3D | null>(path.join(dir, 'manifest.json'), null);
   const m: Scene3D = { ...(prev || {}), id, name: o.name || prev?.name || id, duration: o.duration ?? prev?.duration ?? 5, transparent: o.transparent ?? prev?.transparent ?? false, params: o.params ?? prev?.params ?? {}, updatedAt: new Date().toISOString() };
   writeJson(path.join(dir, 'manifest.json'), m);
-  if (o.code || !fs.existsSync(path.join(dir, 'scene.py'))) fs.writeFileSync(path.join(dir, 'scene.py'), o.code || SKELETON(m.name));
+  // code wins; a kit (re)starts scene.py from that studio scene; otherwise the skeleton for a new scene
+  if (o.code || kitSrc || !fs.existsSync(path.join(dir, 'scene.py'))) fs.writeFileSync(path.join(dir, 'scene.py'), o.code || kitSrc || SKELETON(m.name));
   return getScene3d(id);
 }
 

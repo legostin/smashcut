@@ -23,6 +23,84 @@ A 3D scene is `scenes3d/<id>/scene.py` with a `build(ctx)` function using `studi
 
 Keep `mock` cheap: branch on `ctx.quality` (skip high-poly imports, heavy modifiers, particles, bevel segments) — the camera and timing must stay identical across stages.
 
+## Studio kit — start every shot from a preset
+
+Don't light from scratch. `s3.studio(kind)` builds a complete, tuned set (backdrop, lights in W with colour temperatures, reflection probe/cards, world HDRI from Blender's bundled studio lights, colour management, EEVEE raytracing hints) in one call. Subject at the origin standing on the floor (z = 0), about 1–1.5 m tall, facing −Y (the camera side).
+
+| preset | look | use it for |
+|---|---|---|
+| `white_cyc` | seamless white cyclorama, big softbox key + top + wall wash, soft contact shadows (PBR Neutral: whites white, brand colours true) | clean Apple-style packshots, devices, anything "premium-minimal" |
+| `dark_luxe` | near-black seamless, halo on the wall (accent-tinted), flagged rim strips, satin reflective floor, front reflection card (AgX) | logo/word reveals in chrome/gold, luxury products, dark brands |
+| `product_softbox` | classic 3-point: big softbox key, fill, two strip rims, grey sweep (PBR Neutral) | glossy/curved products — long strip highlights; neutral e-commerce look |
+| `neon` | dark set, two coloured strips (`accent` / `accent-2`), coloured glows, wet floor; `tubes=True` visible neon tubes, `haze_density` volumetric haze (AgX Punchy) | tech/gaming/night energy, chrome objects |
+| `sunset_window` | warm low sun through a window (window-pattern shadows on wall + floor), sunset HDRI fill | lifestyle: desk, mug, laptop, cosmetics |
+| `daylight` | neutral high sun through a window, courtyard HDRI fill | editorial / lifestyle, brighter |
+| `abstract_void` | infinite radial gradient void from `bg` + a touch of `accent`, soft key + accent-tinted rims (PBR Neutral); `floor='gloss'` adds a reflective stage | floating type, logos, abstract objects that must sit on the HTML clips' background colour |
+
+```python
+st = s3.studio('white_cyc', accent='accent', accent2='accent-2', backdrop=None,  # tokens / '#hex' / linear tuples
+               floor=None,             # 'matte' | 'gloss' | 'mirror' (preset default otherwise)
+               size=1.0, z=0.0,        # scale the whole set (lights, energies) for bigger subjects; floor height
+               exposure=None, view=None, look=None,   # override colour management (else preset)
+               hdri=None, hdri_strength=None, key_side='left', cards=True,
+               haze_density=None, tubes=False, void=None)   # neon / abstract_void extras
+st.lights['key'].data.energy *= 1.2     # names: key, fill, top, bg, rim, rim_l, rim_r, halo, a, b, glow_a, glow_b, sun, bounce, sky, rim_a, rim_b
+st.dim(0.8); st.backdrop; st.extras['probe']
+```
+Then adjust, don't rebuild: move a light, change its energy, swap a material. `s3.flag(light, obj)` keeps a light off an object (light linking — the black flag of a real studio; presets already flag rims off the floor so there are no light pools). `s3.card(location, target, size, strength, color)` adds a reflection board (only reflections see it) when chrome/gold looks black. `s3.render_hints(exposure=…, view='AgX', look='AgX - Punchy', raytracing=True, samples_look=48…)` changes the per-stage render settings; params `view` / `look` / `exposure` in the scene manifest override at render time.
+
+### Elements
+
+```python
+pod = s3.podium('cylinder' | 'rounded' | 'stepped' | 'pill', radius=0.7, height=0.25, material=None)  # pod['top'] = z of its top; material follows the preset
+s3.turntable_rig([obj, pod], turns=0.25 | speed=30 (deg/s), t0=0, t1=None, start=-20, ease='inOutSine')  # → pivot empty
+s3.reflective_floor(color, rough=0.12)                           # glossy plane + planar probe (cyc presets: floor='gloss' instead)
+s3.rounded_cylinder(r, depth, round, location, material=…)      # bottles, cans, pucks;  s3.bevel(obj, width) rounds any mesh
+phone = s3.phone(screen='media/ui.png' | 'media/demo.mp4' | None, height=1.6, location=(0, 0, pod['top']), frame='satin_metal', back='#2a2a2e')
+s3.tablet(screen=…, height=1.6, landscape=False);  lap = s3.laptop(screen=…, width=2.0, open=105)
+s3.key(s3.child(lap, 'hinge'), 'rotation_euler', t, (-angle, 0, 0))   # open the lid; parts: 'screen', 'body', 'camera', 'hinge', 'lid'
+s3.screen_material(source, aspect=w/h)                           # cover-fit image/video, glossy glass on top; None → gradient wallpaper in accents
+t = s3.title('LAUNCH', size=0.5, depth=0.12, family='inter', weight=800, material=s3.material('chrome'), tracking=0.04)
+s3.logo('media/logo.svg', height=0.6, depth=0.08, material=s3.material('gold'))
+m = s3.material('glossy_plastic', 'accent')   # glossy_plastic matte_plastic matte satin ceramic clay rubber fabric brushed_metal
+                                              # satin_metal anodized chrome gold rose_gold glass frosted_glass black_glass emissive floor
+                                              # overrides: rough, metal, coat, spec, sheen, transmission, ior, emissive=strength
+```
+Fonts: `family` = bundled inter, manrope, space-grotesk, unbounded, bebas-neue, playfair-display, jetbrains-mono (any weight that exists), or `font_path='media/Brand.otf'`.
+
+### Framing & camera rigs (16:9 and 9:16 from the same code)
+
+```python
+cam = s3.frame([pod, phone], margin=0.1, direction=(0, -1, 0.25), lens=60, offset=(-0.2, 0))  # hero framing for the project aspect; offset = room for copy
+s3.rig_dolly(subject, push=1.25, lens=60, direction=(0, -1, 0.25), margin=0.1)     # dolly-in that ENDS on hero framing (push<1 = out)
+s3.rig_orbit(subject, start=-115, end=-65, lens=55, elevation=12)                   # rotation-safe distance
+s3.rig_crane(subject, low=2, high=35)                                               # rises, keeps the subject framed
+s3.rig_push_focus(subject, focus_from=a, focus_to=b, fstop=2.0)                     # slow push + focus pull (DOF)
+s3.fit_distance(objs, lens, direction, margin) / s3.bounds(objs)                   # the maths, if you need it
+```
+Frame the FINAL pose, then add the animation keys (the kits do it that way). Framing reads the aspect from the project, so a vertical project gets a width-fitted camera automatically.
+
+### Kit scenes — copy one and edit
+
+`create_3d_scene {id, kit:'<name>', params:{…}}` writes `runtime/blender/kits/<name>.py` into scenes3d/<id>/scene.py — a lit, framed, animated shot to tune (params) or edit.
+
+| kit | preset | shot | params |
+|---|---|---|---|
+| `product_hero` | white_cyc | glossy product (stand-in bottle — swap in `s3.import_model`) on a podium, slow turn + dolly-in | preset, color, label, turns, podium |
+| `logo_reveal` | dark_luxe | chrome/gold word or SVG logo rises and turns in, rims sweep up, push-in | text, svg, material, family, weight |
+| `phone_podium` | product_softbox | phone on a stepped podium swinging ±40°, screen = project image/video | screen, frame, back, swing, preset |
+| `floating_type` | abstract_void | words at different depths pop in and drift, push-in with a focus pull | words, accent_word, family, weight |
+| `neon_object` | neon | chrome ring + orb between neon tubes, wet floor, haze, orbit | tubes, haze, ring, orb |
+| `lifestyle_window` | sunset_window | laptop opens on a desk next to a mug and books in window light | preset ('daylight'), screen, mug |
+
+### Rules
+- Start from a preset (or a kit), then adjust. Never stack extra lights to "fix" a preset — change energies/positions, or switch preset.
+- Colours come from tokens: `accent`, `accent-2`, `bg`, `surface`, `text` (missing tokens fall back to neutral defaults). For a shot that must sit on the HTML background, use `abstract_void` (its void is built from `bg`).
+- Keep `mock` cheap: presets/devices already skip HDRI, probes, cards, haze, the window gobo and bevel segments in mock; do the same with your own heavy stuff (`if ctx.quality == 'mock'`). Camera & timing stay identical across stages.
+- Look renders ≈ 1.5–2 s per 1080p frame; final ≈ 3–8 s (EEVEE raytracing + jittered soft shadows).
+- Chrome/gold look black → it reflects a dark world: add `s3.card(...)` in front, or use dark_luxe/neon which have cards.
+- EEVEE ignores light `spread`; use `s3.flag` to keep light off surfaces. Cycles (`params.engine='cycles'`) works with every preset; the first Cycles render on a machine compiles GPU kernels (minutes) — after that it's fast.
+
 ## Helpers (time is always in seconds)
 
 ```python
@@ -30,7 +108,7 @@ import studio3d as s3
 
 def build(ctx):                       # ctx.fps, ctx.duration, ctx.width/height, ctx.vertical, ctx.quality, ctx.params
     s3.world(ctx.color('bg'))         # design-system colours: 'bg','surface','text','muted','accent','accent-2'
-    s3.light_rig('studio')            # 'studio' | 'soft' | 'dramatic'; or s3.light('AREA', energy, location, target)
+    s3.light_rig('studio')            # basic rigs ('studio' | 'soft' | 'dramatic') — prefer s3.studio(...) above
     s3.floor(s3.mat(ctx.color('bg'), rough=0.6), z=-0.6)          # shadow_catcher=True (Cycles) for alpha shots
     m = s3.mat(ctx.color('accent'), rough=0.3, metal=0.0)        # emission=…, emission_strength=…, transmission=1 (glass)
     box = s3.rounded_box((0.75, 0.08, 1.55), radius=0.09, material=m)
@@ -55,7 +133,7 @@ Easings: linear, in/out/inOut × Sine, Quad, Cubic, Quart, Expo, plus outBack, i
 ## Look good, fast
 
 - Units are metres. Hero objects 0.5–2 m, camera 4–8 m away, lens 35–85 mm (product: 50–85; wide drama: 24–35). In 9:16, frame tighter and keep the hero in the middle 60% of the height.
-- Light: key + fill + rim (`light_rig('studio')`). A rim light separates dark objects from dark backgrounds. Area lights energy 200–1500 W at these distances.
+- Light: start from `s3.studio(...)`. A rim light separates dark objects from dark backgrounds. Area lights 200–1500 W at these distances; `s3.softbox` / `s3.strip` (kelvin=…) for extra sources.
 - Colour comes from `ctx.color(...)` so 3D matches the HTML clips; colours are converted to linear for you. Use one accent; keep backgrounds desaturated.
 - Motion: one main move per shot (a slow dolly or orbit with `inOutSine`/`outCubic`) plus object secondary motion. Hold the final pose ≥ 0.5 s for a cut.
 - Bevel everything you'd see in real life (`rounded_box`, `text3d(bevel=…)`): sharp CG edges look cheap. Rounded box radius is clamped to half the thinnest side.
