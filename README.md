@@ -87,11 +87,11 @@ Projects are git repositories (every agent task is a commit, undo/redo), several
 | Exact text, numbers, charts, logos | **Yes (code)** | Yes (code) | Often garbled | Hard | Yes |
 | Edit one detail without regenerating | **Yes** | Yes | No | Partly | Yes |
 | Whole video: script, music, voice, edit | **Yes** | DIY | Clips only | DIY | Manual |
-| Photoreal footage generation | Planned (APIs) | No | **Yes** | **Yes** | No |
+| Photoreal footage generation | **Yes (fal.ai, Runway, Replicate, Higgsfield, OpenAI, Google, ComfyUI — your keys)** | No | **Yes** | **Yes** | No |
 | Runs locally, your subscription | **Yes** | Yes | Cloud credits | Yes (GPU) | Subscription |
 | Open source | **MIT** | Source-available license | No | GPL | No |
 
-Smashcut is not a replacement for footage generators — it is the studio around them: generated shots are planned as the next integration, so agents can choose between filming (generators) and building (code) per scene.
+Smashcut is not a replacement for footage generators — it is the studio around them: agents call your footage generators (with a daily budget) and choose per scene between generating a shot and building it in code — then edit, track, caption and score it like any other footage.
 
 ## FAQ
 
