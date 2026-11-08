@@ -1,6 +1,6 @@
 {
   "name": "smashcut-studio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Smashcut — open-source AI video production studio. Your AI crew (Claude Code / Codex agents) writes the script and makes motion graphics, music, voice-over, 3D (Blender), tracking and the edit. Local-first, code-based, MCP.",
   "keywords": [
     "ai-video-editor",
