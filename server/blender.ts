@@ -78,6 +78,8 @@ export function createScene3d(o: { id: string; name?: string; duration?: number;
 }
 
 const jobs = new Map<string, Render3DJob>();
+/** running Blender processes by job id (a newer render of the same scene/quality/mode supersedes the running one) */
+const procs = new Map<string, ReturnType<typeof spawn>>();
 export const listJobs3d = () => { const id = cur().id; return [...jobs.values()].filter((j) => j.project === id).slice(-20); };
 const emit = (j: Render3DJob) => bus.send({ type: 'render3d', job: { ...j } } as any);
 
@@ -93,12 +95,26 @@ export function render3d(id: string, o: { quality?: Quality; mode?: 'stills' | '
   const quality: Quality = o.quality || 'mock';
   const mode = o.mode || 'animation';
   const p = store.project;
+  // two renders of the same scene & stage must never share frames: the newer one wins, the older one is stopped
+  for (const j of jobs.values()) {
+    if (j.project === store.id && j.sceneId === id && j.quality === quality && j.mode === mode && j.status === 'running') {
+      j.status = 'error'; j.error = 'Superseded by a newer render of this scene'; j.endedAt = new Date().toISOString();
+      procs.get(j.id)?.kill('SIGTERM');
+      emit(j);
+    }
+  }
   const job: Render3DJob = { id: 'b' + nid(), project: store.id, sceneId: id, quality, mode, status: 'running', progress: 0, startedAt: new Date().toISOString() };
   jobs.set(job.id, job);
   emit(job);
-  const work = store.p('.studio', '3d', id, `${quality}-${mode}`);
-  fs.rmSync(work, { recursive: true, force: true });
+  // a work folder per job (frames of concurrent or earlier renders can't mix in), removed when the job ends
+  const root3d = store.p('.studio', '3d', id);
+  const work = path.join(root3d, `${quality}-${mode}-${job.id}`);
   fs.mkdirSync(work, { recursive: true });
+  // folders of the old layout (shared per stage) or of crashed jobs
+  for (const d of fs.existsSync(root3d) ? fs.readdirSync(root3d) : []) {
+    const owner = /-(b[a-z0-9]+)$/.exec(d)?.[1];
+    if (d !== path.basename(work) && d.startsWith(`${quality}-${mode}`) && (!owner || jobs.get(owner)?.status !== 'running')) fs.rmSync(path.join(root3d, d), { recursive: true, force: true });
+  }
   const spec = {
     scene: path.join(dirOf(id), 'scene.py'), outDir: work, mode, quality, fps: p.fps, duration: manifest.duration,
     width: p.width, height: p.height, transparent: !!manifest.transparent, times: o.times, params: manifest.params || {},
@@ -107,6 +123,7 @@ export function render3d(id: string, o: { quality?: Quality; mode?: 'stills' | '
   writeJson(path.join(work, 'job.json'), spec);
   const done = new Promise<Render3DJob>((resolve) => {
     const proc = spawn(bin, ['-b', '--factory-startup', '--python', RUNNER, '--', path.join(work, 'job.json')], { cwd: store.dir });
+    procs.set(job.id, proc);
     let log = '';
     const onData = (b: Buffer) => {
       const s = b.toString(); log = (log + s).slice(-8000);
@@ -114,6 +131,8 @@ export function render3d(id: string, o: { quality?: Quality; mode?: 'stills' | '
     };
     proc.stdout.on('data', onData); proc.stderr.on('data', onData);
     proc.on('close', async (code) => {
+      procs.delete(job.id);
+      if (job.status !== 'running') { fs.rmSync(work, { recursive: true, force: true }); resolve(job); return; } // superseded
       try {
         if (code !== 0 || !/STUDIO3D done/.test(log)) {
           const err = /STUDIO3D error (.*)/.exec(log)?.[1] || log.split('\n').filter((l) => /Error|Traceback|line \d+/.test(l)).slice(-6).join('\n') || `blender exited with ${code}`;
@@ -132,11 +151,18 @@ export function render3d(id: string, o: { quality?: Quality; mode?: 'stills' | '
           const name = `3d-${id}-${quality}.${alpha ? 'webm' : 'mp4'}`;
           const out = store.p('media', name);
           const fps = String(p.fps);
+          // every frame must be there, in order: ffmpeg's image sequence silently stops at the first gap
+          const expected = Math.max(1, Math.round(manifest.duration * p.fps));
+          const got = fs.readdirSync(work).filter((f) => /^\d{4}\.png$/.test(f)).map((f) => parseInt(f, 10)).sort((a, b) => a - b);
+          const firstGap = got.findIndex((n, i) => n !== i + 1);
+          if (got.length < expected || firstGap >= 0) throw uerr('Blender rendered {got} of {expected} frames (first missing: {missing}) — render again.', { got: got.length, expected, missing: firstGap >= 0 ? firstGap + 1 : got.length + 1 });
           const args = ['-y', '-v', 'error', '-framerate', fps, '-i', path.join(work, '%04d.png')];
           if (alpha) args.push('-c:v', 'libvpx-vp9', '-pix_fmt', 'yuva420p', '-b:v', '0', '-crf', quality === 'final' ? '20' : '32', '-deadline', quality === 'final' ? 'good' : 'realtime', '-cpu-used', quality === 'final' ? '2' : '8', '-auto-alt-ref', '0');
           else args.push('-vf', `scale=${p.width}:${p.height}:flags=lanczos,format=yuv420p`, '-c:v', 'libx264', '-preset', quality === 'final' ? 'slow' : 'veryfast', '-crf', quality === 'final' ? '16' : '22', '-movflags', '+faststart', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709');
-          await runOk('ffmpeg', [...args, out + '.tmp' + path.extname(out)]);
-          fs.renameSync(out + '.tmp' + path.extname(out), out);
+          const tmp = `${out}.${job.id}.tmp${path.extname(out)}`;
+          await runOk('ffmpeg', [...args, tmp]);
+          if (job.status !== 'running') { fs.rmSync(tmp, { force: true }); throw new Error(job.error || 'Superseded'); }
+          fs.renameSync(tmp, out);
           await probeMedia(name, true);
           job.output = name;
           const m = readJson<Scene3D>(path.join(dirOf(id), 'manifest.json'), manifest);
@@ -144,6 +170,7 @@ export function render3d(id: string, o: { quality?: Quality; mode?: 'stills' | '
           if (o.place !== false) await placeRender(id, name, manifest.duration, o.place || {});
         }
         job.status = 'done'; job.progress = 1;
+        fs.rmSync(work, { recursive: true, force: true }); // frames are in the media file / contact sheet now
       } catch (e) {
         job.status = 'error'; job.error = (e as Error).message.slice(0, 1200);
       }

@@ -52,7 +52,7 @@ export function Player({ project, frames, renderMode }: { project: Project; fram
       {audioItems.map((it) => {
         let src: string | undefined;
         if (it.kind === 'music') { const m = music.find((x) => x.id === it.ref); src = m?.rendered ? `${projectBase()}/${m.rendered}` : undefined; }
-        else src = `${projectBase()}/media/${encodeURIComponent(it.ref)}`;
+        else src = mediaUrl(it.ref, media);
         return src ? <AudioLayer key={it.id + src} item={it} src={src} playing={playing} muted={mutedTracks.has(it.track)} /> : null;
       })}
     </div>
@@ -146,7 +146,8 @@ function ImageLayer({ item }: { item: Item }) {
     if (!renderSync.enabled) return;
     return time.sub(() => { const el = ref.current; if (el && !el.complete) renderSync.waits.push(el.decode().catch(() => {})); });
   }, []);
-  return <img ref={ref} className="layer" src={`${projectBase()}/media/${encodeURIComponent(item.ref)}`} style={mediaStyle(item)} alt="" />;
+  const src = useMediaSrc(item.ref);
+  return <img ref={ref} className="layer" src={src} style={mediaStyle(item)} alt="" />;
 }
 
 /** render mode: show the pre-extracted JPEG frame for the current time */
@@ -248,9 +249,19 @@ function ClipFrame({ v, item, project, visible, onReady }: { v: number; item: It
   return <iframe ref={ref} className="layer clip-layer" src={src} title={item.ref} style={{ visibility: visible ? 'inherit' : 'hidden' }} />;
 }
 
+/**
+ * URL of a media file, versioned by its modification time: a file rewritten under the same name (a re-render,
+ * a replaced upload) gets a new URL, so the browser never mixes cached byte ranges of the old file with the new one.
+ */
+export function mediaUrl(file: string, media: { file: string; mtime?: number; proxy?: string }[]) {
+  const m = media.find((x) => x.file === file);
+  const v = m?.mtime ? `?v=${Math.round(m.mtime)}` : '';
+  return m?.proxy ? `${projectBase()}/${m.proxy}${v}` : `${projectBase()}/media/${encodeURIComponent(file)}${v}`;
+}
+
 function useMediaSrc(file: string) {
-  const proxy = useStore((s) => s.media.find((m) => m.file === file)?.proxy);
-  return proxy ? `${projectBase()}/${proxy}` : `${projectBase()}/media/${encodeURIComponent(file)}`;
+  const m = useStore((s) => s.media.find((x) => x.file === file));
+  return mediaUrl(file, m ? [m] : []);
 }
 
 function VideoLayer({ item, muted, playing }: { item: Item; muted: boolean; playing: boolean }) {

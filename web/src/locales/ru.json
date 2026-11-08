@@ -840,5 +840,7 @@
   "{model} needs an input image (image=media/…): it is an image-to-{kind} model": "{model} нужен входной кадр (image=media/…): это модель image-to-{kind}",
   "{model} supports aspect {list} (got {aspect})": "{model} поддерживает соотношения {list} (передано {aspect})",
   "{model} supports resolution {list} (got {res})": "{model} поддерживает разрешения {list} (передано {res})",
-  "{provider} has no {kind} model — pass model (see list_generators)": "У {provider} нет модели {kind} — укажите model (см. list_generators)"
+  "{provider} has no {kind} model — pass model (see list_generators)": "У {provider} нет модели {kind} — укажите model (см. list_generators)",
+  "Blender rendered {got} of {expected} frames (first missing: {missing}) — render again.": "Blender отрендерил {got} из {expected} кадров (первый пропущенный: {missing}) — запустите рендер ещё раз.",
+  "Superseded by a newer render of this scene": "Заменён более новым рендером этой сцены"
 }

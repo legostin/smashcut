@@ -126,6 +126,8 @@ export interface MediaInfo {
   file: string;
   type: 'video' | 'audio' | 'image';
   duration: number;
+  /** file modification time (ms) — versions the URL so a rewritten file is never served from a stale cache */
+  mtime?: number;
   width?: number;
   height?: number;
   hasAudio?: boolean;
