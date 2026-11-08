@@ -908,5 +908,9 @@
   "Storytelling structure": "Структура истории",
   "Sound-driven edits": "Монтаж от звука",
   "Motion graphics": "Моушн-графика",
-  "3D studio kits": "3D-студии (заготовки)"
+  "3D studio kits": "3D-студии (заготовки)",
+  "Something in the interface broke": "В интерфейсе что-то сломалось",
+  "Your project is safe. This is usually a file an agent edited by hand — try again, or reload the page.": "Проект в порядке. Обычно это файл, который агент поправил вручную, — попробуйте ещё раз или перезагрузите страницу.",
+  "Try again": "Попробовать снова",
+  "Reload": "Перезагрузить"
 }

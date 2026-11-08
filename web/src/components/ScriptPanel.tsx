@@ -143,7 +143,7 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
         </button>
         <span className="grow" />
         <button className="link" onClick={() => setOpen(!open)}>{open ? t('Collapse') : t('More')}</button>
-        {sc.vo && <span className={'vo-pace' + (sc.vo.flagged ? ' warn' : '')} title={t('Voice pace: {r} syllables/s · {n} flagged', { r: sc.vo.rate.toFixed(1), n: sc.vo.flagged })}>{sc.vo.flagged ? '⚠' : '✓'} {sc.vo.rate.toFixed(1)}</span>}
+        {typeof sc.vo?.rate === 'number' && <span className={'vo-pace' + (sc.vo.flagged ? ' warn' : '')} title={t('Voice pace: {r} syllables/s · {n} flagged', { r: sc.vo.rate.toFixed(1), n: sc.vo.flagged ?? 0 })}>{sc.vo.flagged ? '⚠' : '✓'} {sc.vo.rate.toFixed(1)}</span>}
         {sc.voiceover?.trim() && !sc.speech && <button className="link" onClick={() => actions.startTask(`Prepare the speech text for scene ${n} "${sc.title}" (id ${sc.id}) following the studio-voiceover skill: update_scene {speech} with numbers/dates as words, {display|spoken}, stress marks and pauses. Don't generate the voice yet; show me the speech text.`)}>{t('Prepare speech')}</button>}
         {sc.voiceover?.trim() && <VoiceButton sc={sc} />}
         <button className="link" onClick={make}>{t('Make')}</button>
