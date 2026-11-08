@@ -1,0 +1,6 @@
+{
+  "schema": {
+    "text": { "type": "text", "label": "Text", "default": "New 3D clip" },
+    "color": { "type": "color", "label": "Color", "default": "#d4ff3a" }
+  }
+}

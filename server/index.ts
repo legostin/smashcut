@@ -78,6 +78,11 @@ serveFrom('/fonts/', () => FONTS_DIR, { 'cache-control': 'max-age=86400' });
 serveFrom('/vendor/gsap/', () => GSAP_DIST, { 'cache-control': 'max-age=86400' });
 app.get('/vendor/gsap.min.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').sendFile('gsap.min.js', GSAP_DIST));
 app.get('/vendor/Tone.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').sendFile('Tone.js', TONE_BUILD));
+// Three.js for 3D clips: /vendor/three/build/three.module.js + /vendor/three/examples/jsm/… (addons), opentype for 3D text
+const THREE_DIR = moduleDir('three');
+const OPENTYPE_DIST = path.join(moduleDir('opentype.js'), 'dist');
+serveFrom('/vendor/three/', () => THREE_DIR, { 'cache-control': 'max-age=86400' });
+app.get('/vendor/opentype.module.js', (_req, reply) => reply.header('cache-control', 'max-age=86400').type('text/javascript').sendFile('opentype.module.js', OPENTYPE_DIST));
 app.get('/api/doctor', async () => runDoctor({ serverRunning: true }));
 // project files: /p/<projectId>/… (legacy /p/… resolves through the request's project)
 app.get('/p/*', (req, reply) => {

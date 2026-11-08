@@ -237,7 +237,7 @@ function ClipFrame({ v, item, project, visible, onReady }: { v: number; item: It
       if (local < -0.5 || local > item.in + item.duration + 0.5) return;
       if (renderSync.enabled) {
         const id = ++ackSeq;
-        renderSync.waits.push(new Promise<void>((r) => { acks.set(id, r); setTimeout(r, 4000); }));
+        renderSync.waits.push(new Promise<void>((r) => { acks.set(id, r); setTimeout(r, 30000); })); // heavy WebGL frames render in software on export
         post({ type: 'seek', t: Math.max(0, local), ack: id });
       } else post({ type: 'seek', t: Math.max(0, local) });
     };

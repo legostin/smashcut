@@ -94,8 +94,8 @@ server.registerTool('lint_clip', {
 }, safe(async ({ clipId }) => text(await api('POST', '/api/agent/lint-clip', { clipId }))));
 
 server.registerTool('create_clip', {
-  description: 'Create a new empty clip package clips/<id>/ (index.html, clip.js, style.css, params.json, manifest.json) from the starter skeleton. Then edit the files.',
-  inputSchema: { id: z.string(), name: z.string(), description: z.string().optional(), duration: z.number().optional() },
+  description: 'Create a new empty clip package clips/<id>/ (index.html, clip.js, style.css, params.json, manifest.json) from the starter skeleton. Then edit the files. template "3d" = a Three.js clip (import map for three / three/addons / studio3js, clip.js as an ES module) — the default way to make 3D; Blender (create_3d_scene) only for what Three.js can\'t do well.',
+  inputSchema: { id: z.string(), name: z.string(), description: z.string().optional(), duration: z.number().optional(), template: z.enum(['2d', '3d']).optional() },
 }, safe(async (a) => text(await api('POST', '/api/clips', a))));
 
 server.registerTool('create_music', {

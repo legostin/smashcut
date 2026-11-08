@@ -1,7 +1,7 @@
 // End-to-end smoke test: boots the server in a temp sandbox, then exercises
 // project creation, every gallery template (lint + render), music render, composite frames,
 // comments API, MCP tool listing and a short export.  Run: npm test
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -139,6 +139,22 @@ try {
   await api('POST', '/api/redo');
   const afterRedo = (await api('GET', '/api/project')).items.length;
   ok('undo / redo', afterUndo === before && afterRedo === before - 1, `${before} → undo ${afterUndo} → redo ${afterRedo}`);
+
+  // ---------- 3D clip (Three.js via studio3js) ----------
+  const c3 = await api('POST', '/api/clips', { id: 'smoke3d', name: 'Smoke 3D', duration: 3, template: '3d' });
+  const at3 = (await api('GET', '/api/project')).duration + 2;
+  await api('POST', '/api/items', { kind: 'clip', ref: c3.id, start: at3, duration: 3 });
+  const f3a = await api('POST', '/api/agent/render-frame', { times: [at3 + 1.5] });
+  const f3b = await api('POST', '/api/agent/render-frame', { times: [at3 + 1.5] });
+  ok('3D clip (three.js) renders without errors', f3a.png.length > 10000 && f3a.errors.length === 0, f3a.errors.join('; '));
+  ok('3D clip is deterministic (same frame twice)', f3a.png === f3b.png);
+  {
+    // the 3D text in the accent colour must actually be drawn (not a blank WebGL canvas)
+    const raw = execFileSync('ffmpeg', ['-v', 'error', '-i', 'pipe:0', '-vf', 'scale=96:54', '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1'], { input: Buffer.from(f3a.png, 'base64'), maxBuffer: 1 << 24 });
+    let lime = 0;
+    for (let i = 0; i < raw.length; i += 3) if (raw[i + 1] > 150 && raw[i] > 120 && raw[i + 2] < 120) lime++;
+    ok('3D clip draws the scene (accent pixels)', lime > 40, `${lime} accent px of ${raw.length / 3}`);
+  }
 } catch (e) {
   failures++;
   console.error('✗ fatal:', (e as Error).message);

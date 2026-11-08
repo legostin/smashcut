@@ -261,7 +261,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '--mcp-config', mcpConfigFile(t.id),
       '--permission-mode', settings.permissionMode,
       '--permission-prompt-tool', 'mcp__studio__approve_permission',
-      '--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)',
+      '--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)', 'Bash(npm:*)', 'Bash(npx:*)', 'Bash(pnpm:*)', 'Bash(yarn:*)', 'Bash(bun:*)', 'Bash(unzip:*)', 'Bash(tar:*)',
       '--add-dir', GALLERY_DIR, LIBRARY_DIR,
       '--disallowedTools', 'Task',
       ...(settings.agentUserConfig ? [] : ['--strict-mcp-config', '--setting-sources', 'project,local']),

@@ -23,6 +23,8 @@ export const DEFAULT_TRACKS: Track[] = [
 
 const PROJECT_GITIGNORE = `.studio/
 media/
+node_modules/
+__pycache__/
 .DS_Store
 `;
 
@@ -74,6 +76,15 @@ export class ProjectStore {
 
   ensureDirs() {
     for (const d of ['clips', 'music', 'media', '.studio/cache', '.studio/exports', '.studio/tasks', '.studio/comments', '.studio/media', '.studio/frames']) fs.mkdirSync(path.join(this.dir, d), { recursive: true });
+    // agents may install npm packages / run Python in the project: keep those out of the project history
+    try {
+      const gi = path.join(this.dir, '.gitignore');
+      if (fs.existsSync(gi)) {
+        const cur0 = fs.readFileSync(gi, 'utf8');
+        const missing = ['node_modules/', '__pycache__/'].filter((l) => !cur0.split(/\r?\n/).includes(l));
+        if (missing.length) fs.writeFileSync(gi, cur0.replace(/\n?$/, '\n') + missing.join('\n') + '\n');
+      }
+    } catch { /* read-only project */ }
   }
 
   reload() {

@@ -506,9 +506,13 @@
     bbox,
   };
 
-  // safety: if clip never calls studio.clip()
-  setTimeout(() => {
-    if (!def) { reportError('clip.js never called studio.clip({...}) — syntax error or exception at load?'); def = { duration: 1 }; isReady = true; readyResolve(); post({ type: 'ready', duration: null, schema, errors }); }
-  }, 4000);
+  // safety: if clip never calls studio.clip() (ES-module clips load their imports first, e.g. Three.js: allow more time)
+  let bootChecks = 0;
+  const bootCheck = () => {
+    if (def) return;
+    if (bootChecks++ === 0 && document.querySelector('script[type="module"]')) { setTimeout(bootCheck, 16000); return; }
+    reportError('clip.js never called studio.clip({...}) — syntax error, failed import or exception at load?'); def = { duration: 1 }; isReady = true; readyResolve(); post({ type: 'ready', duration: null, schema, errors });
+  };
+  setTimeout(bootCheck, 4000);
   void nativeRaf; void nativeNow;
 })();

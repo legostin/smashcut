@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- bare imports for the 3D clip; add your own packages here (installed in the project: "../../node_modules/<pkg>/…") -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/vendor/three/build/three.module.js",
+      "three/addons/": "/vendor/three/examples/jsm/",
+      "studio3js": "/runtime/studio3js.js",
+      "opentype": "/vendor/opentype.module.js"
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="/runtime/fonts.css">
+  <link rel="stylesheet" href="/runtime/base.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="/vendor/gsap.min.js"></script>
+  <script src="/runtime/studio.js"></script>
+</head>
+<body>
+  <div id="stage"></div>
+  <script type="module" src="clip.js"></script>
+</body>
+</html>

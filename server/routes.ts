@@ -100,13 +100,13 @@ function listExports() {
   return fs.readdirSync(dir).filter((f) => /\.(mp4|mov|webm|gif)$/.test(f)).map((f) => ({ file: `.studio/exports/${f}`, size: fs.statSync(path.join(dir, f)).size, mtime: fs.statSync(path.join(dir, f)).mtimeMs })).sort((a, b) => b.mtime - a.mtime);
 }
 
-function createClipPackage(id: string, name: string, description = '', duration = 4) {
+function createClipPackage(id: string, name: string, description = '', duration = 4, template: '2d' | '3d' = '2d') {
   const store = cur();
   const cid = slug(id);
   const dir = store.p('clips', cid);
   if (fs.existsSync(dir)) throw new Error(`clip ${cid} already exists`);
-  copyDir(path.join(SKELETONS, 'clip'), dir);
-  writeJson(path.join(dir, 'manifest.json'), { id: cid, kind: 'clip', name, description, category: 'custom', tags: [], duration } satisfies PackageManifest);
+  copyDir(path.join(SKELETONS, template === '3d' ? 'clip3d' : 'clip'), dir);
+  writeJson(path.join(dir, 'manifest.json'), { id: cid, kind: 'clip', name, description, category: 'custom', tags: template === '3d' ? ['3d'] : [], duration } satisfies PackageManifest);
   const js = fs.readFileSync(path.join(dir, 'clip.js'), 'utf8').replace('duration: 4', `duration: ${duration}`);
   fs.writeFileSync(path.join(dir, 'clip.js'), js);
   return cid;
@@ -367,9 +367,9 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- clips & music ----------
   app.get('/api/clips', async () => need().listClips());
-  app.post<{ Body: { id: string; name: string; description?: string; duration?: number } }>('/api/clips', async (req) => {
+  app.post<{ Body: { id: string; name: string; description?: string; duration?: number; template?: '2d' | '3d' } }>('/api/clips', async (req) => {
     need();
-    const id = createClipPackage(req.body.id || req.body.name, req.body.name || req.body.id, req.body.description, req.body.duration);
+    const id = createClipPackage(req.body.id || req.body.name, req.body.name || req.body.id, req.body.description, req.body.duration, req.body.template === '3d' ? '3d' : '2d');
     return { id, path: `clips/${id}/`, files: ['index.html', 'clip.js', 'style.css', 'params.json', 'manifest.json'] };
   });
   app.post<{ Params: { id: string } }>('/api/clips/:id/duplicate', async (req) => {

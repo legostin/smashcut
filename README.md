@@ -68,8 +68,9 @@ Agents follow a core **craft skill** distilled from measured references (HyperFr
 - **Voice-over as a process** — speech text with numbers spelled out, stress marks and pauses; ElevenLabs takes with a pace check so the voice doesn't speed up or slow down; captions keep the display text.
 - Loudness normalisation, denoise, silence removal and music ducking.
 
-### 3D with Blender
-3D scenes are Python code rendered headless in stages — **mock** (seconds) → **look** (EEVEE) → **final** — placed on the timeline and replaced in place.
+### 3D: Three.js by default, Blender for the heavy stuff
+- **Three.js clips** — logos and type extruded in space, product turntables, particles that form shapes, 3D charts, isometric scenes. Live in the preview (no render step), tweakable params, transparent over footage, frame-exact in export. Agents can install any npm package into the project and use it in a clip.
+- **Blender** — physics, cloth and fluids, photoreal Cycles light, heavy geometry: Python scenes rendered headless in stages — **mock** (seconds) → **look** (EEVEE) → **final** — placed on the timeline and replaced in place.
 
 ### Footage tools for agents
 Camera tracking (graphics glued to the world), planar tracking (screen replacement with perspective), object tracking by words, auto-reframe 16:9 → 9:16, blur faces/plates, background removal for images and video, chroma key, shot detection and rhythm analysis, morphs, slow-mo.
