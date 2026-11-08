@@ -454,8 +454,8 @@ input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.15); }
 
 /* script panel */
 .script { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.stepper { display: flex; gap: 2px; padding: 12px 12px 10px; border-bottom: 1px solid var(--line); overflow-x: auto; flex: none; scrollbar-width: none; }
-.stepper::-webkit-scrollbar { display: none; }
+.stage-steps { display: flex; gap: 2px; padding: 12px 12px 10px; border-bottom: 1px solid var(--line); overflow-x: auto; flex: none; scrollbar-width: none; }
+.stage-steps::-webkit-scrollbar { display: none; }
 .step-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; border-radius: 999px; color: var(--fg3); font-size: 11.5px; white-space: nowrap; transition: background var(--t), color var(--t); }
 .step-pill:hover { background: var(--raise); color: var(--fg2); }
 .step-dot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; background: var(--raise); color: var(--fg3); transition: background var(--t), color var(--t); flex: none; }
@@ -821,7 +821,7 @@ button.chip:hover { filter: brightness(1.25); }
 .scene-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; animation: fadein 260ms var(--ease); }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 .scene-thumb-empty { color: var(--fg3); font-size: 12px; }
-.scene-n { position: absolute; left: 10px; top: 10px; height: 22px; padding: 0 7px; border-radius: 999px; background: rgba(10, 10, 11, .72); backdrop-filter: blur(6px); font-size: 11px; display: grid; place-items: center; color: var(--fg); }
+.scene-thumb .scene-n { position: absolute; left: 10px; top: 10px; height: 22px; padding: 0 7px; border-radius: 999px; background: rgba(10, 10, 11, .72); backdrop-filter: blur(6px); font-size: 11px; display: grid; place-items: center; color: var(--fg); }
 .scene-agent { position: absolute; right: 10px; top: 10px; display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: rgba(10, 10, 11, .78); backdrop-filter: blur(6px); color: var(--tone-work); font-size: 11px; font-weight: 500; }
 .scene-agent .pulse { background: var(--tone-work-dot); animation-name: pulseBlue; }
 @keyframes pulseBlue { 0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, .5); } 70% { box-shadow: 0 0 0 7px rgba(96, 165, 250, 0); } 100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0); } }
@@ -829,7 +829,7 @@ button.chip:hover { filter: brightness(1.25); }
 .scene-card.live.sel { border-color: var(--accent); }
 .scene-lock { position: absolute; right: 10px; bottom: 10px; width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: rgba(10, 10, 11, .78); color: var(--fg); }
 .scene-meta { display: flex; align-items: baseline; gap: 8px; padding: 11px 13px 4px; }
-.scene-title { flex: 1; font-weight: 600; font-size: 14px; letter-spacing: -0.005em; }
+.scene-meta .scene-title { flex: 1; font-weight: 600; font-size: 14px; letter-spacing: -0.005em; }
 .scene-foot { display: flex; align-items: center; gap: 8px; padding: 2px 13px 13px; min-width: 0; }
 .scene-note { flex: 1; min-width: 0; font-size: 12px; color: var(--fg3); }
 .scene-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 180px; border-radius: var(--r-lg); border: 2px dashed #24242a; color: var(--fg3); font-weight: 500; transition: color var(--t), border-color var(--t), background var(--t); }

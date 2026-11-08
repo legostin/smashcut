@@ -34,7 +34,7 @@ export function ScriptPanel() {
 
   return (
     <div className="script">
-      <div className="stepper">
+      <div className="stage-steps">
         {STAGES.map((st, i) => (
           <button key={st.id} className={'step-pill' + (i < stageIdx ? ' past' : '') + (i === stageIdx ? ' now' : '')} onClick={() => actions.saveScript({ stage: st.id })} title={t('Stage: {name}', { name: t(st.label) })}>
             <span className="step-dot">{i < stageIdx ? <Icon name="check" size={9} /> : i + 1}</span>
