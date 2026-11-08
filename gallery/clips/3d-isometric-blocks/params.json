@@ -1,0 +1,10 @@
+{
+  "schema": {
+    "seed": { "type": "number", "label": "Layout seed", "min": 1, "max": 99, "step": 1, "default": 3 },
+    "grid": { "type": "number", "label": "Grid size", "min": 3, "max": 10, "step": 1, "default": 6 },
+    "palette": { "type": "select", "label": "Palette", "options": ["pastel", "brand", "mono"], "default": "pastel" },
+    "accent": { "type": "color", "label": "Accent (gem, blocks)", "default": "#d4ff3a", "token": "accent" },
+    "accent2": { "type": "color", "label": "Accent 2 (blocks)", "default": "#7a5cff", "token": "accent-2" },
+    "hero": { "type": "boolean", "label": "Floating gem on the tallest tower", "default": true }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "3d-title-flythrough",
+  "kind": "clip",
+  "name": "3D title flythrough",
+  "description": "Three.js title on a transparent background: extruded letters (Inter, real font outlines) flip forward and drop into place one by one while the camera pushes in from a high, offset angle; an accent rule draws under the title, an optional second line rises letter by letter, and it ends on a readable front-facing hold; use for chapter/episode titles, launch and keynote openers, or a hero line over footage (auto two-line layout in 9:16).",
+  "category": "3d",
+  "tags": ["3d", "threejs", "title", "type", "per-letter", "flip", "camera", "opener", "overlay"],
+  "duration": 6
+}

@@ -1,0 +1,9 @@
+{
+  "id": "3d-particles-form",
+  "kind": "clip",
+  "name": "3D particles form a word",
+  "description": "Three.js particle hit on a transparent background: thousands of soft glowing points (accent + second colour) spiral in from a scattered cloud and converge onto the surface of a word — or a torus knot / sphere — resolving left to right, hold with a gentle shimmer under a slow camera arc, then optionally blow away; optional bloom. Use for a reveal of a product name, keyword or number, tech/AI intros and transitions between sections (16:9 and 9:16).",
+  "category": "3d",
+  "tags": ["3d", "threejs", "particles", "points", "converge", "glow", "bloom", "text", "reveal", "tech", "overlay"],
+  "duration": 6
+}

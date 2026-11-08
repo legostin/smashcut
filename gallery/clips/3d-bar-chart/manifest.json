@@ -1,0 +1,9 @@
+{
+  "id": "3d-bar-chart",
+  "kind": "clip",
+  "name": "3D bar chart",
+  "description": "Three.js data chart on a transparent background: from a label:value list, a base plate draws out and rounded 3D bars rise one after another (outCubic) with value labels counting up above them and category labels below; one bar (the largest, or the one you pick) is in the accent colour, the others muted, with soft shadows and a gentle orbiting camera. Use for KPIs, quarter-over-quarter growth, survey results and comparisons in explainer, finance and pitch videos (3–8 bars; 16:9 and 9:16).",
+  "category": "3d",
+  "tags": ["3d", "threejs", "chart", "bar-chart", "data", "infographic", "kpi", "statistics", "overlay"],
+  "duration": 7
+}

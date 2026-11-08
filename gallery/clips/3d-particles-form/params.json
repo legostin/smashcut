@@ -1,0 +1,11 @@
+{
+  "schema": {
+    "text": { "type": "text", "label": "Word (shape: text)", "default": "FORM" },
+    "shape": { "type": "select", "label": "Shape", "options": ["text", "knot", "sphere"], "default": "text" },
+    "accent": { "type": "color", "label": "Particle colour", "default": "#d4ff3a", "token": "accent" },
+    "accent2": { "type": "color", "label": "Second colour (mix)", "default": "#7a5cff", "token": "accent-2" },
+    "count": { "type": "number", "label": "Particles", "min": 1000, "max": 30000, "step": 500, "default": 9000 },
+    "bloom": { "type": "boolean", "label": "Glow (bloom)", "default": true },
+    "disperse": { "type": "boolean", "label": "Blow away at the end", "default": true }
+  }
+}

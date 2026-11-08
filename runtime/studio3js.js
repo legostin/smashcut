@@ -175,7 +175,7 @@ export async function text(str, o = {}) {
  * path — the parts stay separate so you can animate them (group.parts[i], each pivoting on its own centre; its
  * resting position is userData.{x,y,z} in world units — later SVG paths are stacked `layer` in front of earlier ones).
  * Returned group is centred on the origin and `size` units wide (world units for depth/bevel/layer too).
- * { size=4, depth=0.3, bevel=0.02, layer=depth*0.3, material | materialFor(svgColor, i) }
+ * { size=4, depth=0.3, bevel=0.02, layer=depth*0.3, curveSegments=16, material | materialFor(svgColor, i) }
  */
 export async function svg(src, o = {}) {
   const markup = /^\s*</.test(src) ? src : await fetch(src).then((r) => r.text());
@@ -195,7 +195,7 @@ export async function svg(src, o = {}) {
   const layer = (o.layer ?? (o.depth ?? 0.3) * 0.3) / k;
   const group = new THREE.Group();
   const meshes = parts.map(({ p, i, shapes }, n) => {
-    const geo = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel * 0.8, bevelSegments: 3, curveSegments: 16 });
+    const geo = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel * 0.8, bevelSegments: 3, curveSegments: o.curveSegments ?? 16 });
     // to world units, y up (SVG y points down); a mirror reverses the triangle winding, so restore it
     geo.translate(-c.x, -c.y, -depth / 2).scale(k, -k, k);
     flipWinding(geo);
@@ -284,7 +284,8 @@ let current = null;
 
 /**
  * Create the renderer/scene/camera inside root (the clip's #stage). Options:
- *  fov=35, camera=[0,0,10], target=[0,0,0], background=null (transparent) | token | css colour,
+ *  fov=35, camera=[0,0,10], target=[0,0,0], ortho=null | n (OrthographicCamera, n world units tall — zoom via camera.zoom),
+ *  background=null (transparent) | token | css colour,
  *  light='studio' | 'rim' | 'neon' | 'soft' | 'none', env=1 (environment reflections intensity, 0 = off),
  *  exposure=1, tone='neutral' | 'aces' | 'agx' | 'none', shadows=false,
  *  bloom=null | true | { strength=0.5, radius=0.4, threshold=1 } (glow for emissive parts; alpha is kept), fog=null | { color, near, far }
@@ -313,7 +314,10 @@ export async function stage(root, o = {}) {
   else renderer.setClearColor(0x000000, 0);
   if (o.fog) scene.fog = new THREE.Fog(color(o.fog.color ?? o.background ?? '#000000'), o.fog.near ?? 8, o.fog.far ?? 30);
 
-  const camera = new THREE.PerspectiveCamera(o.fov ?? 35, W / H, o.near ?? 0.1, o.far ?? 200);
+  // ortho: n → an OrthographicCamera showing n world units vertically (isometric / technical looks); else perspective
+  const camera = o.ortho
+    ? new THREE.OrthographicCamera((-o.ortho / 2) * (W / H), (o.ortho / 2) * (W / H), o.ortho / 2, -o.ortho / 2, o.near ?? 0.1, o.far ?? 200)
+    : new THREE.PerspectiveCamera(o.fov ?? 35, W / H, o.near ?? 0.1, o.far ?? 200);
   const target = new THREE.Vector3(...(o.target || [0, 0, 0]));
   camera.position.set(...(o.camera || [0, 0, 10]));
   camera.lookAt(target);

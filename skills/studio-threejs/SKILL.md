@@ -54,15 +54,18 @@ set in `render(t)` from `t` alone — never accumulate state between frames (`x 
 
 ## The helper (`/runtime/studio3js.js` — Read it for every option)
 
+Study the built-in 3D techniques first (`get_technique`, category 3d): `3d-logo-extrude`, `3d-title-flythrough`, `3d-product-turntable`, `3d-particles-form`, `3d-bar-chart`, `3d-isometric-blocks` — learn the approach, then write an original clip in the project's style.
+
 - `stage(root, { fov, camera, target, background, light, env, exposure, tone, shadows, bloom, fog })` → `S`
   - `background`: omit = transparent (composites over footage and other layers); a token (`'bg'`) or CSS colour = opaque.
   - `light`: `'studio'` (key + fill + rim, the safe default), `'soft'`, `'rim'` (accent-coloured back light, dramatic), `'neon'` (two coloured point lights, dark), `'none'` (bring your own).
   - `env`: strength of studio reflections (0.7 default) — PBR materials need it to look like anything.
   - `tone`: `'neutral'` (default — keeps brand colours exact), `'aces'`/`'agx'` (filmic, desaturates highlights).
+  - `ortho: n`: an OrthographicCamera n world units tall (isometric / technical looks; zoom with `camera.zoom` + `updateProjectionMatrix()`).
   - `bloom`: `true` or `{ strength, radius, threshold=1 }` — only things brighter than lit white glow: give glowing parts `emissive` + `emissiveIntensity` 2–6. Alpha is preserved.
 - `S.mat({ color, metal, rough, clearcoat, emissive, emissiveIntensity, glass, opacity, flat })` — colours take design tokens (`'accent'`, `'text'`, `'bg'`…) or CSS colours.
 - `await S.text(str, { size, depth, bevel, weight, font, letterSpacing, lineHeight, align, perChar, material })` — real font outlines (Inter by default, any .ttf/.otf/.woff via `font`; not .woff2). `perChar: true` → a Group of letters, each pivoting on its own baseline centre, for staggered flips/drops. Latin + Cyrillic.
-- `await S.svg(urlOrMarkup, { size, depth, bevel, layer, material | materialFor(svgColor, i) })` — a logo in 3D: one mesh per SVG path in `group.parts` (pivot = part centre, resting position in `userData.{x,y,z}`); later paths sit `layer` in front so details don't z-fight. Animate parts back to `userData` positions.
+- `await S.svg(urlOrMarkup, { size, depth, bevel, layer, material | materialFor(svgColor, i) })` — a logo in 3D: one mesh per SVG path in `group.parts` (pivot = part centre, resting position in `userData.{x,y,z}`); later paths sit `layer` in front so details don't z-fight. Big circles: raise `curveSegments` (default 16) to 32. Animate parts back to `userData` positions.
 - `await S.model(url)` → `{ scene, animations, at(t, name?) }` — GLB/GLTF; `at(t)` poses its animation deterministically.
 - `S.particles({ count, radius | spread, size, color, seed, additive })` → `{ points, base, update((i, base, out) => …) }` — deterministic positions; move them in `render(t)` from `base`.
 - `S.orbit(t, { radius, height, turns, start })`, `S.look(x,y,z)`, `S.ground({ y, opacity })` (shadow catcher, needs `shadows: true`), `S.shadows(obj)`, `S.box(w,h,d,r,mat)`.

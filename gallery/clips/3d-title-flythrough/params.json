@@ -1,0 +1,10 @@
+{
+  "schema": {
+    "text": { "type": "text", "label": "Title", "default": "NEXT LEVEL" },
+    "subtitle": { "type": "text", "label": "Second line (empty = none)", "default": "The 2026 keynote · Live on June 12" },
+    "color": { "type": "color", "label": "Type colour", "default": "#ffffff", "token": "text" },
+    "accent": { "type": "color", "label": "Accent rule", "default": "#d4ff3a", "token": "accent" },
+    "finish": { "type": "select", "label": "Finish", "options": ["gloss", "satin", "chrome"], "default": "gloss" },
+    "weight": { "type": "select", "label": "Weight", "options": ["500", "600", "700", "800", "900"], "default": "800" }
+  }
+}

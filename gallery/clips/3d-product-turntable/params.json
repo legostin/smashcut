@@ -1,0 +1,49 @@
+{
+  "schema": {
+    "product": {
+      "type": "select",
+      "label": "Built-in product",
+      "options": [
+        "can",
+        "phone"
+      ],
+      "default": "can"
+    },
+    "label": {
+      "type": "text",
+      "label": "Can label name",
+      "default": "Nova"
+    },
+    "model": {
+      "type": "text",
+      "label": "3D model .glb (e.g. /p/<project>/media/x.glb; empty = built-in)",
+      "default": ""
+    },
+    "accent": {
+      "type": "color",
+      "label": "Accent (label, rim light, ring)",
+      "default": "#d4ff3a",
+      "token": "accent"
+    },
+    "accent2": {
+      "type": "color",
+      "label": "Accent 2 (phone screen gradient)",
+      "default": "#7a5cff",
+      "token": "accent-2"
+    },
+    "podium": {
+      "type": "color",
+      "label": "Podium",
+      "default": "#1d1d22",
+      "token": "surface"
+    },
+    "spin": {
+      "type": "number",
+      "label": "Turn speed (°/s)",
+      "min": 0,
+      "max": 120,
+      "step": 5,
+      "default": 40
+    }
+  }
+}

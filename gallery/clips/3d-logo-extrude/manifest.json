@@ -1,0 +1,9 @@
+{
+  "id": "3d-logo-extrude",
+  "kind": "clip",
+  "name": "3D logo extrude — assemble",
+  "description": "Three.js logo sting on a transparent background: an SVG logo (paste markup; a 3-part geometric mark by default) is extruded into glossy 3D, its parts fly in from depth with a stagger and lock together while the lockup turns from a 3/4 view to front-facing, a light bar sweeps a glint across the clearcoat and it holds over a soft floor shadow; use as an intro/outro brand sting or a logo hit over footage (16:9 and 9:16).",
+  "category": "3d",
+  "tags": ["3d", "threejs", "logo", "svg", "extrude", "sting", "intro", "outro", "brand", "overlay"],
+  "duration": 6
+}

@@ -1,0 +1,10 @@
+{
+  "schema": {
+    "data": { "type": "textarea", "label": "Data (label:value, comma or new line separated)", "default": "Q1:42, Q2:58, Q3:51, Q4:86, Q5:73" },
+    "unit": { "type": "text", "label": "Value suffix (%, k, $…)", "default": "%" },
+    "highlight": { "type": "number", "label": "Highlight bar # (0 = largest)", "min": 0, "max": 12, "step": 1, "default": 0 },
+    "accent": { "type": "color", "label": "Highlight colour", "default": "#d4ff3a", "token": "accent" },
+    "barColor": { "type": "color", "label": "Other bars", "default": "#9a9aa3", "token": "muted" },
+    "textColor": { "type": "color", "label": "Labels", "default": "#ffffff", "token": "text" }
+  }
+}

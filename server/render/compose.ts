@@ -78,8 +78,9 @@ async function makeManifest(from: number, to: number, opts: { transparent?: bool
 }
 
 /** open the renderer page for a manifest and run fn with a frame grabber */
-async function withRenderer<T>(manifestId: string, size: { width: number; height: number }, fn: (seek: (t: number) => Promise<void>, grab: (fmt: 'png' | 'jpeg') => Promise<Buffer>, errors: string[]) => Promise<T>): Promise<T> {
+async function withRenderer<T>(manifestId: string, size: { width: number; height: number }, fn: (seek: (t: number) => Promise<void>, grab: (fmt: 'png' | 'jpeg') => Promise<Buffer>, errors: string[]) => Promise<T>, onPage?: (page: { close: () => Promise<void> }) => void): Promise<T> {
   return withPage(size, async (page, errors) => {
+    onPage?.(page); // lets an export cancel close the page mid-frame (heavy WebGL / motion-blur frames take seconds)
     await page.goto(`${BASE_URL}/render.html?m=${manifestId}&p=${cur().id}`, { waitUntil: 'load', timeout: 60000 });
     await page.waitForFunction(() => (window as any).__render, null, { timeout: 20000 });
     await page.evaluate(() => (window as any).__render.ready);
@@ -146,7 +147,7 @@ export interface ExportOptions {
 }
 
 const jobs = new Map<string, ExportJob>();
-const aborts = new Map<string, { aborted: boolean; kill?: () => void }>();
+const aborts = new Map<string, { aborted: boolean; kill?: () => void; pages?: Set<{ close: () => Promise<void> }> }>();
 /** export jobs of the current project */
 export function getJobs() { const id = cur().id; return [...jobs.values()].filter((j) => !j.project || j.project === id); }
 export function cancelExport(id: string) {
@@ -154,6 +155,7 @@ export function cancelExport(id: string) {
   if (!a) return false;
   a.aborted = true;
   a.kill?.();
+  for (const pg of a.pages || []) pg.close().catch(() => {});
   return true;
 }
 
@@ -165,7 +167,7 @@ export function startExport(opts: ExportOptions = {}): ExportJob {
   const to = Math.min(opts.to ?? (end || p.duration), end || p.duration);
   const job: ExportJob = { id: nid(), project: store.id, status: 'running', progress: 0, stage: 'preparing', stageKey: 'preparing', from, to };
   jobs.set(job.id, job);
-  const signal = { aborted: false } as { aborted: boolean; kill?: () => void };
+  const signal = { aborted: false, pages: new Set() } as { aborted: boolean; kill?: () => void; pages: Set<{ close: () => Promise<void> }> };
   aborts.set(job.id, signal);
   const emit = () => bus.send({ type: 'export', job: { ...job } });
   emit();
@@ -201,7 +203,7 @@ export function resumeExport() {
 
 const QUALITY = { high: 15, standard: 19, small: 26 } as const;
 
-export async function exportRange(o: ExportOptions & { from: number; to: number; name: string }, progress: (stage: string, p: number, params?: Record<string, string | number>) => void = () => {}, signal: { aborted: boolean; kill?: () => void } = { aborted: false }): Promise<string> {
+export async function exportRange(o: ExportOptions & { from: number; to: number; name: string }, progress: (stage: string, p: number, params?: Record<string, string | number>) => void = () => {}, signal: { aborted: boolean; kill?: () => void; pages?: Set<{ close: () => Promise<void> }> } = { aborted: false }): Promise<string> {
   const store = cur();
   const p = store.project;
   const { from, to } = o;
@@ -248,8 +250,9 @@ export async function exportRange(o: ExportOptions & { from: number; to: number;
           done++;
           if (done % 5 === 0) report();
         }
-      });
+      }, (pg) => { (signal.pages ??= new Set()).add(pg); if (signal.aborted) pg.close().catch(() => {}); });
     } catch (e) {
+      if (signal.aborted) throw new Error('cancelled'); // the page was closed by cancel
       if ((e as Error).message === 'cancelled' || attempt >= 2) throw e;
       return renderChunk(a, b, attempt + 1);
     }

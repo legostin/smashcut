@@ -1,0 +1,9 @@
+{
+  "id": "3d-isometric-blocks",
+  "kind": "clip",
+  "name": "3D isometric blocks",
+  "description": "Three.js isometric diorama on a transparent background, shot with a true-isometric OrthographicCamera: a base slab draws in, grid tiles pop up in a diagonal wave, rounded cubes drop onto seeded stacks that rise towards the centre, then a faceted accent gem lands above the tallest tower and floats; soft shadows, pastel/brand/mono palettes from the design tokens, seedable layout. Use for 'building / growth / platform' metaphors, tech and SaaS explainers, section openers and backgrounds for a headline (16:9 and 9:16).",
+  "category": "3d",
+  "tags": ["3d", "threejs", "isometric", "orthographic", "blocks", "diorama", "build", "pastel", "explainer", "overlay"],
+  "duration": 6
+}

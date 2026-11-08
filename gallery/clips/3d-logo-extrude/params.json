@@ -1,0 +1,11 @@
+{
+  "schema": {
+    "svg": { "type": "textarea", "label": "Logo SVG markup (one part per path/shape)", "default": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 120 100\"><rect width=\"32\" height=\"100\" rx=\"16\" fill=\"#d4ff3a\"/><circle cx=\"70\" cy=\"25\" r=\"24\" fill=\"#ffffff\"/><path d=\"M62 100A58 58 0 0 1 120 42V100Z\" fill=\"#7a5cff\"/></svg>" },
+    "colorMode": { "type": "select", "label": "Colours", "options": ["brand", "svg"], "default": "brand" },
+    "accent": { "type": "color", "label": "Part 1 (accent)", "default": "#d4ff3a", "token": "accent" },
+    "color": { "type": "color", "label": "Part 2 (text)", "default": "#ffffff", "token": "text" },
+    "accent2": { "type": "color", "label": "Part 3 (accent 2)", "default": "#7a5cff", "token": "accent-2" },
+    "depth": { "type": "number", "label": "Extrusion depth", "min": 0.1, "max": 1.2, "step": 0.05, "default": 0.45 },
+    "shadow": { "type": "boolean", "label": "Shadow catcher", "default": true }
+  }
+}

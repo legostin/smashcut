@@ -1,0 +1,9 @@
+{
+  "id": "3d-product-turntable",
+  "kind": "clip",
+  "name": "3D product turntable",
+  "description": "Three.js product shot on a transparent background: a podium rises, the product drops onto it and turns at a constant speed under a shadowed key light and two rim lights (one in the brand accent), with a glowing accent ring on the podium edge and a soft floor shadow. Built-in procedural products (a drinks can with your name on a canvas-drawn label, or a phone with a lit screen) or your own .glb via the model param; use for product reveals, e-commerce promos and launch videos (16:9 and 9:16).",
+  "category": "3d",
+  "tags": ["3d", "threejs", "product", "turntable", "podium", "packshot", "glb", "model", "rim-light", "overlay"],
+  "duration": 7
+}
