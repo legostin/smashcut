@@ -293,6 +293,14 @@ server.registerTool('voice_report', {
   inputSchema: {},
 }, safe(async () => text(await api('GET', '/api/voice/report'))));
 
+server.registerTool('search_inspiration', {
+  description: 'Search the inspiration library: real motion-graphics pieces (group "motion": launches, kinetic type, UI motion, explainers, data viz…) and viral / highly effective EDITING (group "edit": retention editing, short-form hooks, trend transitions, documentary, vlog, music-video cutting, ads, storytelling, sound design) — each with a breakdown of what it does and why it works. Look here for ideas when planning a script, a scene, the edit rhythm or a transition. Rule: learn the principle and apply it in this project\'s own style — NEVER recreate a piece 1:1 (no copied shots, layouts, copy, music, characters or brand assets).',
+  inputSchema: { query: z.string().optional().describe('words: a technique, mood, format or brand, e.g. "hook first second captions", "match cut", "product reveal"'), group: z.enum(['motion', 'edit']).optional(), category: z.string().optional(), limit: z.number().optional() },
+}, safe(async (a) => {
+  const qs = new URLSearchParams(Object.entries(a).filter(([, v]) => v != null && v !== '').map(([k, v]) => [k === 'query' ? 'q' : k, String(v)]));
+  return text(await api('GET', `/api/agent/inspiration?${qs}`));
+}));
+
 server.registerTool('ask_user', {
   description: 'Ask the user a question and WAIT for the answer (shown as a card in the editor chat). Use it when the direction is genuinely unclear and a wrong guess would waste work: the idea, tone, style, script angle. Best with drafts: make 2–4 cheap options first (short script variants as text; style frames — render_frame / render_clip of quick sketches — passed as option.image) so the user can point instead of describe. Keep it to one clear question with 2–4 options; the user may also answer in free text or tell you to decide. If autopilot is on you get an immediate reply telling you to decide yourself — then do, and say what you chose. Never ask about things you can decide from the brief, the design system or good craft.',
   inputSchema: {

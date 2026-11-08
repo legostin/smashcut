@@ -26,7 +26,7 @@ import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
 import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
 import { voiceScene, cleanupTakes, voicePace } from './voice/voiceover.ts';
-import { listInspiration, getInspiration, inspirationThumb } from './inspiration.ts';
+import { listInspiration, getInspiration, inspirationThumb, searchInspiration, inspirationCategories } from './inspiration.ts';
 import { projectTracks } from './tracks.ts';
 import { blenderBin, listScenes3d, getScene3d, createScene3d, render3d, listJobs3d, openInBlender } from './blender.ts';
 import { paceReport } from './voice/speech.ts';
@@ -439,6 +439,12 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- inspiration (curated real-world motion: link + breakdown) ----------
   app.get('/api/inspiration', async () => listInspiration().map(({ breakdown, ...x }) => ({ ...x, breakdown: breakdown.slice(0, 280) })));
+  // for agents: search the inspiration library (motion graphics + editing) — to learn principles, never to copy
+  app.get<{ Querystring: { q?: string; group?: string; category?: string; limit?: string } }>('/api/agent/inspiration', async (req) => ({
+    rule: 'Learn the principle (pacing, structure, technique, why it works) and apply it in THIS project\'s own style, story and design system. Never recreate a piece 1:1: no copied shots, layouts, copy, characters, music, logos or brand assets.',
+    categories: inspirationCategories(),
+    results: searchInspiration({ query: req.query.q, group: req.query.group, category: req.query.category, limit: Number(req.query.limit) || undefined }),
+  }));
   app.get<{ Params: { id: string } }>('/api/inspiration/:id', async (req) => { const x = getInspiration(req.params.id); if (!x) throw uerr('Not found', {}, 404); return x; });
   app.get<{ Params: { id: string } }>('/api/inspiration/:id/thumb', async (req, reply) => {
     const f = await inspirationThumb(req.params.id);

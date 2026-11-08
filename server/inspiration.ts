@@ -13,6 +13,30 @@ const FILE = path.join(GALLERY_DIR, 'inspiration.json');
 export const listInspiration = (): Inspiration[] => readJson<Inspiration[]>(FILE, []);
 export const getInspiration = (id: string) => listInspiration().find((x) => x.id === id);
 
+/**
+ * for agents: find pieces to learn from — by words (title, author, tags, techniques, breakdown), group (motion / edit)
+ * and category. Ranked by how many query words hit, techniques and tags weigh more than the breakdown.
+ */
+export function searchInspiration(o: { query?: string; group?: string; category?: string; limit?: number }) {
+  const words = String(o.query || '').toLowerCase().split(/[^\p{L}\p{N}-]+/u).filter((w) => w.length > 1);
+  const scored = listInspiration()
+    .filter((x) => (!o.group || (x.group || 'motion') === o.group) && (!o.category || x.category === o.category))
+    .map((x) => {
+      const strong = `${x.title} ${x.by} ${(x.tags || []).join(' ')} ${(x.techniques || []).join(' ')} ${x.category}`.toLowerCase();
+      const weak = x.breakdown.toLowerCase();
+      const score = words.reduce((n, w) => n + (strong.includes(w) ? 3 : 0) + (weak.includes(w) ? 1 : 0), 0);
+      return { x, score };
+    })
+    .filter((r) => !words.length || r.score > 0)
+    .sort((a, b) => b.score - a.score);
+  return scored.slice(0, Math.min(20, o.limit || 8)).map(({ x }) => ({ id: x.id, group: x.group || 'motion', category: x.category, title: x.title, by: x.by, year: x.year, url: x.url, techniques: x.techniques, tags: x.tags, breakdown: x.breakdown }));
+}
+export function inspirationCategories() {
+  const m = new Map<string, number>();
+  for (const x of listInspiration()) { const k = `${x.group || 'motion'}/${x.category}`; m.set(k, (m.get(k) || 0) + 1); }
+  return Object.fromEntries([...m.entries()].sort());
+}
+
 const inflight = new Map<string, Promise<string | null>>();
 /** official preview image, downloaded once into ~/.smashcut/inspiration */
 export function inspirationThumb(id: string): Promise<string | null> {

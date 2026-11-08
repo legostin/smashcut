@@ -249,15 +249,27 @@ function Tile({ g, i, big }: { g: GalleryItem; i: number; big: boolean }) {
   );
 }
 
-const INSPO_CATS: Record<string, string> = { 'product-launch': 'Product launches', 'ui-motion': 'UI motion', 'kinetic-type': 'Kinetic type', 'brand-identity': 'Brand identity', 'logo-animation': 'Logo animation', explainer: 'Explainers', 'data-viz': 'Data viz', 'social-short': 'Social shorts', '3d-motion': '3D-look motion', transitions: 'Transitions', titles: 'Title sequences', abstract: 'Abstract' };
+const INSPO_CATS: Record<string, string> = { 'product-launch': 'Product launches', 'ui-motion': 'UI motion', 'kinetic-type': 'Kinetic type', 'brand-identity': 'Brand identity', 'logo-animation': 'Logo animation', explainer: 'Explainers', 'data-viz': 'Data viz', 'social-short': 'Social shorts', '3d-motion': '3D-look motion', transitions: 'Transitions', titles: 'Title sequences', abstract: 'Abstract',
+  'retention-edit': 'Retention editing', 'short-form': 'Short-form hooks', 'trend-transitions': 'Trend transitions', documentary: 'Documentary & essays', vlog: 'Vlogs & B-roll', 'music-video': 'Cutting to the beat', 'ad-edit': 'Ads & brand films', storytelling: 'Storytelling structure', 'sound-design': 'Sound-driven edits' };
 
 /** real-world motion pieces (link + our breakdown); click adds one to the project references */
-function InspirationWall({ items, cat, q, onCat }: { items: Inspiration[]; cat: string; q: string; onCat: (c: string) => void }) {
+function InspirationWall({ items: all, cat, q, onCat }: { items: Inspiration[]; cat: string; q: string; onCat: (c: string) => void }) {
+  // two shelves: motion graphics and editing (viral / effective cutting)
+  const [group, setGroup] = useState<'motion' | 'edit'>(() => { try { return localStorage.getItem('inspoGroup') === 'edit' ? 'edit' : 'motion'; } catch { return 'motion'; } });
+  const pickGroup = (g: 'motion' | 'edit') => { setGroup(g); onCat('all'); try { localStorage.setItem('inspoGroup', g); } catch {} };
+  const counts = useMemo(() => ({ motion: all.filter((x) => (x.group || 'motion') === 'motion').length, edit: all.filter((x) => x.group === 'edit').length }), [all]);
+  const items = useMemo(() => all.filter((x) => (x.group || 'motion') === group), [all, group]);
   const cats = useMemo(() => { const m = new Map<string, number>(); for (const x of items) m.set(x.category, (m.get(x.category) || 0) + 1); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [items]);
   const list = items.filter((x) => (cat === 'all' || x.category === cat) && (!q || `${x.title} ${x.by} ${x.category} ${(x.tags || []).join(' ')} ${(x.techniques || []).join(' ')}`.toLowerCase().includes(q.toLowerCase())));
   if (!items.length) return <div className="lib-empty">{t('The inspiration library is being collected — come back in a few minutes.')}</div>;
   return (
     <>
+      {counts.edit > 0 && (
+        <div className="inspo-groups seg">
+          <button className={group === 'motion' ? 'on' : ''} onClick={() => pickGroup('motion')}>{t('Motion graphics')} <span>{counts.motion}</span></button>
+          <button className={group === 'edit' ? 'on' : ''} onClick={() => pickGroup('edit')}>{t('Editing')} <span>{counts.edit}</span></button>
+        </div>
+      )}
       <div className="wall-cats">
         <button className={'wall-cat' + (cat === 'all' ? ' on' : '')} onClick={() => onCat('all')}>{t('All')} <span>{items.length}</span></button>
         {cats.map(([c, n]) => <button key={c} className={'wall-cat' + (cat === c ? ' on' : '')} onClick={() => onCat(c)}>{t(INSPO_CATS[c] || c)} <span>{n}</span></button>)}

@@ -341,9 +341,10 @@ export interface ExportJob {
 export interface Inspiration {
   id: string; title: string; by: string; year?: number; url: string; platform: string; license?: string;
   thumb?: string; category: string; tags?: string[]; techniques?: string[]; breakdown: string; durationHint?: string;
+  /** motion graphics (default) or editing (viral / effective cutting) */
+  group?: 'motion' | 'edit';
 }
 
-/** a reference attached to the project: a technique from the library, an image/video from media, or a link */
 /** a question an agent asks the user — optionally with draft options (text and/or an image to compare) */
 export interface AgentQuestion {
   id: string;
@@ -355,6 +356,7 @@ export interface AgentQuestion {
   answeredAt?: string;
 }
 
+/** a reference attached to the project: a technique from the library, an image/video from media, or a link */
 export interface Reference {
   id: string;
   kind: 'technique' | 'music-technique' | 'media' | 'link' | 'inspiration';

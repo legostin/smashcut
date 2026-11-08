@@ -1131,3 +1131,5 @@ button.chip:hover { filter: brightness(1.25); }
 .composer-bar { flex-wrap: nowrap; align-items: flex-end; gap: 6px; }
 .composer-bar > .row { flex: 1 1 auto; flex-wrap: wrap; min-width: 0; }
 .composer-bar > .send, .composer-bar > .row + .row { flex: none; }
+.inspo-groups { display: inline-flex; margin: 0 0 12px; }
+.inspo-groups button span { opacity: 0.55; margin-left: 4px; font-size: 0.9em; }

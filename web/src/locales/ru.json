@@ -216,7 +216,7 @@
   "e.g. opus / sonnet": "напр. opus / sonnet",
   "e.g. punchier hook for TikTok, bigger captions, end with the website instead of the logo": "напр. хук поострее для TikTok, субтитры крупнее, в конце сайт вместо логотипа",
   "Edit": "Монтаж",
-  "Editing": "Правит",
+  "Editing": "Монтаж",
   "Editing in Premiere, DaVinci, Final Cut; supports alpha": "Монтаж в Premiere, DaVinci, Final Cut; поддерживает альфу",
   "Effect added: {name}": "Эффект добавлен: {name}",
   "Effects": "Эффекты",
@@ -897,5 +897,15 @@
   "The agent may ask you and show drafts to choose a direction — click for autopilot": "Агент может спрашивать и показывать черновики, чтобы выбрать направление — нажмите для автопилота",
   "Asking you": "Спрашивает вас",
   "No open question": "Нет открытого вопроса",
-  "waiting for your answer": "ждёт вашего ответа"
+  "waiting for your answer": "ждёт вашего ответа",
+  "Retention editing": "Монтаж на удержание",
+  "Short-form hooks": "Хуки коротких видео",
+  "Trend transitions": "Трендовые переходы",
+  "Documentary & essays": "Документалки и видеоэссе",
+  "Vlogs & B-roll": "Влоги и B-roll",
+  "Cutting to the beat": "Монтаж в бит",
+  "Ads & brand films": "Реклама и брендфильмы",
+  "Storytelling structure": "Структура истории",
+  "Sound-driven edits": "Монтаж от звука",
+  "Motion graphics": "Моушн-графика"
 }
