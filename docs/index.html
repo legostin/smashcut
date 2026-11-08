@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smashcut — open-source AI video production studio (Claude Code & Codex agents)</title>
+<meta name="description" content="Smashcut is a free, open-source, local-first AI video editor. Claude Code and Codex agents write the script and make motion graphics, music, voice-over, 3D (Blender), tracking and the edit — as code you can change.">
+<meta name="keywords" content="AI video editor, AI motion graphics, open source video editor, Claude Code, Codex, MCP, explainer video maker, product launch video, text to video, Remotion alternative, GSAP, Blender">
+<link rel="canonical" href="https://legostin.github.io/smashcut/">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0a0a0b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Smashcut">
+<meta property="og:title" content="Smashcut — your AI crew makes the video. You direct.">
+<meta property="og:description" content="Open-source AI video production studio: agents write the script, then make motion graphics, music, voice-over, 3D and the edit — locally, as code.">
+<meta property="og:url" content="https://legostin.github.io/smashcut/">
+<meta property="og:image" content="https://legostin.github.io/smashcut/assets/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Smashcut — open-source AI video production studio">
+<meta name="twitter:description" content="Claude Code & Codex agents make motion graphics, music, voice-over, 3D and the edit. You direct.">
+<meta name="twitter:image" content="https://legostin.github.io/smashcut/assets/og.png">
+<link rel="alternate" hreflang="en" href="https://github.com/legostin/smashcut#readme">
+<link rel="alternate" hreflang="ru" href="https://github.com/legostin/smashcut/blob/main/README.ru.md">
+<link rel="alternate" hreflang="zh-Hans" href="https://github.com/legostin/smashcut/blob/main/README.zh-CN.md">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Smashcut",
+  "alternateName": "smashcut-studio",
+  "applicationCategory": "MultimediaApplication",
+  "applicationSubCategory": "Video editor",
+  "operatingSystem": "macOS, Linux",
+  "description": "Open-source, local-first AI video production studio. Claude Code and Codex agents write the script and make motion graphics, music, voice-over, 3D (Blender), tracking and the edit as code.",
+  "url": "https://legostin.github.io/smashcut/",
+  "downloadUrl": "https://www.npmjs.com/package/smashcut-studio",
+  "codeRepository": "https://github.com/legostin/smashcut",
+  "license": "https://opensource.org/licenses/MIT",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "image": "https://legostin.github.io/smashcut/assets/og.png",
+  "screenshot": ["https://legostin.github.io/smashcut/assets/home.jpg", "https://legostin.github.io/smashcut/assets/storyboard.jpg", "https://legostin.github.io/smashcut/assets/editor.jpg"],
+  "featureList": ["AI storyboard and script", "Motion graphics as code (GSAP)", "Music as code (Tone.js)", "Voice-over with pace check", "Blender 3D in stages", "Camera, planar and object tracking", "Shot detection", "Export MP4, ProRes 4444 alpha, WebM, GIF"]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Is Smashcut free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Smashcut is MIT licensed and uses the Claude Code or Codex subscription you already have. Optional services such as ElevenLabs or video generators use your own keys." } },
+    { "@type": "Question", "name": "Do I need to know how to code?", "acceptedAnswer": { "@type": "Answer", "text": "No. You describe and direct the video in plain language; the AI agents write the code. Developers can open and edit everything." } },
+    { "@type": "Question", "name": "Can Smashcut make vertical videos for TikTok, Reels and Shorts?", "acceptedAnswer": { "@type": "Answer", "text": "Yes: 9:16, 1:1, 4:5 and 16:9, with platform safe areas, captions and versions per format." } },
+    { "@type": "Question", "name": "Is Smashcut a Remotion alternative?", "acceptedAnswer": { "@type": "Answer", "text": "It shares the idea that video is code, but Smashcut is a full editor where AI agents do the work: script, storyboard, timeline, music, voice-over, 3D, tracking and review." } }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0a0a0b; --card: #131315; --line: #222227; --fg: #f4f4f5; --fg2: #a1a1aa; --accent: #d4ff3a; --ink: #0a0a0b; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { background-image: radial-gradient(#16161a 1px, transparent 1px); background-size: 22px 22px; }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+nav { display: flex; align-items: center; gap: 12px; height: 68px; }
+nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; color: var(--fg); }
+nav .grow { flex: 1; }
+nav a.l { color: var(--fg2); font-size: 14px; margin-left: 18px; }
+.hero { text-align: center; padding: 72px 0 40px; }
+.hero h1 { font-size: clamp(36px, 6vw, 68px); line-height: 1.02; letter-spacing: -0.035em; margin: 0 0 18px; font-weight: 800; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero p { max-width: 700px; margin: 0 auto 30px; color: var(--fg2); font-size: 18px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 12px; font-weight: 600; }
+.btn.primary { background: var(--accent); color: var(--ink); }
+.btn.ghost { border: 1px solid var(--line); color: var(--fg); }
+.btn:hover { text-decoration: none; filter: brightness(1.08); }
+code.cmd { display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 18px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); font: 15px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--fg); }
+code.cmd button { background: none; border: 0; color: var(--fg2); cursor: pointer; font: inherit; }
+.shot { margin: 46px auto 0; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 40px 120px rgba(0,0,0,.6); }
+.shot img { width: 100%; display: block; }
+section { padding: 70px 0 10px; }
+h2 { font-size: clamp(26px, 3.4vw, 38px); letter-spacing: -0.02em; margin: 0 0 12px; }
+.lead { color: var(--fg2); max-width: 760px; margin: 0 0 30px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+.card h3 { margin: 0 0 8px; font-size: 17px; }
+.card p { margin: 0; color: var(--fg2); font-size: 14.5px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
+.split img { width: 100%; border-radius: 14px; border: 1px solid var(--line); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; overflow: hidden; border-radius: 14px; }
+th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+th { color: var(--fg2); font-weight: 500; }
+td:nth-child(2) { color: var(--accent); font-weight: 600; }
+.tablewrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; margin-bottom: 10px; }
+summary { cursor: pointer; font-weight: 600; }
+details p { color: var(--fg2); margin: 10px 0 0; }
+footer { padding: 70px 0 50px; color: var(--fg2); font-size: 14px; text-align: center; }
+@media (max-width: 760px) { .split { grid-template-columns: 1fr; } nav a.l { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="./"><img src="assets/logo.svg" width="30" height="30" alt=""> Smashcut</a>
+    <div class="grow"></div>
+    <a class="l" href="#features">Features</a>
+    <a class="l" href="#compare">Compare</a>
+    <a class="l" href="#faq">FAQ</a>
+    <a class="l" href="https://github.com/legostin/smashcut">GitHub</a>
+  </nav>
+
+  <header class="hero">
+    <h1>Your AI crew makes the video.<br><em>You direct.</em></h1>
+    <p>Smashcut is an open-source AI video production studio. Claude Code and Codex agents write the script, then make the motion graphics, music, voice-over, 3D shots and the edit — locally, as code you can change.</p>
+    <div class="cta">
+      <code class="cmd">npx smashcut-studio <button onclick="navigator.clipboard.writeText('npx smashcut-studio'); this.textContent='copied'">copy</button></code>
+      <a class="btn primary" href="https://github.com/legostin/smashcut">Star on GitHub</a>
+      <a class="btn ghost" href="https://www.npmjs.com/package/smashcut-studio">npm</a>
+    </div>
+    <div class="shot"><img src="assets/home.jpg" alt="Smashcut home: describe the video, pick a format, add references" width="1600" height="500"></div>
+  </header>
+
+  <section id="features">
+    <h2>AI video production, from brief to export</h2>
+    <p class="lead">Not a prompt-to-clip toy: a full editor where agents plan, build, review and fix — and you stay in control of every frame.</p>
+    <div class="grid">
+      <div class="card"><h3>Storyboard first</h3><p>The agent writes the script — scenes, copy, timing, visuals — then works scene by scene with live statuses. Approve or lock what's done.</p></div>
+      <div class="card"><h3>Motion graphics as code</h3><p>HTML/CSS/GSAP clips render frame-exact: exact text, numbers, charts and logos. 24 transitions, 17 effects, masks, blend modes.</p></div>
+      <div class="card"><h3>Pro craft rules</h3><p>Story first, audio as the clock, easing by role, read time, safe areas, seams and sound levels — distilled from measured references.</p></div>
+      <div class="card"><h3>Music & voice-over</h3><p>Music as code with Tone.js. Voice-over as a process: numbers spelled out, stress marks, pauses, takes with a pace check.</p></div>
+      <div class="card"><h3>3D with Blender</h3><p>Scenes as Python code, rendered in stages: mock in seconds → look → final, replaced in place on the timeline.</p></div>
+      <div class="card"><h3>Footage tracking</h3><p>Camera, planar and object tracking: graphics glued to the world, screen replacement with perspective, auto-reframe to 9:16.</p></div>
+      <div class="card"><h3>References & inspiration</h3><p>57 techniques with guides and 108 curated real-world motion pieces with breakdowns — bind them to scenes as references.</p></div>
+      <div class="card"><h3>Yours, locally</h3><p>Runs on your machine with your agent subscription. Projects are folders with git history. MIT licensed.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="split">
+      <div><h2>Direct, don't regenerate</h2><p class="lead">Select scenes and say what to change. Pin comments on frames. Sub-agents build scenes in parallel; a review loop checks numbers and contact sheets before the agent says "done".</p></div>
+      <img src="assets/storyboard.jpg" alt="Storyboard with scene statuses and selection actions" loading="lazy" width="1600" height="1000">
+    </div>
+  </section>
+
+  <section>
+    <div class="split">
+      <img src="assets/editor.jpg" alt="Editor with preview, multi-track timeline and agent panel" loading="lazy" width="1600" height="1000">
+      <div><h2>A real editor underneath</h2><p class="lead">Multi-track timeline, beat-synced cuts, versions for other languages and formats, and export to MP4, ProRes 4444 with alpha, WebM or GIF.</p></div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <h2>How Smashcut compares</h2>
+    <div class="tablewrap"><table>
+      <tr><th></th><th>Smashcut</th><th>Remotion</th><th>Video generators</th><th>ComfyUI</th><th>After Effects</th></tr>
+      <tr><td>Made by AI agents from a brief</td><td>Yes</td><td>You write code</td><td>Prompt → clip</td><td>Node graph</td><td>Manual</td></tr>
+      <tr><td>Exact text, numbers, logos</td><td>Yes</td><td>Yes</td><td>Often garbled</td><td>Hard</td><td>Yes</td></tr>
+      <tr><td>Edit a detail without regenerating</td><td>Yes</td><td>Yes</td><td>No</td><td>Partly</td><td>Yes</td></tr>
+      <tr><td>Whole video: script, music, voice, edit</td><td>Yes</td><td>DIY</td><td>Clips only</td><td>DIY</td><td>Manual</td></tr>
+      <tr><td>Runs locally</td><td>Yes</td><td>Yes</td><td>Cloud</td><td>Yes (GPU)</td><td>Yes</td></tr>
+      <tr><td>Open source</td><td>MIT</td><td>Source-available</td><td>No</td><td>GPL</td><td>No</td></tr>
+    </table></div>
+  </section>
+
+  <section id="faq">
+    <h2>FAQ</h2>
+    <details><summary>Is Smashcut free?</summary><p>Yes — MIT licensed. It uses the Claude Code or Codex subscription you already have; optional services (ElevenLabs, video generators) use your own keys.</p></details>
+    <details><summary>Do I need to know how to code?</summary><p>No. Describe and direct the video in plain language; agents write the code. Developers can open and edit everything.</p></details>
+    <details><summary>Can it make vertical videos for TikTok, Reels and Shorts?</summary><p>Yes: 9:16, 1:1, 4:5 and 16:9 with platform safe areas, captions and versions per format.</p></details>
+    <details><summary>Is it a Remotion alternative?</summary><p>It shares the idea that video is code, but Smashcut is a full editor where AI agents do the work: script, storyboard, timeline, music, voice-over, 3D, tracking and review.</p></details>
+    <details><summary>Does my footage leave my computer?</summary><p>No. Everything runs locally; only your agent CLI talks to its provider, plus optional services you configure.</p></details>
+  </section>
+
+  <footer>
+    <p><a href="https://github.com/legostin/smashcut">GitHub</a> · <a href="https://www.npmjs.com/package/smashcut-studio">npm</a> · <a href="https://github.com/legostin/smashcut/blob/main/README.ru.md">Русский</a> · <a href="https://github.com/legostin/smashcut/blob/main/README.zh-CN.md">简体中文</a></p>
+    <p>MIT License</p>
+  </footer>
+</div>
+</body>
+</html>

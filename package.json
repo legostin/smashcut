@@ -1,19 +1,44 @@
 {
   "name": "smashcut-studio",
   "version": "0.1.0",
-  "license": "MIT",
-  "description": "Smashcut — AI agents (Claude Code / Codex) make motion graphics, music, voice-over, 3D and the edit; you direct. Local-first video editor.",
-  "type": "module",
+  "description": "Smashcut — open-source AI video production studio. Your AI crew (Claude Code / Codex agents) writes the script and makes motion graphics, music, voice-over, 3D (Blender), tracking and the edit. Local-first, code-based, MCP.",
   "keywords": [
+    "ai-video-editor",
+    "ai-video",
     "video-editor",
     "motion-graphics",
+    "motion-design",
+    "ai-agents",
     "claude-code",
     "codex",
     "mcp",
-    "agents",
+    "model-context-protocol",
     "gsap",
-    "tone.js"
+    "tone.js",
+    "remotion-alternative",
+    "after-effects-alternative",
+    "explainer-video",
+    "video-generation",
+    "text-to-video",
+    "blender",
+    "object-tracking",
+    "storyboard",
+    "voiceover",
+    "elevenlabs",
+    "local-first",
+    "open-source"
   ],
+  "homepage": "https://legostin.github.io/smashcut/",
+  "bugs": {
+    "url": "https://github.com/legostin/smashcut/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/legostin/smashcut.git"
+  },
+  "license": "MIT",
+  "author": "legostin",
+  "type": "module",
   "bin": {
     "smashcut": "bin/studio.mjs",
     "smashcut-studio": "bin/studio.mjs"
@@ -28,6 +53,8 @@
     "server/mcp/",
     "server/skeletons/",
     "README.md",
+    "README.zh-CN.md",
+    "README.ru.md",
     "LICENSE"
   ],
   "scripts": {
