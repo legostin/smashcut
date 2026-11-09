@@ -544,7 +544,7 @@ function Composer({ task }: { task: Task | null }) {
       <div className="composer-bar">
         <div className="row gap6">
           {!task && <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>}
-          <ModelPicker agent={task?.agent || agent} />
+          <ModelPicker agent={task?.agent || agent} task={task} />
           <button className={'auto-pill' + (autopilot ? ' on' : '')} aria-pressed={autopilot} onClick={() => actions.setAutopilot(!autopilot)} title={autopilot ? t('Autopilot: the agent decides everything itself and explains its choices') : t('The agent may ask you and show drafts to choose a direction — click for autopilot')}>{t('Autopilot')}</button>
         </div>
         <div className="row gap6">

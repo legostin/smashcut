@@ -973,7 +973,12 @@
   "Enter — the agent takes it into account at its next step": "Enter — агент учтёт это на следующем шаге",
   "Click to show all": "Нажмите, чтобы показать целиком",
   "The verdict is saved on the scene — open the Script tab to see it.": "Вердикт сохранён в сцене — он во вкладке «Сценарий».",
-  "{n} attachment|{n} attachments": {"one": "{n} вложение", "few": "{n} вложения", "many": "{n} вложений", "other": "{n} вложения"},
+  "{n} attachment|{n} attachments": {
+    "one": "{n} вложение",
+    "few": "{n} вложения",
+    "many": "{n} вложений",
+    "other": "{n} вложения"
+  },
   "Art director": "Арт-директор",
   "review": "ревью",
   "Loading tools": "Подключает инструменты",
@@ -1030,5 +1035,8 @@
   "The edit is empty — describe the video to the agent on the right, or add media from the library on the left": "Монтаж пока пуст — опишите ролик агенту справа или добавьте медиа из библиотеки слева",
   "Click — add to the project references (bound to the selected scenes) · + inserts the reference clip at the playhead as a quick draft": "Клик — в референсы проекта (к выделенным сценам) · + вставляет клип-образец на плейхед как быстрый черновик",
   "Click — add to the project references (bound to the selected scenes)": "Клик — в референсы проекта (к выделенным сценам)",
-  "Expand to the full timeline (⇧T)": "Развернуть полный таймлайн (⇧T)"
+  "Expand to the full timeline (⇧T)": "Развернуть полный таймлайн (⇧T)",
+  "next message": "со след. сообщения",
+  "The agent is working on {now} right now. Your choice applies from your next message — or right away with “Restart with this”.": "Агент сейчас работает на {now}. Ваш выбор применится со следующего сообщения — или сразу через «Начать заново с этим».",
+  "The agent is working on {now} right now and keeps it for the current step. A new choice applies from your next message — or right away with “Restart with this” (same session, nothing is lost).": "Агент сейчас работает на {now} и не меняет её до конца текущего шага. Новый выбор применится со следующего сообщения — или сразу через «Начать заново с этим» (та же сессия, ничего не теряется)."
 }

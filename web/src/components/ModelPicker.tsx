@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AgentKind } from '../../../shared/types';
+import type { AgentKind, Task } from '../../../shared/types';
 import { useStore, actions } from '../store';
 import { Icon } from './Icon';
 import { t } from '../i18n';
@@ -21,7 +21,7 @@ const EFFORTS = [
 ] as const;
 
 /** model + reasoning effort for the chat: a compact pill with a menu (applies to new tasks and the next message) */
-export function ModelPicker({ agent }: { agent: AgentKind }) {
+export function ModelPicker({ agent, task }: { agent: AgentKind; task?: Task | null }) {
   const model = useStore((s) => s.chatModel[agent] || '');
   const effort = useStore((s) => s.chatEffort);
   const [open, setOpen] = useState(false);
@@ -34,12 +34,19 @@ export function ModelPicker({ agent }: { agent: AgentKind }) {
     return () => window.removeEventListener('mousedown', close);
   }, [open]);
   useEffect(() => { setCustom(agent === 'codex' || !CLAUDE_MODELS.some((m) => m.id === model) ? model : ''); }, [agent, model]);
-  const modelLabel = agent === 'claude' ? (CLAUDE_MODELS.find((m) => m.id === model)?.label || model) : model || 'Default';
-  const effortLabel = EFFORTS.find((e) => e.id === effort)?.label || 'Auto';
+  const labelOf = (m: string) => (agent === 'claude' ? (CLAUDE_MODELS.find((x) => x.id === m)?.label || m) : m || 'Default');
+  const effortOf = (e: string) => EFFORTS.find((x) => x.id === e)?.label || 'Auto';
+  const modelLabel = labelOf(model);
+  const effortLabel = effortOf(effort);
+  // a working agent keeps the model it was started with: say so, and when the new choice applies
+  const working = !!task && (task.status === 'running' || task.status === 'queued');
+  const pending = working && ((task!.model || '') !== model || (task!.effort || '') !== (effort || ''));
+  const nowLabel = working ? `${t(labelOf(task!.model || ''))} · ${t(effortOf(task!.effort || ''))}` : '';
   return (
     <div className="model-pick" ref={box}>
-      <button className={'model-pill' + (open ? ' on' : '')} onClick={() => setOpen((o) => !o)} title={t('Model and thinking level for this chat')}>
-        <Icon name="sparkle" size={11} /> {t(modelLabel)}<span className="model-sep">·</span>{t(effortLabel)}
+      <button className={'model-pill' + (open ? ' on' : '') + (pending ? ' pending' : '')} onClick={() => setOpen((o) => !o)}
+        title={pending ? t('The agent is working on {now} right now. Your choice applies from your next message — or right away with “Restart with this”.', { now: nowLabel }) : t('Model and thinking level for this chat')}>
+        <Icon name="sparkle" size={11} /> {t(modelLabel)}<span className="model-sep">·</span>{t(effortLabel)}{pending && <span className="model-next">{t('next message')}</span>}
       </button>
       {open && (
         <div className="model-menu" role="dialog">
@@ -63,7 +70,9 @@ export function ModelPicker({ agent }: { agent: AgentKind }) {
           <div className="model-seg">
             {EFFORTS.map((e) => <button key={e.id} className={effort === e.id ? 'on' : ''} onClick={() => actions.setChatEffort(e.id)}>{t(e.label)}</button>)}
           </div>
-          <div className="model-note muted xsmall">{t('Applies to new tasks and to your next message in this one. Sub-agents use the same.')}</div>
+          <div className="model-note muted xsmall">{working
+            ? t('The agent is working on {now} right now and keeps it for the current step. A new choice applies from your next message — or right away with “Restart with this” (same session, nothing is lost).', { now: nowLabel })
+            : t('Applies to new tasks and to your next message in this one. Sub-agents use the same.')}</div>
         </div>
       )}
     </div>
