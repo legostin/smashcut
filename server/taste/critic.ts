@@ -158,7 +158,7 @@ function compactDesign(): string {
   } catch { return ''; }
 }
 
-export interface ReviewRequest { caller?: string; sceneId?: string; film?: boolean; start?: number; end?: number; focus?: string; force?: boolean }
+export interface ReviewRequest { caller?: string; sceneId?: string; film?: boolean; start?: number; end?: number; focus?: string; force?: boolean; /** language name for the verdict text (default: the caller's reply language, else English) */ language?: string }
 export interface ReviewStart { taskId?: string; cached?: SceneReview; text?: string; sheets: string[]; round: number; scene?: string; film?: boolean }
 
 /** start an art-director review of a scene, a range, or the whole film; unchanged frames reuse the last verdict */
@@ -212,11 +212,20 @@ export async function startReview(req: ReviewRequest): Promise<ReviewStart> {
     measured,
     prev ? `Previous round's issues — check each one (fixed or not):\n${[...prev.p0.map((x) => 'P0 ' + x), ...prev.p1.map((x) => 'P1 ' + x)].join('\n')}` : '',
     req.focus ? `The author asks you to look especially at: ${req.focus}` : '',
+    verdictLanguage(req) ? `Write the prose, the verdict and every item in ${verdictLanguage(req)} — the user reads them (keep times, px, hex colours, ease names and ids as they are; the JSON keys stay in English).` : '',
   ].filter(Boolean).join('\n\n');
 
   const title = `Art director · ${film ? 'whole video' : sc ? `scene ${n} “${sc.title}”` : `${start.toFixed(1)}–${end.toFixed(1)} s`}`;
   const t = startCritic(req.caller, { title, prompt, reviewOf: { sceneId: sc?.id, film, start, end, round, sheet: shots.files[0], hash: shots.hash } });
   return { taskId: t.id, sheets: [...shots.files, ...(motion ? [motion.file] : []), ...(board.file ? [board.file] : [])], round, scene: sc?.id, film };
+}
+
+/** the user's language: given by the UI, else the language the caller agent was told to reply in */
+function verdictLanguage(req: ReviewRequest): string {
+  if (req.language && req.language !== 'English') return req.language;
+  const caller = req.caller ? getTask(req.caller) : undefined;
+  const m = caller?.prompt.match(/Write your replies and summaries for the user in ([A-Za-z ()]+)\./);
+  return m && m[1] !== 'English' ? m[1] : '';
 }
 
 /** the whole film: one key frame per scene (its payoff, ~55 %) and both sides of every scene change */

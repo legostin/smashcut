@@ -65,7 +65,7 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
 
         {visual && <LayoutPanel item={item} project={project} />}
 
-        {item.kind !== 'music' && <FxPanel item={item} />}
+        {item.kind !== 'music' && <FxPanel item={item} audioOnly={!visual} />}
 
         {(item.kind === 'clip' || item.kind === 'music') && <History path={item.kind === 'clip' ? `clips/${item.ref}` : `music/${item.ref}`} clipId={item.kind === 'clip' ? item.ref : undefined} />}
       </div>
@@ -90,7 +90,7 @@ function Menu({ item }: { item: Item }) {
   const run = (fn: () => unknown) => () => { setOpen(false); fn(); };
   return (
     <div className="rel" onPointerDown={(e) => e.stopPropagation()}>
-      <button className="icon-btn" onClick={() => setOpen(!open)}><Icon name="more" size={15} /></button>
+      <button className="icon-btn" title={t('More actions')} aria-label={t('More actions')} onClick={() => setOpen(!open)}><Icon name="more" size={15} /></button>
       {open && (
         <div className="menu right">
           {item.kind === 'clip' && <button className="menu-item" onClick={run(async () => { const r = await api('POST', '/api/agent/lint-clip', { clipId: item.ref }); notify(r.ok ? 'info' : 'error', r.ok ? t('The clip looks fine') : r.issues.join('\n')); })}>{t('Check clip')}</button>}

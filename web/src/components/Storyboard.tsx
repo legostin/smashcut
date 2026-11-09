@@ -115,7 +115,7 @@ function SceneCard({ sc, n, project, selected, agent }: { sc: Scene; n: number; 
         {refCount > 0 && <span className="scene-refs" title={t('References for this scene')}><Icon name="star" size={11} />{refCount}</span>}
       </div>
       <div className="scene-meta">
-        <span className="scene-title ellipsis">{sc.title}</span>
+        <span className="scene-title ellipsis" title={sc.title}>{sc.title}</span>
         <span className="mono muted xsmall">{sc.duration.toFixed(1)}s</span>
       </div>
       <div className="scene-foot">

@@ -61,13 +61,13 @@ export function GeneratorSettings({ s, setS }: { s: Settings; setS: (s: Settings
           <div key={k.field} className="col gap4">
             <div className="row gap6">
               <span className="small" style={{ width: 110, flex: 'none' }}>{k.label}</span>
-              <input className="input grow" type="password" autoComplete="off" placeholder={p?.keySource === 'env' ? t('set via environment variable') : k.placeholder}
+              <input className="input grow" type="password" autoComplete="off" placeholder={p?.keySource === 'env' ? t('set via environment variable') : t(k.placeholder)}
                 value={s[k.field] || ''} onChange={(e) => setS({ ...s, [k.field]: e.target.value })} />
               <button className="btn sm" disabled={c?.busy} onClick={() => check(k.provider, k.field)}>{c?.busy ? <span className="spinner sm" /> : t('Check')}</button>
               <span style={{ width: 14, color: c ? (c.ok ? 'var(--ok)' : 'var(--err)') : 'var(--fg3)' }} title={c?.detail}>{c && !c.busy ? (c.ok ? '✓' : '✗') : ''}</span>
             </div>
             {c && !c.busy && c.detail && <div className={c.ok ? 'muted xsmall' : 'error-box'}>{c.detail}</div>}
-            {p && !c && <div className="muted xsmall">{p.models.length ? t('{n} models', { n: p.models.length }) + ' · ' : ''}{p.keyUrl && <a href={p.keyUrl} target="_blank" rel="noreferrer">{t('get a key')}</a>}</div>}
+            {p && !c && <div className="muted xsmall">{p.models.length ? t('{n} models', { n: p.models.length }) + ' · ' : ''}{p.keyUrl && <a className="link key-link" href={p.keyUrl} target="_blank" rel="noreferrer">{t('get a key')}</a>}</div>}
           </div>
         );
       })}

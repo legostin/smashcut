@@ -30,7 +30,10 @@ export async function addRefLink(raw: string) {
 
 /** the project's references, right above the chat input: see, remove, add more */
 export function ChatRefs() {
-  const refs = useStore((s) => s.references);
+  // a reference already attached to this message shows as its chip — don't list it twice
+  const attached = useStore((s) => s.chatContext);
+  const all = useStore((s) => s.references);
+  const refs = all.filter((r) => !attached.some((c) => c.key === 'ref:' + r.ref));
   const media = useStore((s) => s.media);
   const [menu, setMenu] = useState(false);
   const [link, setLink] = useState<string | null>(null);

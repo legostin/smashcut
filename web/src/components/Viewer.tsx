@@ -34,6 +34,7 @@ export function Viewer({ project }: { project: Project }) {
             <CommentLayer project={project} active={commentMode} />
           </div>
         )}
+        {project.items.length === 0 && !commentMode && <div className="stage-empty">{t('The edit is empty — describe the video to the agent on the right, or add media from the library on the left')}</div>}
         <LivePill />
         <ReviewBar />
       </div>
@@ -209,7 +210,7 @@ function Transport({ project }: { project: Project }) {
       else if (e.key === 'Home') seek(0);
       else if (e.key === 'End') seek(end);
       else if (e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey) setState((s) => ({ commentMode: !s.commentMode }));
-      else if (e.key === 'Escape') setState((s) => (s.commentMode ? { commentMode: false } : s.selectedCommentId ? { selectedCommentId: null } : { selectedItemId: null }));
+      else if (e.key === 'Escape') setState((s) => (s.commentMode ? { commentMode: false } : s.selectedCommentId ? { selectedCommentId: null } : s.selectedItemId ? { selectedItemId: null } : { sceneSelection: [] }));
       else if ((e.key === 'Delete' || e.key === 'Backspace') && getState().selectedItemId) actions.removeItem(getState().selectedItemId!);
       else if (e.key.toLowerCase() === 's' && !e.metaKey && !e.ctrlKey && getState().selectedItemId) actions.split(getState().selectedItemId!, time.get());
     };
@@ -221,7 +222,7 @@ function Transport({ project }: { project: Project }) {
       <div className="tc mono">{fmtTime(ph, project.fps)}</div>
       <div className="row gap2 center">
         <button className="icon-btn" title={t('Previous frame (←)')} onClick={() => step(-1)}><Icon name="stepBack" size={14} /></button>
-        <button className="play" title={t('Space')} onClick={togglePlay}><Icon name={playing ? 'pause' : 'play'} size={15} /></button>
+        <button className="play" title={playing ? t('Pause (Space)') : t('Play (Space)')} aria-label={playing ? t('Pause') : t('Play')} onClick={togglePlay}><Icon name={playing ? 'pause' : 'play'} size={15} /></button>
         <button className="icon-btn" title={t('Next frame (→)')} onClick={() => step(1)}><Icon name="stepFwd" size={14} /></button>
       </div>
       <div className="row gap4 end">

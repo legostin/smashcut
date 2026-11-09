@@ -410,7 +410,16 @@ export function clipInput(item: Item, p: Project) {
   return { params: item.params || {}, offset: item.start - item.in, duration: item.duration + item.in, width: p.width, height: p.height, fps: p.fps };
 }
 
+/** transport timecode HH:MM:SS:FF (frames) — four groups, so 33 s never reads as 33 minutes */
 export const fmtTime = (t: number, fps = 30) => {
-  const m = Math.floor(t / 60), s = Math.floor(t % 60), f = Math.floor((t % 1) * fps + 1e-6);
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}:${String(f).padStart(2, '0')}`;
+  const x = Math.max(0, t);
+  const h = Math.floor(x / 3600), m = Math.floor((x % 3600) / 60), s = Math.floor(x % 60), f = Math.floor((x % 1) * fps + 1e-6);
+  return [h, m, s, f].map((v) => String(v).padStart(2, '0')).join(':');
+};
+/** short human time for scenes and lists: 0:03, 0:04.5, 1:12 */
+export const fmtShort = (t: number) => {
+  const x = Math.max(0, Math.round(t * 10) / 10);
+  const m = Math.floor(x / 60), s = x - m * 60;
+  const whole = Math.floor(s), tenth = Math.round((s - whole) * 10);
+  return `${m}:${String(whole).padStart(2, '0')}${tenth ? '.' + tenth : ''}`;
 };

@@ -18,6 +18,18 @@ const EXAMPLES = [
   'A launch video for our app, vertical, with screen recordings',
 ];
 
+/** a project name whose folder doesn't exist yet ("Promo" → "Promo 2"): the server refuses to create over an existing folder */
+export async function uniqueProjectName(name: string): Promise<string> {
+  const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9а-яё]+/gi, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'item'; // = server/util.ts slug
+  try {
+    const { projects } = await api<{ projects: string[] }>('GET', '/api/projects');
+    const taken = new Set(projects.map((d) => d.split('/').pop()));
+    let n = 1, out = name;
+    while (taken.has(slug(out)) && n < 100) out = `${name} ${++n}`;
+    return out;
+  } catch { return name; }
+}
+
 type Ref = { key: string; kind: 'file' | 'link' | 'inspiration'; label: string; file?: File; url?: string; insp?: Inspiration };
 
 /**
@@ -45,7 +57,7 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
   const picks = useMemo(() => {
     // a varied first row: one per category, then the rest
     const seen = new Set<string>(); const first: Inspiration[] = [], rest: Inspiration[] = [];
-    for (const x of insp) (seen.has(x.category) ? rest : (seen.add(x.category), first)).push(x);
+    for (const x of insp.filter((y) => y.thumb)) (seen.has(x.category) ? rest : (seen.add(x.category), first)).push(x);
     return [...first, ...rest].slice(0, 18);
   }, [insp]);
 
@@ -66,7 +78,7 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
       const fmt = FORMATS.find((f) => f.key === format)!;
       if (mode === 'home') {
         const name = idea.replace(/[.!?].*$/s, '').split(/\s+/).slice(0, 6).join(' ').slice(0, 48) || t('New project');
-        await api('POST', '/api/projects/create', { name, width: fmt.w, height: fmt.h });
+        await api('POST', '/api/projects/create', { name: await uniqueProjectName(name), width: fmt.w, height: fmt.h });
       } else if (project && (project.width !== fmt.w || project.height !== fmt.h)) {
         await api('PATCH', '/api/project', { width: fmt.w, height: fmt.h });
       }
@@ -88,7 +100,8 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
       await refresh();
       time.set(0);
       setState({ screen: 'editor', view: 'story', sideTab: 'agent', selectedTaskId: null, chatDraft: '', chatContext: [] } as any);
-      await actions.startTask(`${idea}\n\n${extra}`);
+      // if the task can't start, keep the idea in the chat box instead of losing it
+      try { await actions.startTask(`${idea}\n\n${extra}`); } catch { setState({ chatDraft: idea } as any); return; }
       setText(''); setRefs([]);
     } finally { setBusy(false); }
   };
@@ -124,7 +137,7 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
             ))}
           </div>
           <div className="hero-seg" role="group" aria-label={t('Length')}>
-            {LENGTHS.map((l) => <button key={l} className={length === l ? 'on' : ''} onClick={() => setLength(l)}>{l ? (l >= 60 ? `${l / 60}m` : `${l}s`) : t('Any')}</button>)}
+            {LENGTHS.map((l) => <button key={l} className={length === l ? 'on' : ''} onClick={() => setLength(l)}>{l ? (l >= 60 ? t('{n} min', { n: l / 60 }) : t('{n} s', { n: l })) : t('Any')}</button>)}
           </div>
           <button className="hero-attach" onClick={() => fileIn.current?.click()} title={t('Attach images or videos as references')}><Icon name="plus" size={13} /> {t('Files')}</button>
           <input ref={fileIn} type="file" multiple accept="image/*,video/*,audio/*" hidden onChange={(e) => e.target.files && addFiles(e.target.files)} />
@@ -133,7 +146,7 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
             <input value={link} placeholder={t('Paste a link…')} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }} />
           </div>
           </div>
-          <span className="muted xsmall">{agent === 'codex' ? 'Codex' : 'Claude'}</span>
+          <span className="muted xsmall" title={t('The agent that will do the work — change it in Settings')}>{agent === 'codex' ? 'Codex' : 'Claude'}</span>
           <button className="hero-go" disabled={!text.trim() || busy} onClick={() => go()} aria-label={t('Start')}>{busy ? <span className="spinner sm" /> : <Icon name="arrowUp" size={16} />}</button>
         </div>
       </div>
@@ -148,7 +161,7 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
               const on = refs.some((r) => r.key === 'i:' + x.id);
               return (
                 <button key={x.id} className={'hero-insp-tile' + (on ? ' on' : '')} onClick={() => toggleInsp(x)} title={`${x.title} — ${x.by}`}>
-                  <img src={`/api/inspiration/${x.id}/thumb`} alt="" loading="lazy" />
+                  <img src={`/api/inspiration/${x.id}/thumb`} alt="" loading="lazy" onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }} />
                   <span className="hero-insp-name ellipsis">{x.title}</span>
                   {on && <span className="hero-insp-check"><Icon name="check" size={12} /></span>}
                 </button>

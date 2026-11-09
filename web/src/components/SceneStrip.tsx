@@ -46,7 +46,7 @@ export function SceneStrip({ project }: { project: Project }) {
         )) : <div className="strip-empty" onPointerDown={scrub}>{t('No scenes yet — the timeline shows the edit itself')}</div>}
         <div className="strip-head" ref={head} />
       </div>
-      <button className="btn xs ghost" onClick={() => actions.setTimelineOpen(true)} title="⇧T"><Icon name="layers" size={12} /> {t('Timeline')}</button>
+      <button className="btn xs ghost" onClick={() => actions.setTimelineOpen(true)} title={t('Expand to the full timeline (⇧T)')}><Icon name="layers" size={12} /> {t('Timeline')}</button>
     </div>
   );
 }

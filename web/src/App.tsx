@@ -11,6 +11,7 @@ import { Icon } from './components/Icon';
 import { VersionDialog } from './components/VersionDialog';
 import { GeneratorSettings } from './components/GeneratorSettings';
 import { Home } from './components/Home';
+import { uniqueProjectName } from './components/HeroComposer';
 import { Storyboard, SelectionBar } from './components/Storyboard';
 import { SceneStrip, useTimelineHotkey } from './components/SceneStrip';
 import type { Project, Settings, Voice } from '../../shared/types';
@@ -233,16 +234,20 @@ function ProjectsDialog() {
   const [name, setName] = useState('');
   const [size, setSize] = useState('1920x1080');
   const [openPath, setOpenPath] = useState('');
-  useEffect(() => { api('GET', '/api/projects').then(setData); }, []);
+  const [names, setNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    api('GET', '/api/projects').then(setData);
+    api<{ projects: { dir: string; name: string }[] }>('GET', '/api/home').then((h) => setNames(Object.fromEntries(h.projects.map((p) => [p.dir, p.name])))).catch(() => {});
+  }, []);
   const open = async (p: string) => { await api('POST', '/api/projects/open', { path: p }); await refresh(); setState({ dialog: null, selectedItemId: null, selectedTaskId: null }); time.set(0); };
   const create = async () => {
     const [w, h] = size.split('x').map(Number);
-    await api('POST', '/api/projects/create', { name: name || t('New project'), width: w, height: h });
+    await api('POST', '/api/projects/create', { name: await uniqueProjectName(name.trim() || t('New project')), width: w, height: h });
     await refresh(); setState({ dialog: null, selectedItemId: null, selectedTaskId: null }); time.set(0);
   };
   return (
     <div className="col gap16">
-      <h2>{t('Projects')}</h2>
+      <div className="row between"><h2>{t('Projects')}</h2><button className="link" onClick={() => { setState({ dialog: null }); goHome(); }}>{t('Home')}</button></div>
       <div className="col gap6">
         {data?.projects.map((p) => {
           const id = data.ids?.[p];
@@ -250,8 +255,8 @@ function ProjectsDialog() {
           return (
             <div key={p} className={'project-row' + (here ? ' current' : '')}>
               <button className="project-open" onClick={(e) => (e.metaKey || e.ctrlKey) && id ? openInNewTab(id) : !here && open(p)} title={t('Open here · ⌘-click opens in a new tab')}>
-                <Icon name="folder" size={14} /> <span className="strong">{p.split('/').pop()}</span>
-                {here ? <span className="pill xs">{t('this tab')}</span> : data.open?.includes(p) ? <span className="pill xs ghost">{t('open')}</span> : null}
+                <Icon name="folder" size={14} /> <span className="strong project-row-name ellipsis">{names[p] || p.split('/').pop()}</span>
+                {here && <span className="pill xs">{t('this tab')}</span>}
                 <span className="muted xsmall ellipsis">{p}</span>
               </button>
               {id && !here && <button className="icon-btn xs" title={t('Open in a new tab')} onClick={() => openInNewTab(id)}><Icon name="external" size={13} /></button>}
@@ -262,7 +267,7 @@ function ProjectsDialog() {
       <div className="card col gap8">
         <div className="strong small">{t('New project')}</div>
         <div className="row gap6">
-          <input className="input grow" placeholder={t('Name')} value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input grow" placeholder={t('Name')} value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && create()} />
           <select className="input" value={size} onChange={(e) => setSize(e.target.value)}>
             <option value="1920x1080">16:9 · 1920×1080</option><option value="1080x1920">9:16 · 1080×1920</option><option value="1080x1080">1:1 · 1080×1080</option><option value="1080x1350">4:5 · 1080×1350</option><option value="3840x2160">4K</option>
           </select>
@@ -271,7 +276,7 @@ function ProjectsDialog() {
         <div className="muted xsmall">{t('Created in {dir}. A project is a regular folder with git history.', { dir: data?.projectsDir ?? '' })}</div>
       </div>
       <div className="row gap6">
-        <input className="input grow" placeholder={t('/path/to/project/folder')} value={openPath} onChange={(e) => setOpenPath(e.target.value)} />
+        <input className="input grow" placeholder={t('/path/to/project/folder')} value={openPath} onChange={(e) => setOpenPath(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && openPath && open(openPath)} />
         <button className="btn sm" onClick={() => openPath && open(openPath)}>{t('Open')}</button>
       </div>
     </div>
@@ -283,10 +288,17 @@ function SettingsDialog() {
   const agents = useStore((s) => s.agents);
   const dir = useStore((s) => s.dir);
   const repo = useStore((s) => (s as any).repo as string | undefined);
+  const home = useStore((s) => s.screen === 'home');
   const [s, setS] = useState<Settings | undefined>(settings);
+  /** the learned-taste box registers its unsaved edit here, so the one Save button saves it too */
+  const tasteSave = useRef<(() => Promise<unknown>) | null>(null);
   if (!s) return null;
-  const save = async () => { const next = await api('PATCH', '/api/settings', s); setState({ settings: next, agent: next.defaultAgent, dialog: null }); notify('info', t('Saved')); };
-  const mcpCmd = `claude mcp add studio -e STUDIO_URL=${location.protocol}//${location.hostname}:4317 -- node ${repo || '<repo>'}/server/mcp/stdio.mjs`;
+  const save = async () => {
+    if (tasteSave.current) await tasteSave.current().catch((e) => notify('error', (e as Error).message));
+    const next = await api('PATCH', '/api/settings', s); setState({ settings: next, agent: next.defaultAgent, dialog: null }); notify('info', t('Saved'));
+  };
+  const port = import.meta.env.DEV ? '4317' : location.port || '4317';
+  const mcpCmd = `claude mcp add studio -e STUDIO_URL=${location.protocol}//${location.hostname}:${port} -- node ${repo || '<repo>'}/server/mcp/stdio.mjs`;
   return (
     <div className="col gap12">
       <h2>{t('Settings')}</h2>
@@ -294,23 +306,24 @@ function SettingsDialog() {
         <LanguageField />
         <label className="field"><span>{t('Default agent')}</span><select className="input" value={s.defaultAgent} onChange={(e) => setS({ ...s, defaultAgent: e.target.value as any })}><option value="claude">Claude Code</option><option value="codex">Codex</option></select></label>
         <label className="field"><span>{t('Agent permissions')}</span><select className="input" value={s.permissionMode} onChange={(e) => setS({ ...s, permissionMode: e.target.value as any })}><option value="auto">{t('Auto — ask here when in doubt')}</option><option value="acceptEdits">{t('File edits only — ask for the rest')}</option><option value="bypassPermissions">{t('Everything, no questions')}</option></select></label>
-        <label className="field"><span>{t('Claude model (empty = default)')}</span><input className="input" value={s.claudeModel || ''} onChange={(e) => setS({ ...s, claudeModel: e.target.value || undefined })} placeholder={t('e.g. opus / sonnet')} /></label>
-        <label className="field"><span>{t('Codex model')}</span><input className="input" value={s.codexModel || ''} onChange={(e) => setS({ ...s, codexModel: e.target.value || undefined })} /></label>
-        <label className="field"><span>{t('Render workers')}</span><input className="input" type="number" min={1} max={12} value={s.renderWorkers} onChange={(e) => setS({ ...s, renderWorkers: Number(e.target.value) })} /></label>
-        <label className="field"><span>{t('Transcription model')}</span><select className="input" value={s.transcribeModel} onChange={(e) => setS({ ...s, transcribeModel: e.target.value })}><option value="Xenova/whisper-tiny">{t('whisper-tiny (fast)')}</option><option value="Xenova/whisper-base">whisper-base</option><option value="Xenova/whisper-small">{t('whisper-small (more accurate)')}</option></select></label>
+        <label className="field"><span>{t('Claude model')}</span><input className="input" value={s.claudeModel || ''} onChange={(e) => setS({ ...s, claudeModel: e.target.value || undefined })} placeholder={t('Default (e.g. opus / sonnet)')} /></label>
+        <label className="field"><span>{t('Codex model')}</span><input className="input" value={s.codexModel || ''} onChange={(e) => setS({ ...s, codexModel: e.target.value || undefined })} placeholder={t('Default')} /></label>
+        <label className="field"><span>{t('Export speed (parallel renders)')}</span><input className="input" type="number" min={1} max={12} value={s.renderWorkers} onChange={(e) => setS({ ...s, renderWorkers: Number(e.target.value) })} /></label>
+        <label className="field"><span>{t('Speech recognition (subtitles)')}</span><select className="input" value={s.transcribeModel} onChange={(e) => setS({ ...s, transcribeModel: e.target.value })}><option value="Xenova/whisper-tiny">{t('whisper-tiny (fast)')}</option><option value="Xenova/whisper-base">whisper-base</option><option value="Xenova/whisper-small">{t('whisper-small (more accurate)')}</option></select></label>
       </div>
       <AgentPoolSettings s={s} setS={setS} />
-      <HouseStyleSettings s={s} setS={setS} />
+      <HouseStyleSettings s={s} setS={setS} tasteSave={tasteSave} />
       <VoiceSettings s={s} setS={setS} />
       <GeneratorSettings s={s} setS={setS} />
       <div className="card small col gap4">
+        <span className="strong">{t('Agents on this computer')}</span>
         <div><b>Claude Code:</b> {agents?.claude || t('not found')}</div>
         <div><b>Codex:</b> {agents?.codex || t('not found')}</div>
         <div className="muted xsmall">{t('Connect the editor MCP to an agent in your own terminal:')}</div>
         <code className="xsmall selectable">{mcpCmd}</code>
-        <div className="muted xsmall">{t('Project folder:')} <code className="selectable">{dir}</code></div>
+        {!home && <div className="muted xsmall">{t('Project folder:')} <code className="selectable">{dir}</code></div>}
       </div>
-      <div className="row gap6 end"><button className="btn ghost sm" onClick={() => setState({ dialog: null })}>{t('Cancel')}</button><button className="btn primary sm" onClick={save}>{t('Save')}</button></div>
+      <div className="row gap6 end settings-foot"><button className="btn ghost sm" onClick={() => setState({ dialog: null })}>{t('Cancel')}</button><button className="btn primary sm" onClick={save}>{t('Save')}</button></div>
     </div>
   );
 }
@@ -320,7 +333,7 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
   const sub = s.subagents !== false;
   return (
     <div className="set-section col gap10">
-      <div className="section-title">{t('Agents working at once')}</div>
+      <div className="section-title">{t('Agents')}</div>
       <div className="set-row">
         <div className="col gap2 grow">
           <span className="small">{t('Agents at once (maximum)')}</span>
@@ -342,6 +355,15 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
         </div>
         <input type="checkbox" className="toggle" checked={!!s.agentUserConfig} onChange={(e) => setS({ ...s, agentUserConfig: e.target.checked })} />
       </div>
+      {sub && (
+        <div className="set-row">
+          <div className="col gap2 grow">
+            <span className="small">{t('Sub-agents per task')}</span>
+            <span className="muted xsmall">{t('How many sub-agents one task may run at the same time, within the overall limit above. Sub-agents start before new tasks in the queue.')}</span>
+          </div>
+          <Stepper value={s.maxSubagents ?? 3} min={1} max={6} onChange={(v) => setS({ ...s, maxSubagents: v })} />
+        </div>
+      )}
       <div className="set-row">
         <div className="col gap2 grow">
           <span className="small">{t('Art director review')}</span>
@@ -363,15 +385,6 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
           </select>
         </div>
       )}
-      {sub && (
-        <div className="set-row">
-          <div className="col gap2 grow">
-            <span className="small">{t('Sub-agents per task')}</span>
-            <span className="muted xsmall">{t('How many sub-agents one task may run at the same time, within the overall limit above. Sub-agents start before new tasks in the queue.')}</span>
-          </div>
-          <Stepper value={s.maxSubagents ?? 3} min={1} max={6} onChange={(v) => setS({ ...s, maxSubagents: v })} />
-        </div>
-      )}
     </div>
   );
 }
@@ -387,7 +400,7 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
 }
 
 /** the user's standing instructions for every project (sent to agents with each task) */
-function HouseStyleSettings({ s, setS }: { s: Settings; setS: (s: Settings) => void }) {
+function HouseStyleSettings({ s, setS, tasteSave }: { s: Settings; setS: (s: Settings) => void; tasteSave: React.MutableRefObject<(() => Promise<unknown>) | null> }) {
   const h = s.houseStyle || {};
   const set = (k: 'style' | 'direction' | 'colors', v: string) => setS({ ...s, houseStyle: { ...h, [k]: v } });
   return (
@@ -405,26 +418,28 @@ function HouseStyleSettings({ s, setS }: { s: Settings; setS: (s: Settings) => v
       <label className="field"><span>{t('Colours & type')}</span>
         <textarea className="input" rows={2} value={h.colors || ''} onChange={(e) => set('colors', e.target.value)} placeholder={t('e.g. off-black #111 background, one accent #FF5A36, Inter for text, Unbounded for titles')} />
       </label>
-      <LearnedTaste />
+      <LearnedTaste saveRef={tasteSave} />
     </div>
   );
 }
 
 /** the taste profile the agents learned from the user's picks, approvals, notes, reverts and 👍/👎 (editable) */
-function LearnedTaste() {
+function LearnedTaste({ saveRef }: { saveRef: React.MutableRefObject<(() => Promise<unknown>) | null> }) {
   type St = { profile: string; events: number; pending: number; distilledAt?: string; lastError?: string; running?: boolean };
   const [st, setSt] = useState<St | null>(null);
   const [draft, setDraft] = useState('');
-  const [busy, setBusy] = useState<'' | 'save' | 'distill' | 'forget'>('');
+  const [busy, setBusy] = useState<'' | 'distill' | 'forget'>('');
   const [confirmForget, setConfirmForget] = useState(false);
   const load = (r?: St) => (r ? Promise.resolve(r) : api<St>('GET', '/api/taste')).then((x) => { setSt(x); setDraft(x.profile); });
   useEffect(() => { load().catch(() => {}); }, []);
-  const run = async (k: 'save' | 'distill' | 'forget', fn: () => Promise<St>) => {
+  const run = async (k: 'distill' | 'forget', fn: () => Promise<St>) => {
     setBusy(k);
     try { await load(await fn()); } catch (e) { notify('error', (e as Error).message); load().catch(() => {}); } finally { setBusy(''); }
   };
+  const dirty = !!st && draft.trim() !== st.profile.trim();
+  // an unsaved edit here is saved by the dialog's Save button
+  useEffect(() => { saveRef.current = dirty ? () => api<St>('PUT', '/api/taste', { profile: draft }) : null; return () => { saveRef.current = null; }; }, [dirty, draft, saveRef]);
   if (!st) return null;
-  const dirty = draft.trim() !== st.profile.trim();
   return (
     <div className="col gap6 taste-learned">
       <div className="row between">
@@ -435,8 +450,8 @@ function LearnedTaste() {
       <textarea className="input mono" rows={8} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('Nothing learned yet — it fills in as you work.')} />
       {st.lastError && <span className="muted xsmall">{t('Last update failed: {err}', { err: st.lastError })}</span>}
       <div className="row gap6">
-        <button className="btn sm" disabled={!dirty || !!busy} onClick={() => run('save', () => api<St>('PUT', '/api/taste', { profile: draft }))}>{busy === 'save' ? <span className="spinner sm" /> : t('Save')}</button>
-        <button className="btn sm" disabled={!st.pending || !!busy} onClick={() => run('distill', () => api<St>('POST', '/api/taste/distill'))}>{busy === 'distill' ? <><span className="spinner sm" /> {t('Updating…')}</> : t('Update now')}</button>
+        <button className="btn sm" title={t('Turn the new signals into the profile now (it also happens on its own)')} disabled={!st.pending || dirty || !!busy} onClick={() => run('distill', () => api<St>('POST', '/api/taste/distill'))}>{busy === 'distill' ? <><span className="spinner sm" /> {t('Updating…')}</> : t('Update now')}</button>
+        {dirty && <span className="muted xsmall">{t('Your edit is saved with the Save button below.')}</span>}
         <span className="grow" />
         {confirmForget
           ? <>
@@ -512,7 +527,7 @@ function ExportDialog() {
   const project = useStore((s) => s.project)!;
   const jobs = useStore((s) => s.jobs);
   const exportsList = useStore((s) => s.exports);
-  const end = Math.max(1, ...project.items.map((i) => i.start + i.duration));
+  const end = project.items.length ? Math.max(1, ...project.items.map((i) => i.start + i.duration)) : Math.max(1, project.duration);
   const [from, setFrom] = useState(0);
   const [to, setTo] = useState(+end.toFixed(2));
   const [format, setFormat] = useState<'mp4' | 'prores' | 'webm' | 'gif'>(() => (localStorage.getItem('exp.format') as any) || 'mp4');
@@ -539,7 +554,7 @@ function ExportDialog() {
         <label className="field"><span>{t('Range, s')}</span><div className="row gap6"><input className="input" type="number" step={0.1} value={from} onChange={(e) => setFrom(Number(e.target.value))} /><span className="muted">—</span><input className="input" type="number" step={0.1} value={to} onChange={(e) => setTo(Number(e.target.value))} /></div></label>
         <label className="field"><span>{t('Size · {w}×{h}', { w: outW, h: outH })}</span><div className="seg">{[0.5, 1, 2].map((v) => <button key={v} className={scale === v ? 'on' : ''} onClick={() => setScale(v)}>{v * 100}%</button>)}</div></label>
         {format !== 'gif' && format !== 'prores' && <label className="field"><span>{t('Quality')}</span><div className="seg">{([['small', 'Compact'], ['standard', 'Standard'], ['high', 'Maximum']] as const).map(([k, l]) => <button key={k} className={quality === k ? 'on' : ''} onClick={() => setQuality(k)}>{t(l)}</button>)}</div></label>}
-        <label className="field"><span>Motion blur {blur > 1 ? t('· ×{n} subframes, 180° shutter', { n: blur }) : t('· off')}</span><div className="seg">{[1, 4, 8].map((v) => <button key={v} className={blur === v ? 'on' : ''} onClick={() => setBlur(v)}>{v === 1 ? t('Off') : v === 4 ? t('Soft') : t('Cinema')}</button>)}</div></label>
+        <label className="field"><span>{t('Motion blur')} {blur > 1 ? t('· ×{n} subframes, 180° shutter', { n: blur }) : t('· off')}</span><div className="seg">{[1, 4, 8].map((v) => <button key={v} className={blur === v ? 'on' : ''} onClick={() => setBlur(v)}>{v === 1 ? t('Off') : v === 4 ? t('Soft') : t('Cinema')}</button>)}</div></label>
         {alphaOk && <label className="field-line"><span>{t('Transparent background (graphics only, for overlaying in another editor)')}</span><input type="checkbox" className="toggle" checked={transparent} onChange={(e) => setTransparent(e.target.checked)} /></label>}
       </div>
       <div className="row between">

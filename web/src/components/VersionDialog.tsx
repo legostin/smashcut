@@ -95,7 +95,7 @@ export function VersionDialog() {
           </select>
         </label>
         <label className="field"><span>{t('Length')}</span>
-          <div className="seg">{LENGTHS.map((s) => <button key={s} className={length === s ? 'on' : ''} onClick={() => setLength(s)}>{s ? `${s}s` : t('Keep')}</button>)}</div>
+          <div className="seg">{LENGTHS.map((s) => <button key={s} className={length === s ? 'on' : ''} onClick={() => setLength(s)}>{s ? t('{n} s', { n: s }) : t('Keep')}</button>)}</div>
         </label>
       </div>
 

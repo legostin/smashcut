@@ -7,16 +7,23 @@ import { t } from '../i18n';
 import { TRANSITION_NAMES, EFFECT_NAMES, trName, fxName, fxParam, maskName, blendName } from '../fxNames';
 
 /** Transitions / effects / mask / blend controls for the selected item */
-export function FxPanel({ item }: { item: Item }) {
+export function FxPanel({ item, audioOnly }: { item: Item; audioOnly?: boolean }) {
   const fx: ItemFx = item.fx || {};
   const set = (patch: Partial<ItemFx>) => actions.updateItem(item.id, { fx: clean({ ...fx, ...patch }) });
-  return (
+  const transitions = (
     <>
       <div className="ip-section">
-        <div className="ip-section-title row between"><span>{t('Transitions')}</span><button className="link" onClick={() => setState({ libraryOpen: true })}>{t('Library')}</button></div>
+        <div className="ip-section-title row between"><span>{t('Transitions')}</span>{!audioOnly && <button className="link" onClick={() => setState({ libraryOpen: true, libraryTab: 'project' })}>{t('Library')}</button>}</div>
         <TransitionRow label={t('In')} value={fx.in} max={item.duration} onChange={(v) => set({ in: v })} />
         <TransitionRow label={t('Out')} value={fx.out} max={item.duration} onChange={(v) => set({ out: v })} />
+        {audioOnly && <div className="muted xsmall">{t('For sound, any transition works as a fade in / out')}</div>}
       </div>
+    </>
+  );
+  if (audioOnly) return transitions;
+  return (
+    <>
+      {transitions}
 
       <div className="ip-section">
         <div className="ip-section-title row between"><span>{t('Effects')}{fx.effects?.length ? ` · ${fx.effects.length}` : ''}</span><AddEffect onAdd={(type) => {

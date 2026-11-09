@@ -56,12 +56,18 @@ function langLine(code?: string) {
   return `\n\n(Write your replies and summaries for the user in ${LANG_NAMES[code]}. Keep code, file names, ids and tool arguments in English unless the content itself must be in another language.)`;
 }
 
-function trackFor(p: Project, kind: Item['kind'], ref: string): string {
+/** the track a new item goes to: the first compatible track that is free over [start, start + duration) — so an item
+ *  added on top of another doesn't land on the same track and hide it — else the first compatible one */
+function trackFor(p: Project, kind: Item['kind'], ref: string, span?: { start: number; duration: number }): string {
   let want: string[] = ['graphics'];
   if (kind === 'music') want = ['music', 'audio'];
   if (kind === 'media') {
     const t = MEDIA_EXT[path.extname(ref).toLowerCase()];
     want = t === 'audio' ? ['audio', 'music'] : ['video', 'graphics'];
+  }
+  if (span) {
+    const free = (id: string) => !p.items.some((i) => i.track === id && i.start < span.start + span.duration - 1e-3 && i.start + i.duration > span.start + 1e-3);
+    for (const k of want) { const tr = p.tracks.find((t) => t.kind === k && free(t.id)); if (tr) return tr.id; }
   }
   for (const k of want) { const tr = p.tracks.find((t) => t.kind === k); if (tr) return tr.id; }
   return p.tracks[0].id;
@@ -314,9 +320,10 @@ export async function registerRoutes(app: FastifyInstance) {
     const b = req.body;
     const id = 'i' + nid();
     await store.update((p) => {
+      const start = Math.max(0, Number(b.start) || 0), duration = Number(b.duration) || defaultDuration(b.kind, b.ref);
       const it: Item = {
-        id, kind: b.kind, ref: b.ref, track: b.track || trackFor(p, b.kind, b.ref), start: Math.max(0, Number(b.start) || 0), in: Number(b.in) || 0,
-        duration: Number(b.duration) || defaultDuration(b.kind, b.ref), label: b.label, params: b.params, opacity: b.opacity, volume: b.volume, transform: b.transform,
+        id, kind: b.kind, ref: b.ref, track: b.track || trackFor(p, b.kind, b.ref, { start, duration }), start, in: Number(b.in) || 0,
+        duration, label: b.label, params: b.params, opacity: b.opacity, volume: b.volume, transform: b.transform,
       };
       p.items.push(it);
       p.duration = Math.max(p.duration, Math.ceil(it.start + it.duration));
@@ -491,7 +498,8 @@ export async function registerRoutes(app: FastifyInstance) {
       await store.update((p) => {
         const kind = b.kind === 'clip' ? 'clip' : 'music';
         const mf = readJson<any>(store.p(kind === 'clip' ? 'clips' : 'music', id, 'manifest.json'), {});
-        p.items.push({ id: iid, kind, ref: id, track: b.place!.track || trackFor(p, kind, id), start: b.place!.start, in: 0, duration: b.place!.duration || defaultDuration(kind, id), params: b.place!.params, ...(mf.transform ? { transform: mf.transform } : {}), ...(mf.fx ? { fx: mf.fx } : {}) });
+        const duration = b.place!.duration || defaultDuration(kind, id);
+        p.items.push({ id: iid, kind, ref: id, track: b.place!.track || trackFor(p, kind, id, { start: b.place!.start, duration }), start: b.place!.start, in: 0, duration, params: b.place!.params, ...(mf.transform ? { transform: mf.transform } : {}), ...(mf.fx ? { fx: mf.fx } : {}) });
         p.duration = Math.max(p.duration, Math.ceil(b.place!.start + (b.place!.duration || 5)));
       });
       item = store.project.items.find((i) => i.id === iid);
@@ -813,7 +821,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const store = cur();
     const iid = 'i' + nid();
     await store.update((p) => {
-      const track = place.track || trackFor(p, 'media', file);
+      const track = place.track || trackFor(p, 'media', file, { start: Math.max(0, place.start ?? 0), duration });
       p.items.push({ id: iid, kind: 'media', ref: file, track, start: Math.max(0, place.start ?? 0), in: 0, duration: +duration.toFixed(3) });
       p.duration = Math.max(p.duration, Math.ceil((place.start ?? 0) + duration));
     });
@@ -1034,8 +1042,8 @@ export async function registerRoutes(app: FastifyInstance) {
     return startReview({ caller: tid || undefined, ...(req.body || {}) });
   });
   app.get<{ Params: { id: string } }>('/api/agent/art-director/:id', async (req) => { need(); return reviewStatus(req.params.id); });
-  app.post<{ Params: { id: string } }>('/api/script/scenes/:id/review', async (req) => { need(); return startReview({ sceneId: req.params.id, force: true }); });
-  app.post('/api/script/review', async () => { need(); return startReview({ film: true, force: true }); });
+  app.post<{ Params: { id: string }; Body: { lang?: string } }>('/api/script/scenes/:id/review', async (req) => { need(); return startReview({ sceneId: req.params.id, force: true, language: LANG_NAMES[req.body?.lang || ''] }); });
+  app.post<{ Body: { lang?: string } }>('/api/script/review', async (req) => { need(); return startReview({ film: true, force: true, language: LANG_NAMES[req.body?.lang || ''] }); });
   app.post<{ Body: { clipId: string } }>('/api/agent/lint-clip', async (req) => { need(); return lintClip(req.body.clipId); });
   // taste audit (server/taste/audit.ts): measured craft checks — a scene / a project range / one clip
   app.post<{ Body: { sceneId?: string; start?: number; end?: number; clipId?: string; itemId?: string } }>('/api/agent/taste-audit', async (req) => {

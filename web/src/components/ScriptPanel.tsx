@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Scene, StageId } from '../../../shared/types';
-import { useStore, usePlayhead, actions, seek, fmtTime, setState, api, notify } from '../store';
+import { useStore, usePlayhead, actions, seek, fmtTime, setState, api, notify, fmtShort } from '../store';
 import { Icon } from './Icon';
-import { t, tn } from '../i18n';
+import { t, tn, getLocale } from '../i18n';
 
 const STAGES: { id: StageId; label: string }[] = [
   { id: 'brief', label: 'Brief' },
@@ -13,6 +13,7 @@ const STAGES: { id: StageId; label: string }[] = [
   { id: 'export', label: 'Export' },
 ];
 const STATUS: Record<Scene['status'], string> = { todo: 'Not started', doing: 'In progress', review: 'Needs review', done: 'Done', approved: 'Approved' };
+const SEV: Record<string, string> = { P0: 'Must fix', P1: 'Should fix', P2: 'Nice to have' };
 const NEXT: Record<Scene['status'], Scene['status']> = { todo: 'doing', doing: 'done', review: 'done', done: 'approved', approved: 'todo' };
 
 /** Script & production pipeline: stage stepper, brief, scene cards (storyboard). */
@@ -62,7 +63,7 @@ export function ScriptPanel() {
 
         {script.scenes.length > 0 && (
           <div className="scenes-head">
-            <span>{tn(script.scenes.length, '{n} scene', '{n} scenes')} · {fmtTime(total, fps)}</span>
+            <span>{tn(script.scenes.length, '{n} scene', '{n} scenes')} · {fmtShort(total)}</span>
             <span className="scenes-progress"><span style={{ width: `${(done / script.scenes.length) * 100}%` }} /></span>
             <span>{done}/{script.scenes.length}</span>
           </div>
@@ -110,9 +111,10 @@ function VoiceAll() {
   return <button className="btn sm ghost" disabled={!!prog} onClick={run}>{prog ? <><span className="spinner sm" /> {t('Voiceover {p}', { p: prog })}</> : <>♪ {t('Voice all')}</>}</button>;
 }
 
-function useAutoGrow(v: string) {
+function useAutoGrow(v: string, open = true) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => { const el = ref.current; if (!el) return; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }, [v]);
+  // re-measure when the text changes and when the field turns into a textarea (card expanded); + borders, or the last line is clipped
+  useEffect(() => { const el = ref.current; if (!el) return; el.style.height = 'auto'; el.style.height = el.scrollHeight + (el.offsetHeight - el.clientHeight) + 'px'; }, [v, open]);
   return ref;
 }
 
@@ -127,29 +129,35 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
       <div className="scene-top" onClick={() => { seek(sc.start + 0.001); setState({ selectedItemId: null }); }}>
         <span className="scene-n">{n}</span>
         <TitleEdit sc={sc} />
-        <span className="scene-time mono">{fmtTime(sc.start, fps)}</span>
+        <span className="scene-time mono">{fmtShort(sc.start)}</span>
       </div>
       {(sc.voiceover || open) && <Field label={t('Text')} value={sc.voiceover || ''} onSave={(v) => actions.patchScene(sc.id, { voiceover: v })} open={open} placeholder={t('Voiceover or on-screen text')} />}
-      {(sc.speech || (open && sc.voiceover)) && <Field label={t('Speech (what the narrator says)')} value={sc.speech || ''} onSave={(v) => actions.patchScene(sc.id, { speech: v })} open={open} placeholder={t('Numbers as words, {2026|two thousand twenty-six}, stress á, [pause 0.4]')} />}
+      {open && (sc.speech || sc.voiceover) && <Field label={t('Speech (what the narrator says)')} value={sc.speech || ''} onSave={(v) => actions.patchScene(sc.id, { speech: v })} open={open} placeholder={t('Numbers as words, {2026|two thousand twenty-six}, stress á, [pause 0.4]')} />}
       {(sc.visual || open) && <Field label={t('Visual')} value={sc.visual || ''} onSave={(v) => actions.patchScene(sc.id, { visual: v })} open={open} placeholder={t('What is in the frame: composition, motion, style')} />}
       {open && (
         <div className="scene-timing">
-          <TimeInput label={t('Starts at')} value={sc.start} onSave={(v) => actions.patchScene(sc.id, { start: v })} />
-          <TimeInput label={t('Duration')} value={sc.duration} onSave={(v) => actions.patchScene(sc.id, { duration: v })} />
+          <TimeInput label={t('Starts at, s')} value={sc.start} onSave={(v) => actions.patchScene(sc.id, { start: v })} />
+          <TimeInput label={t('Duration, s')} value={sc.duration} onSave={(v) => actions.patchScene(sc.id, { duration: v })} />
+        </div>
+      )}
+      {open && (
+        <div className="scene-bar scene-more">
+          {sc.voiceover?.trim() && !sc.speech && <button className="link" onClick={() => actions.startTask(`Prepare the speech text for scene ${n} "${sc.title}" (id ${sc.id}) following the studio-voiceover skill: update_scene {speech} with numbers/dates as words, {display|spoken}, stress marks and pauses. Don't generate the voice yet; show me the speech text.`)}>{t('Prepare speech')}</button>}
+          {sc.voiceover?.trim() && <VoiceButton sc={sc} />}
+          {!sc.review && <ReviewBadge sc={sc} />}
+          <span className="grow" />
+          <button className="link danger" onClick={() => actions.deleteScene(sc.id)}>{t('Delete')}</button>
         </div>
       )}
       <div className="scene-bar">
-        <button className={`scene-status st-${sc.status}`} onClick={() => actions.patchScene(sc.id, { status: NEXT[sc.status] })} title={t('Change status')}>
+        <button className={`scene-status st-${sc.status}`} onClick={() => actions.patchScene(sc.id, { status: NEXT[sc.status] })} title={t('Status — click to switch to “{next}”', { next: t(STATUS[NEXT[sc.status]]) })}>
           {live ? <span className="spinner sm" /> : <span className="dot" />}{t(STATUS[sc.status])}
         </button>
+        {sc.review && <ReviewBadge sc={sc} />}
+        {typeof sc.vo?.rate === 'number' && <span className={'vo-pace' + (sc.vo.flagged ? ' warn' : '')} title={t('Voice pace: {r} syllables/s · {n} flagged', { r: sc.vo.rate.toFixed(1), n: sc.vo.flagged ?? 0 })}>{sc.vo.flagged ? '⚠' : '✓'} {sc.vo.rate.toFixed(1)}</span>}
         <span className="grow" />
         <button className="link" onClick={() => setOpen(!open)}>{open ? t('Collapse') : t('More')}</button>
-        {typeof sc.vo?.rate === 'number' && <span className={'vo-pace' + (sc.vo.flagged ? ' warn' : '')} title={t('Voice pace: {r} syllables/s · {n} flagged', { r: sc.vo.rate.toFixed(1), n: sc.vo.flagged ?? 0 })}>{sc.vo.flagged ? '⚠' : '✓'} {sc.vo.rate.toFixed(1)}</span>}
-        {sc.voiceover?.trim() && !sc.speech && <button className="link" onClick={() => actions.startTask(`Prepare the speech text for scene ${n} "${sc.title}" (id ${sc.id}) following the studio-voiceover skill: update_scene {speech} with numbers/dates as words, {display|spoken}, stress marks and pauses. Don't generate the voice yet; show me the speech text.`)}>{t('Prepare speech')}</button>}
-        {sc.voiceover?.trim() && <VoiceButton sc={sc} />}
-        <ReviewBadge sc={sc} />
-        <button className="link" onClick={make}>{t('Make')}</button>
-        {open && <button className="link danger" onClick={() => actions.deleteScene(sc.id)}>{t('Delete')}</button>}
+        <button className="link" onClick={make}>{sc.status === 'done' || sc.status === 'approved' ? t('Redo') : t('Make')}</button>
       </div>
     </div>
   );
@@ -166,7 +174,7 @@ function ReviewBadge({ sc, film }: { sc?: Scene; film?: boolean }) {
   const what = film ? t('the whole video') : t('the scene');
   const run = async () => {
     setBusy(true);
-    try { await api('POST', film ? '/api/script/review' : `/api/script/scenes/${sc!.id}/review`); }
+    try { await api('POST', film ? '/api/script/review' : `/api/script/scenes/${sc!.id}/review`, { lang: getLocale() }); }
     catch (e) { notify('error', (e as Error).message); } finally { setBusy(false); }
   };
   if (looking || busy) return <span className="review-badge looking" title={t('A fresh-eyes critic is reviewing {what}', { what })}><span className="spinner sm" /> {t('Art director is looking…')}</span>;
@@ -184,7 +192,7 @@ function ReviewBadge({ sc, film }: { sc?: Scene; film?: boolean }) {
         <div className="review-pop" onClick={(e) => e.stopPropagation()}>
           <div className="small"><b>{r.pass ? t('Passed') : t('Not yet')}</b> · {t('round {n}', { n: r.round })}</div>
           <div className="muted xsmall">{r.verdict}</div>
-          {items.map(([sev, x], i) => <div key={i} className={'review-item sev-' + sev}><span className="mono">{sev}</span> {x}</div>)}
+          {items.map(([sev, x], i) => <div key={i} className={'review-item sev-' + sev}><span className="sev">{t(SEV[sev])}</span> {x}</div>)}
           {r.strongest && <div className="xsmall"><span className="muted">{t('What works')}:</span> {r.strongest}</div>}
           <div className="row gap2" style={{ marginTop: 6 }}>
             <button className="btn xs" onClick={run}>{t('Review again')}</button>
@@ -210,13 +218,13 @@ function VoiceButton({ sc }: { sc: Scene }) {
 function TitleEdit({ sc }: { sc: Scene }) {
   const [v, setV] = useState(sc.title);
   useEffect(() => setV(sc.title), [sc.title]);
-  return <input className="scene-title" value={v} onClick={(e) => e.stopPropagation()} onChange={(e) => setV(e.target.value)} onBlur={() => v !== sc.title && actions.patchScene(sc.id, { title: v })} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />;
+  return <input className="scene-title" value={v} title={v} onClick={(e) => e.stopPropagation()} onChange={(e) => setV(e.target.value)} onBlur={() => v !== sc.title && actions.patchScene(sc.id, { title: v })} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />;
 }
 
 function Field({ label, value, onSave, open, placeholder }: { label: string; value: string; onSave: (v: string) => void; open: boolean; placeholder: string }) {
   const [v, setV] = useState(value);
   useEffect(() => setV(value), [value]);
-  const ref = useAutoGrow(v);
+  const ref = useAutoGrow(v, open);
   return (
     <label className={'scene-field' + (open ? ' editing' : '')}>
       <span>{label}</span>

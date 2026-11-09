@@ -104,15 +104,24 @@ export function Timeline({ project }: { project: Project }) {
     window.addEventListener('pointerup', () => window.removeEventListener('pointermove', move), { once: true });
   };
 
-  const onWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+  // ⌘/Ctrl + wheel (and trackpad pinch) zooms the timeline. A native non-passive listener: React's wheel handler is
+  // passive, so preventDefault there fails and the browser zooms the whole page instead.
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
-      const t = xToT(e.clientX);
-      const nz = Math.min(400, Math.max(8, zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+      const z = getState().zoom;
+      const r = el.getBoundingClientRect();
+      const at = Math.max(0, (e.clientX - r.left - HEADER_W + el.scrollLeft) / z);
+      const nz = Math.min(400, Math.max(8, z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
       setState({ zoom: nz });
-      requestAnimationFrame(() => { const r = scroller.current!.getBoundingClientRect(); scroller.current!.scrollLeft = t * nz - (e.clientX - r.left - HEADER_W); });
-    }
-  };
+      requestAnimationFrame(() => { el.scrollLeft = at * nz - (e.clientX - r.left - HEADER_W); });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
 
   const onDrop = async (e: React.DragEvent, track: Track) => {
     e.preventDefault();
@@ -161,7 +170,7 @@ export function Timeline({ project }: { project: Project }) {
 
   return (
     <div className="timeline">
-      <div className="tl-scroll" ref={scroller} onWheel={onWheel}>
+      <div className="tl-scroll" ref={scroller}>
         <div className="tl-inner" style={{ width: width + HEADER_W }}>
           <div className="tl-ruler-row">
             <div className="tl-corner" style={{ width: HEADER_W }}>
@@ -186,10 +195,11 @@ export function Timeline({ project }: { project: Project }) {
           {project.tracks.map((tr) => (
             <div key={tr.id} className={`tl-row kind-${tr.kind}`} style={{ height: ROW_H[tr.kind] }}>
               <div className="tl-head" style={{ width: HEADER_W }}>
-                <input className="tl-name" value={tr.name} onChange={(e) => actions.patchProject({ tracks: project.tracks.map((t) => (t.id === tr.id ? { ...t, name: e.target.value } : t)) })} />
+                <input className="tl-name" value={trackLabel(tr.name)} title={t('Rename track')} onChange={(e) => actions.patchProject({ tracks: project.tracks.map((t) => (t.id === tr.id ? { ...t, name: e.target.value } : t)) })}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') (e.target as HTMLInputElement).blur(); }} />
                 {tr.kind === 'graphics' || tr.kind === 'video'
-                  ? <button className="icon-btn xs" title={t('Hide')} onClick={() => toggleTrack(tr.id, 'hidden')}><Icon name={tr.hidden ? 'eyeOff' : 'eye'} size={14} /></button>
-                  : <button className="icon-btn xs" title="Mute" onClick={() => toggleTrack(tr.id, 'muted')}><Icon name={tr.muted ? 'mute' : 'volume'} size={14} /></button>}
+                  ? <button className="icon-btn xs" title={tr.hidden ? t('Show') : t('Hide')} onClick={() => toggleTrack(tr.id, 'hidden')}><Icon name={tr.hidden ? 'eyeOff' : 'eye'} size={14} /></button>
+                  : <button className="icon-btn xs" title={tr.muted ? t('Unmute') : t('Mute')} onClick={() => toggleTrack(tr.id, 'muted')}><Icon name={tr.muted ? 'mute' : 'volume'} size={14} /></button>}
                 {!project.items.some((i) => i.track === tr.id) && project.tracks.filter((t) => t.kind === tr.kind).length > 1 && (
                   <button className="icon-btn xs" title={t('Delete track')} onClick={() => actions.patchProject({ tracks: project.tracks.filter((t) => t.id !== tr.id) })}><Icon name="x" size={12} /></button>
                 )}
@@ -211,6 +221,9 @@ export function Timeline({ project }: { project: Project }) {
     </div>
   );
 }
+
+/** default track names are stored in English ("Graphics 2"); show them in the UI language, keep custom names as typed */
+const trackLabel = (name: string) => name.replace(/^(Graphics|Video|Audio|Music)(?=$| \d+$)/, (w) => t(w));
 
 function Playhead({ zoom }: { zoom: number }) {
   const t = usePlayhead();

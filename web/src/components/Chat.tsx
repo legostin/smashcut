@@ -30,10 +30,22 @@ export function Chat() {
   );
 }
 
+/** a task's title for the user: art-director reviews are titled by the server in English — rebuild them in the UI language */
+function useTaskTitle() {
+  const scenes = useStore((s) => s.script.scenes);
+  return (tk: Task) => {
+    const r = tk.role === 'critic' ? tk.reviewOf : undefined;
+    if (!r) return tk.title;
+    const i = r.sceneId ? scenes.findIndex((s) => s.id === r.sceneId) : -1;
+    const what = r.film ? t('the whole video') : i >= 0 ? `${t('Scene {n}', { n: i + 1 })} “${scenes[i].title}”` : `${r.start.toFixed(1)}–${r.end.toFixed(1)} s`;
+    return `${t('Art director')} · ${what}`;
+  };
+}
+
 function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null }) {
   const [open, setOpen] = useState(false);
-  const running = tasks.filter((t) => t.status === 'running' || t.status === 'queued').length;
   const pending = useStore((s) => s.permissions.length);
+  const title = useTaskTitle();
   useEffect(() => {
     if (!open) return;
     const close = () => setOpen(false);
@@ -43,13 +55,12 @@ function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null 
   return (
     <div className="chat-head">
       <button className="switcher" onClick={() => setOpen(!open)} onPointerDown={(e) => e.stopPropagation()}>
-        {current ? <><Dot status={current.status} /><span className="ellipsis">{current.title}</span></> : <span>{t('New task')}</span>}
+        {current ? <><Dot status={current.status} /><span className="ellipsis">{title(current)}</span></> : <span>{t('New task')}</span>}
         <Icon name="chevron" size={12} />
       </button>
       <div className="row gap6">
         <FollowToggle />
         {pending > 0 && <span className="pill warn">{t('{n} awaiting permission', { n: pending })}</span>}
-        {running > 0 && <span className="pill">{t('{n} in progress', { n: running })}</span>}
         {current && <button className="icon-btn" title={t('New task')} onClick={() => setState({ selectedTaskId: null })}><Icon name="plus" size={14} /></button>}
       </div>
       {open && (
@@ -58,7 +69,7 @@ function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null 
           {tasks.length > 0 && <div className="menu-sep" />}
           {tasks.filter((tk) => !tk.parentId).slice(0, 40).flatMap((tk) => [tk, ...tasks.filter((c) => c.parentId === tk.id).reverse()]).map((tk) => (
             <button key={tk.id} className={'menu-item' + (tk.id === current?.id ? ' active' : '') + (tk.parentId ? ' sub' : '')} onClick={() => { setState({ selectedTaskId: tk.id }); setOpen(false); }}>
-              <Dot status={tk.status} /><span className="ellipsis grow">{tk.title}</span><span className="muted xsmall">{tk.parentId ? t('sub-agent') : tk.agent}</span>
+              <Dot status={tk.status} /><span className="ellipsis grow">{title(tk)}</span>{tk.parentId && <span className="muted xsmall">{tk.role === 'critic' ? t('review') : t('sub-agent')}</span>}
             </button>
           ))}
         </div>
@@ -71,10 +82,11 @@ function TaskSwitcher({ tasks, current }: { tasks: Task[]; current: Task | null 
 function SubagentStrip({ task, tasks }: { task: Task; tasks: Task[] }) {
   const parent = task.parentId ? tasks.find((x) => x.id === task.parentId) : null;
   const kids = useMemo(() => tasks.filter((x) => x.parentId === task.id).reverse(), [tasks, task.id]);
+  const title = useTaskTitle();
   if (parent) {
     return (
       <div className="sub-strip">
-        <button className="sub-back" onClick={() => setState({ selectedTaskId: parent.id })}><Icon name="back" size={12} /> {t('Lead task')}: <span className="ellipsis">{parent.title}</span></button>
+        <button className="sub-back" onClick={() => setState({ selectedTaskId: parent.id })} title={parent.title}><Icon name="back" size={12} /> <span className="sub-back-label">{t('Lead task')}:</span> <span className="ellipsis">{parent.title}</span></button>
       </div>
     );
   }
@@ -85,7 +97,7 @@ function SubagentStrip({ task, tasks }: { task: Task; tasks: Task[] }) {
       <span className="muted xsmall">{t('Sub-agents {done}/{n}', { done, n: kids.length })}</span>
       <div className="sub-chips">
         {kids.map((k) => (
-          <button key={k.id} className="sub-chip" title={k.title} onClick={() => setState({ selectedTaskId: k.id })}><Dot status={k.status} /><span className="ellipsis">{k.title}</span></button>
+          <button key={k.id} className="sub-chip" title={title(k)} onClick={() => setState({ selectedTaskId: k.id })}><Dot status={k.status} /><span className="ellipsis">{title(k)}</span></button>
         ))}
       </div>
     </div>
@@ -139,7 +151,9 @@ function buildBlocks(events: AgentEvent[]): Block[] {
       continue;
     }
     if (e.kind === 'tool_result') { const st = pending.shift(); if (st) st.result = e; continue; }
-    if (e.kind === 'status' && /interrupt|stopped|restarted|queued|sub-agent/i.test(e.key || e.text || '')) { blocks.push({ kind: 'event', e }); continue; }
+    if (e.kind === 'status' && /interrupt|stopped|restarted|queued|sub-agent|next step|received your message/i.test(e.key || e.text || '')) { blocks.push({ kind: 'event', e }); continue; }
+    // the CLI often repeats the agent's last words as the error — show it once
+    if (e.kind === 'error' || e.kind === 'result') { const prev = blocks[blocks.length - 1]; if (prev?.kind === 'event' && (prev.e.kind === 'text' || prev.e.kind === 'error' || prev.e.kind === 'result') && prev.e.text?.trim() === e.text?.trim()) continue; }
     if (e.kind === 'status' || (e.kind === 'result' && e.ok !== false)) continue;
     if (e.kind === 'image') {
       // frames the agent looked at: attach to the current steps group so they read as "what it saw"
@@ -166,10 +180,10 @@ function Feed({ task }: { task: Task }) {
         ? <Steps key={i} steps={b.steps} images={b.images} live={busy && i === blocks.length - 1} />
         : <Message key={i} e={b.e} task={task} />)}
       {perms.map((p) => <PermissionCard key={p.id} p={p} />)}
-      {busy && !perms.length && !openQ && <div className="working"><span className="spinner" /> {task.status === 'queued' ? t('queued') : t('working')}</div>}
+      {busy && !perms.length && !openQ && <div className="working"><span className="spinner" /> {task.status === 'queued' ? t('queued') : task.waiting ? t('waiting for its sub-agents') : t('working')}</div>}
       {!busy && (
         <div className="task-foot">
-          <span>{t(STATUS[task.status])}{task.commitAfter ? ' · ' + t('version {v}', { v: task.commitAfter }) : ''}{task.costUsd ? ` · $${task.costUsd.toFixed(2)}` : ''}</span>
+          <span>{t(STATUS[task.status])}{task.commitAfter ? ' · ' + t('version {v}', { v: task.commitAfter }) : ''}{task.costUsd && task.costUsd >= 0.005 ? ` · $${task.costUsd.toFixed(2)}` : ''}</span>
           {task.status === 'done' && <TaskRating task={task} />}
         </div>
       )}
@@ -207,13 +221,35 @@ function Message({ e, task }: { e: AgentEvent; task: Task }) {
   const [open, setOpen] = useState(false);
   if (e.kind === 'question' && e.question) return <QuestionCard q={e.question} task={task} />;
   if (e.kind === 'user') {
-    const long = (e.text || '').length > 420;
-    return <div className={'msg-user' + (long && !open ? ' clamp' : '')} onClick={() => long && setOpen(!open)}>{e.text}</div>;
+    const text = userText(e.text || '');
+    const long = text.length > 420;
+    return <div className={'msg-user' + (long && !open ? ' clamp' : '')} title={long && !open ? t('Click to show all') : undefined} onClick={() => long && setOpen(!open)}>{text}</div>;
   }
-  if (e.kind === 'text') return <div className="msg-agent"><Markdown text={e.text || ''} /></div>;
+  if (e.kind === 'text') {
+    // the art director ends with its verdict as JSON — it is already shown on the scene, keep the feed readable
+    const text = task.role === 'critic' ? (e.text || '').replace(/```(?:json)?\s*\{[\s\S]*?\}\s*```/g, '').replace(/\n\s*\{\s*"pass"[\s\S]*\}\s*$/, '').trim() : e.text || '';
+    const verdict = text !== (e.text || '').trim();
+    return <div className="msg-agent"><Markdown text={text} />{verdict && <div className="muted xsmall" style={{ marginTop: 6 }}>{t('The verdict is saved on the scene — open the Script tab to see it.')}</div>}</div>;
+  }
   if (e.kind === 'status') return <div className="msg-status">{e.key ? t(e.key, e.params) : e.text}</div>;
   if (e.kind === 'image') return <Frames images={[e]} />;
-  return <div className="msg-error">{e.text}</div>;
+  const [head, ...rest] = (e.text || '').trim().split('\n');
+  return (
+    <div className="msg-error">
+      {head}
+      {rest.length > 0 && (open ? <pre className="msg-error-more">{rest.join('\n')}</pre> : <> <button className="link" onClick={() => setOpen(true)}>{t('details')}</button></>)}
+    </div>
+  );
+}
+
+/** what the user typed — without the machine-only suffixes the editor appends for the agent (language line, editor context, selection context) */
+export function userText(s: string) {
+  return s
+    .replace(/\n*\(Write your replies and summaries for the user in [^)]*\)\s*$/, '')
+    .replace(/\n*\(Editor context: [\s\S]*?\)\s*$/, '')
+    .replace(/\n*\(Write your replies and summaries for the user in [^)]*\)\s*$/, '')
+    .replace(/\n\nContext — what the user selected \/ referenced \(work on exactly these\):\n([\s\S]*)$/, (_m, list: string) => '\n\n+ ' + tn(list.split('\n').filter((l) => l.startsWith('- ')).length, '{n} attachment', '{n} attachments'))
+    .trim();
 }
 
 /** the agent asks — options (with draft images) to pick, free text in the composer, or "you decide" */
@@ -228,6 +264,13 @@ function QuestionCard({ q, task }: { q: NonNullable<AgentEvent['question']>; tas
     else answer(label);
   };
   const withImages = q.options.some((o) => o.image);
+  // once answered: highlight what was chosen
+  const answered = useMemo(() => {
+    if (task.question?.id === q.id) return task.question.answer ?? undefined;
+    const i = task.events.findIndex((x) => x.kind === 'question' && x.question?.id === q.id);
+    return i >= 0 ? task.events.slice(i + 1).find((x) => x.kind === 'user')?.text : undefined;
+  }, [task.question, task.events, q.id]);
+  const chosen = (label: string) => picked.includes(label) || (!!answered && answered.split('; ').includes(label));
   return (
     <div className={'q-card' + (live ? ' live' : '')}>
       <div className="q-head"><Icon name="sparkle" size={13} /> {live ? t('The agent asks') : t('The agent asked')}</div>
@@ -235,7 +278,7 @@ function QuestionCard({ q, task }: { q: NonNullable<AgentEvent['question']>; tas
       {q.options.length > 0 && (
         <div className={'q-options' + (withImages ? ' grid' : '')}>
           {q.options.map((o, i) => (
-            <button key={i} className={'q-opt' + (picked.includes(o.label) ? ' on' : '')} disabled={!live || sending} onClick={() => choose(o.label)}>
+            <button key={i} className={'q-opt' + (chosen(o.label) ? ' on' : '')} disabled={!live || sending} onClick={() => choose(o.label)}>
               {o.image && <img src={pfile(o.image)} alt="" onClick={(ev) => { ev.stopPropagation(); setState({ lightbox: pfile(o.image!) }); }} />}
               <span className="q-opt-label"><b>{String.fromCharCode(65 + i)}.</b> {o.label}</span>
               {o.description && <span className="q-opt-desc">{o.description}</span>}
@@ -256,7 +299,13 @@ function QuestionCard({ q, task }: { q: NonNullable<AgentEvent['question']>; tas
 
 const LABEL: Record<string, string> = {
   Read: 'Reading', Write: 'Creating', Edit: 'Editing', MultiEdit: 'Editing', edit: 'Editing', Glob: 'Finding files', Grep: 'Searching', Bash: 'Command', shell: 'Command',
-  WebFetch: 'Opening a page', WebSearch: 'Searching the web', TodoWrite: 'Plan', ToolSearch: 'Tools', Task: 'Subagent', Agent: 'Subagent',
+  WebFetch: 'Opening a page', WebSearch: 'Searching the web', TodoWrite: 'Plan', ToolSearch: 'Loading tools', Task: 'Starting a sub-agent', Agent: 'Starting a sub-agent', Skill: 'Reading a guide',
+  get_script: 'Reading the script', set_script: 'Writing the script', update_scene: 'Updating a scene', get_design: 'Reading the design system', set_design: 'Setting the design system',
+  art_director: 'Asking the art director', taste_audit: 'Checking against your taste', list_references: 'Looking at references', get_technique: 'Reading a technique', search_inspiration: 'Searching inspiration',
+  dismiss_comment: 'Closing a note', list_board_notes: 'Reading board notes', resolve_board_note: 'Closing a board note', delete_board_note: 'Removing a board note',
+  create_3d_scene: 'Creating a 3D scene', render_3d: 'Rendering 3D', list_fx: 'Browsing effects', record_web: 'Recording a web page', record_app: 'Recording an app',
+  list_voices: 'Choosing a voice', generate_voiceover: 'Recording the voice-over', voice_report: 'Checking the voice-over', music_report: 'Checking the music',
+  approve_permission: 'Asking permission', list_media_tools: 'Browsing media tools', run_media_tool: 'Processing media',
   get_project: 'Viewing the project', render_clip: 'Rendering a clip', render_frame: 'Looking at a frame', lint_clip: 'Checking a clip', resolve_comment: 'Closing a note',
   list_comments: 'Reading notes', create_clip: 'Creating a clip', create_music: 'Creating a track', render_music: 'Listening to a track', analyze_audio: 'Analyzing audio',
   transcribe_media: 'Transcribing', get_timing: 'Checking the rhythm', timeline_add: 'Placing on the timeline', timeline_update: 'Moving on the timeline', timeline_remove: 'Removing from the timeline',
@@ -264,17 +313,29 @@ const LABEL: Record<string, string> = {
   delegate_task: 'Starting a sub-agent', wait_subagents: 'Waiting for sub-agents', message_subagent: 'Messaging a sub-agent', ask_user: 'Asking you',
 };
 /** short argument summary of a step (ask_user: just the question — the card shows the rest) */
-const stepText = (e: AgentEvent) => { if (/ask_user$/.test(e.tool || '')) { try { return JSON.parse(e.text || '{}').question || ''; } catch { return ''; } } return e.text; };
-const label = (tool?: string) => { const k = (tool || '').replace(/^(studio\.|mcp__studio__)/, ''); return LABEL[k] ? t(LABEL[k]) : k; };
+const SUMMARY_KEYS = ['question', 'title', 'name', 'skill', 'clipId', 'sceneId', 'file_path', 'path', 'url', 'query', 'pattern', 'command', 'description', 'id', 'ref', 'text', 'prompt'];
+const stepText = (e: AgentEvent) => {
+  const s = (e.text || '').trim();
+  if (/^ToolSearch$/.test(e.tool || '')) return '';
+  if (!s.startsWith('{')) return s;
+  // JSON arguments → the one field a person would care about (never raw JSON)
+  let o = e.input && typeof e.input === 'object' ? (e.input as Record<string, unknown>) : null;
+  if (!o) try { o = JSON.parse(s); } catch { o = null; }
+  if (!o) return '';
+  for (const k of SUMMARY_KEYS) if (typeof o[k] === 'string' && o[k]) return (o[k] as string).replace(/^studio-/, '');
+  if (o.patch && typeof o.patch === 'object') return Object.keys(o.patch as object).join(', ');
+  return '';
+};
+const label = (tool?: string) => { const k = (tool || '').replace(/^(studio\.|mcp__studio__)/, ''); return LABEL[k] ? t(LABEL[k]) : k.replace(/^mcp__\w+?__/, '').replace(/_/g, ' '); };
 
 function Frames({ images }: { images: AgentEvent[] }) {
   const shown = images.slice(-6);
   return (
     <div className="frames">
       {shown.map((im, i) => (
-        <button key={i} className="frame-thumb" title={im.text} onClick={() => setState({ lightbox: im.src || null })}>
+        <button key={i} className="frame-thumb" title={im.key ? t(im.key, im.params) : im.text} onClick={() => setState({ lightbox: im.src || null })}>
           <img src={im.src} alt="" loading="lazy" />
-          {i === shown.length - 1 && <span className="frame-cap">{im.text}</span>}
+          {i === shown.length - 1 && <span className="frame-cap">{im.key ? t(im.key, im.params) : im.text}</span>}
         </button>
       ))}
     </div>
@@ -311,7 +372,7 @@ function StepRow({ s }: { s: Step }) {
       </button>
       {open && (
         <div className="step-detail">
-          {s.tool.input != null && <pre>{JSON.stringify(s.tool.input, null, 2).slice(0, 4000)}</pre>}
+          {s.tool.input != null && !(typeof s.tool.input === 'object' && !Object.keys(s.tool.input as object).length) && <pre>{JSON.stringify(s.tool.input, null, 2).slice(0, 4000)}</pre>}
           {s.result?.text && <pre className={bad ? 'bad' : ''}>{s.result.text}</pre>}
         </div>
       )}
@@ -326,7 +387,7 @@ function PermissionCard({ p }: { p: PermissionRequest }) {
   return (
     <div className="perm">
       <div className="perm-title">{t('The agent asks for permission')}</div>
-      <div className="perm-tool">{p.tool}</div>
+      <div className="perm-tool" title={p.tool}>{label(p.tool)}</div>
       {main && <pre className="perm-main">{main}</pre>}
       {details && <pre className="perm-input">{JSON.stringify(p.input, null, 2).slice(0, 3000)}</pre>}
       <div className="row gap6">
@@ -381,7 +442,7 @@ function useSuggestions(draft: string, caret: number) {
     if (trigger === '#') {
       return media.filter((x) => match(x.file)).slice(0, 12).map((x) => ({ key: 'media:' + x.file, label: x.file, hint: x.type, icon: x.type === 'audio' ? 'music' : x.type === 'image' ? 'image' : 'film', chip: { key: 'media:' + x.file, label: x.file, text: `media file media/${x.file} (${x.type}${x.duration ? `, ${x.duration.toFixed(1)} s` : ''}${x.width ? `, ${x.width}×${x.height}` : ''})` } }));
     }
-    const out: Suggest[] = COMMANDS.filter((c) => match(c.cmd + ' ' + c.hint)).map((c) => ({ key: 'cmd:' + c.cmd, label: '/' + c.cmd, hint: t(c.hint), icon: 'sparkle', insert: c.text }));
+    const out: Suggest[] = COMMANDS.filter((c) => match(c.cmd + ' ' + c.hint + ' ' + t(c.hint))).map((c) => ({ key: 'cmd:' + c.cmd, label: '/' + c.cmd, hint: t(c.hint), icon: 'sparkle', insert: t(c.text) }));
     for (const op of tools || []) if (match(op.id + ' ' + op.title)) out.push({ key: 'tool:' + op.id, label: '/' + op.id.replace(/_/g, '-'), hint: op.title, icon: 'tool', insert: `Use the media tool ${op.id} (run_media_tool) ` });
     return out.slice(0, 14);
   }, [trigger, q, scenes, project, clips, media, tools]);
@@ -395,6 +456,7 @@ function Composer({ task }: { task: Task | null }) {
   const ctx = useStore((s) => s.chatContext);
   const ref = useRef<HTMLTextAreaElement>(null);
   const busy = !!task && (task.status === 'running' || task.status === 'queued');
+  const answering = busy && !!task?.question && task.question.answer == null;
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -473,21 +535,22 @@ function Composer({ task }: { task: Task | null }) {
           }
           if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
         }} />
+      {busy && !empty && !answering && (
+        <div className="composer-hint">
+          <span>{t('Enter — the agent takes it into account at its next step')}</span>
+          <button className="link" onClick={() => send('interrupt')} title={t('Stop the current step and restart from your message')}>{t('Restart with this')}</button>
+        </div>
+      )}
       <div className="composer-bar">
         <div className="row gap6">
-          {!task
-            ? <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>
-            : <span className="muted xsmall">{busy ? <><span className="spinner sm" /> {task.question && task.question.answer == null ? t('waiting for your answer') : task.waiting ? t('waiting for its sub-agents') : t('{agent} is working', { agent: task.agent })}</> : task.agent}</span>}
+          {!task && <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>}
           <ModelPicker agent={task?.agent || agent} />
-          <button className={'auto-pill' + (autopilot ? ' on' : '')} onClick={() => actions.setAutopilot(!autopilot)} title={autopilot ? t('Autopilot: the agent decides everything itself and explains its choices') : t('The agent may ask you and show drafts to choose a direction — click for autopilot')}>{autopilot ? t('Autopilot') : t('Asks')}</button>
+          <button className={'auto-pill' + (autopilot ? ' on' : '')} aria-pressed={autopilot} onClick={() => actions.setAutopilot(!autopilot)} title={autopilot ? t('Autopilot: the agent decides everything itself and explains its choices') : t('The agent may ask you and show drafts to choose a direction — click for autopilot')}>{t('Autopilot')}</button>
         </div>
-        {busy ? (
-          <div className="row gap6">
-            <button className="btn xs ghost" onClick={() => actions.cancelTask(task!.id)} title={t('Stop completely')}><Icon name="stop" size={9} /> {t('Stop')}</button>
-            {!empty && <button className="btn xs ghost" onClick={() => send('interrupt')} title={t('Stop the current step and restart from your message')}>{t('Restart with this')}</button>}
-            <button className="btn xs primary" disabled={empty} onClick={() => send()} title={t('The agent keeps working and takes your message into account at its next step (Enter)')}>{t('Send')}</button>
-          </div>
-        ) : <button className="send" disabled={empty} onClick={() => send()} title="Enter"><Icon name="arrowUp" size={14} /></button>}
+        <div className="row gap6">
+          {busy && <button className="send stop" onClick={() => actions.cancelTask(task!.id)} title={t('Stop completely')} aria-label={t('Stop')}><Icon name="stop" size={10} /></button>}
+          <button className="send" disabled={empty} onClick={() => send()} title={busy ? t('The agent keeps working and takes your message into account at its next step (Enter)') : 'Enter'}><Icon name="arrowUp" size={14} /></button>
+        </div>
       </div>
     </div>
   );

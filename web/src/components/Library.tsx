@@ -82,7 +82,7 @@ export function Library() {
         <section className="lib-main">
           <header className="lib-top">
             {searchable
-              ? <div className="lib-searchbox"><Icon name="search" size={14} /><input autoFocus placeholder={t('Search templates')} value={q} onChange={(e) => setQ(e.target.value)} /></div>
+              ? <div className="lib-searchbox"><Icon name="search" size={14} /><input autoFocus placeholder={t('Search')} value={q} onChange={(e) => setQ(e.target.value)} /></div>
               : <div className="lib-heading">{section.kind === 'media' ? t('Media files') : section.kind === 'masks' ? t('Masks') : t('In this project')}</div>}
             <button className="icon-btn" onClick={close} title={t('Close (Esc)')}><Icon name="x" size={15} /></button>
           </header>
@@ -105,7 +105,11 @@ export function Library() {
             {section.kind === 'effects' && <EffectsGrid q={q} />}
             {section.kind === 'masks' && <MasksGrid />}
           </div>
-          <footer className="lib-foot">{['transitions', 'effects', 'masks'].includes(section.kind) ? t('Click — apply to the selected clip · a transition can be dragged onto a clip edge') : ['inspiration', 'graphics'].includes(section.kind) ? t('Click — add to the project references (bound to the selected scenes) · ↗ opens the original') : t('Click — add at the playhead ({time})', { time: fmt(time.get()) })}</footer>
+          <footer className="lib-foot">{['transitions', 'effects', 'masks'].includes(section.kind) ? t('Click — apply to the selected clip · a transition can be dragged onto a clip edge')
+            : section.kind === 'inspiration' ? t('Click — add to the project references (bound to the selected scenes) · ↗ opens the original')
+            : section.kind === 'graphics' || section.kind === 'mine' ? t('Click — add to the project references (bound to the selected scenes) · + inserts the reference clip at the playhead as a quick draft')
+            : section.kind === 'music' ? t('Click — add to the project references (bound to the selected scenes)')
+            : t('Click — add at the playhead ({time})', { time: fmt(time.get()) })}</footer>
         </section>
       </div>
     </div>
@@ -378,7 +382,7 @@ function Media() {
               </div>
               <div className="lib-card-name ellipsis">{m.file}</div>
               <div className="lib-card-desc row gap8">
-                {m.transcript ? t('has transcript') : (m.type === 'audio' || m.hasAudio) ? <button className="link" onClick={(e) => { e.stopPropagation(); api('POST', `/api/media/${encodeURIComponent(m.file)}/transcribe`, {}); }}>{t('transcribe speech')}</button> : m.type}
+                {m.transcript ? t('has transcript') : (m.type === 'audio' || m.hasAudio) ? <button className="link" onClick={(e) => { e.stopPropagation(); api('POST', `/api/media/${encodeURIComponent(m.file)}/transcribe`, {}); }}>{t('transcribe speech')}</button> : m.type === 'image' ? t('Image') : m.type === 'video' ? t('Video') : m.type}
               </div>
             </div>
           ))}

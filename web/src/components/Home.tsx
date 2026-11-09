@@ -14,7 +14,7 @@ const NEWS: { title: string; text: string; tag: string }[] = [
   { tag: '3D', title: 'Blender 3D in stages', text: 'Scenes as code: mock in seconds → look → final, placed on the timeline and replaced in place.' },
   { tag: 'Library', title: '108 inspiration pieces', text: 'Studios, product launches, code demos and social formats with breakdowns — add them as references.' },
   { tag: 'Edit', title: 'Shots & rhythm', text: 'Find the cuts in any video, split it into shots and match the rhythm of a reference edit.' },
-  { tag: 'Voice', title: 'Voice-over as a process', text: 'Speech text with numbers spelled out, stress marks and pauses; takes with a pace check.' },
+  { tag: 'Voiceover', title: 'Voice-over as a process', text: 'Speech text with numbers spelled out, stress marks and pauses; takes with a pace check.' },
 ];
 
 const ago = (ms: number) => {
@@ -63,10 +63,9 @@ export function Home() {
                 <div className="home-thumb" style={{ aspectRatio: '16 / 9' }}>
                   {p.poster ? <img src={p.poster} alt="" loading="lazy" /> : <div className="home-thumb-empty"><span className="hero-ratio lg" style={{ aspectRatio: `${p.width} / ${p.height}` }} /></div>}
                   <span className="home-badge">{p.width > p.height ? '16:9' : p.width === p.height ? '1:1' : p.height / p.width > 1.5 ? '9:16' : '4:5'}{p.duration ? ` · ${fmtDur(p.duration)}` : ''}</span>
-                  {p.open && <span className="home-open-dot" title={t('Open in a tab')} />}
                   <button className="home-newtab" title={t('Open in a new tab')} onClick={(e) => { e.stopPropagation(); openInNewTab(p.id); }}><Icon name="external" size={12} /></button>
                 </div>
-                <div className="home-card-name ellipsis">{p.name}</div>
+                <div className="home-card-name ellipsis" title={p.name}>{p.name}</div>
                 <div className="home-card-meta">
                   <span>{ago(p.updatedAt)}</span>
                   {p.scenes.total > 0 && <span>· {t('{done}/{total} scenes done', { done: p.scenes.done, total: p.scenes.total })}</span>}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DesignSystem, Item, Project, Scene, Task } from '../../../shared/types';
-import { useStore, actions, seek, setState, getState, fmtTime, api, projectBase } from '../store';
+import { useStore, actions, seek, setState, getState, fmtTime, api, projectBase, fmtShort } from '../store';
 import { withContext } from './Chat';
 import { Icon } from './Icon';
 import { t, tn } from '../i18n';
@@ -239,7 +239,7 @@ function ScriptFrame({ segs, hasScript, brief, active }: { segs: Seg[]; hasScrip
       {!hasScript && <button className="btn sm b-cta" data-ui onClick={() => setState({ sideTab: 'script' })}>{t('Open script')}</button>}
       {hasScript && segs.map((s, i) => (
         <div key={s.id} className={`b-scene st-${s.status || 'todo'}${active === `scene:${s.id}` ? ' active' : ''}`} data-anchor={`scene:${s.id}`} onDoubleClick={() => seek(s.start + 0.001)}>
-          <div className="b-scene-top"><span className="b-num">{i + 1}</span><span className="grow ellipsis">{s.title}</span><span className="mono muted">{fmtTime(s.start, fps)}</span></div>
+          <div className="b-scene-top"><span className="b-num">{i + 1}</span><span className="grow ellipsis">{s.title}</span><span className="mono muted">{fmtShort(s.start)}</span></div>
           {s.voiceover && <div className="b-scene-vo">{s.voiceover}</div>}
         </div>
       ))}
@@ -355,7 +355,7 @@ function StoryCard({ s, n, project, active }: { s: Seg; n: number; project: Proj
         {loading && <span className="sb-loading"><span className="spinner sm" /></span>}
         <span className="sb-n">{n}</span>
       </div>
-      <div className="sb-meta"><span className="ellipsis grow">{s.title}</span><span className="mono muted">{fmtTime(s.start, fps)}–{fmtTime(s.start + s.duration, fps)}</span></div>
+      <div className="sb-meta"><span className="ellipsis grow">{s.title}</span><span className="mono muted">{fmtShort(s.start)}–{fmtShort(s.start + s.duration)}</span></div>
       {s.voiceover && <div className="sb-vo">{s.voiceover}</div>}
     </div>
   );
@@ -519,7 +519,7 @@ function SelectionBar({ world, cam, selection, project }: { world: React.RefObje
     } finally { setBusy(false); }
   };
   return (
-    <div className={'sel-bar' + (above ? '' : ' below')} style={{ left, top }} data-ui onPointerDown={(e) => e.stopPropagation()}>
+    <div className={'b-selbar' + (above ? '' : ' below')} style={{ left, top }} data-ui onPointerDown={(e) => e.stopPropagation()}>
       {mode === 'bar' ? (
         <>
           <span className="sel-count">{selection.length === 1 ? items[0].label : tn(selection.length, '{n} object', '{n} objects')}</span>
