@@ -175,7 +175,7 @@ export interface Task {
   /** a special-purpose agent: 'critic' = the art director (reviews frames, read-only, returns a verdict) */
   role?: 'critic';
   /** what the art director reviews */
-  reviewOf?: { sceneId?: string; start: number; end: number; round: number; sheet?: string };
+  reviewOf?: { sceneId?: string; film?: boolean; start: number; end: number; round: number; sheet?: string; hash?: string };
   prompt: string;
   clipId?: string;
   commentIds: string[];
@@ -235,7 +235,7 @@ export interface DesignSystem {
 
 export type StageId = 'brief' | 'script' | 'storyboard' | 'production' | 'review' | 'export';
 /** art director verdict: pass = no P0 and at most 2 P1; items are "t=4.2s · where · problem → exact change" */
-export interface SceneReview { at: string; pass: boolean; round: number; verdict: string; p0: string[]; p1: string[]; p2: string[]; strongest?: string; weakest?: string; sheet?: string; taskId?: string }
+export interface SceneReview { at: string; pass: boolean; round: number; verdict: string; p0: string[]; p1: string[]; p2: string[]; strongest?: string; weakest?: string; sheet?: string; taskId?: string; /** fingerprint of the reviewed frames: unchanged frames reuse the verdict */ hash?: string }
 
 /** todo → doing (agent works) → review (waits for the user) / done (agent finished) → approved (user signed off) */
 export type SceneStatus = 'todo' | 'doing' | 'review' | 'done' | 'approved';
@@ -266,6 +266,8 @@ export interface Script {
   brief: string;
   stage: StageId;
   scenes: Scene[];
+  /** art-director review of the whole film (pacing, consistency, story, seams) */
+  review?: SceneReview;
   updatedAt?: string;
 }
 
@@ -299,6 +301,8 @@ export interface Settings {
   houseStyle?: { style?: string; direction?: string; colors?: string };
   /** art director: a fresh-eyes critic reviews every scene before an agent may mark it done ('scenes', default), or only on request ('off') */
   artDirector?: 'scenes' | 'off';
+  /** model for the art director ('' = the author's model, but never weaker than sonnet) */
+  artDirectorModel?: string;
   renderWorkers: number;
   transcribeModel: string;
   /** ElevenLabs: API key (stored locally; masked when sent to the UI), default voice & model */

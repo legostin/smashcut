@@ -13,6 +13,13 @@ export function Chat() {
   const tasks = useStore((s) => s.tasks);
   const selectedId = useStore((s) => s.selectedTaskId);
   const task = tasks.find((t) => t.id === selectedId) || null;
+  // opening a project while an agent works: show that task (once — "New task" still gives an empty composer)
+  const autoPicked = useRef(false);
+  useEffect(() => {
+    if (autoPicked.current || selectedId) { autoPicked.current = autoPicked.current || !!selectedId; return; }
+    const live = tasks.find((x) => !x.parentId && x.role !== 'critic' && (x.status === 'running' || x.status === 'queued'));
+    if (live) { autoPicked.current = true; setState({ selectedTaskId: live.id }); }
+  }, [tasks, selectedId]);
   return (
     <div className="chat">
       <TaskSwitcher tasks={tasks} current={task} />

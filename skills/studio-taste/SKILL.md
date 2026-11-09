@@ -68,6 +68,8 @@ Use any of these only as a deliberate, named choice that the idea needs.
 
 ## 10. Working with the art director
 - `art_director {sceneId, focus?}` → PASS / NOT YET with P0/P1/P2 as `t=… · where · problem → exact change`. You are idle while it reviews.
+- It sees: key frames (incl. both seams), motion strips at ~12 fps around the entrance, cuts and exit, the user's references as pictures, the measured audit, the brief, the design system and the user's taste. Unchanged frames return the previous verdict instantly — re-review only after real changes.
+- When all scenes are done: `art_director {film:true}` — one pass over the whole video (hook, spine, pacing curve, one design language, transition family, seams).
 - Fix the smallest scope that resolves each item; keep what it says works. If you disagree with an item, say why in your final message — don't silently ignore it.
 - Scenes need a passing review (or 3 used rounds) before `update_scene status:"done"`; trivial changes may pass `force:true, reason`.
 - `taste_audit {sceneId}` gives measured facts (contrast, sizes, safe areas, read time, simultaneous motion, dead stretches, fonts, palette) — fast, use it every iteration.

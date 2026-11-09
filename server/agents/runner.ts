@@ -580,7 +580,11 @@ export function startCritic(callerId: string | undefined, o: { title: string; pr
   const caller = callerId ? tasks.get(callerId) : undefined;
   const st = getSettings();
   const run = () => {
-    const t = startTask({ agent: caller?.agent || st.defaultAgent, title: o.title, prompt: o.prompt, images: o.images, parentId: caller?.id, autopilot: true, role: 'critic', reviewOf: o.reviewOf, ...(caller ? { model: caller.model, effort: caller.effort } : {}) });
+    const agent = caller?.agent || st.defaultAgent;
+    // the critic must not be weaker than the author: its own model, else the author's, never below sonnet
+    const authorModel = caller?.model || (agent === 'claude' ? st.claudeModel : st.codexModel) || '';
+    const model = agent === 'claude' ? (st.artDirectorModel || (/haiku/i.test(authorModel) ? 'sonnet' : caller?.model)) : caller?.model;
+    const t = startTask({ agent, title: o.title, prompt: o.prompt, images: o.images, parentId: caller?.id, autopilot: true, role: 'critic', reviewOf: o.reviewOf, ...(model ? { model } : {}), ...(caller?.effort ? { effort: caller.effort } : {}) });
     if (caller) {
       waitingLeads.add(caller.id);
       caller.waiting = true;

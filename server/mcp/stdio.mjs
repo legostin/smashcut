@@ -237,12 +237,14 @@ server.registerTool('art_director', {
   description: 'Get your work reviewed by the ART DIRECTOR: a fresh-eyes critic (a separate agent with taste, the user\'s learned taste and house style) looks at contact sheets of the composited frames of a scene — including the seams with its neighbours — plus the measured taste audit, the brief and the design system, and returns a verdict: PASS / NOT YET with P0/P1/P2 items "t=… · where · problem → exact change". Call it when a scene looks finished to you, BEFORE update_scene status "done" (that is required unless the user turned it off); fix the P0s and P1s, re-render, and call it again (max 3 rounds). Takes a few minutes; you are idle meanwhile (you don\'t hold an agent slot). The verdict is also shown to the user on the scene.',
   inputSchema: {
     sceneId: z.string().optional().describe('the scene to review (preferred)'),
+    film: z.boolean().optional().describe('review the WHOLE video (pacing, consistency, story, seams) — do this once when all scenes are done, before you report back'),
     start: z.number().optional().describe('or a range of the timeline, seconds'),
     end: z.number().optional(),
     focus: z.string().optional().describe('what you want a second opinion on, e.g. "is the title hierarchy clear?"'),
   },
 }, safe(async (a) => {
   const r = await api('POST', '/api/agent/art-director', a);
+  if (r.cached) return text(r.text);
   const until = Date.now() + 40 * 60_000;
   while (Date.now() < until) {
     await new Promise((res) => setTimeout(res, 3000));

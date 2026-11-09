@@ -18,7 +18,7 @@ import { HOME_DIR, getSettings } from '../config.ts';
 import { cur, hasProject } from '../project.ts';
 import { which, resolveCmd } from '../bin.ts';
 
-export type TasteEventKind = 'choice' | 'approve' | 'reject' | 'comment' | 'rating' | 'revert';
+export type TasteEventKind = 'choice' | 'approve' | 'reject' | 'comment' | 'rating' | 'revert' | 'edit';
 export interface TasteEvent { seq: number; t: string; kind: TasteEventKind; text: string; sceneId?: string; image?: string; project?: string; projectId?: string; key?: string }
 interface TasteState { seq: number; distilledSeq: number; distilledAt?: string; lastError?: string; failedAt?: number }
 
@@ -139,7 +139,7 @@ export function sceneTaste(prev: { id: string; title?: string; visual?: string; 
   else if (['done', 'review', 'approved'].includes(prev.status || '') && ['todo', 'doing'].includes(next.status)) recordTaste({ kind: 'reject', text: `The user sent ${what} back to “${next.status}” (it was “${prev.status}”) — they did not like the result.`, sceneId: prev.id });
 }
 
-const DISTILL_RULES = `You maintain a short taste profile of ONE video editor user, learned from what they actually do in an AI video editor (Smashcut): which draft they pick when an agent asks, which scenes they approve or send back, their notes on frames, the agent work they revert, and their 👍/👎 ratings.
+const DISTILL_RULES = `You maintain a short taste profile of ONE video editor user, learned from what they actually do in an AI video editor (Smashcut): which draft they pick when an agent asks, which scenes they approve or send back, their notes on frames, the agent work they revert, their 👍/👎 ratings, and the changes they make BY HAND after the agent (edits: the direction of the change — shorter, bigger, a different colour or font, less motion — is the strongest evidence of what they want; count them as "edits").
 
 Update the profile with the NEW SIGNALS below. Rules:
 - Only concrete, reusable visual / motion / typography / colour / pacing / editing / sound preferences ("prefers hard cuts on the downbeat", "dislikes neon glow and bouncy text").

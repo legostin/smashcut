@@ -76,6 +76,7 @@ export function ScriptPanel() {
           <button className="btn sm ghost" onClick={() => actions.addScene()}><Icon name="plus" size={12} /> {t('Scene')}</button>
           {script.scenes.length > 0 && <button className="btn sm" onClick={produceAll}><Icon name="sparkle" size={11} /> {t('Make the whole video')}</button>}
           {script.scenes.some((x) => x.voiceover?.trim()) && <VoiceAll />}
+          {script.scenes.length > 1 && <ReviewBadge film />}
         </div>
       </div>
     </div>
@@ -154,18 +155,30 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
   );
 }
 
-/** the art director's verdict on the scene (or a button to ask for one) */
-function ReviewBadge({ sc }: { sc: Scene }) {
+/** the art director's verdict on a scene or on the whole film — or a button to ask for one */
+function ReviewBadge({ sc, film }: { sc?: Scene; film?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
-  const r = sc.review;
-  const run = async () => { setBusy(true); try { await api('POST', `/api/script/scenes/${sc.id}/review`); notify('info', t('The art director is looking at the scene…')); } catch (e) { notify('error', (e as Error).message); } finally { setBusy(false); } };
-  if (!r) return sc.itemIds?.length ? <button className="link" disabled={busy} onClick={run} title={t('A fresh-eyes critic reviews the frames of this scene')}>{t('Art review')}</button> : null;
+  const filmReview = useStore((s) => s.script?.review);
+  const hasWork = useStore((s) => (film ? (s.project?.items.length || 0) > 0 : !!sc?.itemIds?.length || !!s.project?.items.some((i) => i.kind !== 'music' && i.start < sc!.start + sc!.duration && i.start + i.duration > sc!.start)));
+  const looking = useStore((s) => s.tasks.some((x) => x.role === 'critic' && (x.status === 'running' || x.status === 'queued') && (film ? x.reviewOf?.film : x.reviewOf?.sceneId === sc?.id)));
+  const r = film ? filmReview : sc?.review;
+  const what = film ? t('the whole video') : t('the scene');
+  const run = async () => {
+    setBusy(true);
+    try { await api('POST', film ? '/api/script/review' : `/api/script/scenes/${sc!.id}/review`); }
+    catch (e) { notify('error', (e as Error).message); } finally { setBusy(false); }
+  };
+  if (looking || busy) return <span className="review-badge looking" title={t('A fresh-eyes critic is reviewing {what}', { what })}><span className="spinner sm" /> {t('Art director is looking…')}</span>;
+  if (!r) return hasWork ? <button className={film ? 'btn sm ghost' : 'link'} onClick={run} title={t('A fresh-eyes critic reviews {what}: frames, motion, your references and taste', { what })}>{film ? t('Review the whole video') : t('Art review')}</button> : null;
   const items = [...r.p0.map((x) => ['P0', x]), ...r.p1.map((x) => ['P1', x]), ...r.p2.map((x) => ['P2', x])];
+  const fix = film
+    ? `Fix the art director's notes on the whole video: ${items.map(([sev, x]) => `${sev} ${x}`).join('; ')}. Keep approved/locked scenes untouched. Then art_director {film:true} again.`
+    : `Fix the art director's notes on scene "${sc!.title}" (id ${sc!.id}): ${items.map(([sev, x]) => `${sev} ${x}`).join('; ')}. Then art_director {sceneId:"${sc!.id}"} again.`;
   return (
     <span className="review-wrap">
       <button className={'review-badge' + (r.pass ? ' ok' : ' warn')} onClick={() => setOpen((o) => !o)} title={r.verdict}>
-        {r.pass ? '✓' : '!'} {t('Art')}{!r.pass && r.p0.length + r.p1.length ? ` · ${r.p0.length + r.p1.length}` : ''}
+        {r.pass ? '✓' : '!'} {film ? t('Art · whole video') : t('Art')}{!r.pass && r.p0.length + r.p1.length ? ` · ${r.p0.length + r.p1.length}` : ''}
       </button>
       {open && (
         <div className="review-pop" onClick={(e) => e.stopPropagation()}>
@@ -174,8 +187,8 @@ function ReviewBadge({ sc }: { sc: Scene }) {
           {items.map(([sev, x], i) => <div key={i} className={'review-item sev-' + sev}><span className="mono">{sev}</span> {x}</div>)}
           {r.strongest && <div className="xsmall"><span className="muted">{t('What works')}:</span> {r.strongest}</div>}
           <div className="row gap2" style={{ marginTop: 6 }}>
-            <button className="btn xs" disabled={busy} onClick={run}>{t('Review again')}</button>
-            {!r.pass && <button className="btn xs primary" onClick={() => { setOpen(false); actions.startTask(`Fix the art director's notes on scene "${sc.title}" (id ${sc.id}): ${items.map(([sev, x]) => `${sev} ${x}`).join('; ')}. Then art_director {sceneId:"${sc.id}"} again.`); }}>{t('Fix these')}</button>}
+            <button className="btn xs" onClick={run}>{t('Review again')}</button>
+            {!r.pass && <button className="btn xs primary" onClick={() => { setOpen(false); actions.startTask(fix); }}>{t('Fix these')}</button>}
           </div>
         </div>
       )}

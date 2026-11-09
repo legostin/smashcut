@@ -511,7 +511,7 @@ input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.15); }
 .scene-status.st-done { color: var(--ok); }
 .scene-status.st-done .dot { background: var(--ok); }
 .link.danger:hover { color: var(--err); }
-.script-actions { padding-top: 4px; }
+.script-actions { padding-top: 4px; flex-wrap: wrap; }
 
 /* modal */
 .modal-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); opacity: 0; transition: opacity 180ms var(--ease); }
@@ -1150,3 +1150,10 @@ button.chip:hover { filter: brightness(1.25); }
 .review-item .mono { font-size: 10px; padding: 1px 4px; border-radius: 4px; margin-right: 4px; background: var(--raise); }
 .review-item.sev-P0 .mono { color: #ff6b5e; }
 .review-item.sev-P1 .mono { color: var(--tone-review); }
+.review-badge.looking { display: inline-flex; align-items: center; gap: 6px; color: var(--tone-work); background: rgba(96, 165, 250, .1); font-weight: 500; }
+.script-actions > .review-wrap, .script-actions .review-pop { white-space: normal; min-width: 0; }
+.story-empty.working .working-task { width: min(520px, 100%); display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); text-align: left; margin: 4px 0 14px; }
+.story-empty.working .working-said { font-size: 13px; line-height: 1.5; color: var(--fg2); }
+.story-empty-mark.busy { background: var(--raise); color: var(--fg); }
+.story-empty.working .story-empty-mark .spinner { width: 20px; height: 20px; }
+.story-empty.working h1 { color: var(--fg); }

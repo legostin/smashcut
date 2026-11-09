@@ -21,6 +21,7 @@ import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport, ge
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
 import { startReview, reviewStatus, doneGate } from './taste/critic.ts';
+import { itemBefore, itemAfter, designEdit, exported } from './taste/signals.ts';
 import { getTask } from './agents/runner.ts';
 import { rateTask } from './agents/runner.ts';
 import { recordTaste, sceneTaste, tasteStatus, saveTasteProfile, distillTaste, forgetTaste } from './taste/memory.ts';
@@ -326,6 +327,8 @@ export async function registerRoutes(app: FastifyInstance) {
   });
   app.patch<{ Params: { id: string }; Body: Partial<Item> }>('/api/items/:id', async (req) => {
     const store = need();
+    const byUser = !taskOf(req);
+    if (byUser) itemBefore(store.project.items.find((i) => i.id === req.params.id));
     await store.update((p) => {
       const it = p.items.find((i) => i.id === req.params.id);
       if (!it) throw Object.assign(new Error('item not found'), { statusCode: 404 });
@@ -335,7 +338,9 @@ export async function registerRoutes(app: FastifyInstance) {
       p.duration = Math.max(p.duration, Math.ceil(it.start + it.duration));
     });
     recomputeTiming();
-    return store.project.items.find((i) => i.id === req.params.id);
+    const after = store.project.items.find((i) => i.id === req.params.id);
+    if (byUser) itemAfter(after); // taste: what the user changes by hand
+    return after;
   });
   app.delete<{ Params: { id: string } }>('/api/items/:id', async (req) => {
     const store = need();
@@ -675,7 +680,7 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- design system ----------
   app.get('/api/design', async () => (hasProject() ? getDesign() : { colors: [], type: [], motion: [], spacing: [] }));
-  app.put<{ Body: any }>('/api/design', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'design', at: Date.now() }); return saveDesign(req.body as any); });
+  app.put<{ Body: any }>('/api/design', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'design', at: Date.now() }); else designEdit(getDesign(), req.body || {}); return saveDesign(req.body as any); });
 
   app.get('/api/fx', async () => ({ transitions: TRANSITIONS, effects: EFFECTS.map((e) => ({ type: e.type, name: e.name, group: e.group, params: e.params.map((p) => ({ key: p.key, min: p.min, max: p.max, default: p.def })), options: e.options })), masks: MASKS, blends: BLENDS.map((b) => b.mode) }));
 
@@ -959,7 +964,7 @@ export async function registerRoutes(app: FastifyInstance) {
   });
 
   // ---------- export ----------
-  app.post<{ Body: any }>('/api/export', async (req) => { need(); return startExport((req.body || {}) as any); });
+  app.post<{ Body: any }>('/api/export', async (req) => { need(); if (!taskOf(req)) exported(); return startExport((req.body || {}) as any); });
   app.post<{ Params: { id: string } }>('/api/export/:id/cancel', async (req) => ({ ok: cancelExport(req.params.id) }));
   app.get('/api/exports', async () => listExports());
 
@@ -1022,14 +1027,15 @@ export async function registerRoutes(app: FastifyInstance) {
     return { ...r, png: r.png.toString('base64'), file: cur().p(r.file) };
   });
   // art director: a fresh-eyes critic reviews a scene / range (async: poll the verdict)
-  app.post<{ Body: { sceneId?: string; start?: number; end?: number; focus?: string } }>('/api/agent/art-director', async (req) => {
+  app.post<{ Body: { sceneId?: string; film?: boolean; start?: number; end?: number; focus?: string } }>('/api/agent/art-director', async (req) => {
     need();
     const tid = taskOf(req);
     if (tid && getTask(tid)?.role === 'critic') throw uerr('The art director cannot call itself');
     return startReview({ caller: tid || undefined, ...(req.body || {}) });
   });
   app.get<{ Params: { id: string } }>('/api/agent/art-director/:id', async (req) => { need(); return reviewStatus(req.params.id); });
-  app.post<{ Params: { id: string } }>('/api/script/scenes/:id/review', async (req) => { need(); return startReview({ sceneId: req.params.id }); });
+  app.post<{ Params: { id: string } }>('/api/script/scenes/:id/review', async (req) => { need(); return startReview({ sceneId: req.params.id, force: true }); });
+  app.post('/api/script/review', async () => { need(); return startReview({ film: true, force: true }); });
   app.post<{ Body: { clipId: string } }>('/api/agent/lint-clip', async (req) => { need(); return lintClip(req.body.clipId); });
   // taste audit (server/taste/audit.ts): measured craft checks — a scene / a project range / one clip
   app.post<{ Body: { sceneId?: string; start?: number; end?: number; clipId?: string; itemId?: string } }>('/api/agent/taste-audit', async (req) => {

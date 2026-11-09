@@ -160,7 +160,31 @@ function ReferencesStrip() {
   );
 }
 
+/** an agent is already on it: show its progress instead of the "what are we making" start screen */
+function StoryWorking({ task }: { task: Task }) {
+  const last = [...task.events].reverse();
+  const said = last.find((e) => e.kind === 'text' && e.text?.trim())?.text?.trim();
+  const doing = last.find((e) => e.kind === 'tool');
+  const asking = task.question && task.question.answer == null;
+  const side = useStore((s) => s.sideTab);
+  return (
+    <div className="story-empty working">
+      <div className="story-empty-mark busy"><span className="spinner" /></div>
+      <h1>{asking ? t('The agent has a question for you') : t('The agent is working on your video')}</h1>
+      <p className="muted">{asking ? t('Answer it in the chat on the right — then it continues.') : t('The script appears here as soon as it is written — scenes, text and visuals — and then fills in scene by scene. You can add instructions in the chat on the right at any time; the agent keeps going.')}</p>
+      <div className="working-task">
+        <div className="small ellipsis"><b>{task.title}</b></div>
+        {said && <div className="working-said">{said.length > 280 ? said.slice(0, 280) + '…' : said}</div>}
+        {doing?.tool && <div className="muted xsmall mono ellipsis">{doing.tool.replace(/^mcp__studio__/, '')} {typeof doing.text === 'string' ? doing.text.slice(0, 80) : ''}</div>}
+      </div>
+      {side !== 'agent' && <button className="btn sm" onClick={() => setState({ sideTab: 'agent' })}>{t('Open the chat')}</button>}
+    </div>
+  );
+}
+
 function StoryEmpty({ hasItems }: { hasItems: boolean }) {
+  const working = useStore((s) => s.tasks.find((x) => !x.parentId && x.role !== 'critic' && (x.status === 'running' || x.status === 'queued')));
+  if (working) return <StoryWorking task={working} />;
   if (!hasItems) return (
     <div className="story-empty start">
       <h1>{t('What video are we making?')}</h1>

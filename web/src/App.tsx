@@ -349,6 +349,20 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
         </div>
         <input type="checkbox" className="toggle" checked={(s.artDirector || 'scenes') !== 'off'} onChange={(e) => setS({ ...s, artDirector: e.target.checked ? 'scenes' : 'off' })} />
       </div>
+      {(s.artDirector || 'scenes') !== 'off' && (
+        <div className="set-row">
+          <div className="col gap2 grow">
+            <span className="small">{t('Art director model')}</span>
+            <span className="muted xsmall">{t('A stronger model judges better. "Auto" uses the agent’s model, but never weaker than Sonnet.')}</span>
+          </div>
+          <select className="input" style={{ width: 140 }} value={s.artDirectorModel || ''} onChange={(e) => setS({ ...s, artDirectorModel: e.target.value || undefined })}>
+            <option value="">{t('Auto')}</option>
+            <option value="sonnet">Sonnet</option>
+            <option value="opus">Opus</option>
+            <option value="fable">Fable</option>
+          </select>
+        </div>
+      )}
       {sub && (
         <div className="set-row">
           <div className="col gap2 grow">

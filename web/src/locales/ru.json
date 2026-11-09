@@ -942,5 +942,19 @@
   "Forget": "Забыть",
   "Good result — the agents learn your taste from it": "Хороший результат — агенты учатся вашему вкусу",
   "Not quite — tell the agents what’s off": "Не то — подскажите агентам, что не так",
-  "What’s off?": "Что не так?"
+  "What’s off?": "Что не так?",
+  "The agent has a question for you": "У агента вопрос к вам",
+  "Answer it in the chat on the right — then it continues.": "Ответьте в чате справа — и он продолжит.",
+  "The agent is working on your video": "Агент работает над видео",
+  "The script appears here as soon as it is written — scenes, text and visuals — and then fills in scene by scene. You can add instructions in the chat on the right at any time; the agent keeps going.": "Сценарий появится здесь, как только агент его напишет, — сцены, текст и визуал, а затем сцены будут наполняться одна за другой. Добавлять указания можно в чате справа в любой момент — агент не остановится.",
+  "Open the chat": "Открыть чат",
+  "the whole video": "всё видео",
+  "the scene": "сцену",
+  "A fresh-eyes critic is reviewing {what}": "Критик со свежим взглядом проверяет {what}",
+  "Art director is looking…": "Арт-директор смотрит…",
+  "A fresh-eyes critic reviews {what}: frames, motion, your references and taste": "Критик со свежим взглядом проверит {what}: кадры, движение, ваши референсы и вкус",
+  "Review the whole video": "Проверить всё видео",
+  "Art · whole video": "Арт · всё видео",
+  "Art director model": "Модель арт-директора",
+  "A stronger model judges better. \"Auto\" uses the agent’s model, but never weaker than Sonnet.": "Чем сильнее модель, тем точнее оценка. «Авто» берёт модель агента, но не слабее Sonnet."
 }

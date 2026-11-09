@@ -41,7 +41,7 @@ function normalize(s: Partial<Script>): Script {
   }));
   scenes.sort((a, b) => a.start - b.start);
   const stage = STAGES.some((st) => st.id === s.stage) ? (s.stage as StageId) : 'brief';
-  return { brief: s.brief || '', stage, scenes, updatedAt: s.updatedAt };
+  return { brief: s.brief || '', stage, scenes, ...(s.review && typeof s.review === 'object' ? { review: s.review } : {}), updatedAt: s.updatedAt };
 }
 
 export function saveScript(next: Partial<Script>) {
