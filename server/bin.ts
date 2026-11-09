@@ -1,13 +1,16 @@
 // Resolves external binaries (ffmpeg / ffprobe) once: an explicit env override, then the system one
-// (PATH plus the usual Homebrew/system dirs, which a GUI-launched process may lack), then the npm fallbacks
-// `ffmpeg-static` / `@ffprobe-installer/ffprobe` (optionalDependencies). Every spawn of ffmpeg/ffprobe goes through `bin()`.
+// (PATH plus the usual Homebrew/system dirs, which a GUI-launched process may lack), then a copy downloaded into the
+// studio home on first start (ensureFfmpeg — only when the system has none), then the npm fallbacks
+// (`@ffprobe-installer/ffprobe`; `ffmpeg-static` in dev). Every spawn of ffmpeg/ffprobe goes through `bin()`.
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import zlib from 'node:zlib';
+import { HOME_DIR } from './config.ts';
 
 export type BinName = 'ffmpeg' | 'ffprobe';
-export interface BinInfo { name: BinName; path: string | null; source: 'env' | 'system' | 'bundled' | 'missing' }
+export interface BinInfo { name: BinName; path: string | null; source: 'env' | 'system' | 'downloaded' | 'bundled' | 'missing' }
 
 const require = createRequire(import.meta.url);
 const ENV: Record<BinName, string[]> = { ffmpeg: ['STUDIO_FFMPEG', 'FFMPEG_PATH'], ffprobe: ['STUDIO_FFPROBE', 'FFPROBE_PATH'] };
@@ -23,6 +26,9 @@ export function which(name: string): string | null {
   for (const d of [...new Set(dirs)]) for (const e of exts) { const p = path.join(d, name + e); if (isExec(p)) return p; }
   return null;
 }
+
+const EXE = process.platform === 'win32' ? '.exe' : '';
+const downloadedPath = (name: BinName) => path.join(HOME_DIR, 'bin', name + EXE);
 
 function bundled(name: BinName): string | null {
   try {
@@ -41,6 +47,7 @@ export function binInfo(name: BinName): BinInfo {
   else {
     const sys = which(name);
     if (sys) info = { name, path: sys, source: 'system' };
+    else if (isExec(downloadedPath(name))) info = { name, path: downloadedPath(name), source: 'downloaded' };
     else { const b = bundled(name); if (b) info = { name, path: b, source: 'bundled' }; }
   }
   cache.set(name, info);
@@ -73,6 +80,30 @@ export function filterComplexFileArgs(file: string): string[] {
 
 /** when ffmpeg/ffprobe come from the npm fallbacks, put them on PATH too — agents (claude/codex) spawned by the editor inherit it */
 export function exposeBundledBins() {
-  const dirs = (['ffmpeg', 'ffprobe'] as const).map(binInfo).filter((b) => b.source === 'bundled' && path.basename(b.path!).startsWith(b.name)).map((b) => path.dirname(b.path!));
+  const dirs = (['ffmpeg', 'ffprobe'] as const).map(binInfo).filter((b) => (b.source === 'bundled' || b.source === 'downloaded') && path.basename(b.path!).startsWith(b.name)).map((b) => path.dirname(b.path!));
   if (dirs.length) process.env.PATH = [...new Set(dirs), process.env.PATH || ''].join(path.delimiter);
+}
+
+/**
+ * No ffmpeg on the system: download a static build once into <studio home>/bin (the same builds ffmpeg-static uses).
+ * Done at start instead of at `npm install`, so installs stay fast for everyone who already has ffmpeg.
+ */
+export async function ensureFfmpeg(log: (s: string) => void = () => {}): Promise<void> {
+  if (binInfo('ffmpeg').path) return;
+  const url = `https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffmpeg-${process.platform}-${process.arch}.gz`;
+  const dest = downloadedPath('ffmpeg');
+  log('  ffmpeg not found — downloading a static build once (≈ 25 MB)…');
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10 * 60_000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const bin = zlib.gunzipSync(Buffer.from(await res.arrayBuffer()));
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest + '.part', bin, { mode: 0o755 });
+    fs.renameSync(dest + '.part', dest);
+    cache.delete('ffmpeg');
+    ffMajor = undefined;
+    log(`  ffmpeg ready: ${dest}`);
+  } catch (e) {
+    log(`  could not download ffmpeg (${(e as Error).message}) — install it yourself: ${process.platform === 'darwin' ? 'brew install ffmpeg' : 'your package manager (apt/dnf/winget) install ffmpeg'}`);
+  }
 }

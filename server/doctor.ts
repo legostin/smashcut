@@ -38,7 +38,7 @@ function nodeCheck(): DoctorCheck {
 async function ffCheck(name: BinName): Promise<DoctorCheck> {
   const b = binInfo(name);
   const title = name === 'ffmpeg' ? 'ffmpeg (export, media)' : 'ffprobe (media info)';
-  if (!b.path) return { id: name, title, status: 'missing', detail: `${name} not found on PATH and the bundled fallback is not installed`, fix: mac ? 'brew install ffmpeg' : 'sudo apt install ffmpeg   (or your distro’s package manager)' };
+  if (!b.path) return { id: name, title, status: 'missing', detail: `${name} not found on PATH${name === 'ffmpeg' ? ' (the editor tries to download it on start)' : ' and the bundled fallback is not installed'}`, fix: mac ? 'brew install ffmpeg' : 'sudo apt install ffmpeg   (or your distro’s package manager)' };
   const r = await exec(b.path, ['-hide_banner', '-version']);
   const ver = /version\s+(\S+)/.exec(r.out)?.[1] || '?';
   if (r.code !== 0) return { id: name, title, status: 'missing', detail: `${b.path} does not run: ${firstLine(r.out || r.err || '')}`, fix: mac ? 'brew install ffmpeg' : 'sudo apt install ffmpeg' };

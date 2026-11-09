@@ -17,13 +17,14 @@ import { probeMedia } from './media.ts';
 import { recomputeTiming } from './timing.ts';
 import { closeBrowser, ensureBrowser } from './render/browser.ts';
 import { runDoctor, formatDoctor } from './doctor.ts';
-import { exposeBundledBins } from './bin.ts';
+import { exposeBundledBins, ensureFfmpeg } from './bin.ts';
 import { resumeExport } from './render/compose.ts';
 import { createDemoProject } from './demo.ts';
 import { onScriptFileChanged } from './script.ts';
 import { onDesignFileChanged } from './design.ts';
 import { SAMPLES_DIR, sampleIndexJson } from './samples.ts';
 
+await ensureFfmpeg((s) => console.log(s)); // only when the system has no ffmpeg (one-time download)
 exposeBundledBins();
 
 const app = Fastify({ logger: false, bodyLimit: 50 * 1024 * 1024 });
