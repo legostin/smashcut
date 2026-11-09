@@ -297,6 +297,10 @@ input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.15); }
 .perm .row { flex-wrap: wrap; }
 .working { display: flex; align-items: center; gap: 8px; color: var(--fg3); font-size: 12.5px; }
 .task-foot { color: var(--fg3); font-size: 11.5px; text-align: center; padding: 4px 0; }
+.task-rate { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; vertical-align: middle; }
+.task-rate .icon-btn { width: 24px; height: 24px; }
+.task-rate-ask { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+.task-rate-ask .input { flex: 1; min-width: 0; padding: 4px 8px; font-size: 12px; }
 .composer { margin: 8px 12px 12px; background: var(--raise); border: 1px solid var(--line2); border-radius: 14px; padding: 10px 10px 8px 12px; transition: border-color var(--t), box-shadow var(--t); flex: none; }
 .composer:focus-within { border-color: var(--line3); box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.03); }
 .composer textarea { width: 100%; background: transparent; border: none; outline: none; resize: none; line-height: 1.5; max-height: 220px; display: block; padding: 0; }
@@ -497,7 +501,9 @@ input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.15); }
 .scene-field textarea { width: 100%; background: var(--bg); border: 1px solid var(--line2); border-radius: 8px; padding: 7px 9px; outline: none; resize: none; font-size: 12.5px; line-height: 1.5; overflow: hidden; transition: border-color var(--t); }
 .scene-field textarea:focus { border-color: var(--line3); }
 .scene-timing { display: flex; gap: 8px; }
-.scene-bar { display: flex; align-items: center; gap: 12px; }
+.scene-bar { display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; }
+.scene-bar > *, .scene-status { white-space: nowrap; }
+.scene-bar > .review-wrap, .review-pop { white-space: normal; min-width: 0; }
 .scene-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg3); padding: 2px 8px 2px 6px; margin-left: -6px; border-radius: 999px; transition: background var(--t), color var(--t); }
 .scene-status:hover { background: var(--raise); color: var(--fg2); }
 .scene-status.st-doing { color: var(--accent); }
@@ -1133,3 +1139,14 @@ button.chip:hover { filter: brightness(1.25); }
 .composer-bar > .send, .composer-bar > .row + .row { flex: none; }
 .inspo-groups { display: inline-flex; margin: 0 0 12px; }
 .inspo-groups button span { opacity: 0.55; margin-left: 4px; font-size: 0.9em; }
+
+/* art director verdict on a scene (details open inside the card, full width) */
+.review-wrap { display: contents; }
+.review-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; background: var(--raise); color: var(--fg2); }
+.review-badge.ok { color: var(--tone-done); background: rgba(74, 222, 128, .1); }
+.review-badge.warn { color: var(--tone-review); background: rgba(250, 204, 21, .1); }
+.review-pop { order: 99; flex-basis: 100%; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line2); text-align: left; cursor: default; }
+.review-item { font-size: 12px; line-height: 1.45; color: var(--fg2); }
+.review-item .mono { font-size: 10px; padding: 1px 4px; border-radius: 4px; margin-right: 4px; background: var(--raise); }
+.review-item.sev-P0 .mono { color: #ff6b5e; }
+.review-item.sev-P1 .mono { color: var(--tone-review); }

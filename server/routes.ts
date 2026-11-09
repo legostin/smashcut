@@ -20,6 +20,10 @@ import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
 import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport, getManifest } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
+import { startReview, reviewStatus, doneGate } from './taste/critic.ts';
+import { getTask } from './agents/runner.ts';
+import { rateTask } from './agents/runner.ts';
+import { recordTaste, sceneTaste, tasteStatus, saveTasteProfile, distillTaste, forgetTaste } from './taste/memory.ts';
 import { startTask, followUp, cancelTask, listTasks, taskEvent, setFocus, interruptTask, steerTask, takeSteer, setTaskOptions, askUser, answerOf, answerQuestion, delegateTask, waitSubagents, children } from './agents/runner.ts';
 import { getScript, saveScript, patchScene, STAGES } from './script.ts';
 import { getDesign, saveDesign } from './design.ts';
@@ -267,6 +271,13 @@ function setTaskModel(id: string, b: { model?: string; effort?: string; autopilo
 export async function registerRoutes(app: FastifyInstance) {
   const taskOf = (req: { headers: Record<string, unknown> }) => String(req.headers['x-studio-task'] || '');
   const need = () => { if (!hasProject()) throw Object.assign(new Error('no project open'), { statusCode: 409 }); return cur(); };
+  // the art director only looks: it may render and read, never change the project
+  const CRITIC_OK = /^\/api\/agent\/(render-clip|render-frame|taste-audit|inspiration|steer|lint-clip)\b/;
+  app.addHook('preHandler', async (req) => {
+    const tid = req.headers['x-studio-task'];
+    if (!tid || req.method === 'GET' || CRITIC_OK.test(req.url.replace(/^\/p\/[^/]+/, ''))) return;
+    if (getTask(String(tid))?.role === 'critic') throw Object.assign(new Error('The art director only reviews — it cannot change the project. Put the change into your verdict.'), { statusCode: 403 });
+  });
 
   // ---------- state & projects ----------
   app.get('/api/state', async () => state());
@@ -537,7 +548,10 @@ export async function registerRoutes(app: FastifyInstance) {
     bus.send({ type: 'notice', level: 'info', ...msg('The agent removed the obsolete note “{note}”: {reason}', { note: c.text.slice(0, 60), reason: req.body.reason }) });
     return { ok: true, id: c.id, deleted: true };
   });
-  app.post<{ Body: { ids?: string[]; agent?: 'claude' | 'codex'; lang?: string } }>('/api/comments/send', async (req) => { need(); return sendComments(req.body?.ids, req.body?.agent, langLine(req.body?.lang)); });
+  app.post<{ Body: { ids?: string[]; agent?: 'claude' | 'codex'; lang?: string } }>('/api/comments/send', async (req) => {
+    need();
+    for (const c of cur().comments.filter((x) => x.status === 'draft' && x.text.trim() && (!req.body?.ids || req.body.ids.includes(x.id)))) recordTaste({ kind: 'comment', text: `The user's note on the frame at ${c.time.toFixed(1)} s${c.clipId ? ` (clip ${c.clipId})` : ''}: “${c.text.trim()}”` });
+    return sendComments(req.body?.ids, req.body?.agent, langLine(req.body?.lang)); });
 
   // ---------- tasks ----------
   app.get('/api/tasks', async () => listTasks());
@@ -569,6 +583,17 @@ export async function registerRoutes(app: FastifyInstance) {
     return { ok: true };
   });
   app.post<{ Params: { id: string }; Body: { answer: string } }>('/api/tasks/:id/answer', async (req) => answerQuestion(req.params.id, String(req.body?.answer ?? '')));
+  // 👍 / 👎 on a finished task — stored on the task and learned by the taste memory
+  app.post<{ Params: { id: string }; Body: { value: number; note?: string } }>('/api/tasks/:id/rate', async (req) => {
+    const v = Number(req.body?.value);
+    if (v !== 1 && v !== -1) throw Object.assign(new Error('value must be 1 or -1'), { statusCode: 400 });
+    return rateTask(req.params.id, v, req.body?.note ? String(req.body.note) : undefined);
+  });
+  // ---------- taste memory (global, learned from the user's choices) ----------
+  app.get('/api/taste', async () => tasteStatus());
+  app.put<{ Body: { profile: string } }>('/api/taste', async (req) => saveTasteProfile(String(req.body?.profile ?? '')));
+  app.post('/api/taste/distill', async () => { const r = await distillTaste(true); return { ...tasteStatus(), distilled: r.events }; });
+  app.delete('/api/taste', async () => forgetTaste());
   app.post<{ Params: { id: string } }>('/api/tasks/:id/cancel', async (req) => { cancelTask(req.params.id); return { ok: true }; });
   app.get('/api/agents/check', async () => {
     const check = async (cmd: string) => { try { const r = await run(cmd, ['--version']); return r.code === 0 ? r.stdout.trim().split('\n')[0] : null; } catch { return null; } };
@@ -735,6 +760,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const b = req.body as any;
     const note = { id: 'n' + nid(), anchors: b.anchors || [], labels: b.labels || [], text: String(b.text || ''), taskId: b.taskId, createdAt: new Date().toISOString() };
     writeNotes([...readNotes(), note]);
+    if (!taskOf(req) && note.text.trim()) recordTaste({ kind: 'comment', text: `The user's note on the board${note.labels.length ? ` about ${note.labels.slice(0, 4).join(', ')}` : ''}: “${note.text.trim()}”` });
     return note;
   });
   app.patch<{ Params: { id: string }; Body: any }>('/api/board/notes/:id', async (req) => { need(); return writeNotes(readNotes().map((n) => (n.id === req.params.id ? { ...n, ...(req.body as any), id: n.id } : n))); });
@@ -870,7 +896,13 @@ export async function registerRoutes(app: FastifyInstance) {
     }) };
   };
   app.put<{ Body: any }>('/api/script', async (req) => { need(); const tid = taskOf(req); if (tid) setFocus(tid, { kind: 'script', at: Date.now() }); return saveScript(tid ? guardScenes(req.body) : (req.body as any)); });
-  app.patch<{ Body: any }>('/api/script', async (req) => { need(); return saveScript(req.body as any); });
+  app.patch<{ Body: any }>('/api/script', async (req) => {
+    need();
+    const prev = taskOf(req) || !Array.isArray((req.body as any)?.scenes) ? null : new Map(getScript().scenes.map((x) => [x.id, { ...x }]));
+    const out = await saveScript(req.body as any);
+    if (prev) for (const sc of (req.body as any).scenes) sceneTaste(prev.get(sc?.id), sc); // the user approved / sent back scenes
+    return out;
+  });
   app.post<{ Body: any }>('/api/script/scenes', async (req) => {
     need();
     const s = getScript();
@@ -885,12 +917,22 @@ export async function registerRoutes(app: FastifyInstance) {
     let body = req.body as any;
     if (tid) {
       setFocus(tid, { kind: 'script', id: req.params.id, at: Date.now() });
-      const { locked, ...rest } = body || {};
+      const { locked, force, reason, review, ...rest } = body || {};
       const cur0 = getScript().scenes.find((s) => s.id === req.params.id);
       body = rest;
       if (body.status === 'approved' || cur0?.status === 'approved') delete body.status;
+      // the art director gate: a scene is done when a fresh-eyes review passed it (or its rounds are used up)
+      if (body.status === 'done' && cur0?.status !== 'done') {
+        const gate = doneGate(req.params.id);
+        if (gate && !(force && String(reason || '').trim())) throw Object.assign(new Error(gate), { statusCode: 409 });
+        if (gate) taskEvent(tid, { kind: 'status', text: `marked done without art-director review: ${String(reason).slice(0, 200)}` });
+      }
+    } else if ((body?.status === 'todo' || body?.status === 'doing') && body?.review === undefined) {
+      body = { ...body, review: undefined }; // the user sent it back: it needs a fresh review
     }
-    return patchScene(req.params.id, body);
+    const sc0 = tid ? undefined : getScript().scenes.find((x) => x.id === req.params.id);
+    const before = sc0 && { ...sc0 };
+    return patchScene(req.params.id, body).then((r) => { sceneTaste(before, body); return r; }); // taste: the user approved / sent back a scene
   });
   app.delete<{ Params: { id: string } }>('/api/script/scenes/:id', async (req) => { need(); const s = getScript(); return saveScript({ scenes: s.scenes.filter((x) => x.id !== req.params.id) }); });
 
@@ -899,8 +941,13 @@ export async function registerRoutes(app: FastifyInstance) {
   app.post<{ Body: { sha: string; path: string } }>('/api/versions/restore', async (req) => {
     const store = need();
     await commit(store.dir, 'Snapshot before restore');
+    // taste: which agent tasks does this undo? (agent commits newer than the restored version)
+    const hist = await gitLog(store.dir, req.body.path, 200).catch(() => []);
+    const at = hist.findIndex((v) => v.sha.startsWith(String(req.body.sha)) || String(req.body.sha).startsWith(v.sha));
+    const undone = (at > 0 ? hist.slice(0, at) : []).map((v) => /^agent\([a-z]+\): (.*)$/.exec(v.message)?.[1]).filter(Boolean) as string[];
     await gitRestore(store.dir, req.body.sha, req.body.path);
     const sha = await commit(store.dir, `Restore ${req.body.path} to ${req.body.sha}`);
+    if (undone.length) recordTaste({ kind: 'revert', text: `The user reverted ${req.body.path} to an earlier version, undoing the agent's work from: ${[...new Set(undone)].slice(0, 5).map((x) => `“${x}”`).join(', ')}.` });
     if (req.body.path === 'project.json') { store.reload(); bus.send({ type: 'project', project: store.project }); }
     return { ok: true, sha };
   });
@@ -974,7 +1021,32 @@ export async function registerRoutes(app: FastifyInstance) {
     if (tid) taskEvent(tid, { kind: 'image', src: pbase() + '/' + r.file, ...msg('frame {times}', { times: req.body.times.map((t) => t.toFixed(1) + 's').join(', ') }) });
     return { ...r, png: r.png.toString('base64'), file: cur().p(r.file) };
   });
+  // art director: a fresh-eyes critic reviews a scene / range (async: poll the verdict)
+  app.post<{ Body: { sceneId?: string; start?: number; end?: number; focus?: string } }>('/api/agent/art-director', async (req) => {
+    need();
+    const tid = taskOf(req);
+    if (tid && getTask(tid)?.role === 'critic') throw uerr('The art director cannot call itself');
+    return startReview({ caller: tid || undefined, ...(req.body || {}) });
+  });
+  app.get<{ Params: { id: string } }>('/api/agent/art-director/:id', async (req) => { need(); return reviewStatus(req.params.id); });
+  app.post<{ Params: { id: string } }>('/api/script/scenes/:id/review', async (req) => { need(); return startReview({ sceneId: req.params.id }); });
   app.post<{ Body: { clipId: string } }>('/api/agent/lint-clip', async (req) => { need(); return lintClip(req.body.clipId); });
+  // taste audit (server/taste/audit.ts): measured craft checks — a scene / a project range / one clip
+  app.post<{ Body: { sceneId?: string; start?: number; end?: number; clipId?: string; itemId?: string } }>('/api/agent/taste-audit', async (req) => {
+    const store = need();
+    const { auditRange, auditClip } = await import('./taste/audit.ts');
+    const b = req.body || {};
+    if (b.clipId) return auditClip(b.clipId, { itemId: b.itemId });
+    if (b.sceneId) {
+      const sc = getScript().scenes.find((x) => x.id === b.sceneId);
+      if (!sc) throw Object.assign(new Error('scene not found: ' + b.sceneId), { statusCode: 404 });
+      return auditRange({ start: sc.start, end: sc.start + sc.duration });
+    }
+    const it = b.itemId ? store.project.items.find((i) => i.id === b.itemId) : undefined;
+    if (it) return auditRange({ start: it.start, end: it.start + it.duration });
+    const filmEnd = Math.max(0, ...store.project.items.map((i) => i.start + i.duration)) || store.project.duration;
+    return auditRange({ start: Number(b.start ?? 0), end: Number(b.end ?? filmEnd) });
+  });
   app.get<{ Querystring: { kind?: string; q?: string } }>('/api/agent/templates', async (req) => {
     const q = (req.query.q || '').toLowerCase();
     return listGallery().filter((g) => (!req.query.kind || g.kind === req.query.kind) && (!q || JSON.stringify(g).toLowerCase().includes(q)))

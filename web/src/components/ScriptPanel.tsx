@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Scene, StageId } from '../../../shared/types';
-import { useStore, usePlayhead, actions, seek, fmtTime, setState } from '../store';
+import { useStore, usePlayhead, actions, seek, fmtTime, setState, api, notify } from '../store';
 import { Icon } from './Icon';
 import { t, tn } from '../i18n';
 
@@ -146,10 +146,40 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
         {typeof sc.vo?.rate === 'number' && <span className={'vo-pace' + (sc.vo.flagged ? ' warn' : '')} title={t('Voice pace: {r} syllables/s · {n} flagged', { r: sc.vo.rate.toFixed(1), n: sc.vo.flagged ?? 0 })}>{sc.vo.flagged ? '⚠' : '✓'} {sc.vo.rate.toFixed(1)}</span>}
         {sc.voiceover?.trim() && !sc.speech && <button className="link" onClick={() => actions.startTask(`Prepare the speech text for scene ${n} "${sc.title}" (id ${sc.id}) following the studio-voiceover skill: update_scene {speech} with numbers/dates as words, {display|spoken}, stress marks and pauses. Don't generate the voice yet; show me the speech text.`)}>{t('Prepare speech')}</button>}
         {sc.voiceover?.trim() && <VoiceButton sc={sc} />}
+        <ReviewBadge sc={sc} />
         <button className="link" onClick={make}>{t('Make')}</button>
         {open && <button className="link danger" onClick={() => actions.deleteScene(sc.id)}>{t('Delete')}</button>}
       </div>
     </div>
+  );
+}
+
+/** the art director's verdict on the scene (or a button to ask for one) */
+function ReviewBadge({ sc }: { sc: Scene }) {
+  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
+  const r = sc.review;
+  const run = async () => { setBusy(true); try { await api('POST', `/api/script/scenes/${sc.id}/review`); notify('info', t('The art director is looking at the scene…')); } catch (e) { notify('error', (e as Error).message); } finally { setBusy(false); } };
+  if (!r) return sc.itemIds?.length ? <button className="link" disabled={busy} onClick={run} title={t('A fresh-eyes critic reviews the frames of this scene')}>{t('Art review')}</button> : null;
+  const items = [...r.p0.map((x) => ['P0', x]), ...r.p1.map((x) => ['P1', x]), ...r.p2.map((x) => ['P2', x])];
+  return (
+    <span className="review-wrap">
+      <button className={'review-badge' + (r.pass ? ' ok' : ' warn')} onClick={() => setOpen((o) => !o)} title={r.verdict}>
+        {r.pass ? '✓' : '!'} {t('Art')}{!r.pass && r.p0.length + r.p1.length ? ` · ${r.p0.length + r.p1.length}` : ''}
+      </button>
+      {open && (
+        <div className="review-pop" onClick={(e) => e.stopPropagation()}>
+          <div className="small"><b>{r.pass ? t('Passed') : t('Not yet')}</b> · {t('round {n}', { n: r.round })}</div>
+          <div className="muted xsmall">{r.verdict}</div>
+          {items.map(([sev, x], i) => <div key={i} className={'review-item sev-' + sev}><span className="mono">{sev}</span> {x}</div>)}
+          {r.strongest && <div className="xsmall"><span className="muted">{t('What works')}:</span> {r.strongest}</div>}
+          <div className="row gap2" style={{ marginTop: 6 }}>
+            <button className="btn xs" disabled={busy} onClick={run}>{t('Review again')}</button>
+            {!r.pass && <button className="btn xs primary" onClick={() => { setOpen(false); actions.startTask(`Fix the art director's notes on scene "${sc.title}" (id ${sc.id}): ${items.map(([sev, x]) => `${sev} ${x}`).join('; ')}. Then art_director {sceneId:"${sc.id}"} again.`); }}>{t('Fix these')}</button>}
+          </div>
+        </div>
+      )}
+    </span>
   );
 }
 

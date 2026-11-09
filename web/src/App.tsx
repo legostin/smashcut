@@ -342,6 +342,13 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
         </div>
         <input type="checkbox" className="toggle" checked={!!s.agentUserConfig} onChange={(e) => setS({ ...s, agentUserConfig: e.target.checked })} />
       </div>
+      <div className="set-row">
+        <div className="col gap2 grow">
+          <span className="small">{t('Art director review')}</span>
+          <span className="muted xsmall">{t('A fresh-eyes critic looks at every finished scene (frames, measured checks, your taste) and the agent fixes what it finds before the scene is done. Slower and uses more tokens, noticeably better results.')}</span>
+        </div>
+        <input type="checkbox" className="toggle" checked={(s.artDirector || 'scenes') !== 'off'} onChange={(e) => setS({ ...s, artDirector: e.target.checked ? 'scenes' : 'off' })} />
+      </div>
       {sub && (
         <div className="set-row">
           <div className="col gap2 grow">
@@ -384,6 +391,47 @@ function HouseStyleSettings({ s, setS }: { s: Settings; setS: (s: Settings) => v
       <label className="field"><span>{t('Colours & type')}</span>
         <textarea className="input" rows={2} value={h.colors || ''} onChange={(e) => set('colors', e.target.value)} placeholder={t('e.g. off-black #111 background, one accent #FF5A36, Inter for text, Unbounded for titles')} />
       </label>
+      <LearnedTaste />
+    </div>
+  );
+}
+
+/** the taste profile the agents learned from the user's picks, approvals, notes, reverts and 👍/👎 (editable) */
+function LearnedTaste() {
+  type St = { profile: string; events: number; pending: number; distilledAt?: string; lastError?: string; running?: boolean };
+  const [st, setSt] = useState<St | null>(null);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState<'' | 'save' | 'distill' | 'forget'>('');
+  const [confirmForget, setConfirmForget] = useState(false);
+  const load = (r?: St) => (r ? Promise.resolve(r) : api<St>('GET', '/api/taste')).then((x) => { setSt(x); setDraft(x.profile); });
+  useEffect(() => { load().catch(() => {}); }, []);
+  const run = async (k: 'save' | 'distill' | 'forget', fn: () => Promise<St>) => {
+    setBusy(k);
+    try { await load(await fn()); } catch (e) { notify('error', (e as Error).message); load().catch(() => {}); } finally { setBusy(''); }
+  };
+  if (!st) return null;
+  const dirty = draft.trim() !== st.profile.trim();
+  return (
+    <div className="col gap6 taste-learned">
+      <div className="row between">
+        <span className="small">{t('Learned taste')}</span>
+        <span className="muted xsmall">{tn(st.pending, '{n} signal since last update', '{n} signals since last update')}</span>
+      </div>
+      <span className="muted xsmall">{t('Agents learn it from what you do: the drafts you pick, scenes you approve or send back, your notes, reverted agent work and 👍/👎 on finished tasks. Edit it freely.')}</span>
+      <textarea className="input mono" rows={8} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('Nothing learned yet — it fills in as you work.')} />
+      {st.lastError && <span className="muted xsmall">{t('Last update failed: {err}', { err: st.lastError })}</span>}
+      <div className="row gap6">
+        <button className="btn sm" disabled={!dirty || !!busy} onClick={() => run('save', () => api<St>('PUT', '/api/taste', { profile: draft }))}>{busy === 'save' ? <span className="spinner sm" /> : t('Save')}</button>
+        <button className="btn sm" disabled={!st.pending || !!busy} onClick={() => run('distill', () => api<St>('POST', '/api/taste/distill'))}>{busy === 'distill' ? <><span className="spinner sm" /> {t('Updating…')}</> : t('Update now')}</button>
+        <span className="grow" />
+        {confirmForget
+          ? <>
+              <span className="muted xsmall">{t('Forget everything learned?')}</span>
+              <button className="btn sm" disabled={!!busy} onClick={() => { setConfirmForget(false); run('forget', () => api<St>('DELETE', '/api/taste')); }}>{t('Forget')}</button>
+              <button className="btn sm ghost" onClick={() => setConfirmForget(false)}>{t('Cancel')}</button>
+            </>
+          : <button className="btn sm ghost" disabled={!!busy || (!st.profile && !st.events)} onClick={() => setConfirmForget(true)}>{t('Forget')}</button>}
+      </div>
     </div>
   );
 }

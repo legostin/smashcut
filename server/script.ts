@@ -32,6 +32,7 @@ function normalize(s: Partial<Script>): Script {
     voiceover: x.voiceover || '',
     ...(x.speech ? { speech: x.speech } : {}),
     ...(x.vo ? { vo: x.vo } : {}),
+    ...(x.review && typeof x.review === 'object' ? { review: x.review } : {}),
     visual: x.visual || '',
     notes: x.notes || '',
     status: (['todo', 'doing', 'review', 'done', 'approved'].includes(x.status as string) ? x.status : 'todo') as Scene['status'],

@@ -106,6 +106,20 @@ server.registerTool('lint_clip', {
   inputSchema: { clipId: z.string() },
 }, safe(async ({ clipId }) => text(await api('POST', '/api/agent/lint-clip', { clipId }))));
 
+server.registerTool('taste_audit', {
+  description: 'Measured craft audit of rendered video (studio-craft numbers): text size / safe areas (16:9 title-safe, 9:16 UI zones) / read time / font fallback & count / WCAG contrast from real pixels, everything-animates-at-once, linear entrances, idle wobble, dead stretches > 3 s, frame 0, flicker, seam flashes, accent-colour sprawl. Pass sceneId (scene range), start/end (project seconds) or clipId (+itemId) for one clip (clip-local times). Run it before you call a scene done; fix every P0 first, then P1s, re-run. Facts, not taste: still look at the frames.',
+  inputSchema: { sceneId: z.string().optional(), start: z.number().optional(), end: z.number().optional(), clipId: z.string().optional(), itemId: z.string().optional() },
+}, safe(async (a) => {
+  const r = await api('POST', '/api/agent/taste-audit', a);
+  const m = r.metrics || {};
+  const lines = r.issues.map((i) => `${i.severity}${i.t != null ? ` t=${Number(i.t).toFixed(2)}s` : ''} · ${i.where} · ${i.problem} → ${i.fix}`);
+  const c = m.counts || {};
+  const tx = m.text || {};
+  const fonts = Object.entries(m.fonts || {}).map(([f, s]) => (s === 'ok' ? f : `${f} (${s})`)).join(', ') || 'none';
+  const summary = `metrics: ${c.P0 || 0} P0 / ${c.P1 || 0} P1 / ${c.P2 || 0} P2 · ${m.timeBase} ${(m.span || []).join('–')} · fonts ${fonts} · min text ${tx.minPx ?? '–'}px (${tx.minPctShort ?? '–'}% short side) · worst contrast ${tx.worstContrast ?? '–'}:1 · max simultaneous starts ${m.motion?.maxSimultaneousStarts ?? 0} · dead stretches ${(m.frames?.deadStretches || []).map((d) => d.join('–')).join(', ') || 'none'} · ${m.frames?.hues ?? 0} saturated hues · ${m.samples?.dom ?? 0} DOM probes, ${m.samples?.frames ?? 0} frames · ${(r.ms / 1000).toFixed(1)} s${m.errors ? ` · runtime errors: ${m.errors.join(' | ')}` : ''}`;
+  return text((lines.length ? lines.join('\n') : 'No measured problems.') + '\n' + summary);
+}));
+
 server.registerTool('create_clip', {
   description: 'Create a new empty clip package clips/<id>/ (index.html, clip.js, style.css, params.json, manifest.json) from the starter skeleton. Then edit the files. template "3d" = a Three.js clip (import map for three / three/addons / studio3js, clip.js as an ES module) — the default way to make 3D; Blender (create_3d_scene) only for what Three.js can\'t do well.',
   inputSchema: { id: z.string(), name: z.string(), description: z.string().optional(), duration: z.number().optional(), template: z.enum(['2d', '3d']).optional() },
@@ -219,6 +233,25 @@ server.registerTool('message_subagent', {
   inputSchema: { id: z.string(), text: z.string() },
 }, safe(async (a) => text(await api('POST', '/api/agent/subagents/message', a))));
 
+server.registerTool('art_director', {
+  description: 'Get your work reviewed by the ART DIRECTOR: a fresh-eyes critic (a separate agent with taste, the user\'s learned taste and house style) looks at contact sheets of the composited frames of a scene — including the seams with its neighbours — plus the measured taste audit, the brief and the design system, and returns a verdict: PASS / NOT YET with P0/P1/P2 items "t=… · where · problem → exact change". Call it when a scene looks finished to you, BEFORE update_scene status "done" (that is required unless the user turned it off); fix the P0s and P1s, re-render, and call it again (max 3 rounds). Takes a few minutes; you are idle meanwhile (you don\'t hold an agent slot). The verdict is also shown to the user on the scene.',
+  inputSchema: {
+    sceneId: z.string().optional().describe('the scene to review (preferred)'),
+    start: z.number().optional().describe('or a range of the timeline, seconds'),
+    end: z.number().optional(),
+    focus: z.string().optional().describe('what you want a second opinion on, e.g. "is the title hierarchy clear?"'),
+  },
+}, safe(async (a) => {
+  const r = await api('POST', '/api/agent/art-director', a);
+  const until = Date.now() + 40 * 60_000;
+  while (Date.now() < until) {
+    await new Promise((res) => setTimeout(res, 3000));
+    const s = await api('GET', `/api/agent/art-director/${r.taskId}`);
+    if (s.done) return text(`${s.text}\n\nContact sheets the critic saw: ${r.sheets.join(', ')}`);
+  }
+  return text(`The review is still running (task ${r.taskId}). Continue with other work; the verdict will appear on the scene (get_script → scene.review).`);
+}));
+
 server.registerTool('get_script', {
   description: 'The video script / storyboard (script.json): brief, production stage (brief→script→storyboard→production→review→export) and scenes [{id,title,start,duration,voiceover,visual,notes,status todo|doing|review|done|approved, locked?, itemIds}]. Read it before producing a video. Scenes that are approved or locked belong to the user: do not change them (items, clips, timing, copy) unless the task explicitly names them.',
   inputSchema: {},
@@ -234,7 +267,7 @@ server.registerTool('set_script', {
 }, safe(async (a) => text(await api('PUT', '/api/script', a))));
 
 server.registerTool('update_scene', {
-  description: 'Patch one scene (title, start, duration, voiceover, visual, notes, status, itemIds). Set status "doing" when you start a scene and "done" when it is finished and verified — the user watches progress live. Use "review" when you need the user to decide something about the scene (say what in notes). Never set "approved" or change "locked" — those are the user\'s.',
+  description: 'Patch one scene (title, start, duration, voiceover, visual, notes, status, itemIds). Set status "doing" when you start a scene and "done" when it is finished and verified — the user watches progress live. "done" requires an art_director review that passed (or 3 rounds used); for a trivial change (a typo, a timing nudge) add force:true and reason:"…" to the patch instead. Use "review" when you need the user to decide something about the scene (say what in notes). Never set "approved" or change "locked" — those are the user\'s.',
   inputSchema: { id: z.string(), patch: z.record(z.string(), z.any()) },
 }, safe(async ({ id, patch }) => text(await api('PATCH', `/api/script/scenes/${id}`, patch))));
 

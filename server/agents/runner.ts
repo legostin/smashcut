@@ -8,9 +8,10 @@ import { cur, hasProject, runIn, type ProjectStore } from '../project.ts';
 import { bus } from '../bus.ts';
 import { nid, readJson, writeJson } from '../util.ts';
 import { commit } from '../git.ts';
-import { SYSTEM_PROMPT, houseStylePrompt, SUBAGENTS_PROMPT, SUBAGENT_ROLE } from './prompts.ts';
+import { SYSTEM_PROMPT, houseStylePrompt, SUBAGENTS_PROMPT, SUBAGENT_ROLE, CRITIC_PROMPT } from './prompts.ts';
 import { uerr } from '../i18n.ts';
 import { denyTask } from '../permissions.ts';
+import { recordTaste, tastePrompt } from '../taste/memory.ts';
 
 const tasks = new Map<string, Task>();
 /** running tasks: taskId → watcher (agents run detached; the server only tails their stream log) */
@@ -60,6 +61,7 @@ export function loadTasks() {
   // continue where we left off: re-attach to live agents, finish or resume dead ones, re-queue waiting ones
   recover.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   for (const t of recover) {
+    if (t.role === 'critic' && t.parentId) waitingLeads.add(t.parentId); // its caller is still waiting for the verdict
     if (t.status === 'queued' && t.pending) { queue.push({ taskId: t.id, prompt: t.pending.prompt, images: t.pending.images }); continue; }
     if (t.status === 'running' && t.logFile) {
       pushEvent(t, { kind: 'status', ...msg(alive(t.pid) ? 'the editor restarted — the agent keeps working' : 'the editor restarted — recovering the task') });
@@ -77,12 +79,13 @@ export function listTasks() {
 }
 export function getTask(id: string) { return tasks.get(id); }
 
-export interface StartOpts { agent?: AgentKind; title: string; prompt: string; clipId?: string; commentIds?: string[]; images?: string[]; parentId?: string; model?: string; effort?: Task['effort']; autopilot?: boolean }
+export interface StartOpts { agent?: AgentKind; title: string; prompt: string; clipId?: string; commentIds?: string[]; images?: string[]; parentId?: string; model?: string; effort?: Task['effort']; autopilot?: boolean; role?: Task['role']; reviewOf?: Task['reviewOf'] }
 
 export function startTask(o: StartOpts): Task {
   const t: Task = {
     id: 't' + nid(), agent: o.agent || getSettings().defaultAgent, title: o.title, prompt: o.prompt, clipId: o.clipId, commentIds: o.commentIds || [], parentId: o.parentId,
     ...(o.model ? { model: o.model } : {}), ...(o.effort ? { effort: o.effort } : {}), ...(o.autopilot ? { autopilot: true } : {}),
+    ...(o.role ? { role: o.role } : {}), ...(o.reviewOf ? { reviewOf: o.reviewOf } : {}),
     status: 'queued', events: [], createdAt: new Date().toISOString(),
   };
   tasks.set(t.id, t);
@@ -172,6 +175,28 @@ export function answerQuestion(taskId: string, answer: string) {
   t.question.answeredAt = new Date().toISOString();
   pushEvent(t, { kind: 'user', text: t.question.answer });
   emitTask(t);
+  if (answer.trim()) inTask(t, () => tasteChoice(t.question!, answer.trim())); // "you decide" / autopilot teaches nothing
+  return t;
+}
+/** taste memory: what the user picked among the agent's options (the rest are the contrast) */
+function tasteChoice(q: AgentQuestion, answer: string) {
+  const picked = q.options.filter((o) => answer === o.label || answer.split('; ').includes(o.label));
+  const opts = q.options.map((o, i) => `${String.fromCharCode(65 + i)}) ${o.label}${o.description ? ` — ${o.description.slice(0, 200)}` : ''}`).join('; ');
+  recordTaste({
+    kind: 'choice',
+    text: `The agent asked: “${q.question.slice(0, 400)}”${opts ? ` Options: ${opts}.` : ''} The user ${picked.length ? `chose: ${picked.map((o) => `“${o.label}”`).join(', ')}` : `answered: “${answer.slice(0, 500)}”`}.`,
+    image: picked.find((o) => o.image)?.image,
+  });
+}
+/** 👍 / 👎 on a finished task (shown on its card; a taste signal with the task's last report) */
+export function rateTask(taskId: string, value: 1 | -1, note?: string) {
+  const t = tasks.get(taskId);
+  if (!t) throw uerr('Unknown task');
+  const n = (note || '').trim().slice(0, 500);
+  t.rating = { value, ...(n ? { note: n } : {}) };
+  emitTask(t);
+  const report = (lastReport(t) || [...t.events].reverse().find((e) => e.kind === 'text' && e.text)?.text || '').replace(/\s+/g, ' ').trim().slice(0, 600);
+  inTask(t, () => recordTaste({ kind: 'rating', text: `The user rated the finished task “${t.title}” ${value > 0 ? '👍 (liked it)' : '👎 (disliked it)'}${n ? ` and said: “${n}”` : ''}.${report ? ` The agent's report: ${report}` : ''}`, key: `rating:${t.id}` }));
   return t;
 }
 
@@ -250,6 +275,7 @@ export function cancelTask(id: string) {
   for (const c of tasks.values()) if (c.parentId === id && (c.status === 'running' || c.status === 'queued')) cancelTask(c.id);
   pushEvent(t, { kind: 'status', text: 'cancelled' });
   emitTask(t);
+  releaseCaller(t);
 }
 
 /** lead agents blocked in wait_subagents: idle, so they don't hold a slot (their sub-agents need it) */
@@ -339,11 +365,12 @@ function codexIsolation(): string[] {
 
 function systemPromptFor(t: Task) {
   const st = getSettings();
+  if (t.role === 'critic') return CRITIC_PROMPT + houseStylePrompt(st.houseStyle) + tastePrompt();
   const role = t.parentId ? SUBAGENT_ROLE(tasks.get(t.parentId)?.title || '') : st.subagents ? SUBAGENTS_PROMPT : '';
   const mode = t.autopilot || t.parentId
     ? '\n\nAUTOPILOT is on for this task: never wait for the user — do not call ask_user; make the decisions yourself (when unsure, try the most promising option), build, and explain your choices briefly at the end.'
     : '';
-  return SYSTEM_PROMPT + houseStylePrompt(st.houseStyle) + role + mode;
+  return SYSTEM_PROMPT + houseStylePrompt(st.houseStyle) + tastePrompt() + role + mode;
 }
 
 function mcpConfigFile(taskId: string) {
@@ -361,7 +388,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
   const settings = getSettings();
   t.status = 'running';
   t.startedAt = t.startedAt || new Date().toISOString();
-  t.commitBefore = t.commitBefore || (await commit(store.dir, 'Snapshot before agent task: ' + t.title)) || undefined;
+  if (t.role !== 'critic') t.commitBefore = t.commitBefore || (await commit(store.dir, 'Snapshot before agent task: ' + t.title)) || undefined;
   emitTask(t);
 
   let cmd: string, args: string[];
@@ -374,9 +401,9 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '--settings', steerSettingsFile(),
       '--permission-mode', settings.permissionMode,
       '--permission-prompt-tool', 'mcp__studio__approve_permission',
-      '--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)', 'Bash(npm:*)', 'Bash(npx:*)', 'Bash(pnpm:*)', 'Bash(yarn:*)', 'Bash(bun:*)', 'Bash(unzip:*)', 'Bash(tar:*)',
+      ...(t.role === 'critic' ? CRITIC_CLAUDE_TOOLS : ['--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)', 'Bash(npm:*)', 'Bash(npx:*)', 'Bash(pnpm:*)', 'Bash(yarn:*)', 'Bash(bun:*)', 'Bash(unzip:*)', 'Bash(tar:*)',
       '--add-dir', GALLERY_DIR, LIBRARY_DIR,
-      '--disallowedTools', 'Task',
+      '--disallowedTools', 'Task']),
       ...(settings.agentUserConfig ? [] : ['--strict-mcp-config', '--setting-sources', 'project,local']),
       '--append-system-prompt', systemPromptFor(t)];
     const model = t.model || settings.claudeModel, effort = t.effort || (settings as any).claudeEffort;
@@ -386,7 +413,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
     if (images.length) args[1] = prompt + '\n\nAttached images (Read them): ' + images.join(', ');
   } else {
     cmd = 'codex';
-    const access = settings.permissionMode === 'bypassPermissions'
+    const access = t.role === 'critic' ? ['--sandbox', 'read-only'] : settings.permissionMode === 'bypassPermissions'
       ? ['--dangerously-bypass-approvals-and-sandbox']
       : ['--approve-for-me', '-c', 'sandbox_workspace_write.network_access=true'];
     const common = ['--json', '--skip-git-repo-check', ...access,
@@ -516,6 +543,7 @@ function attach(t: Task) {
 
 async function afterRun(t: Task) {
   const store = cur();
+  if (t.role === 'critic') return; // reviews only: nothing of its own to commit (and never sweep up others' work)
   const sha = await commit(store.dir, `agent(${t.agent}): ${t.title}\n\nTask: ${t.id}`, scopePaths(t));
   if (sha && sha !== t.commitBefore) t.commitAfter = sha;
   // comments left unresolved by a finished task go back to draft so they can be re-sent
@@ -532,6 +560,45 @@ async function finish(t: Task, status: 'done' | 'error', err?: string) {
   await afterRun(t);
   pushEvent(t, { kind: 'status', text: status === 'done' ? `finished${t.commitAfter ? ' · version ' + t.commitAfter : ''}` : 'failed' });
   emitTask(t);
+  releaseCaller(t);
+  for (const fn of finishHooks) { try { await fn(t); } catch (e) { console.error('[smashcut] finish hook:', (e as Error).message); } }
+}
+
+/** called (in the task's project) when a task finishes — e.g. the art director's verdict is stored on the scene */
+const finishHooks: ((t: Task) => unknown)[] = [];
+export function onTaskFinish(fn: (t: Task) => unknown) { finishHooks.push(fn); }
+
+/** the art director runs read-only: frames, audit, script, design, references — no edits, no questions */
+const CRITIC_CLAUDE_TOOLS = ['--allowedTools', 'Read', 'Glob', 'Grep', 'mcp__studio__render_frame', 'mcp__studio__render_clip', 'mcp__studio__taste_audit', 'mcp__studio__get_script', 'mcp__studio__get_design', 'mcp__studio__get_project', 'mcp__studio__list_references', 'mcp__studio__get_technique', 'mcp__studio__search_inspiration', 'mcp__studio__get_timing',
+  '--disallowedTools', 'Task', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Bash', 'mcp__studio__ask_user', 'mcp__studio__art_director', 'mcp__studio__delegate_task'];
+
+/**
+ * Start the art director (a fresh-eyes critic) for a caller agent, or for the user (no caller).
+ * The caller is idle while its critic works (doesn't hold an agents-at-once slot), like a lead waiting for sub-agents.
+ */
+export function startCritic(callerId: string | undefined, o: { title: string; prompt: string; images?: string[]; reviewOf: NonNullable<Task['reviewOf']> }) {
+  const caller = callerId ? tasks.get(callerId) : undefined;
+  const st = getSettings();
+  const run = () => {
+    const t = startTask({ agent: caller?.agent || st.defaultAgent, title: o.title, prompt: o.prompt, images: o.images, parentId: caller?.id, autopilot: true, role: 'critic', reviewOf: o.reviewOf, ...(caller ? { model: caller.model, effort: caller.effort } : {}) });
+    if (caller) {
+      waitingLeads.add(caller.id);
+      caller.waiting = true;
+      pushEvent(caller, { kind: 'status', ...msg('art director reviewing: {title}', { title: o.title }) });
+      emitTask(caller);
+      pump();
+    }
+    return t;
+  };
+  return caller ? inTask(caller, run) : run();
+}
+function releaseCaller(t: Task) {
+  if (t.role !== 'critic' || !t.parentId) return;
+  const lead = tasks.get(t.parentId);
+  if (!lead || [...tasks.values()].some((x) => x.role === 'critic' && x.parentId === lead.id && x.id !== t.id && (x.status === 'running' || x.status === 'queued'))) return;
+  waitingLeads.delete(lead.id);
+  if (lead.waiting) { lead.waiting = false; emitTask(lead); }
+  pump();
 }
 
 function short(v: unknown, n = 600) {

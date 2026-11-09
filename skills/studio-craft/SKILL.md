@@ -87,6 +87,7 @@ Weak generated videos are "good motion around no story" and the same defaults ev
 
 ## 10. Review loop (before every reply that delivers work)
 1. **Measure:** read times (§4), dead stretches > 3 s, text sizes, safe areas, contrast, loudness (`normalize` report), duration vs plan.
+   `taste_audit` (sceneId, start/end or clipId) measures most of this for you — text size/safe areas/read time/fonts/contrast, simultaneous starts, linear entrances, idle wobble, dead stretches, frame 0, flicker, palette — as `P0 t=… · where · problem → fix`; run it before calling a scene done, fix P0s first.
 2. **Look:** `render_frame` contact sheets — scene starts, ±2 frames around every cut, the payoff, the end card; for 9:16 imagine the platform UI over it.
 3. **Rank** problems P0 (broken/unreadable/off-brief) → P1 (craft) → P2 (polish); fix P0s first; at most 3 passes, then report what's left.
 4. For publishable work you may ask a fresh-eyes sub-agent (`delegate_task`) with only the storyboard + frame sheets: "list P0/P1 as `t=4.2s · where · problem → exact change`".

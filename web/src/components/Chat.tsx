@@ -163,9 +163,35 @@ function Feed({ task }: { task: Task }) {
       {!busy && (
         <div className="task-foot">
           <span>{t(STATUS[task.status])}{task.commitAfter ? ' · ' + t('version {v}', { v: task.commitAfter }) : ''}{task.costUsd ? ` · $${task.costUsd.toFixed(2)}` : ''}</span>
+          {task.status === 'done' && <TaskRating task={task} />}
         </div>
       )}
     </div>
+  );
+}
+/** 👍 / 👎 on a finished task: the agents learn the user's taste from it (👎 asks what's off) */
+function TaskRating({ task }: { task: Task }) {
+  const [asking, setAsking] = useState(false);
+  const [note, setNote] = useState('');
+  const r = task.rating;
+  const rate = async (value: 1 | -1, n?: string) => {
+    setAsking(false);
+    await api('POST', `/api/tasks/${task.id}/rate`, { value, note: n });
+  };
+  return (
+    <>
+      <span className="task-rate">
+        <button className={'icon-btn' + (r?.value === 1 ? ' on' : '')} title={t('Good result — the agents learn your taste from it')} onClick={() => rate(1)}><Icon name="thumbUp" size={13} /></button>
+        <button className={'icon-btn' + (r?.value === -1 ? ' on' : '')} title={r?.note || t('Not quite — tell the agents what’s off')} onClick={() => { setNote(r?.value === -1 ? r.note || '' : ''); setAsking(!asking); }}><Icon name="thumbDown" size={13} /></button>
+      </span>
+      {asking && (
+        <div className="task-rate-ask">
+          <input className="input" autoFocus value={note} placeholder={t('What’s off?')} onChange={(e) => setNote(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') rate(-1, note.trim() || undefined); if (e.key === 'Escape') setAsking(false); }} />
+          <button className="btn xs" onClick={() => rate(-1, note.trim() || undefined)}>{t('Send')}</button>
+        </div>
+      )}
+    </>
   );
 }
 const STATUS: Record<Task['status'], string> = { queued: 'queued', running: 'working', done: 'Done', error: 'Error', cancelled: 'Stopped' };

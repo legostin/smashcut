@@ -104,6 +104,26 @@ export async function compositeFrame(t: number): Promise<{ png: Buffer; errors: 
   } finally { manifests.delete(id); }
 }
 
+/** composite many project times with a few renderer pages (much cheaper than compositeFrame per time); frames in input order */
+export async function compositeFrames(times: number[], o: { fmt?: 'png' | 'jpeg'; workers?: number } = {}): Promise<{ frames: Buffer[]; errors: string[] }> {
+  const p = cur().project;
+  if (!times.length) return { frames: [], errors: [] };
+  const id = await makeManifest(Math.min(...times), Math.max(...times) + 1 / p.fps);
+  const frames: Buffer[] = new Array(times.length);
+  const errors: string[] = [];
+  const order = times.map((t, i) => [t, i] as const).sort((a, b) => a[0] - b[0]);
+  const W = Math.max(1, Math.min(o.workers || 2, Math.ceil(order.length / 8)));
+  const per = Math.ceil(order.length / W);
+  try {
+    await Promise.all(Array.from({ length: W }, (_, w) => order.slice(w * per, (w + 1) * per)).filter((c) => c.length).map((chunk) =>
+      withRenderer(id, { width: p.width, height: p.height }, async (seek, grab, errs) => {
+        for (const [t, i] of chunk) { await seek(t); frames[i] = await grab(o.fmt || 'jpeg'); }
+        errors.push(...errs);
+      })));
+    return { frames, errors: [...new Set(errors)] };
+  } finally { manifests.delete(id); }
+}
+
 /** grid of images with captions → PNG (used for contact sheets, before/after) */
 export async function sheet(cells: { png: Buffer; caption: string }[], opts: { cols?: number; width?: number; checker?: boolean; bg?: string } = {}) {
   const cols = opts.cols || Math.min(4, cells.length);

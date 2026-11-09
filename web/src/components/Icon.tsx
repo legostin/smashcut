@@ -47,6 +47,8 @@ const P: Record<string, string> = {
   plug: 'M9 7V3M15 7V3M6 7h12v4a6 6 0 0 1-12 0zM12 17v4',
   nodes: 'M5 6a2.5 2.5 0 1 0 0 .01M19 12a2.5 2.5 0 1 0 0 .01M5 18a2.5 2.5 0 1 0 0 .01M7.5 6c6 0 4 6 9 6M7.5 18c6 0 4-6 9-6',
   image: 'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9h.01',
+  thumbUp: 'M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 20H7',
+  thumbDown: 'M7 13V4H4v9zM7 13l4 8a2 2 0 0 0 2-2v-4h5.5a2 2 0 0 0 2-2.3l-1.2-7A2 2 0 0 0 17.3 4H7',
 };
 export function Icon({ name, size = 16 }: { name: string; size?: number }) {
   const filled = ['play', 'pause', 'skipBack', 'stepBack', 'stepFwd', 'send', 'sparkle', 'stop'].includes(name);

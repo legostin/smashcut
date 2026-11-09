@@ -172,6 +172,10 @@ export interface Task {
   title: string;
   /** set on sub-agent tasks: the task that delegated this assignment */
   parentId?: string;
+  /** a special-purpose agent: 'critic' = the art director (reviews frames, read-only, returns a verdict) */
+  role?: 'critic';
+  /** what the art director reviews */
+  reviewOf?: { sceneId?: string; start: number; end: number; round: number; sheet?: string };
   prompt: string;
   clipId?: string;
   commentIds: string[];
@@ -208,6 +212,8 @@ export interface Task {
   effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max';
   /** what the agent is working on right now (derived from its tool calls) */
   focus?: { kind: 'clip' | 'music' | 'timeline' | 'script' | 'design'; id?: string; at: number };
+  /** the user's 👍 / 👎 on the finished task (a taste-memory signal) */
+  rating?: { value: 1 | -1; note?: string };
 }
 
 /** a comment pinned to objects on the board (sent to the agent as a chat message) */
@@ -228,6 +234,9 @@ export interface DesignSystem {
 }
 
 export type StageId = 'brief' | 'script' | 'storyboard' | 'production' | 'review' | 'export';
+/** art director verdict: pass = no P0 and at most 2 P1; items are "t=4.2s · where · problem → exact change" */
+export interface SceneReview { at: string; pass: boolean; round: number; verdict: string; p0: string[]; p1: string[]; p2: string[]; strongest?: string; weakest?: string; sheet?: string; taskId?: string }
+
 /** todo → doing (agent works) → review (waits for the user) / done (agent finished) → approved (user signed off) */
 export type SceneStatus = 'todo' | 'doing' | 'review' | 'done' | 'approved';
 export interface Scene {
@@ -242,6 +251,8 @@ export interface Scene {
   speech?: string;
   /** last voice-over check: pace (syllables/s), flagged sentences, takes */
   vo?: { file: string; rate: number; flagged: number; takes: number; at: string };
+  /** last art-director review of the scene (fresh-eyes critic over its frames + measured audit) */
+  review?: SceneReview;
   /** what we see: visual idea, motion, style */
   visual?: string;
   notes?: string;
@@ -286,6 +297,8 @@ export interface Settings {
   agentUserConfig?: boolean;
   /** the user's standing instructions for every project: visual style, direction, colours */
   houseStyle?: { style?: string; direction?: string; colors?: string };
+  /** art director: a fresh-eyes critic reviews every scene before an agent may mark it done ('scenes', default), or only on request ('off') */
+  artDirector?: 'scenes' | 'off';
   renderWorkers: number;
   transcribeModel: string;
   /** ElevenLabs: API key (stored locally; masked when sent to the UI), default voice & model */
