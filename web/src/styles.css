@@ -1066,6 +1066,8 @@ button.chip:hover { filter: brightness(1.25); }
 .hero-bar { display: flex; align-items: flex-end; gap: 10px; }
 .hero-controls { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .hero-bar > .muted { padding-bottom: 12px; }
+.hero-agent { display: flex; align-items: center; gap: 6px; flex: none; padding-bottom: 2px; }
+.hero-agent .model-menu { left: auto; right: 0; }
 .hero-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 11px; background: #0d0d0f; }
 .hero-seg button { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; color: var(--fg3); font-weight: 500; transition: background var(--t), color var(--t); }
 .hero-seg button:hover { color: var(--fg); }

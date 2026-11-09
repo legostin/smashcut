@@ -354,7 +354,7 @@ export const actions = {
     setState({ chatAutopilot: on });
     // applies at once to the task open in the chat if it is working
     const st = getState(), task = st.tasks.find((x) => x.id === st.selectedTaskId);
-    if (task && (task.status === 'running' || task.status === 'queued')) api('POST', `/api/tasks/${task.id}/options`, { autopilot: on }).catch(() => {});
+    if (st.screen === 'editor' && task && (task.status === 'running' || task.status === 'queued')) api('POST', `/api/tasks/${task.id}/options`, { autopilot: on }).catch(() => {});
   },
   answer(taskId: string, answer: string) { return api('POST', `/api/tasks/${taskId}/answer`, { answer }); },
   setChatEffort(effort: State['chatEffort']) { try { localStorage.setItem('chatEffort', effort); } catch {} setState({ chatEffort: effort }); },

@@ -3,6 +3,7 @@ import type { Inspiration } from '../../../shared/types';
 import { useStore, api, actions, setState, getState, refresh, time } from '../store';
 import { t } from '../i18n';
 import { Icon } from './Icon';
+import { ModelPicker } from './ModelPicker';
 
 const FORMATS = [
   { key: '16:9', w: 1920, h: 1080, label: '16:9' },
@@ -39,6 +40,7 @@ type Ref = { key: string; kind: 'file' | 'link' | 'inspiration'; label: string; 
 export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
   const project = useStore((s) => s.project);
   const agent = useStore((s) => s.agent);
+  const autopilot = useStore((s) => s.chatAutopilot);
   const [text, setText] = useState('');
   const [format, setFormat] = useState<string>(() => {
     if (mode === 'project' && project) return FORMATS.find((f) => f.w === project.width && f.h === project.height)?.key || '16:9';
@@ -146,7 +148,11 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
             <input value={link} placeholder={t('Paste a link…')} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }} />
           </div>
           </div>
-          <span className="muted xsmall" title={t('The agent that will do the work — change it in Settings')}>{agent === 'codex' ? 'Codex' : 'Claude'}</span>
+          <div className="hero-agent">
+            <div className="seg">{(['claude', 'codex'] as const).map((a) => <button key={a} className={agent === a ? 'on' : ''} onClick={() => setState({ agent: a })}>{a === 'claude' ? 'Claude' : 'Codex'}</button>)}</div>
+            <ModelPicker agent={agent} />
+            <button className={'auto-pill' + (autopilot ? ' on' : '')} aria-pressed={autopilot} onClick={() => actions.setAutopilot(!autopilot)} title={autopilot ? t('Autopilot: the agent decides everything itself and explains its choices') : t('The agent may ask you and show drafts to choose a direction — click for autopilot')}>{t('Autopilot')}</button>
+          </div>
           <button className="hero-go" disabled={!text.trim() || busy} onClick={() => go()} aria-label={t('Start')}>{busy ? <span className="spinner sm" /> : <Icon name="arrowUp" size={16} />}</button>
         </div>
       </div>
