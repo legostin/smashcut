@@ -1,5 +1,8 @@
 import type { Settings } from '../../shared/types.ts';
 import type { Comment, Item, Project } from '../../shared/types.ts';
+import fs from 'node:fs';
+import path from 'node:path';
+import { RUNTIME_DIR, HOME_DIR, SKILLS_DIR } from '../config.ts';
 
 export const SYSTEM_PROMPT = `You are a senior motion designer + creative coder working inside Smashcut (a local video editor).
 The current directory is the video project. Motion graphics are HTML/CSS/JS clips (clips/<id>/), music is Tone.js code (music/<id>/score.js), the edit is project.json.
@@ -24,7 +27,32 @@ Non-negotiable:
 - Voice-over is its own process (studio-voiceover skill): first write each scene's speech text (update_scene {speech}: numbers/dates as words, {display|spoken}, stress marks, [pause]), then generate_voiceover {sceneId}, then fix anything voice_report flags. Never feed raw copy with digits to the voice.
 - Scenes with status "approved" or locked:true are signed off by the user: don't touch them (their items, clips, timing, copy) unless this task explicitly names them. When a task names specific scenes, work only on those.
 - Comments: for each frame comment you fixed call resolve_comment; for each board comment call resolve_board_note (short note of what changed). If a comment is obsolete — its object no longer exists or the remark no longer applies — remove it with dismiss_comment / delete_board_note and a clear reason. When you notice stale comments while working (list_comments, list_board_notes), clean them up the same way.
+- SPEED — work in few, big steps (every step costs time): call independent tools in parallel in ONE message (several Read / render_clip / get_* at once); read several files in one Bash call; don't re-read what you already read; write a whole file with Write instead of many small Edits when you rewrite most of it; check with one render_frame contact sheet (several times) instead of one call per time. Don't explore the editor's source code or search the disk — the skills document the APIs, and the WHERE THINGS ARE list below gives every path.
 - Finish with a 2–4 line summary of what you changed.`;
+
+let mapCache = '';
+/** where the runtime, skills, fonts and samples live — so agents don't search the disk or read the editor's source */
+export function runtimeMap(): string {
+  if (mapCache) return mapCache;
+  const fonts = new Map<string, Set<number>>();
+  let cyr = new Set<string>();
+  try {
+    const css = fs.readFileSync(path.join(RUNTIME_DIR, 'fonts.css'), 'utf8');
+    for (const m of css.matchAll(/font-family:\s*'([^']+)'[^}]*?font-weight:(\d+)[^}]*?src:url\(([^)]+)\)/g)) {
+      if (!fonts.has(m[1])) fonts.set(m[1], new Set());
+      fonts.get(m[1])!.add(Number(m[2]));
+      if (/cyrillic/.test(m[3])) cyr.add(m[1]);
+    }
+  } catch { /* no fonts list */ }
+  const fontList = [...fonts].map(([f, w]) => `${f} (${[...w].sort((a, b) => a - b).join('/')}${cyr.has(f) ? ', Cyrillic' : ''})`).join('; ');
+  mapCache = `\n\nWHERE THINGS ARE (read-only reference — open a file only for a specific detail, grep the exact symbol; never \`find /\`):
+- Clip runtime (\`studio\` API): ${path.join(RUNTIME_DIR, 'studio.js')} — documented in the studio-clip-authoring skill. Base CSS: ${path.join(RUNTIME_DIR, 'base.css')}.
+- Three.js layer: ${path.join(RUNTIME_DIR, 'studio3js.js')} + studio3js-kit.js (studio-threejs skill); clips import them by name ("studio3js", "studio3js-kit", "three") through the import map in the clip's index.html.
+- Music: ${path.join(RUNTIME_DIR, 'music.js')} and ${path.join(RUNTIME_DIR, 'music-ext')}/ (studio-music-as-code skill); sample library index: ${path.join(HOME_DIR, 'samples', 'index.json')}.
+- Blender helpers: ${path.join(RUNTIME_DIR, 'blender')}/ (studio-blender-3d skill). Skills: .claude/skills/ in the project (originals: ${SKILLS_DIR}).
+- Fonts available to clips (already loaded via /runtime/fonts.css — use these names in CSS): ${fontList || 'see fonts.css'}.`;
+  return mapCache;
+}
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
@@ -73,6 +101,7 @@ export const SUBAGENTS_PROMPT = `
 
 SUB-AGENTS (parallel work). You may delegate independent pieces of work to sub-agents that run in parallel with you and edit the same project:
 - delegate_task {title, prompt, clipId?} starts one; wait_subagents {ids?} blocks until they finish and returns their reports; message_subagent {id, text} sends a follow-up.
+- Build scenes IN PARALLEL: when 3+ scenes need building, first fix the design system (set_design) and the script, then hand one scene per sub-agent (up to the limit) and do the music / voice / assembly yourself meanwhile — a video is done several times faster than scene by scene.
 - Delegate only well-separated work: e.g. one clip per sub-agent ("build clip intro-title for scene 1 per the script and design system"), the music track, a voice-over pass, research. Keep the script, design system and the final timeline assembly yourself.
 - Write self-contained assignments: the scene, the clip id to create/edit, the duration, the relevant tokens from get_design, exactly what to deliver. Sub-agents see the same project and tools but not your conversation.
 - Never let two sub-agents edit the same clip or file. Do the timeline_add/update for delegated clips yourself after wait_subagents (or tell a sub-agent explicitly that it may place its own clip).

@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import { msg, fill } from '../i18n.ts';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -128,9 +129,19 @@ export async function compositeFrames(times: number[], o: { fmt?: 'png' | 'jpeg'
 export async function sheet(cells: { png: Buffer; caption: string }[], opts: { cols?: number; width?: number; checker?: boolean; bg?: string } = {}) {
   const cols = opts.cols || Math.min(4, cells.length);
   const width = opts.width || 1600;
+  // shrink every image to its cell before embedding: full-size PNGs as base64 overflow the DevTools pipe (100 MB) and kill the browser
+  const cellW = Math.max(64, Math.ceil((width - 8 * (cols + 1)) / cols));
+  const keepAlpha = opts.checker !== false;
+  const imgs = await Promise.all(cells.map(async (c) => {
+    try {
+      const img = sharp(c.png).resize({ width: cellW, withoutEnlargement: true });
+      return keepAlpha ? `data:image/png;base64,${(await img.png().toBuffer()).toString('base64')}` : `data:image/jpeg;base64,${(await img.jpeg({ quality: 88 }).toBuffer()).toString('base64')}`;
+    } catch { return `data:image/png;base64,${c.png.toString('base64')}`; }
+  }));
+  cells = cells.map((c, i) => ({ ...c, src: imgs[i] }));
   return withPage({ width, height: 200 }, async (page) => {
     const bgCell = opts.checker !== false ? 'background:repeating-conic-gradient(#1d1d22 0 25%,#2a2a31 0 50%) 0 0/20px 20px' : `background:${opts.bg || '#000'}`;
-    await page.setContent(`<body style="margin:0;background:#0b0b0d;font:600 15px/1.3 ui-monospace,monospace;color:#c9c9d1"><div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:8px;padding:8px">${cells.map((c) => `<div><div style="${bgCell}"><img style="width:100%;display:block" src="data:image/png;base64,${c.png.toString('base64')}"></div><div style="padding:4px 2px">${c.caption}</div></div>`).join('')}</div></body>`, { waitUntil: 'load' });
+    await page.setContent(`<body style="margin:0;background:#0b0b0d;font:600 15px/1.3 ui-monospace,monospace;color:#c9c9d1"><div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:8px;padding:8px">${cells.map((c) => `<div><div style="${bgCell}"><img style="width:100%;display:block" src="${(c as { src?: string }).src}"></div><div style="padding:4px 2px">${c.caption}</div></div>`).join('')}</div></body>`, { waitUntil: 'load' });
     return page.screenshot({ type: 'png', fullPage: true });
   });
 }

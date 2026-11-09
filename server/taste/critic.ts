@@ -12,7 +12,7 @@ import { inspirationThumb } from '../inspiration.ts';
 import { galleryThumb } from '../gallery.ts';
 import { bin } from '../bin.ts';
 import { getDesign } from '../design.ts';
-import { compositeFrame, sheet } from '../render/compose.ts';
+import { compositeFrames, sheet } from '../render/compose.ts';
 import { readJson } from '../util.ts';
 import { getSettings } from '../config.ts';
 import { getTask, onTaskFinish, startCritic } from '../agents/runner.ts';
@@ -38,14 +38,8 @@ function pickTimes(start: number, end: number, projectEnd: number): number[] {
 }
 
 async function renderShots(times: number[], label: (t: number) => string) {
-  const shots: { png: Buffer; caption: string }[] = [];
-  const errors: string[] = [];
-  for (const t of times) {
-    const r = await compositeFrame(t);
-    shots.push({ png: r.png, caption: label(t) });
-    errors.push(...r.errors);
-  }
-  return { shots, errors };
+  const r = await compositeFrames(times, { fmt: 'png', workers: 2 });
+  return { shots: r.frames.map((png, i) => ({ png, caption: label(times[i]) })), errors: r.errors };
 }
 
 async function saveSheets(shots: { png: Buffer; caption: string }[], name: string, per: number, cols: number) {
@@ -74,17 +68,16 @@ async function contactSheets(times: number[], start: number, end: number) {
 /** motion: short bursts at ~12 fps (one row per moment, left → right in time) around the entrance, cuts and the exit */
 async function motionStrips(moments: { label: string; from: number; to: number }[]) {
   const end = cur().project.duration || 0;
-  const rows: { png: Buffer; caption: string }[] = [];
-  const used: string[] = [];
+  const times: number[] = [], labels: string[] = [], used: string[] = [];
   for (const m of moments.slice(0, 4)) {
     const a = Math.max(0, m.from), z = Math.min(end - 0.02, m.to);
     if (!(z > a + 0.1)) continue;
-    const ts = Array.from({ length: 8 }, (_, i) => +(a + ((z - a) * i) / 7).toFixed(3));
-    const { shots } = await renderShots(ts, (t) => `${m.label} ${t.toFixed(2)}s`);
-    rows.push(...shots);
+    for (let i = 0; i < 8; i++) { const t = +(a + ((z - a) * i) / 7).toFixed(3); times.push(t); labels.push(`${m.label} ${t.toFixed(2)}s`); }
     used.push(`${m.label} ${a.toFixed(2)}–${z.toFixed(2)} s`);
   }
-  if (!rows.length) return null;
+  if (!times.length) return null;
+  const { shots: rows } = await renderShots(times, () => ''); // one batch for all strips
+  rows.forEach((r, i) => { r.caption = labels[i]; });
   const [file] = await saveSheets(rows, 'motion', rows.length, 8);
   return { file, rows: used };
 }

@@ -139,10 +139,18 @@ export async function withPage<T>(viewport: { width: number; height: number }, f
   try {
     return await withPageOnce(viewport, fn);
   } catch (e) {
-    if (!/Unable to capture screenshot|Target crashed|Target page, context or browser has been closed|Browser has been closed|Page crashed/i.test(String((e as Error)?.message))) throw e;
-    const b = browserP;
-    browserP = null;
-    (await b?.catch(() => null))?.close().catch(() => {});
+    const msg = String((e as Error)?.message);
+    const broken = /Unable to capture screenshot|Target crashed|Page crashed/i.test(msg);
+    const transient = /Target page, context or browser has been closed|Browser has been closed|Failed to create browser context|Target closed/i.test(msg);
+    if (!broken && !transient) throw e;
+    const b = await browserP?.catch(() => null);
+    // relaunch only a broken or dead browser — relaunching a live one would kill every other render running on it
+    if (broken || !b?.isConnected()) {
+      if (browserP && (await browserP.catch(() => null)) === b) browserP = null;
+      b?.close().catch(() => {});
+    } else {
+      await new Promise((r) => setTimeout(r, 250));
+    }
     return withPageOnce(viewport, fn);
   }
 }

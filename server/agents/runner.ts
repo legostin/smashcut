@@ -8,7 +8,7 @@ import { cur, hasProject, runIn, type ProjectStore } from '../project.ts';
 import { bus } from '../bus.ts';
 import { nid, readJson, writeJson } from '../util.ts';
 import { commit } from '../git.ts';
-import { SYSTEM_PROMPT, houseStylePrompt, SUBAGENTS_PROMPT, SUBAGENT_ROLE, CRITIC_PROMPT } from './prompts.ts';
+import { SYSTEM_PROMPT, houseStylePrompt, SUBAGENTS_PROMPT, SUBAGENT_ROLE, CRITIC_PROMPT, runtimeMap } from './prompts.ts';
 import { uerr } from '../i18n.ts';
 import { denyTask } from '../permissions.ts';
 import { recordTaste, tastePrompt } from '../taste/memory.ts';
@@ -370,7 +370,7 @@ function systemPromptFor(t: Task) {
   const mode = t.autopilot || t.parentId
     ? '\n\nAUTOPILOT is on for this task: never wait for the user — do not call ask_user; make the decisions yourself (when unsure, try the most promising option), build, and explain your choices briefly at the end.'
     : '';
-  return SYSTEM_PROMPT + houseStylePrompt(st.houseStyle) + tastePrompt() + role + mode;
+  return SYSTEM_PROMPT + runtimeMap() + houseStylePrompt(st.houseStyle) + tastePrompt() + role + mode;
 }
 
 function mcpConfigFile(taskId: string) {
@@ -393,7 +393,8 @@ async function runTask(t: Task, prompt: string, images: string[]) {
 
   let cmd: string, args: string[];
   // MCP_TOOL_TIMEOUT: permission prompts wait for a human in the editor
-  const env = { ...process.env, STUDIO_URL: BASE_URL, STUDIO_TASK: t.id, STUDIO_PROJECT: store.id, MCP_TOOL_TIMEOUT: '3600000' };
+  // ENABLE_TOOL_SEARCH=false: the studio tools are loaded up front — no ToolSearch round-trip before each first use (~120 wasted turns measured)
+  const env = { ...process.env, STUDIO_URL: BASE_URL, STUDIO_TASK: t.id, STUDIO_PROJECT: store.id, MCP_TOOL_TIMEOUT: '3600000', ENABLE_TOOL_SEARCH: 'false' };
   if (t.agent === 'claude') {
     cmd = 'claude';
     args = ['-p', prompt, '--output-format', 'stream-json', '--verbose',
@@ -403,7 +404,7 @@ async function runTask(t: Task, prompt: string, images: string[]) {
       '--permission-prompt-tool', 'mcp__studio__approve_permission',
       ...(t.role === 'critic' ? CRITIC_CLAUDE_TOOLS : ['--allowedTools', 'mcp__studio', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'Grep', 'TodoWrite', 'WebFetch', 'WebSearch', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(wc:*)', 'Bash(file:*)', 'Bash(find:*)', 'Bash(mdfind:*)', 'Bash(grep:*)', 'Bash(rg:*)', 'Bash(mkdir:*)', 'Bash(cp:*)', 'Bash(mv:*)', 'Bash(node:*)', 'Bash(python3:*)', 'Bash(curl:*)', 'Bash(ffprobe:*)', 'Bash(ffmpeg:*)', 'Bash(git log:*)', 'Bash(git diff:*)', 'Bash(git show:*)', 'Bash(npm:*)', 'Bash(npx:*)', 'Bash(pnpm:*)', 'Bash(yarn:*)', 'Bash(bun:*)', 'Bash(unzip:*)', 'Bash(tar:*)',
       '--add-dir', GALLERY_DIR, LIBRARY_DIR,
-      '--disallowedTools', 'Task']),
+      '--disallowedTools', 'Task', ...NEVER_HEADLESS]),
       ...(settings.agentUserConfig ? [] : ['--strict-mcp-config', '--setting-sources', 'project,local']),
       '--append-system-prompt', systemPromptFor(t)];
     const model = t.model || settings.claudeModel, effort = t.effort || (settings as any).claudeEffort;
@@ -570,7 +571,9 @@ export function onTaskFinish(fn: (t: Task) => unknown) { finishHooks.push(fn); }
 
 /** the art director runs read-only: frames, audit, script, design, references — no edits, no questions */
 const CRITIC_CLAUDE_TOOLS = ['--allowedTools', 'Read', 'Glob', 'Grep', 'mcp__studio__render_frame', 'mcp__studio__render_clip', 'mcp__studio__taste_audit', 'mcp__studio__get_script', 'mcp__studio__get_design', 'mcp__studio__get_project', 'mcp__studio__list_references', 'mcp__studio__get_technique', 'mcp__studio__search_inspiration', 'mcp__studio__get_timing',
-  '--disallowedTools', 'Task', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Bash', 'mcp__studio__ask_user', 'mcp__studio__art_director', 'mcp__studio__delegate_task'];
+  '--disallowedTools', 'Task', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Bash', 'mcp__studio__ask_user', 'mcp__studio__art_director', 'mcp__studio__delegate_task', 'AskUserQuestion', 'EnterPlanMode', 'ExitPlanMode'];
+/** built-in interactive tools that hang a headless agent (measured: AskUserQuestion waited 30 min × 4) — the studio's ask_user is the way to ask */
+const NEVER_HEADLESS = ['AskUserQuestion', 'EnterPlanMode', 'ExitPlanMode'];
 
 /**
  * Start the art director (a fresh-eyes critic) for a caller agent, or for the user (no caller).
@@ -584,7 +587,7 @@ export function startCritic(callerId: string | undefined, o: { title: string; pr
     // the critic must not be weaker than the author: its own model, else the author's, never below sonnet
     const authorModel = caller?.model || (agent === 'claude' ? st.claudeModel : st.codexModel) || '';
     const model = agent === 'claude' ? (st.artDirectorModel || (/haiku/i.test(authorModel) ? 'sonnet' : caller?.model)) : caller?.model;
-    const t = startTask({ agent, title: o.title, prompt: o.prompt, images: o.images, parentId: caller?.id, autopilot: true, role: 'critic', reviewOf: o.reviewOf, ...(model ? { model } : {}), ...(caller?.effort ? { effort: caller.effort } : {}) });
+    const t = startTask({ agent, title: o.title, prompt: o.prompt, images: o.images, parentId: caller?.id, autopilot: true, role: 'critic', reviewOf: o.reviewOf, ...(model ? { model } : {}), effort: 'medium' }); // judging frames needs a good eye, not long deliberation: medium keeps reviews quick
     if (caller) {
       waitingLeads.add(caller.id);
       caller.waiting = true;

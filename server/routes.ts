@@ -17,7 +17,7 @@ import { listSkills, syncSkills } from './skills.ts';
 import { probeMedia, analyzeMedia, transcribeMedia } from './media.ts';
 import { renderMusic, musicPeaks } from './render/music.ts';
 import { clipUrl, itemInput, renderClipFrames } from './render/clips.ts';
-import { compositeFrame, sheet, annotate, startExport, getJobs, cancelExport, getManifest } from './render/compose.ts';
+import { compositeFrame, compositeFrames, sheet, annotate, startExport, getJobs, cancelExport, getManifest } from './render/compose.ts';
 import { getTiming, recomputeTiming } from './timing.ts';
 import { spectrogram, loudnessSparkline, type AudioAnalysis } from './audio/analyze.ts';
 import { startReview, reviewStatus, doneGate } from './taste/critic.ts';
@@ -145,13 +145,10 @@ async function renderClipSheet(clipId: string, opts: { times?: number[]; count?:
 
 async function renderFrames(times: number[]) {
   const store = cur();
-  const shots = [];
-  const errors: string[] = [];
-  for (const t of times) {
-    const r = await compositeFrame(t);
-    shots.push({ png: r.png, caption: `t=${t.toFixed(2)}s` });
-    errors.push(...r.errors);
-  }
+  // one batch through a couple of renderer pages (not a fresh page per time)
+  const r = await compositeFrames(times, { fmt: 'png', workers: 2 });
+  const shots = r.frames.map((png, i) => ({ png, caption: `t=${times[i].toFixed(2)}s` }));
+  const errors = r.errors;
   const png = shots.length === 1 ? shots[0].png : await sheet(shots, { cols: shots.length <= 4 ? 2 : 3, checker: false });
   const file = `.studio/frames/frame-${Date.now().toString(36)}.png`;
   fs.writeFileSync(store.p(file), png);
