@@ -71,7 +71,7 @@ Weak generated videos are "good motion around no story" and the same defaults ev
 - Never cut inside a word; pad cuts 30–200 ms; prefer silences ≥ 400 ms as cut points; 30 ms audio fades at every cut.
 - J/L cuts: let voice-over and music bridge picture cuts.
 - Cut on beats/downbeats when the music drives (`studio.beats`, `get_timing`); land payoffs on downbeats. Compute beat times per index, don't accumulate drift.
-- Shot length by format: social/trailer 0.8–1.5 s, promo 1.5–2.5 s, explainer 2.5–5 s, cinematic/interview 5 s+. To match a reference edit, measure it: `run_media_tool detect_shots` → rhythm.
+- Shot length by format: social/trailer 0.8–1.5 s, promo 1.5–2.5 s, explainer 2.5–5 s, cinematic/interview 5 s+. To match a reference edit, watch it: `watch_video` → ASL, pacing curve, cut types, cuts on beat, motion strips.
 - Preserve the user's own edits; change one thing at a time.
 
 ## 8. Sound

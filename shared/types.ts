@@ -299,9 +299,9 @@ export interface Settings {
   agentUserConfig?: boolean;
   /** the user's standing instructions for every project: visual style, direction, colours */
   houseStyle?: { style?: string; direction?: string; colors?: string };
-  /** art director: a fresh-eyes critic reviews every scene before an agent may mark it done ('scenes', default), or only on request ('off') */
-  artDirector?: 'scenes' | 'off';
-  /** model for the art director ('' = the author's model, but never weaker than sonnet) */
+  /** art director: 'light' (default) = measured checks per scene + one review of the whole video; 'scenes' = a review of every scene before it is done; 'off' = only on request */
+  artDirector?: 'light' | 'scenes' | 'off';
+  /** model for the art director ('' = Sonnet) */
   artDirectorModel?: string;
   renderWorkers: number;
   transcribeModel: string;

@@ -10,10 +10,10 @@ Taste is mostly **judgement and removal**: decide what the frame is about, then 
 
 ## 1. The process (every scene)
 1. **Idea in one line.** What must the viewer feel/remember in this scene? Find a visual idea that comes FROM the content (a metaphor, a transformation, a number becoming an object) — not decoration added to it.
-2. **Borrow principles, not looks.** Pick 1–2 references (list_references, search_inspiration) and name the principle you take: "hard cut to scale contrast like X", "type as the image like Y". Never recreate a piece.
+2. **Borrow principles, not looks.** Pick 1–2 references (list_references, search_inspiration) and name the principle you take: "hard cut to scale contrast like X", "type as the image like Y". Never recreate a piece. Watch video references with `watch_video` before borrowing their editing/motion principles (rhythm, transitions, easing) — never copy 1:1.
 3. **Style frame first.** Build the scene's key frame (the payoff moment) before animating anything. Render it, look at it for real. If the still isn't strong, motion won't save it.
 4. **Then motion**, then the seams with the neighbours.
-5. **Judge like a stranger**, then `art_director {sceneId}` — fix P0/P1, re-review (max 3 rounds). Run `taste_audit` for measured facts while iterating.
+5. **Judge like a stranger**: `taste_audit {sceneId}` (free, seconds) on every scene, fix its P0s. The art director (`art_director`) is called as the user's setting says (ART DIRECTOR in your instructions): by default once for the whole video at the end, plus any scene you're unsure about.
 6. **Removal pass:** for each frame ask "what can I take away without losing the point?" — and take it away.
 
 ## 2. The first read
@@ -71,5 +71,5 @@ Use any of these only as a deliberate, named choice that the idea needs.
 - It sees: key frames (incl. both seams), motion strips at ~12 fps around the entrance, cuts and exit, the user's references as pictures, the measured audit, the brief, the design system and the user's taste. Unchanged frames return the previous verdict instantly — re-review only after real changes.
 - When all scenes are done: `art_director {film:true}` — one pass over the whole video (hook, spine, pacing curve, one design language, transition family, seams).
 - Fix the smallest scope that resolves each item; keep what it says works. If you disagree with an item, say why in your final message — don't silently ignore it.
-- Scenes need a passing review (or 3 used rounds) before `update_scene status:"done"`; trivial changes may pass `force:true, reason`.
+- In the thorough mode scenes need a passing review (or 2 used rounds) before `update_scene status:"done"`; trivial changes may pass `force:true, reason`.
 - `taste_audit {sceneId}` gives measured facts (contrast, sizes, safe areas, read time, simultaneous motion, dead stretches, fonts, palette) — fast, use it every iteration.

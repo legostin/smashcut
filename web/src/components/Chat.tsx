@@ -303,7 +303,7 @@ const LABEL: Record<string, string> = {
   get_script: 'Reading the script', set_script: 'Writing the script', update_scene: 'Updating a scene', get_design: 'Reading the design system', set_design: 'Setting the design system',
   art_director: 'Asking the art director', taste_audit: 'Checking against your taste', list_references: 'Looking at references', get_technique: 'Reading a technique', search_inspiration: 'Searching inspiration',
   dismiss_comment: 'Closing a note', list_board_notes: 'Reading board notes', resolve_board_note: 'Closing a board note', delete_board_note: 'Removing a board note',
-  create_3d_scene: 'Creating a 3D scene', render_3d: 'Rendering 3D', list_fx: 'Browsing effects', record_web: 'Recording a web page', record_app: 'Recording an app',
+  create_3d_scene: 'Creating a 3D scene', render_3d: 'Rendering 3D', list_fx: 'Browsing effects', record_web: 'Recording a web page', web_login: 'Opening a login window', record_app: 'Recording an app',
   list_voices: 'Choosing a voice', generate_voiceover: 'Recording the voice-over', voice_report: 'Checking the voice-over', music_report: 'Checking the music',
   approve_permission: 'Asking permission', list_media_tools: 'Browsing media tools', run_media_tool: 'Processing media',
   get_project: 'Viewing the project', render_clip: 'Rendering a clip', render_frame: 'Looking at a frame', lint_clip: 'Checking a clip', resolve_comment: 'Closing a note',

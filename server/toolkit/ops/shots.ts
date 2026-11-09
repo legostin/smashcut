@@ -30,6 +30,12 @@ async function detect(ctx: OpContext, abs: string, threshold: number, minShot: n
     const mt = /pts_time:([\d.]+)/.exec(line); if (mt) { lastT = +mt[1]; continue; }
     const ms = /lavfi\.scene_score=([\d.]+)/.exec(line); if (ms) frames.push({ t: lastT, s: +ms[1] });
   }
+  return shotsFromScores(frames, threshold, minShot, duration);
+}
+
+/** the cut decision (shared with watch_video): per-frame scene scores → shots. A hard cut (score ≥ threshold) or a soft
+ *  one — a spike well above the local background (similar-looking shots, colour-matched cuts); too-short shots merge. */
+export function shotsFromScores(frames: { t: number; s: number }[], threshold: number, minShot: number, duration: number): Shot[] {
   const cuts: number[] = [];
   for (let k = 0; k < frames.length; k++) {
     const f = frames[k];

@@ -15,7 +15,7 @@ export async function addRefFiles(files: File[]) {
   const infos = await actions.upload(files);
   for (const m of infos) {
     await api('POST', '/api/references', { kind: 'media', ref: m.file, title: m.file, sceneIds: [] });
-    chip({ key: 'ref:' + m.file, label: '★ ' + m.file, text: `reference media/${m.file} (${m.type}${m.width ? `, ${m.width}×${m.height}` : ''}) — just added by the user: study it and follow it` });
+    chip({ key: 'ref:' + m.file, label: '★ ' + m.file, text: `reference media/${m.file} (${m.type}${m.width ? `, ${m.width}×${m.height}` : ''}) — just added by the user: ${m.type === 'video' ? `watch it (watch_video {file:"media/${m.file}"}) and follow its principles` : 'study it and follow it'}` });
   }
 }
 
@@ -25,7 +25,7 @@ export async function addRefLink(raw: string) {
   notify('info', t('Adding the link to references…'));
   const list = await api<Reference[]>('POST', '/api/references/link', { url });
   const r = [...list].reverse().find((x) => x.ref === url || x.kind === 'media') || list[list.length - 1];
-  if (r) chip({ key: 'ref:' + r.ref, label: '★ ' + r.title.slice(0, 32), text: r.kind === 'media' ? `reference media/${r.ref} — downloaded from ${url}: study it and follow it` : `reference link ${url} ("${r.title}") — read it (WebFetch) and follow it` });
+  if (r) chip({ key: 'ref:' + r.ref, label: '★ ' + r.title.slice(0, 32), text: r.kind === 'media' ? `reference media/${r.ref} — downloaded from ${url}: ${/\.(mp4|mov|webm|mkv|m4v)$/i.test(r.ref) ? `watch it (watch_video {file:"media/${r.ref}"}) and follow its principles` : 'study it and follow it'}` : /^video page/.test(r.note || '') ? `reference video ${url} ("${r.title}") — watch it (watch_video {url:"${url}"}) and follow its principles` : `reference link ${url} ("${r.title}") — read it (WebFetch) and follow it` });
 }
 
 /** the project's references, right above the chat input: see, remove, add more */

@@ -17,8 +17,9 @@ import { readJson } from '../util.ts';
 import { getSettings } from '../config.ts';
 import { getTask, onTaskFinish, startCritic } from '../agents/runner.ts';
 import { uerr } from '../i18n.ts';
+import { videoRefFrames } from '../toolkit/watch.ts';
 
-const MAX_ROUNDS = 3;
+const MAX_ROUNDS = 2;
 
 /** frames the critic sees: just before the scene (the seam in), its start, evenly through it, every cut inside, its end, just after */
 function pickTimes(start: number, end: number, projectEnd: number): number[] {
@@ -96,7 +97,12 @@ async function referenceBoard(sceneId?: string) {
       if (r.kind === 'media') {
         const m = store.listMedia().find((x) => x.file === r.ref);
         if (m?.type === 'image') src = fs.readFileSync(store.p('media', r.ref));
-        else if (m?.type === 'video') src = await videoFrame(store.p('media', r.ref), (m.duration || 3) / 3);
+        else if (m?.type === 'video') {
+          // 2×2 key frames (from the watch_video cache when it was watched) instead of one frame; its motion strips by path
+          const v = await videoRefFrames(r.ref);
+          src = v?.png || await videoFrame(store.p('media', r.ref), (m.duration || 3) / 3);
+          if (v?.strip) notes.push(`- ${r.title}: motion strips of this video reference (Read it): ${v.strip}`);
+        }
       } else if (r.kind === 'inspiration') {
         const f = await inspirationThumb(r.ref);
         if (f) src = fs.readFileSync(f);
@@ -189,7 +195,7 @@ export async function startReview(req: ReviewRequest): Promise<ReviewStart> {
 
   const what = film ? `the WHOLE FILM (${total.toFixed(1)} s, ${script.scenes.length} scenes)` : sc ? `scene ${n} "${sc.title}" (id ${sc.id}): ${start.toFixed(2)}–${end.toFixed(2)} s` : `the range ${start.toFixed(2)}–${end.toFixed(2)} s`;
   const prompt = [
-    `Review ${what} of a ${p.width}×${p.height} ${p.height > p.width ? 'vertical (9:16 social)' : 'horizontal'} video${round > 1 ? ` — review round ${round} of ${MAX_ROUNDS}` : ''}.`,
+    `Review ${what} of a ${p.width}×${p.height} ${p.height > p.width ? 'vertical (9:16 social)' : 'horizontal'} video${round > 1 ? ` — review round ${round}${round <= MAX_ROUNDS ? ` of ${MAX_ROUNDS}` : ''}` : ''}.`,
     film ? FILM_FOCUS : '',
     `Key frames, in time order (Read every sheet first): ${shots.files.join(', ')}\nFrame times: ${shots.times.map((t) => t.toFixed(2)).join(', ')} s${film ? ' (one key frame per scene plus both sides of every scene change)' : ' (frames marked "before"/"after" belong to the neighbouring scenes — judge the seams)'}.`,
     motion ? `MOTION strips (Read it): ${motion.file} — one row per moment, left → right in time at ~12 fps: ${motion.rows.join('; ')}. Judge the motion itself here: easing (does it accelerate/land, or crawl linearly?), overlap and order of arrivals, holds, what the eye follows, how the cut feels.` : '',
@@ -209,7 +215,7 @@ export async function startReview(req: ReviewRequest): Promise<ReviewStart> {
   ].filter(Boolean).join('\n\n');
 
   const title = `Art director · ${film ? 'whole video' : sc ? `scene ${n} “${sc.title}”` : `${start.toFixed(1)}–${end.toFixed(1)} s`}`;
-  const t = startCritic(req.caller, { title, prompt, reviewOf: { sceneId: sc?.id, film, start, end, round, sheet: shots.files[0], hash: shots.hash } });
+  const t = startCritic(req.caller, { title, prompt, images: [...shots.files, ...(motion ? [motion.file] : []), ...(board.file ? [board.file] : [])], reviewOf: { sceneId: sc?.id, film, start, end, round, sheet: shots.files[0], hash: shots.hash } });
   return { taskId: t.id, sheets: [...shots.files, ...(motion ? [motion.file] : []), ...(board.file ? [board.file] : [])], round, scene: sc?.id, film };
 }
 
@@ -286,7 +292,7 @@ export function reviewStatus(taskId: string): { done: boolean; status: string; r
 
 export function verdictText(r: SceneReview) {
   const lines = [
-    `${r.pass ? 'PASS' : 'NOT YET'} (round ${r.round}/${MAX_ROUNDS}) — ${r.verdict}`,
+    `${r.pass ? 'PASS' : 'NOT YET'} (round ${r.round}${r.round <= MAX_ROUNDS ? `/${MAX_ROUNDS}` : ''}) — ${r.verdict}`,
     ...r.p0.map((x) => `P0 ${x}`), ...r.p1.map((x) => `P1 ${x}`), ...r.p2.map((x) => `P2 ${x}`),
     r.strongest ? `Keep: ${r.strongest}` : '', r.weakest ? `Most important change: ${r.weakest}` : '',
     r.pass
@@ -300,7 +306,7 @@ export function verdictText(r: SceneReview) {
 
 /** gate for an agent marking a scene done: has it been reviewed (passed, or the rounds are used up)? */
 export function doneGate(sceneId: string): string | null {
-  if ((getSettings().artDirector || 'scenes') === 'off') return null;
+  if ((getSettings().artDirector || 'light') !== 'scenes') return null; // only the thorough mode gates "done"
   const sc = getScript().scenes.find((s) => s.id === sceneId);
   if (!sc) return null;
   const r = sc.review;

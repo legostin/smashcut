@@ -367,19 +367,26 @@ function AgentPoolSettings({ s, setS }: { s: Settings; setS: (s: Settings) => vo
       <div className="set-row">
         <div className="col gap2 grow">
           <span className="small">{t('Art director review')}</span>
-          <span className="muted xsmall">{t('A fresh-eyes critic looks at every finished scene (frames, measured checks, your taste) and the agent fixes what it finds before the scene is done. Slower and uses more tokens, noticeably better results.')}</span>
+          <span className="muted xsmall">{(s.artDirector || 'light') === 'light'
+            ? t('Light: free measured checks on every scene, and one fresh-eyes review of the whole video at the end. Good results at a small cost.')
+            : s.artDirector === 'scenes'
+              ? t('Thorough: a fresh-eyes critic reviews every scene before it is done, then the whole video. Best results, slower and costs more.')
+              : t('Off: the agent checks its own work with measured checks; you can still ask for a review on any scene.')}</span>
         </div>
-        <input type="checkbox" className="toggle" checked={(s.artDirector || 'scenes') !== 'off'} onChange={(e) => setS({ ...s, artDirector: e.target.checked ? 'scenes' : 'off' })} />
+        <select className="input" style={{ width: 140 }} value={s.artDirector || 'light'} onChange={(e) => setS({ ...s, artDirector: e.target.value as any })}>
+          <option value="light">{t('Light')}</option>
+          <option value="scenes">{t('Thorough')}</option>
+          <option value="off">{t('Off')}</option>
+        </select>
       </div>
-      {(s.artDirector || 'scenes') !== 'off' && (
+      {(s.artDirector || 'light') !== 'off' && (
         <div className="set-row">
           <div className="col gap2 grow">
             <span className="small">{t('Art director model')}</span>
-            <span className="muted xsmall">{t('A stronger model judges better. "Auto" uses the agent’s model, but never weaker than Sonnet.')}</span>
+            <span className="muted xsmall">{t('Sonnet sees well and costs a fraction of Opus. Pick Opus for the most demanding work.')}</span>
           </div>
           <select className="input" style={{ width: 140 }} value={s.artDirectorModel || ''} onChange={(e) => setS({ ...s, artDirectorModel: e.target.value || undefined })}>
-            <option value="">{t('Auto')}</option>
-            <option value="sonnet">Sonnet</option>
+            <option value="">Sonnet</option>
             <option value="opus">Opus</option>
             <option value="fable">Fable</option>
           </select>

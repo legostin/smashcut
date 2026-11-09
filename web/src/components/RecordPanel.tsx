@@ -4,12 +4,13 @@ import { Icon } from './Icon';
 import { t } from '../i18n';
 
 const SAMPLE = `[
-  { "type": "wait", "ms": 1200 },
-  { "type": "hover", "text": "Pricing" },
+  { "type": "wait", "ms": 1000 },
   { "type": "click", "text": "Pricing" },
-  { "type": "scroll", "by": 800, "duration": 2200 },
+  { "type": "scroll", "screens": 2 },
   { "type": "highlight", "selector": "h1", "ms": 1500 },
-  { "type": "type", "selector": "input[type=search]", "text": "agent video studio" }
+  { "type": "type", "selector": "input[type=search]", "text": "agent video studio" },
+  { "type": "press", "key": "Enter" },
+  { "type": "wait", "text": "Results", "timeout": 8000 }
 ]`;
 
 /** Record footage of web pages (scripted demo with a cursor) or macOS app windows — lands in media/. */
@@ -32,6 +33,8 @@ export function RecordPanel() {
   );
 }
 
+interface WebSession { name: string; url: string; savedAt: string; domains: string[]; cookies: number }
+
 function WebForm() {
   const [url, setUrl] = useState('');
   const [device, setDevice] = useState<'auto' | 'desktop' | 'mobile'>('auto');
@@ -41,13 +44,38 @@ function WebForm() {
   const [script, setScript] = useState(SAMPLE);
   const [dark, setDark] = useState(false);
   const [cursor, setCursor] = useState(true);
+  const [autoZoom, setAutoZoom] = useState(true);
   const [place, setPlace] = useState(true);
+  const [fps, setFps] = useState<0 | 30 | 60>(0);
+  const [clean, setClean] = useState(true);
+  const [hidpi, setHidpi] = useState(false);
+  const [realtime, setRealtime] = useState(false);
+  const [session, setSession] = useState('');
+  const [sessions, setSessions] = useState<WebSession[]>([]);
+  const [login, setLogin] = useState<{ name: string; status: string } | null>(null);
+  const loadSessions = () => api<{ sessions: WebSession[]; login: { name: string; status: string } | null }>('GET', '/api/record/sessions').then((r) => { setSessions(r.sessions); setLogin(r.login); return r; }).catch(() => null);
+  useEffect(() => { loadSessions(); }, []);
+  // while the login window is open, watch for it to be saved (the user closes the window or presses Save)
+  useEffect(() => {
+    if (login?.status !== 'open') return;
+    const iv = setInterval(async () => { const r = await loadSessions(); if (r?.login?.status === 'saved') setSession(r.login.name); }, 2000);
+    return () => clearInterval(iv);
+  }, [login?.status]);
+  const openLogin = async () => {
+    if (!url.trim()) { notify('info', t('Enter the address of the page to log in to')); return; }
+    const r = await api<{ name: string; status: string }>('POST', '/api/record/login', { url: url.trim() });
+    setLogin(r);
+  };
+  const saveLogin = async () => { const r = await api<{ name?: string; status: string }>('POST', '/api/record/login/save'); await loadSessions(); if (r.status === 'saved' && r.name) setSession(r.name); };
   const go = async () => {
     if (!url.trim()) return;
     let actions: unknown[] | undefined;
     if (mode === 'load') actions = [{ type: 'wait', ms: seconds * 1000 }];
     if (mode === 'custom') { try { actions = JSON.parse(script); } catch { notify('error', t('The script is not valid JSON')); return; } }
-    await api('POST', '/api/record/web', { url: url.trim(), seconds, actions, device: device === 'auto' ? undefined : device, zoom, dark, cursor, place: place ? { start: +time.get().toFixed(3) } : undefined });
+    await api('POST', '/api/record/web', {
+      url: url.trim(), seconds, actions, device: device === 'auto' ? undefined : device, zoom, dark, cursor, autoZoom, session: session || undefined,
+      fps: fps || undefined, clean, hidpi: hidpi || undefined, realtime: realtime || undefined, place: place ? { start: +time.get().toFixed(3) } : undefined,
+    });
     notify('info', t('Recording started — the footage will appear in “Media”'));
   };
   return (
@@ -63,12 +91,39 @@ function WebForm() {
       {mode !== 'custom'
         ? <label className="slider"><span>{t('Length')}</span><input type="range" min={3} max={60} step={1} value={seconds} onChange={(e) => setSeconds(Number(e.target.value))} /><span className="slider-val">{t('{n} s', { n: seconds })}</span></label>
         : <textarea className="input mono rec-script" rows={8} value={script} onChange={(e) => setScript(e.target.value)} spellCheck={false} />}
-      {mode === 'custom' && <div className="muted xsmall">{t('Steps: wait · scroll (to/by/selector) · click / hover / highlight (selector or text) · type · press · goto · move. The cursor glides to the target by itself and shows the click.')}</div>}
+      {mode === 'custom' && <div className="muted xsmall">{t('Steps: wait (ms, or until selector / text appears) · scroll (screens / by / to / selector) · click / hover / highlight / zoom (selector or text) · type (selector, text) · press · goto · swipe · move. The cursor glides to the target, the camera zooms in on clicks and typing.')}</div>}
       <div className="row gap12 wrap">
         <label className="row gap6 small"><input type="checkbox" className="toggle" checked={cursor} onChange={(e) => setCursor(e.target.checked)} /> {t('Demo cursor')}</label>
+        <label className="row gap6 small" title={t('The camera smoothly zooms into what is clicked or typed into, then back out')}><input type="checkbox" className="toggle" checked={autoZoom} onChange={(e) => setAutoZoom(e.target.checked)} /> {t('Auto-zoom on clicks')}</label>
         <label className="row gap6 small"><input type="checkbox" className="toggle" checked={dark} onChange={(e) => setDark(e.target.checked)} /> {t('Dark theme')}</label>
         <label className="row gap6 small"><input type="checkbox" className="toggle" checked={place} onChange={(e) => setPlace(e.target.checked)} /> {t('Straight to the timeline')}</label>
       </div>
+      <details className="rec-adv" open={login?.status === 'open' || undefined}><summary>{t('Log in for recordings')}{session ? ` · ${session}` : ''}</summary>
+        <div className="col gap8">
+          <div className="muted xsmall">{t('For pages behind a login: a browser window opens at the address above — log in there yourself, then close the window. The session is saved in this project (not in git) and recordings open logged in.')}</div>
+          <div className="row gap8 wrap">
+            <select className="input grow" value={session} onChange={(e) => setSession(e.target.value)}>
+              <option value="">{t('No login')}</option>
+              {sessions.map((s) => <option key={s.name} value={s.name}>{s.name} · {s.domains.slice(0, 2).join(', ')}</option>)}
+            </select>
+            {login?.status === 'open'
+              ? <button className="btn primary sm" onClick={saveLogin}>{t('Done — save session')}</button>
+              : <button className="btn sm" disabled={!url.trim()} onClick={openLogin}><Icon name="external" size={13} /> {t('Log in…')}</button>}
+            {session && login?.status !== 'open' && <button className="btn ghost sm" title={t('Forget this login')} onClick={async () => { await api('DELETE', '/api/record/sessions/' + encodeURIComponent(session)); setSession(''); loadSessions(); }}><Icon name="trash" size={13} /></button>}
+          </div>
+          {login?.status === 'open' && <div className="rec-job"><span className="spinner sm" /> {t('A browser window is open — log in there, then close it or press “Done”')}</div>}
+        </div>
+      </details>
+      <details className="rec-adv"><summary>{t('More options')}</summary>
+        <div className="col gap8">
+          <label className="field"><span>{t('Frame rate')}</span><div className="seg sm">{([[0, 'As project'], [30, '30'], [60, '60']] as const).map(([k, l]) => <button key={k} className={fps === k ? 'on' : ''} onClick={() => setFps(k)}>{t(l)}</button>)}</div></label>
+          <div className="row gap12 wrap">
+            <label className="row gap6 small"><input type="checkbox" className="toggle" checked={clean} onChange={(e) => setClean(e.target.checked)} /> {t('Hide cookie banners and chat widgets')}</label>
+            <label className="row gap6 small" title={t('Renders at double resolution and scales down — sharper photos and thin lines, slower')}><input type="checkbox" className="toggle" checked={hidpi} onChange={(e) => setHidpi(e.target.checked)} /> {t('Extra sharp (2×)')}</label>
+            <label className="row gap6 small" title={t('Records in real time instead of frame by frame — use it if a page misbehaves; no auto-zoom')}><input type="checkbox" className="toggle" checked={realtime} onChange={(e) => setRealtime(e.target.checked)} /> {t('Live capture')}</label>
+          </div>
+        </div>
+      </details>
       <button className="btn primary" disabled={!url.trim()} onClick={go}><span className="rec-dot" /> {t('Record page')}</button>
     </div>
   );

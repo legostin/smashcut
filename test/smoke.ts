@@ -155,6 +155,14 @@ try {
     for (let i = 0; i < raw.length; i += 3) if (raw[i + 1] > 150 && raw[i] > 120 && raw[i + 2] < 120) lime++;
     ok('3D clip draws the scene (accent pixels)', lime > 40, `${lime} accent px of ${raw.length / 3}`);
   }
+  {
+    // web recording: deterministic frames → exact fps and length
+    const rec = await api('POST', '/api/agent/record-web', { url: BASE + '/api/state', fps: 30, actions: [{ type: 'wait', ms: 600 }, { type: 'move', x: 300, y: 200 }], tail: 0.3, name: 'smoke' });
+    const nb = execFileSync('ffprobe', ['-v', 'error', '-count_frames', '-select_streams', 'v:0', '-show_entries', 'stream=nb_read_frames,r_frame_rate,width,height', '-of', 'csv=p=0', path.join(tmp, 'projects', 'smoke', 'media', rec.file)]).toString().trim();
+    ok('web recording (virtual time, exact frames)', /^1920,1080,30\/1,\d+$/.test(nb) && Math.abs(Number(nb.split(',')[3]) - rec.duration * 30) <= 1, `${nb} · ${rec.duration}s`);
+    const ss = await api('GET', '/api/record/sessions');
+    ok('web login sessions list', Array.isArray(ss.sessions) && ss.login === null);
+  }
 } catch (e) {
   failures++;
   console.error('✗ fatal:', (e as Error).message);

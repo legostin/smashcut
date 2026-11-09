@@ -208,6 +208,21 @@ server.registerTool('transcribe_media', {
   inputSchema: { file: z.string(), language: z.string().optional() },
 }, safe(async (a) => text(await api('POST', '/api/agent/transcribe', a))));
 
+server.registerTool('watch_video', {
+  description: 'WATCH a video (you cannot play video — this is how you see one): a media file or any link (video sites via yt-dlp). One call returns the edit (shots with times, ASL, cuts/min, pacing curve, cut types, sections), contact sheets (one numbered frame per shot), MOTION STRIPS (8 frames at ~12 fps around cuts, motion peaks and samples — easing, transitions, camera moves, kinetic type), and the sound (transcript, tempo, loudness, % of cuts on beats). Images come inline and stay saved under .studio/watch/ to Read later; re-watching is instant (cached). Use it on every video reference/source before borrowing its editing or motion principles (never copy 1:1).',
+  inputSchema: {
+    file: z.string().optional().describe('media/<file> (a bare name = media/<name>)'), url: z.string().optional().describe('any page / video link instead of file — imported into media/ once'),
+    start: z.number().optional().describe('seconds'), end: z.number().optional().describe('seconds'),
+    focus: z.string().optional().describe('what to look at, e.g. "the transitions", "title animation at 0:12" (times get their own strip)'),
+    detail: z.enum(['quick', 'full']).optional().describe('quick = fewer strips/images; default full'),
+  },
+}, safe(async (a) => {
+  let r = await api('POST', '/api/agent/watch-video', a);
+  for (let i = 0; r.running && i < 6; i++) r = await api('POST', '/api/agent/watch-video', a);
+  if (r.running) return text(r.text);
+  return { content: [{ type: 'text', text: r.text }, ...(r.images || []).map((im) => ({ type: 'image', data: im.data, mimeType: im.mime || 'image/jpeg' }))] };
+}));
+
 server.registerTool('get_timing', {
   description: 'Project timing in project seconds: bpm, beats, bars, music sections & markers, timeline markers, transcript words. Optionally limit to a window.',
   inputSchema: { from: z.number().optional(), to: z.number().optional() },
@@ -234,7 +249,7 @@ server.registerTool('message_subagent', {
 }, safe(async (a) => text(await api('POST', '/api/agent/subagents/message', a))));
 
 server.registerTool('art_director', {
-  description: 'Get your work reviewed by the ART DIRECTOR: a fresh-eyes critic (a separate agent with taste, the user\'s learned taste and house style) looks at contact sheets of the composited frames of a scene — including the seams with its neighbours — plus the measured taste audit, the brief and the design system, and returns a verdict: PASS / NOT YET with P0/P1/P2 items "t=… · where · problem → exact change". Call it when a scene looks finished to you, BEFORE update_scene status "done" (that is required unless the user turned it off); fix the P0s and P1s, re-render, and call it again (max 3 rounds). Takes a few minutes; you are idle meanwhile (you don\'t hold an agent slot). The verdict is also shown to the user on the scene.',
+  description: 'Get your work reviewed by the ART DIRECTOR: a fresh-eyes critic (Sonnet by default, with the user\'s learned taste and house style) looks at contact sheets of the composited frames incl. the seams, motion strips, the user\'s references, the measured taste audit, the brief and the design system, and returns PASS / NOT YET with P0/P1/P2 items "t=… · where · problem → exact change". WHEN to call it depends on the user\'s setting (ART DIRECTOR in your instructions): light = once for the whole video at the end ({film:true}) plus scenes you are unsure about; thorough = every scene before update_scene "done" (max 2 rounds). Unchanged frames return the previous verdict instantly. Takes ~1 min; you are idle meanwhile.',
   inputSchema: {
     sceneId: z.string().optional().describe('the scene to review (preferred)'),
     film: z.boolean().optional().describe('review the WHOLE video (pacing, consistency, story, seams) — do this once when all scenes are done, before you report back'),
@@ -269,7 +284,7 @@ server.registerTool('set_script', {
 }, safe(async (a) => text(await api('PUT', '/api/script', a))));
 
 server.registerTool('update_scene', {
-  description: 'Patch one scene (title, start, duration, voiceover, visual, notes, status, itemIds). Set status "doing" when you start a scene and "done" when it is finished and verified — the user watches progress live. "done" requires an art_director review that passed (or 3 rounds used); for a trivial change (a typo, a timing nudge) add force:true and reason:"…" to the patch instead. Use "review" when you need the user to decide something about the scene (say what in notes). Never set "approved" or change "locked" — those are the user\'s.',
+  description: 'Patch one scene (title, start, duration, voiceover, visual, notes, status, itemIds). Set status "doing" when you start a scene and "done" when it is finished and verified — the user watches progress live. In the thorough art-director mode "done" requires a passing art_director review (or 2 rounds used); for a trivial change add force:true and reason:"…" to the patch. Use "review" when you need the user to decide something about the scene (say what in notes). Never set "approved" or change "locked" — those are the user\'s.',
   inputSchema: { id: z.string(), patch: z.record(z.string(), z.any()) },
 }, safe(async ({ id, patch }) => text(await api('PATCH', `/api/script/scenes/${id}`, patch))));
 
@@ -296,13 +311,23 @@ server.registerTool('list_fx', {
 }, safe(async () => text(await api('GET', '/api/fx'))));
 
 server.registerTool('record_web', {
-  description: 'Record footage of a web page (any URL) with a scripted demo: load, waits, smooth scrolls, clicks (with an animated demo cursor + click ripple), typing, hovers, highlights. Produces an MP4 in media/ at the project size (or device=mobile for a phone layout) and optionally places it on the timeline. actions: [{type:"wait",ms}|{type:"scroll",to:"bottom"|"top"|px,selector?,by?,duration?}|{type:"click",selector|text|x,y}|{type:"hover",…}|{type:"type",selector?,text,delay?}|{type:"press",key}|{type:"highlight",selector|text,ms?}|{type:"goto",url}|{type:"move",x,y,duration?}] (coordinates in CSS px of the viewport). Without actions: load → slow scroll down and back.',
+  description: 'Record product-demo footage of a web page: a scripted browser with a smooth demo cursor (click ripple), eased scrolls, human-pace typing and an optional Screen-Studio-style camera (autoZoom: zooms into what is clicked/typed, eases back out). Rendered frame by frame on virtual time, so it is perfectly smooth at 30/60 fps with page animations and videos at true speed, text crisp at native resolution; navigations are hidden and crossfaded (no white flash). MP4 in media/ at the project size (device:"mobile" = phone layout with touch dots), optionally placed on the timeline. ' +
+    'actions: {type:"wait",ms} | {type:"wait",text|selector|idle:true,timeout?,cut?} (until it appears / network idle; cut:true skips the waiting in the video) | {type:"scroll",screens:n} (screen by screen) or {to:"bottom"|"top"|px} / {by:px} / {selector|text}, duration? | {type:"click",text|selector|x,y,zoom?} | {type:"hover",…} | {type:"type",selector|target(label/placeholder),text,clear?,delay?} | {type:"press",key} | {type:"highlight",text|selector,ms?} | {type:"zoom",text|selector,level?} / {type:"zoom",level:1} | {type:"swipe",direction,selector?} | {type:"goto",url} | {type:"move",x,y}. Prefer text targets (visible labels). Off-screen targets are scrolled to smoothly. ' +
+    'Pages behind a login: session:"name" from web_login (the user logs in once). Cookie banners/chat widgets are hidden (clean:false keeps them; hide:[selectors] hides more). ' +
+    'Example: {url:"https://linear.app", fps:60, autoZoom:true, actions:[{type:"wait",ms:1000},{type:"click",text:"Features"},{type:"wait",text:"Issue tracking"},{type:"scroll",screens:2},{type:"type",target:"Email",text:"ana@acme.com"},{type:"press",key:"Enter"},{type:"wait",ms:1500}]}. Without actions: load, then read down the page screen by screen for `seconds`.',
   inputSchema: {
     url: z.string(), actions: z.array(z.record(z.string(), z.any())).optional(), seconds: z.number().optional(),
-    device: z.enum(['desktop', 'mobile']).optional(), zoom: z.number().optional(), dark: z.boolean().optional(), cursor: z.boolean().optional(), name: z.string().optional(),
+    device: z.enum(['desktop', 'mobile']).optional(), zoom: z.number().optional().describe('UI scale: 1.5 (default) = page laid out at 1280 css px in a 1920 frame'), dark: z.boolean().optional(), cursor: z.boolean().optional(), name: z.string().optional(),
+    fps: z.number().optional().describe('30 or 60; default: project fps'), autoZoom: z.union([z.boolean(), z.number()]).optional().describe('camera zooms into clicks/typing (true = 1.8×)'),
+    session: z.string().optional(), clean: z.boolean().optional(), hide: z.array(z.string()).optional(), hidpi: z.boolean().optional(), realtime: z.boolean().optional().describe('live capture fallback if a page misbehaves'),
     place: z.object({ start: z.number().optional(), track: z.string().optional() }).optional(),
   },
 }, safe(async (a) => text(await api('POST', '/api/agent/record-web', a))));
+
+server.registerTool('web_login', {
+  description: 'Open a VISIBLE browser window on the user\'s screen at url so THE USER can log in to a site by hand (never type credentials yourself); when they close the window the session (cookies + localStorage) is saved in the project (.studio/sessions, not in git) under name, for record_web {session:name}. Returns immediately — tell the user to log in and close the window, then wait for their go-ahead. Without url: lists saved sessions.',
+  inputSchema: { url: z.string().optional(), name: z.string().optional() },
+}, safe(async (a) => text(a.url ? await api('POST', '/api/record/login', a) : await api('GET', '/api/record/sessions'))));
 
 server.registerTool('record_app', {
   description: 'macOS: record the front window of a running app (or the whole screen) for N seconds, optionally running AppleScript lines in the app meanwhile. Needs Screen Recording permission for the editor host. Result: MP4 in media/, optionally placed on the timeline.',

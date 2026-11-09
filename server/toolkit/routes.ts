@@ -4,6 +4,7 @@
 //   GET  /api/toolkit/jobs             jobs of the current project (newest first)
 //   GET  /api/toolkit/jobs/:id         one job (poll this)
 //   POST /api/toolkit/jobs/:id/cancel  {ok}
+//   POST /api/agent/watch-video        {file|url, start?, end?, focus?, detail?} → summary text + sheets/strips (server/toolkit/watch.ts)
 // Calls carrying x-studio-task (agents) get their image results (and video thumbnails) pushed into the agent feed.
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
@@ -11,6 +12,8 @@ import { cur, hasProject, pbase, MEDIA_EXT } from '../project.ts';
 import { msg } from '../i18n.ts';
 import { taskEvent } from '../agents/runner.ts';
 import { catalog, runOp, listJobs, getJob, cancelJob, getOp } from './index.ts';
+import { watchVideo, type WatchRequest } from './watch.ts';
+import fs from 'node:fs';
 import type { ToolkitJob } from '../../shared/types.ts';
 
 const need = () => { if (!hasProject()) throw Object.assign(new Error('no project open'), { statusCode: 409 }); return cur(); };
@@ -40,6 +43,17 @@ export async function registerToolkitRoutes(app: FastifyInstance) {
     return j;
   });
   app.post<{ Params: { id: string } }>('/api/toolkit/jobs/:id/cancel', async (req) => ({ ok: cancelJob(req.params.id) }));
+  // watch_video: waits up to ~4 min (under the HTTP client's header timeout); {running:true} → call again, it joins the same run
+  app.post<{ Body: WatchRequest }>('/api/agent/watch-video', async (req) => {
+    const store = need();
+    const p = watchVideo(req.body || {});
+    p.catch(() => {}); // a run that outlives this request: its error surfaces on the next call (which retries)
+    const r = await Promise.race([p, new Promise<null>((res) => setTimeout(() => res(null), 240_000))]);
+    if (!r) return { running: true, text: 'Still watching (long video / first Whisper run) — call watch_video again with the same arguments.' };
+    const tid = String(req.headers['x-studio-task'] || '');
+    if (tid && !r.cached) for (const f of r.inline.slice(0, 2)) taskEvent(tid, { kind: 'image', src: `${pbase()}/${f}`, ...msg('watch_video → {file}', { file: f.split('/').pop() || f }) });
+    return { ...r, images: r.inline.filter((f) => fs.existsSync(store.p(f))).map((f) => ({ file: f, mime: 'image/jpeg', data: fs.readFileSync(store.p(f)).toString('base64') })) };
+  });
   app.post<{ Body: { op: string; params?: Record<string, unknown>; wait?: boolean } }>('/api/toolkit/run', async (req) => {
     need();
     const { op, params, wait } = req.body || ({} as any);

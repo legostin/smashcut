@@ -8,7 +8,7 @@ import { cur, hasProject, runIn, type ProjectStore } from '../project.ts';
 import { bus } from '../bus.ts';
 import { nid, readJson, writeJson } from '../util.ts';
 import { commit } from '../git.ts';
-import { SYSTEM_PROMPT, houseStylePrompt, SUBAGENTS_PROMPT, SUBAGENT_ROLE, CRITIC_PROMPT, runtimeMap } from './prompts.ts';
+import { SYSTEM_PROMPT, houseStylePrompt, SUBAGENTS_PROMPT, SUBAGENT_ROLE, CRITIC_PROMPT, runtimeMap, artDirectorPolicy } from './prompts.ts';
 import { uerr } from '../i18n.ts';
 import { denyTask } from '../permissions.ts';
 import { recordTaste, tastePrompt } from '../taste/memory.ts';
@@ -370,7 +370,7 @@ function systemPromptFor(t: Task) {
   const mode = t.autopilot || t.parentId
     ? '\n\nAUTOPILOT is on for this task: never wait for the user — do not call ask_user; make the decisions yourself (when unsure, try the most promising option), build, and explain your choices briefly at the end.'
     : '';
-  return SYSTEM_PROMPT + runtimeMap() + houseStylePrompt(st.houseStyle) + tastePrompt() + role + mode;
+  return SYSTEM_PROMPT + artDirectorPolicy(st.artDirector) + runtimeMap() + houseStylePrompt(st.houseStyle) + tastePrompt() + role + mode;
 }
 
 function mcpConfigFile(taskId: string) {
@@ -392,10 +392,24 @@ async function runTask(t: Task, prompt: string, images: string[]) {
   emitTask(t);
 
   let cmd: string, args: string[];
+  let stdinFile: string | undefined;
   // MCP_TOOL_TIMEOUT: permission prompts wait for a human in the editor
   // ENABLE_TOOL_SEARCH=false: the studio tools are loaded up front — no ToolSearch round-trip before each first use (~120 wasted turns measured)
   const env = { ...process.env, STUDIO_URL: BASE_URL, STUDIO_TASK: t.id, STUDIO_PROJECT: store.id, MCP_TOOL_TIMEOUT: '3600000', ENABLE_TOOL_SEARCH: 'false' };
-  if (t.agent === 'claude') {
+  if (t.agent === 'claude' && t.role === 'critic') {
+    // the art director is a lean, read-only call: no studio tools (everything it needs is in the prompt), only Read for the images —
+    // a small context and 1–2 turns instead of a full agent with 48 tool schemas
+    cmd = 'claude';
+    // the frames go INTO the first message (stream-json input with image blocks): one turn, no Read round-trips
+    stdinFile = images.length ? await criticInput(t, prompt, images) : undefined;
+    args = ['-p', ...(stdinFile ? ['--input-format', 'stream-json'] : [prompt]), '--output-format', 'stream-json', '--verbose',
+      '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--setting-sources', 'project,local',
+      '--tools', 'Read', '--allowedTools', 'Read', '--disallowedTools', ...NEVER_HEADLESS,
+      '--append-system-prompt', systemPromptFor(t)];
+    if (t.model || settings.claudeModel) args.push('--model', t.model || settings.claudeModel!);
+    if (t.effort) args.push('--effort', t.effort);
+    if (t.sessionId) args.push('--resume', t.sessionId);
+  } else if (t.agent === 'claude') {
     cmd = 'claude';
     args = ['-p', prompt, '--output-format', 'stream-json', '--verbose',
       '--mcp-config', mcpConfigFile(t.id),
@@ -444,7 +458,9 @@ async function runTask(t: Task, prompt: string, images: string[]) {
   t.logOffset = fs.statSync(logFile).size;
   t.pending = undefined;
   try {
-    const proc = spawn(cmd, args, { cwd: store.dir, env, stdio: ['ignore', out, err], detached: true });
+    const inp = stdinFile ? fs.openSync(stdinFile, 'r') : 'ignore';
+    const proc = spawn(cmd, args, { cwd: store.dir, env, stdio: [inp, out, err], detached: true });
+    if (typeof inp === 'number') fs.closeSync(inp);
     proc.on('error', (e) => { pushEvent(t, { kind: 'error', text: `Failed to start ${cmd}: ${e.message}. Is it installed and logged in?` }); });
     t.pid = proc.pid;
     proc.unref();
@@ -569,8 +585,24 @@ async function finish(t: Task, status: 'done' | 'error', err?: string) {
 const finishHooks: ((t: Task) => unknown)[] = [];
 export function onTaskFinish(fn: (t: Task) => unknown) { finishHooks.push(fn); }
 
+/** the critic's first message as stream-json: the prompt plus its contact sheets as image blocks (JPEG, ≤ 1600 px) */
+async function criticInput(t: Task, prompt: string, images: string[]) {
+  const sharp = (await import('sharp')).default;
+  const content: unknown[] = [{ type: 'text', text: prompt + '\n\nThe images are attached below in the order listed — no need to Read them.' }];
+  for (const f of images.slice(0, 8)) {
+    try {
+      const abs = path.isAbsolute(f) ? f : cur().p(f);
+      const buf = await sharp(fs.readFileSync(abs)).resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
+      content.push({ type: 'text', text: f }, { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: buf.toString('base64') } });
+    } catch { /* missing sheet: the critic can still Read the path */ }
+  }
+  const file = cur().p('.studio', 'tasks', `${t.id}.in.jsonl`);
+  fs.writeFileSync(file, JSON.stringify({ type: 'user', message: { role: 'user', content } }) + '\n');
+  return file;
+}
+
 /** the art director runs read-only: frames, audit, script, design, references — no edits, no questions */
-const CRITIC_CLAUDE_TOOLS = ['--allowedTools', 'Read', 'Glob', 'Grep', 'mcp__studio__render_frame', 'mcp__studio__render_clip', 'mcp__studio__taste_audit', 'mcp__studio__get_script', 'mcp__studio__get_design', 'mcp__studio__get_project', 'mcp__studio__list_references', 'mcp__studio__get_technique', 'mcp__studio__search_inspiration', 'mcp__studio__get_timing',
+const CRITIC_CLAUDE_TOOLS = ['--allowedTools', 'Read', 'Glob', 'Grep', 'mcp__studio__render_frame', 'mcp__studio__render_clip', 'mcp__studio__taste_audit', 'mcp__studio__get_script', 'mcp__studio__get_design', 'mcp__studio__get_project', 'mcp__studio__list_references', 'mcp__studio__get_technique', 'mcp__studio__search_inspiration', 'mcp__studio__get_timing', 'mcp__studio__watch_video',
   '--disallowedTools', 'Task', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Bash', 'mcp__studio__ask_user', 'mcp__studio__art_director', 'mcp__studio__delegate_task', 'AskUserQuestion', 'EnterPlanMode', 'ExitPlanMode'];
 /** built-in interactive tools that hang a headless agent (measured: AskUserQuestion waited 30 min × 4) — the studio's ask_user is the way to ask */
 const NEVER_HEADLESS = ['AskUserQuestion', 'EnterPlanMode', 'ExitPlanMode'];
@@ -586,7 +618,9 @@ export function startCritic(callerId: string | undefined, o: { title: string; pr
     const agent = caller?.agent || st.defaultAgent;
     // the critic must not be weaker than the author: its own model, else the author's, never below sonnet
     const authorModel = caller?.model || (agent === 'claude' ? st.claudeModel : st.codexModel) || '';
-    const model = agent === 'claude' ? (st.artDirectorModel || (/haiku/i.test(authorModel) ? 'sonnet' : caller?.model)) : caller?.model;
+    void authorModel;
+    // Sonnet by default: a sharp eye at a fraction of Opus' cost; the user can pick another model in Settings
+    const model = agent === 'claude' ? (st.artDirectorModel || 'sonnet') : caller?.model;
     const t = startTask({ agent, title: o.title, prompt: o.prompt, images: o.images, parentId: caller?.id, autopilot: true, role: 'critic', reviewOf: o.reviewOf, ...(model ? { model } : {}), effort: 'medium' }); // judging frames needs a good eye, not long deliberation: medium keeps reviews quick
     if (caller) {
       waitingLeads.add(caller.id);

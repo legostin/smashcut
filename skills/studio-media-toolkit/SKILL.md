@@ -1,6 +1,6 @@
 ---
 name: studio-media-toolkit
-description: Programmatic media operations on photos, footage and audio (list_media_tools / run_media_tool) — cut out backgrounds, stickers, palettes, image resize/adjust/convert, green-screen keying, ML background removal for video, trim/speed/reverse/reframe/slow-mo/loop/GIF, frame extraction, image & clip morphs, audio extract/normalize/denoise/silence removal/ducking. Use when footage or images need processing before they go on the timeline.
+description: Programmatic media operations on photos, footage and audio (list_media_tools / run_media_tool), and watch_video to watch a video (edit, motion, sound) — cut out backgrounds, stickers, palettes, image resize/adjust/convert, green-screen keying, ML background removal for video, trim/speed/reverse/reframe/slow-mo/loop/GIF, frame extraction, image & clip morphs, audio extract/normalize/denoise/silence removal/ducking. Use when footage or images need processing before they go on the timeline.
 ---
 
 # Media toolkit
@@ -13,6 +13,9 @@ description: Programmatic media operations on photos, footage and audio (list_me
 - Identical re-runs (same op, params and unchanged input files) return the cached result instantly — don't be afraid to call again.
 - json outputs (palette colours, kept segments, loudness) come back inline.
 - Every output carries provenance (`.studio/media/<file>.source.json`: op, params, inputs) — you can always tell how a file was made.
+
+## Watching a video: `watch_video` (its own MCP tool, not an op)
+You can't play video — `watch_video {file:"media/x.mp4"}` or `{url}` (any page / YouTube / Vimeo… imported once via yt-dlp) is how you see one. One call returns: the edit (shots with times, ASL, cuts/min, pacing curve, how each cut happens — hard cut / dissolve / fade or dip to black / flash, sections), a **contact sheet** (one numbered frame per shot), **motion strips** (8 frames at ~12 fps around cuts, motion peaks and samples — read easing, transitions, camera moves, kinetic type left → right), and the sound (transcript, tempo, loudness curve, % of cuts on beats vs chance). Images come inline and stay in `.studio/watch/…` to Read again; re-watching is instant. `start`/`end` for a range, `focus:"the title animation at 0:12"` (named times get their own strip), `detail:"quick"` for a lighter look. Facts, not opinions — the judging is yours.
 
 ## Which op?
 | Need | Op | Notes |
@@ -79,7 +82,7 @@ description: Programmatic media operations on photos, footage and audio (list_me
 
 ## Recipe: cut it like the reference
 
-1. The user's reference video is in media (or a reference of kind media): `run_media_tool {op:"detect_shots", params:{video}}` → look at the sheet; read `rhythm` (avg shot, cuts per minute, cuts on beat, colours).
+1. Watch the reference first: `watch_video {file}` (or `{url}`) → look at the sheets and strips, read ASL, the pacing curve, cut types, cuts on beat. `detect_shots` gives the bare cut list + rhythm json (dominant colour per shot, `beatsPerShot`) when you need those.
 2. Translate it into the edit: scene/shot durations ≈ the reference's median shot (in beats of our music: `beatsPerShot`), cut on beats if the reference does, reuse its colour progression in the design system or grades.
 3. To reuse the user's own footage shot by shot: `split_shots` (check with detect_shots first), then place the shots on the timeline at the planned cut points.
 4. Never re-upload or re-cut someone else's video into the user's video unless the user owns it — study the rhythm, don't copy the footage.

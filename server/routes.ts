@@ -38,6 +38,7 @@ import { paceReport } from './voice/speech.ts';
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
 import { recordWeb, defaultWebActions, recordJobs, emitJob, type RecordJob } from './record/web.ts';
 import { recordScreen, listApps } from './record/screen.ts';
+import { registerWebSessionRoutes } from './record/session.ts';
 import { createVariant, family, variantPrompt } from './variants.ts';
 import { commentTaskPrompt, chatTaskPrompt } from './agents/prompts.ts';
 import * as permissions from './permissions.ts';
@@ -276,7 +277,7 @@ export async function registerRoutes(app: FastifyInstance) {
   const taskOf = (req: { headers: Record<string, unknown> }) => String(req.headers['x-studio-task'] || '');
   const need = () => { if (!hasProject()) throw Object.assign(new Error('no project open'), { statusCode: 409 }); return cur(); };
   // the art director only looks: it may render and read, never change the project
-  const CRITIC_OK = /^\/api\/agent\/(render-clip|render-frame|taste-audit|inspiration|steer|lint-clip)\b/;
+  const CRITIC_OK = /^\/api\/agent\/(render-clip|render-frame|taste-audit|inspiration|steer|lint-clip|watch-video)\b/;
   app.addHook('preHandler', async (req) => {
     const tid = req.headers['x-studio-task'];
     if (!tid || req.method === 'GET' || CRITIC_OK.test(req.url.replace(/^\/p\/[^/]+/, ''))) return;
@@ -744,7 +745,7 @@ export async function registerRoutes(app: FastifyInstance) {
     } catch { /* offline or blocked: a plain link */ }
     const list = readRefs();
     if (list.some((r) => r.kind === 'link' && r.ref === url.href)) return list;
-    return writeRefs([...list, { id: 'r' + nid(), kind: 'link', ref: url.href, title, thumb, note: (videoPage ? 'video page — import_url can download it (yt-dlp) for detect_shots. ' : '') + (req.body.note || ''), sceneIds, addedAt: new Date().toISOString() } as Reference]);
+    return writeRefs([...list, { id: 'r' + nid(), kind: 'link', ref: url.href, title, thumb, note: (videoPage ? 'video page — watch_video {url} watches it (edit, motion, sound). ' : '') + (req.body.note || ''), sceneIds, addedAt: new Date().toISOString() } as Reference]);
   });
   app.patch<{ Params: { id: string }; Body: Partial<Reference> }>('/api/references/:id', async (req) => { need(); return writeRefs(readRefs().map((r) => (r.id === req.params.id ? { ...r, ...req.body, id: r.id } : r))); });
   app.delete<{ Params: { id: string } }>('/api/references/:id', async (req) => { need(); return writeRefs(readRefs().filter((r) => r.id !== req.params.id)); });
@@ -757,7 +758,7 @@ export async function registerRoutes(app: FastifyInstance) {
       scenes: (r.sceneIds || []).map((id) => { const i = scenes.findIndex((s) => s.id === id); return i >= 0 ? `${i + 1}:${scenes[i].title} (${id})` : id; }),
       appliesTo: r.sceneIds?.length ? 'listed scenes' : 'the whole video',
       ...(r.kind === 'inspiration' ? (() => { const x = getInspiration(r.ref); return x ? { by: x.by, year: x.year, url: x.url, techniques: x.techniques, breakdown: x.breakdown } : {}; })() : {}),
-      howToRead: r.kind === 'inspiration' ? 'The breakdown above describes the piece and its techniques — apply the techniques in the project style (never copy the brand/assets). The URL is for the user; you cannot watch the video.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? (/\.(mp4|mov|webm|mkv|m4v)$/i.test(r.ref) ? `video: run_media_tool {op:"detect_shots", params:{video:"${r.ref}"}} — shots, contact sheet and the rhythm of the edit` : `Read media/${r.ref} (look at it)`) : `WebFetch ${r.ref} to read the page; run_media_tool {op:"import_url", params:{url:"${r.ref}"}} brings its image (pick=all: every picture, pick=video / video sites: the video) into media/ to look at or use`,
+      howToRead: r.kind === 'inspiration' ? 'The breakdown above describes the piece and its techniques — apply the techniques in the project style (never copy the brand/assets). If the URL is a video link, watch_video {url} lets you see its edit and motion.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? (/\.(mp4|mov|webm|mkv|m4v)$/i.test(r.ref) ? `video: watch_video {file:"media/${r.ref}"} — shots, contact sheet, motion strips, sound and the rhythm of the edit` : `Read media/${r.ref} (look at it)`) : `WebFetch ${r.ref} to read the page; run_media_tool {op:"import_url", params:{url:"${r.ref}"}} brings its image (pick=all: every picture, pick=video / video sites: the video) into media/ to look at or use; a video link / page with a video: watch_video {url:"${r.ref}"} to see its edit, motion and sound`,
     }));
   });
 
@@ -844,6 +845,7 @@ export async function registerRoutes(app: FastifyInstance) {
     return { job, done };
   };
   app.get('/api/record/apps', async () => ({ apps: await listApps() }));
+  registerWebSessionRoutes(app);
   app.get('/api/record/jobs', async () => recordJobs());
   app.post<{ Body: any }>('/api/record/web', async (req) => {
     need();
