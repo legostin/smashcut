@@ -136,8 +136,17 @@ function Slider({ label, value, max, min = 0, step = 0.01, onChange, fmt }: { la
   );
 }
 
+/** a parameter's name for people: the clip's own label (translated when it is one of the common English ones),
+ *  else the key made readable ("accentColor" → "Accent color") */
+function paramLabel(k: string, label?: string) {
+  if (label) return t(label.replace(/colour/gi, (w) => (w[0] === 'C' ? 'Color' : 'color')));
+  const words = k.replace(/^_+/, '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim().toLowerCase();
+  const h = words.charAt(0).toUpperCase() + words.slice(1);
+  return t(h);
+}
+
 function ParamField({ k, spec, value, onChange, token }: { k: string; spec: ParamSpec; value: unknown; onChange: (v: unknown) => void; token?: string }) {
-  const label = <>{spec.label || k}<TokenChip token={token} /></>;
+  const label = <>{paramLabel(k, spec.label)}<TokenChip token={token} /></>;
   const [local, setLocal] = useState(value);
   useEffect(() => setLocal(value), [value]);
   const commit = () => { if (local !== value) onChange(local); };

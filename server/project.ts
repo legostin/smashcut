@@ -327,6 +327,15 @@ export function storeById(id: string | undefined | null): ProjectStore | undefin
   if (dir && ProjectStore.exists(dir)) return openProject(dir, { focus: false });
 }
 
+/** stop watching a project and forget it (before it is moved to the Trash) */
+export function closeProject(id: string) {
+  const st = stores.get(id);
+  if (!st) return;
+  st.close();
+  stores.delete(id);
+  if (fallback === st) fallback = [...stores.values()].pop() || null;
+}
+
 /** open (or focus) a project; it stays open alongside the others */
 export function openProject(dir: string, o: { focus?: boolean } = {}) {
   const id = projectId(dir);

@@ -75,7 +75,7 @@ const initial: State = {
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
   view: (() => { try { const v = localStorage.getItem('view'); return v === 'board' || v === 'edit' || v === 'nodes' ? v : 'story'; } catch { return 'story'; } })() as View,
   screen: new URLSearchParams(location.search).get('p') || /render\.html$/.test(location.pathname) ? 'editor' : 'home', references: [], render3d: [], sceneSelection: [], chatModel: (() => { try { return { claude: '', codex: '', ...JSON.parse(localStorage.getItem('chatModel') || '{}') }; } catch { return { claude: '', codex: '' }; } })(), chatEffort: (() => { try { return (localStorage.getItem('chatEffort') || '') as any; } catch { return ''; } })(), chatAutopilot: (() => { try { return localStorage.getItem('autopilot') === '1'; } catch { return false; } })(), timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
-  selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
+  selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: (() => { try { return localStorage.getItem('tl.snap') !== '0'; } catch { return true; } })(),
   fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
 

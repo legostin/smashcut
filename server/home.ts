@@ -2,8 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import type { Project, Script } from '../shared/types.ts';
-import { getRecents, PROJECTS_DIR } from './config.ts';
-import { ProjectStore, projectId, openStores } from './project.ts';
+import os from 'node:os';
+import { getRecents, dropRecent, HOME_DIR, PROJECTS_DIR } from './config.ts';
+import { ProjectStore, projectId, openStores, getStore, runIn, closeProject } from './project.ts';
+import { listTasks } from './agents/runner.ts';
 import { readJson } from './util.ts';
 import { uerr } from './i18n.ts';
 
@@ -56,8 +58,46 @@ export function homeData() {
   return { projects, renders, projectsDir: PROJECTS_DIR };
 }
 
+/** a project folder the home screen knows about (never an arbitrary path) */
+function known(d?: string) {
+  const dir = path.resolve(String(d || ''));
+  if (!knownDirs().includes(dir)) throw uerr('Not found', {}, 404);
+  return dir;
+}
+
 export async function registerHomeRoutes(app: FastifyInstance) {
   app.get('/api/home', async () => homeData());
+
+  /** rename a project (its display name; the folder keeps its path so open tabs and links keep working) */
+  app.post<{ Body: { dir: string; name: string } }>('/api/home/rename', async (req) => {
+    const dir = known(req.body?.dir);
+    const name = String(req.body?.name || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (!name) throw uerr('Name can’t be empty');
+    const st = getStore(projectId(dir));
+    if (st) await runIn(st, () => st.update((p) => { p.name = name; }));
+    else { const f = path.join(dir, 'project.json'); const p = readJson<Project>(f, null as any); p.name = name; fs.writeFileSync(f, JSON.stringify(p, null, 2)); }
+    return { ok: true, name };
+  });
+
+  /** move a project folder to the Trash (recoverable) — refused while an agent is working in it */
+  app.post<{ Body: { dir: string } }>('/api/home/trash', async (req) => {
+    const dir = known(req.body?.dir);
+    const id = projectId(dir);
+    const st = getStore(id);
+    const busy = (s?: string) => s === 'running' || s === 'queued' || s === 'waiting';
+    const working = st ? runIn(st, () => listTasks()).some((t) => busy(t.status))
+      : (() => { const td = path.join(dir, '.studio', 'tasks'); return fs.existsSync(td) && fs.readdirSync(td).some((f) => f.endsWith('.json') && !f.endsWith('.mcp.json') && busy(readJson<{ status?: string }>(path.join(td, f), {}).status)); })();
+    if (working) throw uerr('An agent is still working in this project — stop it first', {}, 409);
+    closeProject(id);
+    dropRecent(dir);
+    const trash = process.env.STUDIO_TRASH_DIR ? path.resolve(process.env.STUDIO_TRASH_DIR) : process.platform === 'darwin' ? path.join(os.homedir(), '.Trash') : path.join(HOME_DIR, 'trash');
+    fs.mkdirSync(trash, { recursive: true });
+    let to = path.join(trash, path.basename(dir));
+    if (fs.existsSync(to)) to += ' ' + new Date().toISOString().replace(/[:.]/g, '-');
+    try { fs.renameSync(dir, to); }
+    catch (e: any) { if (e.code !== 'EXDEV') throw e; fs.cpSync(dir, to, { recursive: true }); fs.rmSync(dir, { recursive: true, force: true }); }
+    return { ok: true, trashedTo: to };
+  });
   /** a file of a known project (posters, renders) — only inside known project folders */
   app.get<{ Querystring: { dir: string; rel: string } }>('/api/home/file', async (req, reply) => {
     const dir = path.resolve(req.query.dir || '');

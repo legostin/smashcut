@@ -24,7 +24,7 @@ export function moduleDir(name: string): string {
 export const RUNTIME_DIR = path.join(ROOT, 'runtime');
 export const GALLERY_DIR = path.join(ROOT, 'gallery');
 export const SKILLS_DIR = path.join(ROOT, 'skills');
-export const WEB_DIST = path.join(ROOT, 'web', 'dist');
+export const WEB_DIST = process.env.STUDIO_WEB_DIST ? path.resolve(process.env.STUDIO_WEB_DIST) : path.join(ROOT, 'web', 'dist');
 export const MCP_STDIO = path.join(ROOT, 'server', 'mcp', 'stdio.mjs');
 /** ~/.smashcut (an existing ~/.agent-videostudio from before the rename keeps being used) */
 const legacyOr = (fresh: string, legacy: string) => (!fs.existsSync(fresh) && fs.existsSync(legacy) ? legacy : fresh);
@@ -65,6 +65,9 @@ export function saveSettings(s: Partial<Settings>) {
 const RECENTS_FILE = path.join(HOME_DIR, 'recent.json');
 export function getRecents(): string[] {
   try { return JSON.parse(fs.readFileSync(RECENTS_FILE, 'utf8')).filter((p: string) => fs.existsSync(path.join(p, 'project.json'))); } catch { return []; }
+}
+export function dropRecent(dir: string) {
+  try { fs.writeFileSync(RECENTS_FILE, JSON.stringify(getRecents().filter((d) => d !== dir), null, 2)); } catch { /* ignore */ }
 }
 export function pushRecent(dir: string) {
   const list = [dir, ...getRecents().filter((d) => d !== dir)].slice(0, 12);

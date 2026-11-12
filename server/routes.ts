@@ -54,7 +54,7 @@ const LANG_NAMES: Record<string, string> = { en: 'English', ru: 'Russian', es: '
 /** agents work in English but talk to the user in the UI language */
 function langLine(code?: string) {
   if (!code || code === 'en' || !LANG_NAMES[code]) return '';
-  return `\n\n(Write your replies and summaries for the user in ${LANG_NAMES[code]}. Keep code, file names, ids and tool arguments in English unless the content itself must be in another language.)`;
+  return `\n\n(Write your replies and summaries for the user in ${LANG_NAMES[code]}. Keep code, file names, ids and tool arguments in English unless the content itself must be in another language. Text the user sees in the editor — params.json "label"s, scene titles, track and item labels — is in ${LANG_NAMES[code]} too.)`;
 }
 
 /** the track a new item goes to: the first compatible track that is free over [start, start + duration) — so an item

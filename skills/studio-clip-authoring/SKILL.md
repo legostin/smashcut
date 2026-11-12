@@ -19,6 +19,10 @@ clips/<id>/
   clip.js
   assets/         images / svg / video used by the clip (local only)
 ```
+`label` is what the user sees in the Inspector: short (1–3 words), plain words, in the language the user talks to you in
+("Заголовок", "Цвет акцента" — not "titleText", not "Lift: t x y w h…"). Keep keys in English camelCase. Data a person
+wouldn't edit by hand (timing tables, camera paths) doesn't belong in params at all — keep it in clip.js.
+
 Start from `create_clip` (MCP) or copy the skeleton. Keep `index.html` as generated unless you need a GSAP plugin
 (`<script src="/vendor/gsap/SplitText.min.js">`, DrawSVGPlugin, MorphSVGPlugin, CustomEase… all free; call `gsap.registerPlugin(...)`).
 

@@ -6,7 +6,11 @@ import { applyTransition } from './FxLibrary';
 import { t } from '../i18n';
 import { trName } from '../fxNames';
 
-const HEADER_W = 132;
+const HEADER_W = 184;
+const MIN_ZOOM = 2, MAX_ZOOM = 400;
+/** ruler steps (s): the smallest one that leaves room for a label */
+const STEPS = [0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
+const mmss = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 const ROW_H: Record<string, number> = { graphics: 40, video: 48, audio: 40, music: 40 };
 const COMPAT: Record<string, string[]> = { clip: ['graphics', 'video'], media: ['video', 'graphics', 'audio'], music: ['music', 'audio'], generated: ['video', 'graphics'] };
 
@@ -115,12 +119,34 @@ export function Timeline({ project }: { project: Project }) {
       const z = getState().zoom;
       const r = el.getBoundingClientRect();
       const at = Math.max(0, (e.clientX - r.left - HEADER_W + el.scrollLeft) / z);
-      const nz = Math.min(400, Math.max(8, z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+      const nz = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
       setState({ zoom: nz });
       requestAnimationFrame(() => { el.scrollLeft = at * nz - (e.clientX - r.left - HEADER_W); });
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  /** zoom so the whole video fits the visible width */
+  const fit = () => {
+    const el = scroller.current;
+    if (!el) return;
+    const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, (el.clientWidth - HEADER_W - 24) / Math.max(5, projectEnd(getState().project || project))));
+    setState({ zoom: z });
+    requestAnimationFrame(() => { el.scrollLeft = 0; });
+  };
+  const toggleSnap = () => { const v = !getState().snap; setState({ snap: v }); try { localStorage.setItem('tl.snap', v ? '1' : '0'); } catch {} };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable || e.metaKey || e.ctrlKey || e.altKey) return;
+      const st = getState();
+      if (st.libraryOpen || st.dialog || st.lightbox) return;
+      if (e.key.toLowerCase() === 'n' && !e.shiftKey) { e.preventDefault(); toggleSnap(); notify('info', getState().snap ? t('Snapping on') : t('Snapping off')); }
+      else if (e.key.toLowerCase() === 'z' && e.shiftKey) { e.preventDefault(); fit(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const onDrop = async (e: React.DragEvent, track: Track) => {
@@ -164,9 +190,9 @@ export function Timeline({ project }: { project: Project }) {
     actions.patchProject({ tracks });
   };
 
-  const tickStep = zoom > 120 ? 0.5 : zoom > 50 ? 1 : zoom > 20 ? 5 : 10;
-  const ticks = [];
-  for (let t = 0; t <= total; t += tickStep) ticks.push(t);
+  const tickStep = STEPS.find((st) => st * zoom >= 64) || STEPS[STEPS.length - 1];
+  const ticks: { t: number; major: boolean }[] = [];
+  for (let i = 0; i * tickStep / 2 <= total; i++) ticks.push({ t: +(i * tickStep / 2).toFixed(3), major: i % 2 === 0 });
 
   return (
     <div className="timeline">
@@ -176,7 +202,9 @@ export function Timeline({ project }: { project: Project }) {
             <div className="tl-corner" style={{ width: HEADER_W }}>
               <button className="icon-btn xs" title={t('Collapse to the scene strip (⇧T)')} aria-label={t('Collapse timeline')} onClick={() => actions.setTimelineOpen(false)}><Icon name="chevron" size={12} /></button>
               <AddTrack onAdd={addTrack} />
-              <input className="tl-zoom" type="range" min={8} max={400} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} title={t('Zoom (⌘ + wheel)')} />
+              <button className={'icon-btn xs' + (snap ? ' on' : '')} aria-pressed={snap} title={snap ? t('Snapping on: clips stick to edges, the playhead and scenes · N · hold Alt to drag freely') : t('Snapping off · N')} onClick={toggleSnap}><Icon name="magnet" size={13} /></button>
+              <button className="icon-btn xs" title={t('Fit the whole video (⇧Z)')} aria-label={t('Fit the whole video')} onClick={fit}><Icon name="grid" size={12} /></button>
+              <input className="tl-zoom" type="range" min={MIN_ZOOM} max={MAX_ZOOM} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} title={t('Zoom (⌘ + wheel)')} />
             </div>
             <div className="tl-ruler" style={{ width }} onPointerDown={scrub}>
               {scenes.map((sc, i) => (
@@ -187,7 +215,7 @@ export function Timeline({ project }: { project: Project }) {
               ))}
               {timing.sections.map((s, i) => <div key={i} className="tl-section" style={{ left: s.start * zoom, width: (s.end - s.start) * zoom }}>{s.name}</div>)}
               {zoom > 25 && timing.beats.map((b, i) => <div key={i} className={'tl-beat' + (timing.bars.includes(b) ? ' bar' : '')} style={{ left: b * zoom }} />)}
-              {ticks.map((t) => <div key={t} className="tl-tick" style={{ left: t * zoom }}><span>{t % 1 === 0 ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}` : ''}</span></div>)}
+              {ticks.map(({ t: at, major }) => <div key={at} className={'tl-tick' + (major ? '' : ' minor')} style={{ left: at * zoom }}>{major && <span>{at % 1 === 0 ? mmss(at) : `${mmss(at)}.5`}</span>}</div>)}
               {timing.markers.map((m, i) => <div key={i} className="tl-marker" style={{ left: m.time * zoom }} title={m.name}>◆</div>)}
               {comments.map((c) => <div key={c.id} className={`tl-comment status-${c.status}`} style={{ left: c.time * zoom }} title={c.text} onPointerDown={(e) => { e.stopPropagation(); seek(c.time); setState({ selectedCommentId: c.id }); }} />)}
             </div>

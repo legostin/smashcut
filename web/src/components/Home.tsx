@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, setState, refresh, time, openInNewTab, useStore } from '../store';
+import { api, setState, refresh, time, openInNewTab, useStore, notify } from '../store';
 import { t, tn } from '../i18n';
 import { Icon } from './Icon';
 import { HeroComposer } from './HeroComposer';
@@ -31,7 +31,8 @@ export function Home() {
   const [data, setData] = useState<{ projects: HomeProject[]; renders: HomeRender[] } | null>(null);
   const [all, setAll] = useState(false);
   const connected = useStore((s) => s.connected);
-  useEffect(() => { api<any>('GET', '/api/home').then(setData).catch(() => {}); }, [connected]);
+  const load = () => api<any>('GET', '/api/home').then(setData).catch(() => {});
+  useEffect(() => { load(); }, [connected]);
   const open = async (p: HomeProject) => {
     await api('POST', '/api/projects/open', { path: p.dir });
     await refresh(); time.set(0);
@@ -58,22 +59,7 @@ export function Home() {
         <section className="home-sec">
           <div className="home-sec-head"><h2>{t('Recent projects')}</h2><span className="muted xsmall">{tn(projects.length, '{n} project', '{n} projects')}</span><div className="grow" />{projects.length > 8 && <button className="link" onClick={() => setAll(!all)}>{all ? t('Show less') : t('Show all')}</button>}</div>
           <div className="home-grid">
-            {shown.map((p) => (
-              <div key={p.id} className="home-card" role="button" tabIndex={0} onClick={() => open(p)} onKeyDown={(e) => e.key === 'Enter' && open(p)}>
-                <div className="home-thumb" style={{ aspectRatio: '16 / 9' }}>
-                  {p.poster ? <img src={p.poster} alt="" loading="lazy" /> : <div className="home-thumb-empty"><span className="hero-ratio lg" style={{ aspectRatio: `${p.width} / ${p.height}` }} /></div>}
-                  <span className="home-badge">{p.width > p.height ? '16:9' : p.width === p.height ? '1:1' : p.height / p.width > 1.5 ? '9:16' : '4:5'}{p.duration ? ` · ${fmtDur(p.duration)}` : ''}</span>
-                  <button className="home-newtab" title={t('Open in a new tab')} onClick={(e) => { e.stopPropagation(); openInNewTab(p.id); }}><Icon name="external" size={12} /></button>
-                </div>
-                <div className="home-card-name ellipsis" title={p.name}>{p.name}</div>
-                <div className="home-card-meta">
-                  <span>{ago(p.updatedAt)}</span>
-                  {p.scenes.total > 0 && <span>· {t('{done}/{total} scenes done', { done: p.scenes.done, total: p.scenes.total })}</span>}
-                  {p.scenes.review > 0 && <span className="home-review">· {tn(p.scenes.review, '{n} needs review', '{n} need review')}</span>}
-                  {p.version && <span>· {p.version}</span>}
-                </div>
-              </div>
-            ))}
+            {shown.map((p) => <ProjectCard key={p.id} p={p} onOpen={() => open(p)} onChanged={load} />)}
           </div>
         </section>
       )}
@@ -107,6 +93,79 @@ export function Home() {
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+/** a recent project: click opens it; ⋯ renames it or moves it to the Trash (with a confirm step on the card itself) */
+function ProjectCard({ p, onOpen, onChanged }: { p: HomeProject; onOpen: () => void; onChanged: () => void }) {
+  const [menu, setMenu] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [name, setName] = useState(p.name);
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!menu) return;
+    const c = () => setMenu(false);
+    window.addEventListener('pointerdown', c);
+    return () => window.removeEventListener('pointerdown', c);
+  }, [menu]);
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+  const rename = async () => {
+    setRenaming(false);
+    const n = name.trim();
+    if (!n || n === p.name) { setName(p.name); return; }
+    try { await api('POST', '/api/home/rename', { dir: p.dir, name: n }); onChanged(); } catch { setName(p.name); }
+  };
+  const trash = async () => {
+    setBusy(true);
+    try { await api('POST', '/api/home/trash', { dir: p.dir }); notify('info', t('“{name}” moved to the Trash — you can restore it from there', { name: p.name })); onChanged(); }
+    catch { setConfirm(false); }
+    finally { setBusy(false); }
+  };
+  const idle = !renaming && !confirm;
+  return (
+    <div className={'home-card' + (menu ? ' menu-open' : '')} role="button" tabIndex={0} aria-label={p.name}
+      onClick={() => idle && onOpen()} onKeyDown={(e) => idle && e.target === e.currentTarget && e.key === 'Enter' && onOpen()}>
+      {idle && (
+        <div className="home-card-tools" onPointerDown={stop} onClick={stop}>
+          <button className="home-newtab" title={t('Open in a new tab')} aria-label={t('Open in a new tab')} onClick={() => openInNewTab(p.id)}><Icon name="external" size={12} /></button>
+          <div className="rel">
+            <button className="home-newtab" title={t('More actions')} aria-label={t('More actions')} aria-expanded={menu} onClick={() => setMenu(!menu)}><Icon name="more" size={13} /></button>
+            {menu && (
+              <div className="menu right">
+                <button className="menu-item" onClick={() => { setMenu(false); setName(p.name); setRenaming(true); }}>{t('Rename')}</button>
+                <button className="menu-item" onClick={() => { setMenu(false); openInNewTab(p.id); }}>{t('Open in a new tab')}</button>
+                <button className="menu-item danger" onClick={() => { setMenu(false); setConfirm(true); }}>{t('Move to Trash')}</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      <div className="home-thumb" style={{ aspectRatio: '16 / 9' }}>
+        {p.poster ? <img src={p.poster} alt="" loading="lazy" /> : <div className="home-thumb-empty"><span className="hero-ratio lg" style={{ aspectRatio: `${p.width} / ${p.height}` }} /></div>}
+        <span className="home-badge">{p.width > p.height ? '16:9' : p.width === p.height ? '1:1' : p.height / p.width > 1.5 ? '9:16' : '4:5'}{p.duration ? ` · ${fmtDur(p.duration)}` : ''}</span>
+        {confirm && (
+          <div className="home-confirm" onClick={stop} onPointerDown={stop}>
+            <div className="home-confirm-text">{t('Move “{name}” to the Trash?', { name: p.name })}</div>
+            <div className="muted xsmall">{t('The project folder goes to the Trash with all its files — you can restore it from there.')}</div>
+            <div className="row gap6">
+              <button className="btn sm ghost" autoFocus onClick={() => setConfirm(false)}>{t('Cancel')}</button>
+              <button className="btn sm danger" disabled={busy} onClick={trash}>{t('Move to Trash')}</button>
+            </div>
+          </div>
+        )}
+      </div>
+      {renaming
+        ? <input className="home-card-rename" autoFocus value={name} maxLength={120} aria-label={t('Project name')} onClick={stop} onPointerDown={stop} onChange={(e) => setName(e.target.value)} onBlur={rename}
+            onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'Escape') { setName(p.name); setRenaming(false); } }} />
+        : <div className="home-card-name ellipsis" title={p.name}>{p.name}</div>}
+      <div className="home-card-meta">
+        <span>{ago(p.updatedAt)}</span>
+        {p.scenes.total > 0 && <span>· {t('{done}/{total} scenes done', { done: p.scenes.done, total: p.scenes.total })}</span>}
+        {p.scenes.review > 0 && <span className="home-review">· {tn(p.scenes.review, '{n} needs review', '{n} need review')}</span>}
+        {p.version && <span>· {p.version}</span>}
+      </div>
     </div>
   );
 }
