@@ -174,6 +174,43 @@ try {
     const ss = await api('GET', '/api/record/sessions');
     ok('web login sessions list', Array.isArray(ss.sessions) && ss.login === null);
   }
+  {
+    // ---------- the author's own voice: a recorded take → processed → on the voice-over track ----------
+    const sc0 = (await api('GET', '/api/script')).scenes;
+    const script = await api('PUT', '/api/script', { scenes: [...sc0, { title: 'Voice smoke', start: 40, duration: 4, voiceover: 'one two three four five', speech: 'one two three [pause 0.3] four five' }] });
+    const scene = script.scenes.find((x: any) => x.title === 'Voice smoke');
+    const prompter = (await api('GET', '/api/voice/prompter')).scenes.find((x: any) => x.id === scene.id);
+    ok('teleprompter text: words to read, pause mark', prompter?.tokens.length === 5 && prompter.tokens[2].mark === true && prompter.tokens[2].pause === 0.3, JSON.stringify(prompter?.tokens.map((x: any) => x.text)));
+    // a "voice": five tone bursts over room noise, quiet, with silence at both ends (the way a real take looks to the level meter)
+    const rec = path.join(tmp, 'take.wav');
+    await sh('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=180:duration=6', '-f', 'lavfi', '-i', 'anoisesrc=color=pink:amplitude=0.01:duration=6', '-filter_complex',
+      "[0:a]volume='0.12*between(t,1.2,1.6)+0.12*between(t,1.7,2.1)+0.12*between(t,2.2,2.6)+0.12*between(t,3.0,3.4)+0.12*between(t,3.5,3.9)':eval=frame[v];[v][1:a]amix=inputs=2:normalize=0", '-ar', '48000', '-ac', '1', rec]);
+    const fd = new FormData();
+    fd.append('file', new Blob([fs.readFileSync(rec)], { type: 'audio/wav' }), 'take.wav');
+    const take = await (await fetch(`${BASE}/api/voice/take?sceneId=${scene.id}&align=0`, { method: 'POST', body: fd })).json();
+    const rep = take.report;
+    ok('voice take: saved, processed, raw kept', !!take.id && fs.existsSync(path.join(st.dir, 'media', take.file)) && fs.existsSync(path.join(st.dir, 'media', take.raw)) && take.file !== take.raw, take.error || take.file);
+    ok('voice take: loudness to target, peak under the ceiling', Math.abs(rep?.after.lufs + 16) <= 1 && rep?.after.truePeak <= -1, `${rep?.before.lufs} → ${rep?.after.lufs} LUFS, peak ${rep?.after.truePeak} dBTP`);
+    ok('voice take: silence trimmed at both edges', rep?.trimmed.start > 0.7 && rep?.trimmed.end > 1.5 && take.duration < 3.4, `−${rep?.trimmed.start}s / −${rep?.trimmed.end}s → ${take.duration}s`);
+    ok('voice take: noise lower relative to the voice (measured in a pause)', rep?.noiseMeasured === true && rep.after.snr - rep.before.snr >= 6, `SNR ${rep?.before.snr} → ${rep?.after.snr} dB`);
+    const pj = await api('GET', '/api/project');
+    const voItem = pj.items.find((i: any) => i.label === 'VO: Voice smoke');
+    const scAfter = (await api('GET', '/api/script')).scenes.find((x: any) => x.id === scene.id);
+    ok('voice take: on the voice-over track at its scene', voItem?.ref === take.file && Math.abs(voItem.start - 40) < 0.01 && scAfter.vo?.source === 'mic' && scAfter.itemIds.includes(voItem.id));
+    const words = (await api('GET', '/api/timing')).words.filter((w: any) => w.start >= 40 && w.start < 44);
+    ok('voice take: word timings for captions', words.length === 5 && words[0].text === 'one' && words.every((w: any, i: number) => !i || w.start >= words[i - 1].start), words.map((w: any) => `${w.text}@${(w.start - 40).toFixed(2)}`).join(' '));
+    const guard = await fetch(`${BASE}/api/voice/tts`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sceneId: scene.id }) });
+    ok('synthetic voice does not overwrite a recorded scene', guard.status === 409, String(guard.status));
+    const modules: string[] = [];
+    for (const [op, params] of [['compress', {}], ['deess', {}], ['voice_eq', {}], ['declick', {}], ['reduce_breaths', {}], ['trim_silence', {}]] as const) {
+      const j = await api('POST', '/api/toolkit/run', { op, params: { ...params, media: 'media/' + take.raw }, wait: true });
+      if (j.status !== 'done' || !fs.existsSync(path.join(st.dir, String(j.outputs.media)))) modules.push(`${op}: ${j.error || 'no output'}`);
+    }
+    ok('voice modules run (compress, deess, voice_eq, declick, reduce_breaths, trim_silence)', !modules.length, modules.join('; '));
+    await api('DELETE', `/api/voice/takes/${take.id}`);
+    const pj2 = await api('GET', '/api/project');
+    ok('deleting the take clears the track and its files', !pj2.items.some((i: any) => i.label === 'VO: Voice smoke') && !fs.existsSync(path.join(st.dir, 'media', take.file)) && !(await api('GET', '/api/script')).scenes.find((x: any) => x.id === scene.id).vo);
+  }
 } catch (e) {
   failures++;
   console.error('✗ fatal:', (e as Error).message);

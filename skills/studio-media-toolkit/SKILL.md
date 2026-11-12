@@ -44,6 +44,7 @@ You can't play video — `watch_video {file:"media/x.mp4"}` or `{url}` (any page
 | Sound of a video as a file | `extract_audio` | wav for further processing. |
 | Loudness for delivery | `normalize` | −14 LUFS (social/YouTube), −16 (podcast), −23 (broadcast); video keeps its picture. |
 | Hiss / hum / room noise | `denoise` | afftdn; noise floor auto-measured from pauses; `strength` 6–20 dB natural. |
+| Clean a recorded voice (noise, level, clicks, sibilants) | `voice_polish` | the whole chain with a before/after report; single modules `trim_silence`, `declick`, `voice_eq`, `compress`, `deess`, `reduce_breaths`, `voice_isolate` — see the **studio-voice-processing** skill. |
 | Remove pauses (jump cuts) | `remove_silence` | audio or video; returns kept `[start,end]` segments (source seconds) for re-timing captions. |
 | Music under voice-over | `duck` | sidechain compression → new music file; `voiceStart` = voice offset vs music start. |
 

@@ -35,6 +35,9 @@ import { listInspiration, getInspiration, inspirationThumb, inspirationPreview, 
 import { projectTracks } from './tracks.ts';
 import { blenderBin, listScenes3d, getScene3d, createScene3d, render3d, listJobs3d, openInBlender } from './blender.ts';
 import { paceReport } from './voice/speech.ts';
+import { placeVoice } from './voice/place.ts';
+import { deactivateTakes } from './voice/takes.ts';
+import { registerVoiceRoutes } from './voice/routes.ts'; // the author's own voice: teleprompter takes
 import { TRANSITIONS, EFFECTS, MASKS, BLENDS } from '../shared/fx.ts';
 import { recordWeb, defaultWebActions, recordJobs, emitJob, type RecordJob } from './record/web.ts';
 import { recordScreen, listApps } from './record/screen.ts';
@@ -645,6 +648,7 @@ export async function registerRoutes(app: FastifyInstance) {
     const script = getScript();
     const sc = b.sceneId ? script.scenes.find((x) => x.id === b.sceneId) : undefined;
     if (b.sceneId && !sc) throw Object.assign(new Error('scene not found'), { statusCode: 404 });
+    if (sc?.vo?.source === 'mic' && !b.replaceRecorded) throw uerr('Scene "{title}" has the author\'s own recorded voice. A synthetic voice replaces it only when the user asked for that: pass replaceRecorded:true.', { title: sc.title }, 409);
     if (sc) { text = text || sc.voiceover || ''; start = start ?? sc.start; name = name || `scene-${script.scenes.indexOf(sc) + 1}`; if (tid) setFocus(tid, { kind: 'script', id: sc.id, at: Date.now() }); }
     let r: Awaited<ReturnType<typeof tts>>;
     let pace: Awaited<ReturnType<typeof voiceScene>> | undefined;
@@ -658,25 +662,10 @@ export async function registerRoutes(app: FastifyInstance) {
     }
     await probeMedia(r.file, true);
     let item: Item | undefined;
-    if (b.place !== false && start != null) {
-      // one voice-over per scene: replace a previous VO item at that scene
-      const p = store.project;
-      let track = p.tracks.find((t) => t.kind === 'audio' && /озвуч|voice|vo/i.test(t.name)) || p.tracks.find((t) => t.kind === 'audio');
-      if (!track) { track = { id: 'vo', kind: 'audio', name: 'Voice-over' }; }
-      const tr = track;
-      const iid = 'i' + nid();
-      await store.update((pp) => {
-        if (!pp.tracks.some((t) => t.id === tr.id)) pp.tracks.push(tr);
-        if (sc) pp.items = pp.items.filter((x) => !(x.track === tr.id && x.kind === 'media' && x.label === `VO: ${sc.title}`));
-        pp.items.push({ id: iid, kind: 'media', ref: r.file, track: tr.id, start: +start!.toFixed(3), duration: +(r.duration + 0.05).toFixed(3), in: 0, label: sc ? `VO: ${sc.title}` : 'VO', volume: 1 });
-        pp.duration = Math.max(pp.duration, Math.ceil(start! + r.duration));
-      });
-      item = store.project.items.find((x) => x.id === iid);
-      if (sc) await patchScene(sc.id, { itemIds: [...new Set([...(sc.itemIds || []), iid])] });
-      recomputeTiming();
-    }
+    if (b.place !== false && start != null) item = await placeVoice(r.file, r.duration, start, sc); // one voice-over per scene: replaces the previous one
     const overflow = sc ? +(r.duration - sc.duration).toFixed(2) : 0;
-    if (sc && pace) await patchScene(sc.id, { vo: { file: r.file, rate: pace.report.rate, flagged: pace.report.flagged, takes: pace.takes.length, at: new Date().toISOString() } });
+    if (sc && pace) await patchScene(sc.id, { vo: { file: r.file, rate: pace.report.rate, flagged: pace.report.flagged, takes: pace.takes.length, at: new Date().toISOString(), source: 'tts' } });
+    if (sc && b.place !== false) await deactivateTakes(sc.id);
     return {
       file: r.file, duration: r.duration, words: r.words.length, cached: r.cached, voiceId: r.voiceId, modelId: r.modelId, item, sceneDuration: sc?.duration, overflow: overflow > 0 ? overflow : 0,
       ...(pace ? { pace: { rate: pace.report.rate, projectRate: pace.ref, flagged: pace.report.flagged, takes: pace.takes, sentences: pace.report.sentences.filter((x) => x.flag).map((x) => ({ text: x.text, rate: x.rate, dev: x.dev, flag: x.flag })), gaps: pace.report.gaps, usedSpeechText: !!sc?.speech } } : {}),
@@ -689,7 +678,7 @@ export async function registerRoutes(app: FastifyInstance) {
     return getScript().scenes.map((sc, n) => {
       const tr = sc.vo ? readJson<any>(cur().p('.studio', 'transcripts', sc.vo.file + '.json'), null) : null;
       const rep = tr ? paceReport(tr.spokenWords || tr.words, ref) : null;
-      return { sceneId: sc.id, n: n + 1, title: sc.title, hasSpeech: !!sc.speech, file: sc.vo?.file, rate: rep?.rate, projectRate: ref, flagged: rep?.flagged, sentences: rep?.sentences.filter((x) => x.flag), gaps: rep?.gaps };
+      return { sceneId: sc.id, n: n + 1, title: sc.title, hasSpeech: !!sc.speech, file: sc.vo?.file, source: sc.vo?.source || (sc.vo ? 'tts' : undefined), rate: rep?.rate, projectRate: ref, flagged: rep?.flagged, sentences: rep?.sentences.filter((x) => x.flag), gaps: rep?.gaps };
     });
   });
 
@@ -1127,5 +1116,6 @@ export async function registerRoutes(app: FastifyInstance) {
 
   // ---------- media toolkit (server/toolkit/routes.ts: /api/toolkit, /run, /jobs) ----------
   await registerToolkitRoutes(app);
+  registerVoiceRoutes(app);
   await registerGenerateRoutes(app); // generative footage (server/generate/routes.ts)
 }

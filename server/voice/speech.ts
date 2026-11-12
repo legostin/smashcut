@@ -111,3 +111,29 @@ export function paceReport(words: W[], ref?: number, tol = 0.15): PaceReport {
   }
   return { rate: median, sentences, gaps, flagged: flagged + gaps.length, duration: ws.length ? ws[ws.length - 1].end : 0 };
 }
+
+/** one word the reader says, as the teleprompter shows it */
+export interface PrompterToken {
+  /** the spoken form with its punctuation and stress marks ("две", "тысячи,", "за́мок") */
+  text: string;
+  /** syllables — how long the word takes relative to the others */
+  syl: number;
+  /** pause after the word, seconds: explicit [pause] markup or the punctuation's natural stop */
+  pause: number;
+  /** the pause was written in the script ([pause 0.6]) — shown as a mark */
+  mark?: boolean;
+}
+
+/** speech markup → the words to read aloud, in order (what the teleprompter highlights one by one) */
+export function prompterTokens(markup: string): PrompterToken[] {
+  const tts = parseSpeech(markup).tts.replace(/<break time="([\d.]+)s" \/>/g, ' \u0000$1 ');
+  const out: PrompterToken[] = [];
+  for (const w of tts.split(/\s+/).filter(Boolean)) {
+    const last = out[out.length - 1];
+    if (w[0] === '\u0000') { if (last) { last.pause = Math.max(last.pause, Number(w.slice(1)) || 0.5); last.mark = true; } continue; }
+    // a dash or other lone punctuation belongs to the previous word
+    if (!/[\p{L}\p{N}]/u.test(w)) { if (last) { last.text += ' ' + w; last.pause = Math.max(last.pause, 0.3); } continue; }
+    out.push({ text: w, syl: syllables(w), pause: /[.!?…]["»”)]*$/.test(w) ? 0.45 : /[,;:]["»”)]*$/.test(w) ? 0.2 : 0 });
+  }
+  return out;
+}

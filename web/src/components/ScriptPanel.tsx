@@ -77,6 +77,7 @@ export function ScriptPanel() {
           <button className="btn sm ghost" onClick={() => actions.addScene()}><Icon name="plus" size={12} /> {t('Scene')}</button>
           {script.scenes.length > 0 && <button className="btn sm" onClick={produceAll}><Icon name="sparkle" size={11} /> {t('Make the whole video')}</button>}
           {script.scenes.some((x) => x.voiceover?.trim()) && <VoiceAll />}
+          {script.scenes.some((x) => x.voiceover?.trim()) && <button className="btn sm ghost" onClick={() => setState({ prompter: {} })} title={t('Read the script from a teleprompter and record your own voice')}><Icon name="mic" size={12} /> {t('Record my voice')}</button>}
           {script.scenes.length > 1 && <ReviewBadge film />}
         </div>
       </div>
@@ -101,7 +102,7 @@ function VoiceAll() {
       setState({ sideTab: 'agent' });
       return;
     }
-    const list = scenes.filter((x) => x.voiceover?.trim());
+    const list = scenes.filter((x) => x.voiceover?.trim() && x.vo?.source !== 'mic'); // scenes with the author's own recording are left alone
     for (let i = 0; i < list.length; i++) {
       setProg(`${i + 1}/${list.length}`);
       try { await actions.voiceScene(list[i].id); } catch { break; }
@@ -144,6 +145,7 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
         <div className="scene-bar scene-more">
           {sc.voiceover?.trim() && !sc.speech && <button className="link" onClick={() => actions.startTask(`Prepare the speech text for scene ${n} "${sc.title}" (id ${sc.id}) following the studio-voiceover skill: update_scene {speech} with numbers/dates as words, {display|spoken}, stress marks and pauses. Don't generate the voice yet; show me the speech text.`)}>{t('Prepare speech')}</button>}
           {sc.voiceover?.trim() && <VoiceButton sc={sc} />}
+          {sc.voiceover?.trim() && <button className={'link' + (sc.vo?.source === 'mic' ? ' voiced' : '')} onClick={() => setState({ prompter: { sceneId: sc.id } })} title={t('Read the script from a teleprompter and record your own voice')}>{sc.vo?.source === 'mic' ? '● ' + t('Re-record') : t('Record')}</button>}
           {!sc.review && <ReviewBadge sc={sc} />}
           <span className="grow" />
           <button className="link danger" onClick={() => actions.deleteScene(sc.id)}>{t('Delete')}</button>
@@ -154,7 +156,7 @@ function SceneCard({ sc, n, fps }: { sc: Scene; n: number; fps: number }) {
           {live ? <span className="spinner sm" /> : <span className="dot" />}{t(STATUS[sc.status])}
         </button>
         {sc.review && <ReviewBadge sc={sc} />}
-        {typeof sc.vo?.rate === 'number' && <span className={'vo-pace' + (sc.vo.flagged ? ' warn' : '')} title={t('Voice pace: {r} syllables/s · {n} flagged', { r: sc.vo.rate.toFixed(1), n: sc.vo.flagged ?? 0 })}>{sc.vo.flagged ? '⚠' : '✓'} {sc.vo.rate.toFixed(1)}</span>}
+        {typeof sc.vo?.rate === 'number' && sc.vo.rate > 0 && <span className={'vo-pace' + (sc.vo.flagged ? ' warn' : '')} title={t('Voice pace: {r} syllables/s · {n} flagged', { r: sc.vo.rate.toFixed(1), n: sc.vo.flagged ?? 0 })}>{sc.vo.flagged ? '⚠' : '✓'} {sc.vo.rate.toFixed(1)}</span>}
         <span className="grow" />
         <button className="link" onClick={() => setOpen(!open)}>{open ? t('Collapse') : t('More')}</button>
         <button className="link" onClick={make}>{sc.status === 'done' || sc.status === 'approved' ? t('Redo') : t('Make')}</button>
@@ -209,8 +211,12 @@ function VoiceButton({ sc }: { sc: Scene }) {
   const voiced = useStore((s) => (sc.itemIds || []).some((id) => s.project?.items.find((i) => i.id === id && i.label?.startsWith('VO'))));
   return (
     <button className={'link' + (voiced ? ' voiced' : '')} disabled={busy} title={t('Voice the scene text with ElevenLabs')}
-      onClick={async () => { setBusy(true); try { await actions.voiceScene(sc.id); } catch {} finally { setBusy(false); } }}>
-      {busy ? <span className="spinner sm" /> : voiced ? '♪ ' + t('Re-voice') : t('Voice')}
+      onClick={async () => {
+        const mic = sc.vo?.source === 'mic';
+        if (mic && !window.confirm(t('This scene has your recorded voice. Replace it with the synthetic one?'))) return;
+        setBusy(true); try { await actions.voiceScene(sc.id, mic); } catch {} finally { setBusy(false); }
+      }}>
+      {busy ? <span className="spinner sm" /> : voiced && sc.vo?.source !== 'mic' ? '♪ ' + t('Re-voice') : t('Voice')}
     </button>
   );
 }

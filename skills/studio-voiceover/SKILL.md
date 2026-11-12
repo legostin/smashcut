@@ -5,6 +5,8 @@ description: Voice-over that sounds natural — turn the script copy into speech
 
 # Voice-over as a process
 
+This skill is about the **synthetic** voice (ElevenLabs). When the user records the narration themself (teleprompter, microphone, a narration file; scenes with `vo.source: "mic"`), follow **studio-author-voice** instead — and never overwrite a recorded scene with `generate_voiceover`. The speech-text rules in step 1 apply to both: the teleprompter shows the same `speech` text to the reader.
+
 Voice engines read digits, dates, units and abbreviations badly — especially in Russian, where the number's form depends on case and gender ("в 2026 году" → "в две тысячи двадцать шестом году"). They also speed up or slow down when a sentence is long, dense or oddly punctuated. So narration is three steps. Never skip the first one.
 
 ## 1. Speech text — `update_scene {id, patch:{speech}}`
