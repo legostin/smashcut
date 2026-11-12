@@ -188,11 +188,13 @@ export function notify(level: 'info' | 'error', text: string) {
   setTimeout(() => setState((s) => ({ notices: s.notices.filter((n) => n.id !== id) })), level === 'error' ? 9000 : 4500);
 }
 
+/** the Settings default agent we last applied: it applies at start and when it changes — never over what the user picked since (home composer, chat) */
+let appliedDefaultAgent: string | null = null;
 export async function refresh() {
   const s = await api('GET', '/api/state');
   setState({ ...s, project: s.project, timing: getState().timing });
   if (s.project) await refreshTiming();
-  if (s.settings) setState({ agent: s.settings.defaultAgent });
+  if (s.settings && s.settings.defaultAgent !== appliedDefaultAgent) { appliedDefaultAgent = s.settings.defaultAgent; setState({ agent: s.settings.defaultAgent }); }
 }
 export async function refreshTiming() { setState({ timing: await api('GET', '/api/timing') }); }
 export async function refreshGallery() { setState({ gallery: await api('GET', '/api/gallery') }); }
