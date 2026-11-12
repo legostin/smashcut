@@ -46,6 +46,7 @@ export function App() {
   const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 240));
   const tlOpen = useStore((s) => s.timelineOpen);
   useTimelineHotkey();
+  useLandingView();
   if (screen === 'home') return (
     <div className="app-home">
       <Home />
@@ -160,12 +161,30 @@ function Lightbox() {
   );
 }
 
+/** when a project opens: if it has clips but no scenes, show the edit (player + timeline) instead of an empty storyboard */
+function useLandingView() {
+  const project = useStore((s) => s.project);
+  const scenes = useStore((s) => s.script.scenes.length);
+  const key = project ? projectBase() : '';
+  const landed = useRef('');
+  useEffect(() => {
+    if (!project || !key || landed.current === key) return;
+    landed.current = key;
+    if (scenes === 0 && project.items.length > 0 && getState().view === 'story') {
+      setState({ view: 'edit' });
+      if (!getState().timelineOpen) actions.setTimelineOpen(true);
+    }
+  }, [key, project, scenes]);
+}
+
 function TopBar() {
   const project = useStore((s) => s.project)!;
   const connected = useStore((s) => s.connected);
   const job = useStore((s) => s.jobs.find((j) => j.status === 'running'));
   const running = useStore((s) => s.tasks.filter((x) => x.status === 'running' && !x.waiting && !(x.question && x.question.answer == null)).length); // waiting for sub-agents / for your answer = idle
   const [family, setFamily] = useState<{ dir: string; label?: string; width: number; height: number; current?: boolean }[]>([]);
+  const curVer = family.find((v) => v.current)?.label;
+  const shownName = curVer && curVer !== 'Original' && project.name.endsWith(' — ' + curVer) ? project.name.slice(0, -(' — ' + curVer).length) : project.name;
   useEffect(() => { document.title = /Smashcut/.test(project.name) ? project.name : `${project.name} — Smashcut`; }, [project.name]);
   useEffect(() => { api<typeof family>('GET', '/api/variants').then(setFamily).catch(() => setFamily([])); }, [project.name, project.width, project.height]);
   const openVariant = async (dir: string) => { await api('POST', '/api/projects/open', { path: dir }); await refresh(); time.set(0); setState({ selectedItemId: null, selectedTaskId: null, sceneSelection: [] }); };
@@ -174,7 +193,7 @@ function TopBar() {
       <div className="row gap10 minw0">
         <span className="logo" role="button" tabIndex={0} title={t('Home')} onClick={goHome} onKeyDown={(e) => e.key === 'Enter' && goHome()}><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 4h9.5L8 20H4z" fill="currentColor" /><path d="M16 4h4v16h-9.5z" fill="currentColor" transform="translate(1.2 -1.2)" /></svg></span>
         <button className="project-name" onClick={() => setState({ dialog: 'projects' })} title={t('Projects')}>
-          <span className={'conn' + (connected ? '' : ' off')} /><span className="ellipsis">{project.name.replace(/ — .*$/, '')}</span><Icon name="chevron" size={12} />
+          <span className={'conn' + (connected ? '' : ' off')} /><span className="ellipsis" title={project.name}>{shownName}</span><Icon name="chevron" size={12} />
         </button>
         <nav className="versions" aria-label={t('Versions of this video')}>
           {(family.length > 1 ? family : [{ dir: '', label: 'Original', width: project.width, height: project.height, current: true }]).map((v) => (

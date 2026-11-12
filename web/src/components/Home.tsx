@@ -28,7 +28,7 @@ const fmtDur = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)
 const fmtSize = (b: number) => (b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.round(b / 1e3) + ' KB');
 
 export function Home() {
-  const [data, setData] = useState<{ projects: HomeProject[]; renders: HomeRender[] } | null>(null);
+  const [data, setData] = useState<{ projects: HomeProject[]; renders: HomeRender[]; trashed?: { to: string; name: string; at: number }[] } | null>(null);
   const [all, setAll] = useState(false);
   const connected = useStore((s) => s.connected);
   const load = () => api<any>('GET', '/api/home').then(setData).catch(() => {});
@@ -39,6 +39,10 @@ export function Home() {
     setState({ screen: 'editor', selectedItemId: null, selectedTaskId: null, sceneSelection: [] } as any);
   };
   const projects = data?.projects || [];
+  const trashed = data?.trashed || [];
+  const restore = async (to: string, name: string) => {
+    try { await api('POST', '/api/home/restore', { to }); notify('info', t('“{name}” is back', { name })); } finally { load(); }
+  };
   const shown = all ? projects : projects.slice(0, 8);
   return (
     <div className="home">
@@ -55,12 +59,23 @@ export function Home() {
         <HeroComposer mode="home" />
       </section>
 
-      {projects.length > 0 && (
+      {(projects.length > 0 || trashed.length > 0) && (
         <section className="home-sec">
           <div className="home-sec-head"><h2>{t('Recent projects')}</h2><span className="muted xsmall">{tn(projects.length, '{n} project', '{n} projects')}</span><div className="grow" />{projects.length > 8 && <button className="link" onClick={() => setAll(!all)}>{all ? t('Show less') : t('Show all')}</button>}</div>
           <div className="home-grid">
             {shown.map((p) => <ProjectCard key={p.id} p={p} onOpen={() => open(p)} onChanged={load} />)}
           </div>
+          {trashed.length > 0 && (
+            <div className="home-trash" aria-label={t('In the Trash')}>
+              <Icon name="trash" size={13} /><span className="muted">{t('In the Trash')}:</span>
+              {trashed.map((x) => (
+                <span key={x.to} className="home-trash-item" title={x.to}>
+                  <span className="ellipsis">{x.name}</span>
+                  <button className="link" onClick={() => restore(x.to, x.name)}>{t('Restore')}</button>
+                </span>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -119,7 +134,7 @@ function ProjectCard({ p, onOpen, onChanged }: { p: HomeProject; onOpen: () => v
   };
   const trash = async () => {
     setBusy(true);
-    try { await api('POST', '/api/home/trash', { dir: p.dir }); notify('info', t('“{name}” moved to the Trash — you can restore it from there', { name: p.name })); onChanged(); }
+    try { await api('POST', '/api/home/trash', { dir: p.dir }); notify('info', t('“{name}” moved to the Trash — “Restore” under the projects brings it back', { name: p.name })); onChanged(); }
     catch { setConfirm(false); }
     finally { setBusy(false); }
   };
@@ -148,7 +163,7 @@ function ProjectCard({ p, onOpen, onChanged }: { p: HomeProject; onOpen: () => v
         {confirm && (
           <div className="home-confirm" onClick={stop} onPointerDown={stop}>
             <div className="home-confirm-text">{t('Move “{name}” to the Trash?', { name: p.name })}</div>
-            <div className="muted xsmall">{t('The project folder goes to the Trash with all its files — you can restore it from there.')}</div>
+            <div className="muted xsmall">{t('The project folder goes to the Trash with all its files. You can bring it back right here, under the projects.')}</div>
             <div className="row gap6">
               <button className="btn sm ghost" autoFocus onClick={() => setConfirm(false)}>{t('Cancel')}</button>
               <button className="btn sm danger" disabled={busy} onClick={trash}>{t('Move to Trash')}</button>

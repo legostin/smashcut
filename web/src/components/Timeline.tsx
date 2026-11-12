@@ -10,6 +10,7 @@ const HEADER_W = 184;
 const MIN_ZOOM = 2, MAX_ZOOM = 400;
 /** ruler steps (s): the smallest one that leaves room for a label */
 const STEPS = [0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
+const fmtShortT = (x: number) => `${Math.floor(x / 60)}:${(x % 60).toFixed(2).padStart(5, '0')}`;
 const mmss = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 const ROW_H: Record<string, number> = { graphics: 40, video: 48, audio: 40, music: 40 };
 const COMPAT: Record<string, string[]> = { clip: ['graphics', 'video'], media: ['video', 'graphics', 'audio'], music: ['music', 'audio'], generated: ['video', 'graphics'] };
@@ -202,8 +203,8 @@ export function Timeline({ project }: { project: Project }) {
             <div className="tl-corner" style={{ width: HEADER_W }}>
               <button className="icon-btn xs" title={t('Collapse to the scene strip (⇧T)')} aria-label={t('Collapse timeline')} onClick={() => actions.setTimelineOpen(false)}><Icon name="chevron" size={12} /></button>
               <AddTrack onAdd={addTrack} />
-              <button className={'icon-btn xs' + (snap ? ' on' : '')} aria-pressed={snap} title={snap ? t('Snapping on: clips stick to edges, the playhead and scenes · N · hold Alt to drag freely') : t('Snapping off · N')} onClick={toggleSnap}><Icon name="magnet" size={13} /></button>
-              <button className="icon-btn xs" title={t('Fit the whole video (⇧Z)')} aria-label={t('Fit the whole video')} onClick={fit}><Icon name="grid" size={12} /></button>
+              <button className={'icon-btn xs' + (snap ? ' on' : '')} aria-pressed={snap} title={snap ? t('Snapping on: clips stick to edges, the playhead and scenes · N · hold Alt to drag freely') : t('Snapping off: clips move freely · N to turn on')} onClick={toggleSnap}><Icon name="magnet" size={13} /></button>
+              <button className="icon-btn xs" title={t('Fit the whole video (⇧Z)')} aria-label={t('Fit the whole video')} onClick={fit}><Icon name="fit" size={13} /></button>
               <input className="tl-zoom" type="range" min={MIN_ZOOM} max={MAX_ZOOM} value={zoom} onChange={(e) => setState({ zoom: Number(e.target.value) })} title={t('Zoom (⌘ + wheel)')} />
             </div>
             <div className="tl-ruler" style={{ width }} onPointerDown={scrub}>
@@ -296,6 +297,7 @@ function TlItem({ item, zoom, selected, dragging, onDown }: { item: Item; zoom: 
         {(item.fx?.effects?.length || item.fx?.mask) ? <span className="tl-fx" title={t('Effects / mask')}>fx</span> : null}
         {openComments > 0 && <span className="tl-count">{openComments}</span>}
       </div>
+      {dragging && <div className="tl-drag-badge mono">{fmtShortT(item.start)} · {item.duration.toFixed(2)} {t('s')}</div>}
       <div className="tl-handle left" onPointerDown={(e) => onDown(e, 'left')} />
       <div className="tl-handle right" onPointerDown={(e) => onDown(e, 'right')} />
     </div>

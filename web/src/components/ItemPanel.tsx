@@ -33,7 +33,7 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
         <button className="icon-btn" title={t('Back to the agent (Esc)')} onClick={() => setState({ selectedItemId: null })}><Icon name="back" size={15} /></button>
         <div className="grow minw0">
           <div className="ip-title ellipsis">{name}</div>
-          <div className="ip-sub ellipsis">{item.kind === 'clip' ? t('Graphics') : item.kind === 'music' ? `${t('Music')}${music?.meta ? ` · ${music.meta.bpm} BPM` : ''}` : media?.type === 'audio' ? t('Audio') : media?.type === 'image' ? t('Image') : t('Video')} · {item.start.toFixed(2)}–{(item.start + item.duration).toFixed(2)} s</div>
+          <div className="ip-sub ellipsis">{item.kind === 'clip' ? t('Graphics') : item.kind === 'music' ? `${t('Music')}${music?.meta ? ` · ${music.meta.bpm} BPM` : ''}` : media?.type === 'audio' ? t('Audio') : media?.type === 'image' ? t('Image') : t('Video')} · {t('{a}–{b} s', { a: item.start.toFixed(2), b: (item.start + item.duration).toFixed(2) })}</div>
         </div>
         <Menu item={item} />
       </div>
@@ -53,9 +53,9 @@ export function ItemPanel({ item, project }: { item: Item; project: Project }) {
 
         <Section title={t('Time')}>
           <div className="row gap8">
-            <Num label={t('Start')} value={item.start} onChange={(v) => up({ start: Math.max(0, v) })} />
-            <Num label={t('Duration')} value={item.duration} onChange={(v) => up({ duration: Math.max(0.04, v) })} />
-            <Num label={t('In offset')} value={item.in} onChange={(v) => up({ in: Math.max(0, v) })} />
+            <Num label={t('Start')} hint={t('When it starts on the timeline (s)')} value={item.start} onChange={(v) => up({ start: Math.max(0, v) })} />
+            <Num label={t('Duration')} hint={t('How long it plays (s)')} value={item.duration} onChange={(v) => up({ duration: Math.max(0.04, v) })} />
+            <Num label={t('In offset')} hint={t('Where in the source this item starts (s) — trims its beginning')} value={item.in} onChange={(v) => up({ in: Math.max(0, v) })} />
           </div>
           {visual && <Slider label={t('Opacity')} value={item.opacity ?? 1} max={1} onChange={(v) => up({ opacity: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
           {audible && <Slider label={t('Volume')} value={item.volume ?? 1} max={1.5} onChange={(v) => up({ volume: v })} fmt={(v) => `${Math.round(v * 100)}%`} />}
@@ -112,12 +112,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return <div className="ip-section"><div className="ip-section-title">{title}</div>{children}</div>;
 }
 
-function Num({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function Num({ label, value, onChange, hint }: { label: string; value: number; onChange: (v: number) => void; hint?: string }) {
   const [v, setV] = useState(String(+value.toFixed(2)));
   useEffect(() => setV(String(+value.toFixed(2))), [value]);
   const commit = () => { const n = Number(v); if (!Number.isNaN(n) && n !== value) onChange(n); };
   return (
-    <label className="num">
+    <label className="num" title={hint}>
       <span>{label}</span>
       <input value={v} onChange={(e) => setV(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
     </label>

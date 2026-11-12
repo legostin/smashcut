@@ -23,6 +23,7 @@ const P: Record<string, string> = {
   history: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 3',
   upload: 'M12 16V4M7 9l5-5 5 5M4 20h16',
   scissors: 'M6 6a2.5 2.5 0 1 0 0 .1M6 18a2.5 2.5 0 1 0 0 .1M8 7.5L20 18M8 16.5L20 6',
+  fit: 'M3 9V4h5M21 9V4h-5M3 15v5h5M21 15v5h-5M8 12h8M8 12l2-2M8 12l2 2M16 12l-2-2M16 12l-2 2',
   magnet: 'M6 3v8a6 6 0 0 0 12 0V3h-4v8a2 2 0 0 1-4 0V3z',
   stop: 'M6 6h12v12H6z',
   mic: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6',

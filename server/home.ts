@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import type { Project, Script } from '../shared/types.ts';
 import os from 'node:os';
-import { getRecents, dropRecent, HOME_DIR, PROJECTS_DIR } from './config.ts';
+import { getRecents, dropRecent, pushRecent, HOME_DIR, PROJECTS_DIR } from './config.ts';
 import { ProjectStore, projectId, openStores, getStore, runIn, closeProject } from './project.ts';
 import { listTasks } from './agents/runner.ts';
 import { readJson } from './util.ts';
@@ -26,6 +26,12 @@ function newestFile(dir: string, re: RegExp) {
   for (const f of fs.readdirSync(dir)) { if (!re.test(f)) continue; const t = mtime(path.join(dir, f)); if (!best || t > best.t) best = { f, t }; }
   return best?.f || null;
 }
+
+/** projects this studio moved to the Trash (so they can be put back from the home screen) */
+const TRASHED_FILE = path.join(HOME_DIR, 'trashed.json');
+type Trashed = { from: string; to: string; name: string; at: number };
+const readTrashed = () => readJson<Trashed[]>(TRASHED_FILE, []).filter((x) => fs.existsSync(path.join(x.to, 'project.json')));
+const writeTrashed = (l: Trashed[]) => { fs.mkdirSync(HOME_DIR, { recursive: true }); fs.writeFileSync(TRASHED_FILE, JSON.stringify(l.slice(0, 30), null, 2)); };
 
 export function homeData() {
   const open = new Set(openStores().map((s) => s.dir));
@@ -55,7 +61,7 @@ export function homeData() {
       return { projectId: pr.id, project: pr.name, file: f, size: st.size, mtime: st.mtimeMs, width: pr.width, height: pr.height, url: `/api/home/file?dir=${encodeURIComponent(pr.dir)}&rel=${encodeURIComponent('.studio/exports/' + f)}` };
     });
   }).sort((a, b) => b.mtime - a.mtime).slice(0, 24);
-  return { projects, renders, projectsDir: PROJECTS_DIR };
+  return { projects, renders, projectsDir: PROJECTS_DIR, trashed: readTrashed().slice(0, 8).map(({ to, name, at }) => ({ to, name, at })) };
 }
 
 /** a project folder the home screen knows about (never an arbitrary path) */
@@ -96,7 +102,24 @@ export async function registerHomeRoutes(app: FastifyInstance) {
     if (fs.existsSync(to)) to += ' ' + new Date().toISOString().replace(/[:.]/g, '-');
     try { fs.renameSync(dir, to); }
     catch (e: any) { if (e.code !== 'EXDEV') throw e; fs.cpSync(dir, to, { recursive: true }); fs.rmSync(dir, { recursive: true, force: true }); }
+    const name = readJson<Project | null>(path.join(to, 'project.json'), null)?.name || path.basename(dir);
+    writeTrashed([{ from: dir, to, name, at: Date.now() }, ...readTrashed().filter((x) => x.to !== to)]);
     return { ok: true, trashedTo: to };
+  });
+
+  /** put a project this studio trashed back where it was */
+  app.post<{ Body: { to: string } }>('/api/home/restore', async (req) => {
+    const list = readTrashed();
+    const rec = list.find((x) => x.to === path.resolve(String(req.body?.to || '')));
+    if (!rec) throw uerr('Not found', {}, 404);
+    let back = rec.from;
+    if (fs.existsSync(back)) back += ' ' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+    fs.mkdirSync(path.dirname(back), { recursive: true });
+    try { fs.renameSync(rec.to, back); }
+    catch (e: any) { if (e.code !== 'EXDEV') throw e; fs.cpSync(rec.to, back, { recursive: true }); fs.rmSync(rec.to, { recursive: true, force: true }); }
+    writeTrashed(list.filter((x) => x !== rec));
+    if (path.dirname(back) !== path.resolve(PROJECTS_DIR)) pushRecent(back);
+    return { ok: true, dir: back };
   });
   /** a file of a known project (posters, renders) — only inside known project folders */
   app.get<{ Querystring: { dir: string; rel: string } }>('/api/home/file', async (req, reply) => {
