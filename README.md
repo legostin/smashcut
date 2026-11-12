@@ -66,6 +66,7 @@ Agents follow a core **craft skill** distilled from measured references (HyperFr
 ### Music, voice-over and sound
 - **Music as code** — Tone.js scores rendered offline; beats, sections and markers drive the animation.
 - **Voice-over as a process** — speech text with numbers spelled out, stress marks and pauses; ElevenLabs takes with a pace check so the voice doesn't speed up or slow down; captions keep the display text.
+- **Your own voice** — a teleprompter highlights the script word by word at your pace and waits while you are silent; takes are recorded from the microphone, cleaned (noise, clicks, EQ, compressor, de-esser, loudness to target — with measured before/after), aligned to the script for captions and put on the voice-over track per scene.
 - Loudness normalisation, denoise, silence removal and music ducking.
 
 ### 3D: Three.js by default, Blender for the heavy stuff

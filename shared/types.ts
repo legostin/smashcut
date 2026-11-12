@@ -250,7 +250,8 @@ export interface Scene {
   /** speech text for the voice (numbers/dates as words, stress marks, [pause 0.5], {display|spoken}) — see server/voice/speech.ts */
   speech?: string;
   /** last voice-over check: pace (syllables/s), flagged sentences, takes */
-  vo?: { file: string; rate: number; flagged: number; takes: number; at: string };
+  /** source: 'mic' = the author's own recorded take (never replace it with a synthetic voice unless the user asks) */
+  vo?: { file: string; rate: number; flagged: number; takes: number; at: string; source?: 'tts' | 'mic'; takeId?: string };
   /** last art-director review of the scene (fresh-eyes critic over its frames + measured audit) */
   review?: SceneReview;
   /** what we see: visual idea, motion, style */
@@ -328,6 +329,37 @@ export interface Settings {
   /** default generator per kind: { image: { provider, model }, video: { provider, model } } */
   genDefaults?: { image?: { provider?: string; model?: string }; video?: { provider?: string; model?: string } };
 }
+
+/** before/after facts of a processed voice recording (toolkit op voice_polish) */
+export interface VoiceFacts { lufs: number; truePeak: number; lra: number; noiseFloor: number; snr: number; duration: number }
+export interface VoiceProcessReport { before: VoiceFacts; after: VoiceFacts; trimmed: { start: number; end: number }; steps: string[]; mode?: string; /** noiseFloor was measured in a pause of the recording (false = rough estimate, the take had no pause) */ noiseMeasured?: boolean }
+/** a take the author recorded with the teleprompter (or an attached narration file) for one scene */
+export interface VoiceTake {
+  id: string;
+  sceneId: string;
+  /** the untouched recording in media/ */
+  raw: string;
+  /** the file that goes on the timeline: the processed one, or the raw one when processing is off */
+  file: string;
+  duration: number;
+  at: string;
+  /** on the timeline now (one active take per scene) */
+  active: boolean;
+  /** voice_polish parameters used; absent = not processed */
+  options?: Record<string, unknown>;
+  /** processing failed (the take is the raw recording): why */
+  error?: string;
+  report?: VoiceProcessReport;
+  /** word timings: 'estimate' (spread by syllables) until Whisper has aligned the take to the script */
+  align: { status: 'estimate' | 'aligning' | 'aligned' | 'failed'; matched?: number; total?: number; missed?: string[]; extra?: string[]; error?: string };
+  /** seconds the take runs past the scene end (0 = fits) */
+  overflow: number;
+  /** speaking rate, words per minute (speech only, pauses excluded) */
+  wpm?: number;
+}
+/** one word of the teleprompter text */
+export interface PrompterToken { text: string; syl: number; pause: number; mark?: boolean }
+export interface PrompterScene { id: string; n: number; title: string; start: number; duration: number; tokens: PrompterToken[]; voiced: 'mic' | 'tts' | null; takes: VoiceTake[] }
 
 export interface Voice { id: string; name: string; category?: string; labels?: Record<string, string>; preview?: string; languages?: string[] }
 
@@ -416,6 +448,7 @@ export type ServerEvent = (
   | { type: 'render3d'; job: { id: string; sceneId: string; quality: 'mock' | 'look' | 'final'; mode: 'stills' | 'animation'; status: 'running' | 'done' | 'error'; progress: number; output?: string; sheet?: string; error?: string } }
   | { type: 'record'; job: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string } }
   | { type: 'toolkit-job'; job: ToolkitJob }
+  | { type: 'voice-takes' }
   | { type: 'notice'; level: 'info' | 'error'; text: string; key?: string; params?: Record<string, string | number> }) & { pid?: string };
 
 // ---------- media toolkit (server/toolkit) ----------

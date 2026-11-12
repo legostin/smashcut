@@ -43,6 +43,10 @@ export interface State {
   boardSelection: string[];
   boardNotes: BoardNote[];
   recordJobs: { id: string; kind: 'web' | 'screen'; status: 'running' | 'done' | 'error'; stage: string; file?: string; duration?: number; error?: string; label: string }[];
+  /** teleprompter (record your own voice) is open, optionally at a scene */
+  prompter: null | { sceneId?: string };
+  /** bumped when the recorded takes change on the server */
+  takesVersion: number;
   // ui
   libraryOpen: boolean;
   libraryTab: 'inspiration' | 'templates' | 'media' | 'project';
@@ -74,7 +78,7 @@ const initial: State = {
   timing: { bpm: 120, beats: [], bars: [], sections: [], markers: [], words: [] }, notices: [], agents: null, permissions: [], libraryOpen: false, libraryTab: 'templates',
   script: { brief: '', stage: 'brief', scenes: [] }, design: { colors: [], type: [], motion: [], spacing: [] },
   view: (() => { try { const v = localStorage.getItem('view'); return v === 'board' || v === 'edit' || v === 'nodes' ? v : 'story'; } catch { return 'story'; } })() as View,
-  screen: new URLSearchParams(location.search).get('p') || /render\.html$/.test(location.pathname) ? 'editor' : 'home', references: [], render3d: [], sceneSelection: [], chatModel: (() => { try { return { claude: '', codex: '', ...JSON.parse(localStorage.getItem('chatModel') || '{}') }; } catch { return { claude: '', codex: '' }; } })(), chatEffort: (() => { try { return (localStorage.getItem('chatEffort') || '') as any; } catch { return ''; } })(), chatAutopilot: (() => { try { return localStorage.getItem('autopilot') === '1'; } catch { return false; } })(), timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [],
+  screen: new URLSearchParams(location.search).get('p') || /render\.html$/.test(location.pathname) ? 'editor' : 'home', references: [], render3d: [], sceneSelection: [], chatModel: (() => { try { return { claude: '', codex: '', ...JSON.parse(localStorage.getItem('chatModel') || '{}') }; } catch { return { claude: '', codex: '' }; } })(), chatEffort: (() => { try { return (localStorage.getItem('chatEffort') || '') as any; } catch { return ''; } })(), chatAutopilot: (() => { try { return localStorage.getItem('autopilot') === '1'; } catch { return false; } })(), timelineOpen: (() => { try { return localStorage.getItem('tlopen') === '1'; } catch { return false; } })(), sideTab: 'agent', followAgent: (() => { try { return localStorage.getItem('follow') !== '0'; } catch { return true; } })(), lightbox: null, chatContext: [], boardSelection: [], boardNotes: [], recordJobs: [], prompter: null, takesVersion: 0,
   selectedItemId: null, selectedCommentId: null, selectedTaskId: null, commentMode: false, rightTab: 'agent', leftTab: 'gallery', zoom: 60, snap: true,
   fileVersion: {}, clipErrors: {}, clipBindings: {}, playing: false, dialog: null, agent: 'claude', chatDraft: '',
 };
@@ -260,6 +264,7 @@ function onEvent(ev: ServerEvent) {
     }
     case 'notice': notify(ev.level, ev.key ? t(ev.key, ev.params) : ev.text); break;
     case 'script': setState({ script: ev.script }); break;
+    case 'voice-takes': setState((s) => ({ takesVersion: s.takesVersion + 1 })); scheduleTiming(); break;
     case 'design': setState({ design: ev.design }); break;
     case 'board': setState({ boardNotes: ev.notes }); break;
     case 'references': setState({ references: ev.references }); break;
@@ -382,10 +387,10 @@ export const actions = {
     setState((s) => ({ script: { ...s.script, scenes: s.script.scenes.map((x) => (x.id === id ? { ...x, ...patch } : x)) } }));
     return api('PATCH', `/api/script/scenes/${id}`, patch);
   },
-  async voiceScene(sceneId: string) {
+  async voiceScene(sceneId: string, replaceRecorded = false) {
     const st = getState().settings as any;
     if (!st?.hasElevenlabsKey || !st?.elevenlabsVoiceId) { notify('error', t('Set up ElevenLabs: key and voice in Settings')); setState({ dialog: 'settings' }); throw new Error('no voice'); }
-    const r = await api<any>('POST', '/api/voice/tts', { sceneId });
+    const r = await api<any>('POST', '/api/voice/tts', { sceneId, ...(replaceRecorded ? { replaceRecorded: true } : {}) });
     if (r.pace?.flagged > 0) notify('error', t('Voice pace is uneven in {n} places — ask the agent to fix the speech text', { n: r.pace.flagged }));
     notify(r.overflow > 0 ? 'error' : 'info', r.overflow > 0 ? t('Voiceover is {s}s longer than the scene — lengthen the scene or shorten the text', { s: fmtNumber(r.overflow, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) }) : t(r.cached ? 'Voiced: {s}s (cached)' : 'Voiced: {s}s', { s: fmtNumber(r.duration, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) }));
     return r;

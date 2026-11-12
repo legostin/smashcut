@@ -14,6 +14,7 @@ import { Home } from './components/Home';
 import { uniqueProjectName } from './components/HeroComposer';
 import { Storyboard, SelectionBar } from './components/Storyboard';
 import { SceneStrip, useTimelineHotkey } from './components/SceneStrip';
+import { Teleprompter } from './components/Teleprompter';
 import type { Project, Settings, Voice } from '../../shared/types';
 import { t, tn, LANGS, setLocale, useLocale, fmtNumber, type Lang } from './i18n';
 
@@ -40,6 +41,7 @@ export function App() {
   const dialog = useStore((s) => s.dialog);
   const view = useStore((s) => s.view);
   const screen = useStore((s) => s.screen);
+  const prompter = useStore((s) => s.prompter);
   useEffect(() => { syncUrl(); }, [screen]);
   const [tlHeight, setTlHeight] = useState(() => Number(localStorage.getItem('tlh') || 240));
   const tlOpen = useStore((s) => s.timelineOpen);
@@ -87,6 +89,7 @@ export function App() {
       <Modal open={dialog === 'version'}><VersionDialog /></Modal>
       <Modal open={!!dialog && typeof dialog === 'object'} wide>{dialog && typeof dialog === 'object' && 'compare' in dialog ? <CompareDialog clipId={dialog.compare.clipId} sha={dialog.compare.sha} /> : null}</Modal>
       <Lightbox />
+      {prompter && <Teleprompter />}
       <Reconnecting />
       <Notices />
     </div>

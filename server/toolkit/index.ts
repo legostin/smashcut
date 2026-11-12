@@ -3,6 +3,7 @@ import './ops/image.ts';
 import './ops/video.ts';
 import './ops/morph.ts';
 import './ops/audio.ts';
+import './ops/voice.ts'; // recorded-voice processing: voice_polish chain + its modules
 import './ops/shots.ts';
 import './ops/track.ts';
 import './ops/scene.ts';

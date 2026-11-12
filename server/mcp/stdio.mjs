@@ -345,8 +345,28 @@ server.registerTool('generate_voiceover', {
     sceneId: z.string().optional(), text: z.string().optional(), start: z.number().optional(), place: z.boolean().optional(),
     voiceId: z.string().optional(), modelId: z.string().optional(), speed: z.number().min(0.7).max(1.2).optional(), stability: z.number().min(0).max(1).optional(), style: z.number().min(0).max(1).optional(), name: z.string().optional(),
     takes: z.number().int().min(1).max(4).optional().describe('max takes when the pace check fails (default from settings, 2)'),
+    replaceRecorded: z.boolean().optional().describe('the scene has the author\'s own recorded voice (scene.vo.source "mic"): true replaces it with the synthetic voice — only when the user asked for exactly that'),
   },
 }, safe(async (a) => text(await api('POST', '/api/voice/tts', a))));
+
+server.registerTool('list_voice_takes', {
+  description: 'The author\'s own voice: takes recorded with the teleprompter (or narration files attached to scenes). Per take: id, sceneId, raw (untouched recording in media/), file (the processed take on the timeline), duration, active (on the voice-over track now), options (voice_polish parameters used), report {before, after: lufs/truePeak/noiseFloor/snr, trimmed, steps}, align {status, matched/total words of the script heard in the take, missed, extra}, overflow (seconds past the scene end), wpm. A scene whose vo.source is "mic" is voiced by the author — never replace it with generate_voiceover unless the user asks. See the studio-author-voice skill.',
+  inputSchema: { sceneId: z.string().optional() },
+}, safe(async (a) => text(await api('GET', '/api/voice/takes' + (a.sceneId ? `?sceneId=${encodeURIComponent(a.sceneId)}` : '')))));
+
+server.registerTool('process_voice_take', {
+  description: 'Run the voice processing chain again on a recorded take — always from its raw recording — and put the result on the timeline in place of the previous version. options = parameters of the media tool voice_polish (noise off|light|normal|strong|isolate, compress off|light|normal|strong, deess, breaths, eq, declick, trim, target LUFS, truePeak, padding); options:false = use the raw sound. Returns the take with the new before/after report; word timings are re-aligned to the script in the background. When to change what: studio-voice-processing skill. noise:"isolate" is the paid ElevenLabs cloud isolator — only with the user\'s consent.',
+  inputSchema: { takeId: z.string(), options: z.union([z.record(z.string(), z.any()), z.literal(false)]).optional() },
+}, safe(async (a) => text(await api('POST', `/api/voice/takes/${encodeURIComponent(a.takeId)}/process`, { options: a.options ?? {} }))));
+
+server.registerTool('use_voice_take', {
+  description: 'Put another recorded take of a scene on the voice-over track (one active take per scene; the previous one comes off the timeline but stays in the list). To attach a narration file the user brought (media/…) to a scene as a new take, pass sceneId + file instead of takeId: it is processed (options as in process_voice_take), aligned to the scene\'s speech text and placed at the scene start.',
+  inputSchema: { takeId: z.string().optional(), sceneId: z.string().optional(), file: z.string().optional(), options: z.union([z.record(z.string(), z.any()), z.literal(false)]).optional() },
+}, safe(async (a) => {
+  if (a.takeId) return text(await api('POST', `/api/voice/takes/${encodeURIComponent(a.takeId)}/use`, {}));
+  if (!a.sceneId || !a.file) throw new Error('pass takeId, or sceneId + file');
+  return text(await api('POST', '/api/voice/attach', { sceneId: a.sceneId, file: a.file, options: a.options }));
+}));
 
 server.registerTool('voice_report', {
   description: 'Pace check of every scene\'s voice-over: syllables/s, the project\'s voice pace, sentences that run fast/slow (>15%), unexpected gaps, and whether the scene has prepared speech text. Use after voicing to find scenes to fix.',
@@ -410,7 +430,7 @@ const fmtParam = (k, s) => {
 };
 
 server.registerTool('list_media_tools', {
-  description: 'Catalog of programmatic media operations you can run with run_media_tool: cut out backgrounds (photo & video), sticker outlines, colour palettes, resize/crop/adjust/convert images, chroma key green screen → transparent WebM/ProRes, trim, speed/reverse/boomerang, reframe to 9:16/1:1, smooth slow-mo, frame extraction, GIF, seamless loops, image/clip morphs, audio extract/normalize (−14 LUFS)/denoise/remove silence/duck music under voice. Compact by default (* = required); pass op for the full spec of one tool.',
+  description: 'Catalog of programmatic media operations you can run with run_media_tool: cut out backgrounds (photo & video), sticker outlines, colour palettes, resize/crop/adjust/convert images, chroma key green screen → transparent WebM/ProRes, trim, speed/reverse/boomerang, reframe to 9:16/1:1, smooth slow-mo, frame extraction, GIF, seamless loops, image/clip morphs, audio extract/normalize (−14 LUFS)/denoise/remove silence/duck music under voice, recorded-voice processing (voice_polish chain, trim_silence, declick, voice_eq, compress, deess, reduce_breaths, voice_isolate). Compact by default (* = required); pass op for the full spec of one tool.',
   inputSchema: { category: z.enum(['image', 'video', 'audio', 'convert', 'generate']).optional(), op: z.string().optional().describe('one op id → full JSON spec') },
 }, safe(async ({ category, op }) => {
   const { ops } = await api('GET', '/api/toolkit');

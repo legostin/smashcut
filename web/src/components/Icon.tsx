@@ -25,6 +25,7 @@ const P: Record<string, string> = {
   scissors: 'M6 6a2.5 2.5 0 1 0 0 .1M6 18a2.5 2.5 0 1 0 0 .1M8 7.5L20 18M8 16.5L20 6',
   magnet: 'M6 3v8a6 6 0 0 0 12 0V3h-4v8a2 2 0 0 1-4 0V3z',
   stop: 'M6 6h12v12H6z',
+  mic: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6',
   bot: 'M5 8h14v11H5zM12 4v4M9 13h.01M15 13h.01M9 16h6',
   layers: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5',
   copy: 'M8 8h12v12H8zM4 4h12v2H6v10H4z',

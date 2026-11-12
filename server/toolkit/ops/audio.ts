@@ -11,7 +11,7 @@ import { probe, ffmpeg, ffmpegAnalyze, audioEncoder, MP4 } from '../ff.ts';
 const AV = ['audio', 'video'] as ('audio' | 'video')[];
 const kindOf = (rel: string) => MEDIA_EXT[path.extname(rel).toLowerCase()];
 
-async function withAudio(ctx: OpContext, rel: string) {
+export async function withAudio(ctx: OpContext, rel: string) {
   const abs = ctx.abs(rel);
   const info = await probe(abs);
   if (!info.hasAudio) throw uerr('{file} has no audio track', { file: rel });
@@ -19,7 +19,7 @@ async function withAudio(ctx: OpContext, rel: string) {
 }
 
 /** output container/codec for "same media, processed audio": audio → matching audio codec, video → copy picture */
-function avOut(rel: string, isVideo: boolean) {
+export function avOut(rel: string, isVideo: boolean) {
   const ext = path.extname(rel).toLowerCase().slice(1);
   if (!isVideo) { const e = audioEncoder(ext); return { ext: e.ext, args: ['-vn', ...e.args] }; }
   if (ext === 'webm') return { ext: 'webm', args: ['-map', '0:v:0', '-c:v', 'copy', '-c:a', 'libopus', '-b:a', '160k'] };
