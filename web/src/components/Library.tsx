@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { InspoPreview } from './InspoPreview';
 import type { Inspiration, GalleryItem } from '../../../shared/types';
 import { useStore, setState, getState, actions, time, api, notify, refreshGallery, projectBase, pfile } from '../store';
 import { Icon } from './Icon';
@@ -106,7 +107,7 @@ export function Library() {
             {section.kind === 'masks' && <MasksGrid />}
           </div>
           <footer className="lib-foot">{['transitions', 'effects', 'masks'].includes(section.kind) ? t('Click — apply to the selected clip · a transition can be dragged onto a clip edge')
-            : section.kind === 'inspiration' ? t('Click — add to the project references (bound to the selected scenes) · ↗ opens the original')
+            : section.kind === 'inspiration' ? t('The preview is our own mini-scene of the one technique we take, not the original · click — add to the project references · ↗ opens the original')
             : section.kind === 'graphics' || section.kind === 'mine' ? t('Click — add to the project references (bound to the selected scenes) · + inserts the reference clip at the playhead as a quick draft')
             : section.kind === 'music' ? t('Click — add to the project references (bound to the selected scenes)')
             : t('Click — add at the playhead ({time})', { time: fmt(time.get()) })}</footer>
@@ -264,8 +265,8 @@ function InspirationWall({ items: all, cat, q, onCat }: { items: Inspiration[]; 
   const counts = useMemo(() => ({ motion: all.filter((x) => (x.group || 'motion') === 'motion').length, edit: all.filter((x) => x.group === 'edit').length }), [all]);
   const items = useMemo(() => all.filter((x) => (x.group || 'motion') === group), [all, group]);
   const cats = useMemo(() => { const m = new Map<string, number>(); for (const x of items) m.set(x.category, (m.get(x.category) || 0) + 1); return [...m.entries()].sort((a, b) => b[1] - a[1]); }, [items]);
-  const list = items.filter((x) => (cat === 'all' || x.category === cat) && (!q || `${x.title} ${x.by} ${x.category} ${(x.tags || []).join(' ')} ${(x.techniques || []).join(' ')}`.toLowerCase().includes(q.toLowerCase())));
-  if (!items.length) return <div className="lib-empty">{t('The inspiration library is being collected — come back in a few minutes.')}</div>;
+  const list = items.filter((x) => (cat === 'all' || x.category === cat) && (!q || `${x.title} ${x.by} ${x.category} ${x.take} ${t(x.take)} ${(x.tags || []).join(' ')} ${(x.techniques || []).join(' ')}`.toLowerCase().includes(q.toLowerCase())));
+  if (!items.length) return <div className="lib-empty">{t('Nothing here yet — an example appears only when it has a preview of what we take from it.')}</div>;
   return (
     <>
       {counts.edit > 0 && (
@@ -285,20 +286,18 @@ function InspirationWall({ items: all, cat, q, onCat }: { items: Inspiration[]; 
 
 function InspoTile({ x, i }: { x: Inspiration; i: number }) {
   const isRef = useStore((s) => s.references.some((r) => r.kind === 'inspiration' && r.ref === x.id));
-  const [ok, setOk] = useState(true);
-  const add = () => actions.addReference({ kind: 'inspiration', ref: x.id, title: x.title, thumb: `/api/inspiration/${x.id}/thumb`, note: (x.techniques || []).slice(0, 3).join(', ') });
+  const add = () => actions.addReference({ kind: 'inspiration', ref: x.id, title: x.title, thumb: `/api/inspiration/${x.id}/thumb`, note: x.take });
   return (
     <div className={'inspo' + (isRef ? ' isref' : '')} style={{ animationDelay: `${Math.min(i, 16) * 25}ms` }} role="button" tabIndex={0} onClick={add} onKeyDown={(e) => e.key === 'Enter' && add()}>
       <div className="inspo-img">
-        {ok ? <img src={`/api/inspiration/${x.id}/thumb`} alt="" loading="lazy" onError={() => setOk(false)} /> : <div className="inspo-noimg"><Icon name="star" size={20} /></div>}
+        <InspoPreview x={x} />
         <span className="tile-cat">{t(INSPO_CATS[x.category] || x.category)}</span>
         <a className="inspo-open" href={x.url} target="_blank" rel="noreferrer" title={t('Open the original')} onClick={(e) => e.stopPropagation()}><Icon name="external" size={13} /></a>
         <span className={isRef ? 'tile-ref-on' : 'tile-cta'}>{isRef ? <><Icon name="check" size={12} /> {t('In references')}</> : <><Icon name="star" size={12} /> {t('Add to references')}</>}</span>
       </div>
       <div className="inspo-meta">
-        <div className="inspo-title ellipsis">{x.title}</div>
-        <div className="inspo-by ellipsis">{x.by}{x.year ? ` · ${x.year}` : ''}</div>
-        {x.techniques?.length ? <div className="inspo-tech">{x.techniques.slice(0, 3).map((tq) => <span key={tq}>{tq}</span>)}</div> : null}
+        <div className="inspo-take"><span>{t('We take')}</span>{t(x.take)}</div>
+        <div className="inspo-by ellipsis">{x.title} · {x.by}{x.year ? ` · ${x.year}` : ''}</div>
       </div>
     </div>
   );

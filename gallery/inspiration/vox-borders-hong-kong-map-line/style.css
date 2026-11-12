@@ -1,0 +1,8 @@
+#stage { background: #b7d0d6; }
+.map { position: absolute; inset: 0; transform-origin: 960px 560px; }
+.over { position: absolute; inset: 0; }
+.tag { position: absolute; padding: 26px 48px 30px; border-radius: 14px; background: #15151a; color: #f6f2e6; font-weight: 800;
+  font-size: 132px; line-height: 1; letter-spacing: 0.02em; white-space: nowrap; }
+.north { left: 740px; top: 300px; }
+.south { left: 950px; top: 800px; }
+.date { left: 1540px; top: 215px; background: #e5311d; color: #fff; font-size: 170px; padding: 28px 52px 34px; }

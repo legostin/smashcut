@@ -1,0 +1,4 @@
+.letter { position: absolute; inset: 0; transform-origin: 960px 540px; }
+.arm { position: absolute; left: 630px; top: 240px; width: 660px; height: 170px; background: var(--a); }
+.stem { position: absolute; left: 870px; top: 240px; width: 180px; height: 600px; background: var(--a); }
+.strand { position: absolute; top: -40px; height: 1160px; left: 0; width: 100px; transform-origin: 0 0; }

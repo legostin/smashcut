@@ -31,7 +31,7 @@ import { getDesign, saveDesign } from './design.ts';
 import { boardFrame } from './render/board.ts';
 import { listVoices, tts, MODELS, apiKey } from './voice/elevenlabs.ts';
 import { voiceScene, cleanupTakes, voicePace } from './voice/voiceover.ts';
-import { listInspiration, getInspiration, inspirationThumb, searchInspiration, inspirationCategories } from './inspiration.ts';
+import { listInspiration, getInspiration, inspirationThumb, inspirationPreview, inspirationPreviewPath, searchInspiration, inspirationCategories } from './inspiration.ts';
 import { projectTracks } from './tracks.ts';
 import { blenderBin, listScenes3d, getScene3d, createScene3d, render3d, listJobs3d, openInBlender } from './blender.ts';
 import { paceReport } from './voice/speech.ts';
@@ -467,11 +467,20 @@ export async function registerRoutes(app: FastifyInstance) {
     results: searchInspiration({ query: req.query.q, group: req.query.group, category: req.query.category, limit: Number(req.query.limit) || undefined }),
   }));
   app.get<{ Params: { id: string } }>('/api/inspiration/:id', async (req) => { const x = getInspiration(req.params.id); if (!x) throw uerr('Not found', {}, 404); return x; });
+  // the still of our mini-scene (the frame that shows what we take)
   app.get<{ Params: { id: string } }>('/api/inspiration/:id/thumb', async (req, reply) => {
     const f = await inspirationThumb(req.params.id);
     if (!f) return reply.code(404).send({ error: 'no preview' });
-    reply.header('cache-control', 'max-age=604800');
-    return reply.sendFile(path.basename(f), path.dirname(f));
+    reply.header('cache-control', 'max-age=60').type('image/png');
+    return fs.createReadStream(f);
+  });
+  /** looping preview of a moving mini-scene; 202 while it is being rendered (the UI shows the still meanwhile), 404 for a still-only entry */
+  app.get<{ Params: { id: string } }>('/api/inspiration/:id/preview', async (req, reply) => {
+    const f = inspirationPreviewPath(req.params.id);
+    if (!f) return reply.code(404).send({ error: 'no loop' });
+    if (fs.existsSync(f)) { reply.header('cache-control', 'max-age=86400'); return reply.sendFile(path.basename(f), path.dirname(f)); }
+    inspirationPreview(req.params.id, true).catch(() => {});
+    return reply.code(202).send({ pending: true });
   });
 
   /** looping preview video for the live gallery; 202 while it is being rendered (the UI shows the still meanwhile) */
@@ -757,8 +766,8 @@ export async function registerRoutes(app: FastifyInstance) {
       id: r.id, kind: r.kind, title: r.title, note: r.note || undefined,
       scenes: (r.sceneIds || []).map((id) => { const i = scenes.findIndex((s) => s.id === id); return i >= 0 ? `${i + 1}:${scenes[i].title} (${id})` : id; }),
       appliesTo: r.sceneIds?.length ? 'listed scenes' : 'the whole video',
-      ...(r.kind === 'inspiration' ? (() => { const x = getInspiration(r.ref); return x ? { by: x.by, year: x.year, url: x.url, techniques: x.techniques, breakdown: x.breakdown } : {}; })() : {}),
-      howToRead: r.kind === 'inspiration' ? 'The breakdown above describes the piece and its techniques — apply the techniques in the project style (never copy the brand/assets). If the URL is a video link, watch_video {url} lets you see its edit and motion.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? (/\.(mp4|mov|webm|mkv|m4v)$/i.test(r.ref) ? `video: watch_video {file:"media/${r.ref}"} — shots, contact sheet, motion strips, sound and the rhythm of the edit` : `Read media/${r.ref} (look at it)`) : `WebFetch ${r.ref} to read the page; run_media_tool {op:"import_url", params:{url:"${r.ref}"}} brings its image (pick=all: every picture, pick=video / video sites: the video) into media/ to look at or use; a video link / page with a video: watch_video {url:"${r.ref}"} to see its edit, motion and sound`,
+      ...(r.kind === 'inspiration' ? (() => { const x = getInspiration(r.ref); return x ? { by: x.by, year: x.year, url: x.url, take: x.take, techniques: x.techniques, breakdown: x.breakdown, demo: `gallery/inspiration/${x.id}/clip.js` } : {}; })() : {}),
+      howToRead: r.kind === 'inspiration' ? '`take` is the ONE thing to borrow from this piece; `demo` is our own mini-scene that re-creates just that (a clip package: read its clip.js to see how it is built). The breakdown describes the whole piece — apply the technique in the project style (never copy the brand/assets). If the URL is a video link, watch_video {url} lets you see its edit and motion.' : r.kind === 'technique' ? `get_technique {id: "${r.ref}"}` : r.kind === 'music-technique' ? `get_technique {id: "${r.ref}", kind: "music"}` : r.kind === 'media' ? (/\.(mp4|mov|webm|mkv|m4v)$/i.test(r.ref) ? `video: watch_video {file:"media/${r.ref}"} — shots, contact sheet, motion strips, sound and the rhythm of the edit` : `Read media/${r.ref} (look at it)`) : `WebFetch ${r.ref} to read the page; run_media_tool {op:"import_url", params:{url:"${r.ref}"}} brings its image (pick=all: every picture, pick=video / video sites: the video) into media/ to look at or use; a video link / page with a video: watch_video {url:"${r.ref}"} to see its edit, motion and sound`,
     }));
   });
 

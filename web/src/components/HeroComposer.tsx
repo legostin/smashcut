@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { InspoPreview } from './InspoPreview';
 import type { Inspiration } from '../../../shared/types';
 import { useStore, api, actions, setState, getState, refresh, time } from '../store';
 import { t } from '../i18n';
@@ -59,7 +60,7 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
   const picks = useMemo(() => {
     // a varied first row: one per category, then the rest
     const seen = new Set<string>(); const first: Inspiration[] = [], rest: Inspiration[] = [];
-    for (const x of insp.filter((y) => y.thumb)) (seen.has(x.category) ? rest : (seen.add(x.category), first)).push(x);
+    for (const x of insp) (seen.has(x.category) ? rest : (seen.add(x.category), first)).push(x);
     return [...first, ...rest].slice(0, 18);
   }, [insp]);
 
@@ -92,7 +93,7 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
       }
       for (const r of refs) {
         if (r.kind === 'link') await api('POST', '/api/references', { kind: 'link', ref: r.url, title: r.label });
-        if (r.kind === 'inspiration' && r.insp) await api('POST', '/api/references', { kind: 'inspiration', ref: r.insp.id, title: r.insp.title, thumb: `/api/inspiration/${r.insp.id}/thumb` });
+        if (r.kind === 'inspiration' && r.insp) await api('POST', '/api/references', { kind: 'inspiration', ref: r.insp.id, title: r.insp.title, thumb: `/api/inspiration/${r.insp.id}/thumb`, note: r.insp.take });
       }
       const extra = [
         length ? `Target length: about ${length} s.` : '',
@@ -161,14 +162,13 @@ export function HeroComposer({ mode }: { mode: 'home' | 'project' }) {
       )}
       {picks.length > 0 && (
         <div className="hero-insp">
-          <div className="hero-insp-head"><Icon name="star" size={13} /> {t('Inspiration — pick what it should feel like')}</div>
+          <div className="hero-insp-head"><Icon name="star" size={13} /> {t('Inspiration — pick the techniques to borrow')}</div>
           <div className="hero-insp-row">
             {picks.map((x) => {
               const on = refs.some((r) => r.key === 'i:' + x.id);
               return (
-                <button key={x.id} className={'hero-insp-tile' + (on ? ' on' : '')} onClick={() => toggleInsp(x)} title={`${x.title} — ${x.by}`}>
-                  <img src={`/api/inspiration/${x.id}/thumb`} alt="" loading="lazy" onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }} />
-                  <span className="hero-insp-name ellipsis">{x.title}</span>
+                <button key={x.id} className={'hero-insp-tile' + (on ? ' on' : '')} onClick={() => toggleInsp(x)} title={`${t(x.take)} — ${x.title}, ${x.by}`}>
+                  <InspoPreview x={x} />
                   {on && <span className="hero-insp-check"><Icon name="check" size={12} /></span>}
                 </button>
               );

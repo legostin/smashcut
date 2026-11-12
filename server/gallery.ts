@@ -91,19 +91,27 @@ export function previewPath(origin: Origin, id: string) {
 }
 export function galleryPreview(origin: Origin, id: string, front = false): Promise<string> {
   const out = previewPath(origin, id);
+  const m = readJson<Partial<PackageManifest>>(path.join(packageDir(origin, 'clip', id), 'manifest.json'), {});
+  const d = m.duration || 5;
+  const len = Math.min(d, 6);
+  // the most lively stretch: start a little in so entrances are visible, end before long holds
+  return renderLoop(out, clipPage(origin, id), { duration: d, from: Math.max(0, Math.min(d - len, d * 0.05)), length: len }, front);
+}
+/**
+ * Render a clip page into a small looping H.264 video (640 px wide, 24 fps, no sound) — once per output file,
+ * one render at a time. Shared by the technique previews and the inspiration mini-scenes.
+ */
+export function renderLoop(out: string, page: string, o: { duration: number; from?: number; length?: number }, front = false): Promise<string> {
   if (fs.existsSync(out)) return Promise.resolve(out);
   if (previewJobs.has(out)) return previewJobs.get(out)!;
   const p = new Promise<string>((resolve, reject) => {
     const job = async () => {
       try {
-        const dir = packageDir(origin, 'clip', id);
-        const m = readJson<Partial<PackageManifest>>(path.join(dir, 'manifest.json'), {});
-        const d = m.duration || 5;
-        const len = Math.min(d, 6), fps = 24;
+        const d = o.duration, fps = 24;
+        const len = Math.min(o.length ?? d, d);
         const input = { width: 1920, height: 1080, fps: 30, duration: d, timing: false };
-        const url = `${BASE_URL}${clipPage(origin, id)}#${encodeURIComponent(JSON.stringify(input))}`;
-        // the most lively stretch: start a little in so entrances are visible, end before long holds
-        const t0 = Math.max(0, Math.min(d - len, d * 0.05));
+        const url = `${BASE_URL}${page}#${encodeURIComponent(JSON.stringify(input))}`;
+        const t0 = o.from ?? 0;
         const times = Array.from({ length: Math.round(len * fps) }, (_, k) => t0 + k / fps);
         const r = await renderClipFrames(url, { width: 1920, height: 1080 }, times);
         const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'avs-prev-'));

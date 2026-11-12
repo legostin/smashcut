@@ -1,0 +1,16 @@
+.shot { position: absolute; inset: 0; overflow: hidden; }
+.s0 { background: #ff5c38; }
+.s1 { background: #6a86ff; }
+.s2 { background: #1b1b22; }
+.s3 { background: #f3f2ec; }
+.sun { position: absolute; left: 760px; top: 420px; width: 440px; height: 440px; border-radius: 50%; background: #f3f2ec; }
+.hill { position: absolute; left: -200px; top: 700px; width: 2320px; height: 900px; border-radius: 50%; background: #0f0f13; }
+.floor { position: absolute; left: 0; right: 0; top: 800px; height: 280px; background: #0f0f13; }
+.ball { position: absolute; left: 820px; top: 520px; width: 280px; height: 280px; border-radius: 50%; background: #f3f2ec; }
+.window { position: absolute; left: 610px; top: 130px; width: 700px; height: 640px; border-radius: 30px; background: #d4ff3a; overflow: hidden; }
+.passer { position: absolute; left: -200px; top: 250px; width: 300px; height: 600px; border-radius: 150px 150px 0 0; background: #0f0f13; }
+.bar { position: absolute; background: #1b1b22; }
+.bar.v { left: 330px; top: 0; width: 40px; height: 100%; }
+.bar.h { left: 0; top: 300px; width: 100%; height: 40px; }
+.stamp { position: absolute; left: 80px; bottom: 64px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 156px; line-height: 1;
+  color: #f3f2ec; white-space: nowrap; -webkit-text-stroke: 16px #0f0f13; paint-order: stroke fill; letter-spacing: -0.02em; }

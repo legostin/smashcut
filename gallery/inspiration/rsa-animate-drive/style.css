@@ -1,0 +1,6 @@
+.paper { position: absolute; inset: 0; background: #f1efe8; }
+svg path { fill: none; stroke: #15151a; stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; }
+svg path.red { stroke: #ff5c38; }
+svg .pen path { stroke-width: 64; stroke: #15151a; }
+svg .pen path.nib { stroke-width: 30; }
+svg .pen path.cap { stroke: #ff5c38; }

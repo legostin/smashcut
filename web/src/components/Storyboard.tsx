@@ -148,10 +148,10 @@ function ReferencesStrip() {
     <div className="refs">
       <span className="refs-title"><Icon name="star" size={13} /> {t('References')}</span>
       {refs.map((r) => (
-        <div key={r.id} className={'ref-card' + (sel.length && sel.every((id) => r.sceneIds?.includes(id)) ? ' bound' : '')} role="button" tabIndex={0}
+        <div key={r.id} className={'ref-card' + (r.kind === 'inspiration' && r.note ? ' insp' : '') + (sel.length && sel.every((id) => r.sceneIds?.includes(id)) ? ' bound' : '')} role="button" tabIndex={0}
           title={sel.length ? t('Click to bind to / unbind from the selected scenes') : t('Select scenes, then click to bind this reference to them')} onClick={() => toggle(r)}>
           <span className="ref-thumb">{thumb(r) ? <img src={thumb(r)!} alt="" /> : <Icon name={r.kind === 'link' ? 'external' : r.kind === 'music-technique' ? 'music' : 'image'} size={14} />}</span>
-          <span className="ref-text"><span className="ref-name ellipsis">{r.title}</span><span className="ref-scope">{label(r.sceneIds)}</span></span>
+          <span className="ref-text"><span className={'ref-name' + (r.kind === 'inspiration' && r.note ? '' : ' ellipsis')} title={r.kind === 'inspiration' && r.note ? `${t('We take')}: ${t(r.note)}` : undefined}>{r.kind === 'inspiration' && r.note ? t(r.note) : r.title}</span><span className="ref-scope ellipsis">{r.kind === 'inspiration' && r.note ? r.title + ' · ' : ''}{label(r.sceneIds)}</span></span>
           <button className="ref-x" aria-label={t('Remove reference')} onClick={(e) => { e.stopPropagation(); actions.removeReference(r.id); }}><Icon name="x" size={10} /></button>
         </div>
       ))}

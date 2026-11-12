@@ -1,0 +1,7 @@
+.view { position: absolute; left: 130px; top: 100px; width: 880px; height: 880px; }
+.frame { position: absolute; left: 130px; top: 100px; width: 880px; height: 880px; border: 10px solid var(--line); pointer-events: none; }
+.count { position: absolute; left: 1120px; top: 330px; height: 420px; display: flex; align-items: flex-start; }
+.count .base { font-size: 400px; font-weight: 800; letter-spacing: -0.05em; line-height: 420px; color: var(--ink); }
+.count .exp { position: relative; width: 190px; height: 230px; margin: -30px 0 0 24px; overflow: hidden; }
+.count .exp div { position: absolute; left: 0; top: 0; width: 190px; height: 230px; font-size: 230px; font-weight: 800; line-height: 230px;
+  text-align: left; color: var(--a); }

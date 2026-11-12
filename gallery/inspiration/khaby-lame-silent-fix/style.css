@@ -1,0 +1,11 @@
+.shot { position: absolute; inset: 0; }
+.shot.a { background: var(--c); transform-origin: 50% 50%; }
+.shot.b { background: var(--bg); }
+.ramps line { stroke: var(--ink); stroke-width: 48; stroke-linecap: round; }
+.ball { fill: var(--a); }
+.box { fill: none; stroke: var(--b); stroke-width: 44; stroke-linejoin: round; stroke-linecap: round; }
+.body { fill: var(--ink); }
+.inside { fill: var(--bg); }
+.table { fill: var(--panel); stroke: var(--line); stroke-width: 12; }
+.arm { fill: none; stroke: var(--ink); stroke-width: 64; stroke-linecap: round; stroke-linejoin: round; }
+.arm.edge { stroke: var(--bg); stroke-width: 96; }

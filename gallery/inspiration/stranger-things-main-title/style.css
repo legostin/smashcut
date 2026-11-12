@@ -1,0 +1,7 @@
+.glow { position: absolute; inset: 0; }
+.word { position: absolute; left: 0; right: 0; top: 289px; height: 470px; display: flex; justify-content: center; gap: 22px; }
+.ltr {
+  font-family: 'Playfair Display', serif; font-weight: 900; font-size: 470px; line-height: 470px;
+  color: transparent; -webkit-text-stroke: 16px var(--a);
+  transform-origin: 50% 53.5%;   /* middle of the capitals */
+}

@@ -1,0 +1,14 @@
+/* Inspiration mini-scenes — one neutral look for the whole collection, so a tile shows the TECHNIQUE, not a brand.
+   Stage is 1920×1080 and is shown ~5× smaller: few, big elements; nothing thinner than 6 px; text ≥ 110 px. */
+:root {
+  --bg: #0f0f13; --panel: #1b1b22; --line: #2e2e38; --mute: #70707e; --ink: #f3f2ec;
+  --a: #d4ff3a;  /* accent: the thing to look at */
+  --b: #ff5c38;  /* second voice */
+  --c: #6a86ff;  /* third voice */
+}
+#stage { background: var(--bg); color: var(--ink); font-family: 'Manrope', 'Inter', system-ui, sans-serif; }
+#stage.light { --bg: #f1efe8; --panel: #ffffff; --line: #d9d6cc; --mute: #9a978c; --ink: #15151a; }
+.abs { position: absolute; }
+.fill { position: absolute; inset: 0; }
+.center { position: absolute; inset: 0; display: grid; place-items: center; }
+.big { font-weight: 800; letter-spacing: -0.04em; line-height: 1; }

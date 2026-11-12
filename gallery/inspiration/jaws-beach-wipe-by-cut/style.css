@@ -1,0 +1,12 @@
+.sea { position: absolute; left: 0; top: 0; width: 1920px; height: 470px; background: var(--c); }
+.sand { position: absolute; left: 0; top: 470px; width: 1920px; height: 610px; background: var(--ink); }
+
+/* the watcher is drawn at close-up size and scaled down around a point on the horizon, so every shot shares one axis */
+.watcher { position: absolute; left: 960px; top: 470px; width: 0; height: 0; transform-origin: 0 0; }
+.w-head { position: absolute; left: -210px; top: -70px; width: 420px; height: 420px; border-radius: 50%; background: var(--b); }
+.w-body { position: absolute; left: -450px; top: 390px; width: 900px; height: 900px; border-radius: 300px 300px 80px 80px; background: var(--b); }
+
+/* a passer-by close to the lens: a dark head-and-shoulders silhouette taller than the frame */
+.passer { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.p-head { position: absolute; left: -330px; top: -140px; width: 660px; height: 660px; border-radius: 50%; background: var(--bg); }
+.p-body { position: absolute; left: -700px; top: 330px; width: 1400px; height: 900px; border-radius: 330px 330px 0 0; background: var(--bg); }

@@ -12,7 +12,7 @@ const NEWS: { title: string; text: string; tag: string }[] = [
   { tag: 'Tracking', title: 'Scene-aware tracking', text: 'Camera motion, planar surfaces and objects — graphics that stick to the world, screen replacement, auto-reframe, blur.' },
   { tag: 'Craft', title: 'Pro craft rules for agents', text: 'Story first, audio as the clock, easing by role, read time, safe areas, seams, sound levels — and a review loop.' },
   { tag: '3D', title: 'Blender 3D in stages', text: 'Scenes as code: mock in seconds → look → final, placed on the timeline and replaced in place.' },
-  { tag: 'Library', title: '108 inspiration pieces', text: 'Studios, product launches, code demos and social formats with breakdowns — add them as references.' },
+  { tag: 'Library', title: 'Inspiration you can see', text: 'The best real-world pieces, each with a looping mini-scene of the one technique we take from it — add them as references.' },
   { tag: 'Edit', title: 'Shots & rhythm', text: 'Find the cuts in any video, split it into shots and match the rhythm of a reference edit.' },
   { tag: 'Voiceover', title: 'Voice-over as a process', text: 'Speech text with numbers spelled out, stress marks and pauses; takes with a pace check.' },
 ];

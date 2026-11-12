@@ -1,0 +1,29 @@
+.floor { position: absolute; left: 0; top: 900px; width: 1920px; height: 180px; background: var(--panel); border-top: 10px solid var(--line); }
+.frame { position: absolute; left: 160px; top: 70px; width: 1600px; height: 830px; overflow: hidden; background: var(--bg); }
+.flat { position: absolute; left: 0; top: 0; width: 1600px; height: 830px; }
+
+/* A — a tiled wall */
+.flat.a {
+  background-color: var(--b);
+  background-image:
+    linear-gradient(to right, rgba(15, 15, 19, 0.4) 14px, transparent 14px),
+    linear-gradient(to bottom, rgba(15, 15, 19, 0.4) 14px, transparent 14px);
+  background-size: 200px 200px;
+  background-position: -7px 8px;
+}
+/* B — sea and sun */
+.flat.b { background: var(--c); }
+.flat.b .sun { position: absolute; left: 150px; top: 110px; width: 260px; height: 260px; border-radius: 50%; background: var(--ink); }
+.flat.b .water { position: absolute; left: 0; top: 520px; width: 1600px; height: 310px; background: #3d55c4; }
+/* C — night: one flat cut in two halves */
+.door { position: absolute; top: 0; width: 800px; height: 830px; overflow: hidden; }
+.door.l { left: 0; }
+.door.r { left: 800px; }
+.door.r .flat { left: -800px; }
+.flat.c { background: var(--ink); }
+.flat.c .moon { position: absolute; left: 1090px; top: 120px; width: 300px; height: 300px; border-radius: 50%; background: var(--bg); }
+
+/* the presenter */
+.who { position: absolute; left: 960px; top: 0; width: 0; height: 0; }
+.who .head { position: absolute; left: -125px; top: 250px; width: 250px; height: 250px; border-radius: 50%; background: var(--a); border: 16px solid var(--bg); }
+.who .body { position: absolute; left: -190px; top: 480px; width: 380px; height: 500px; border-radius: 190px 190px 60px 60px; background: var(--a); border: 16px solid var(--bg); }

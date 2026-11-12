@@ -59,7 +59,7 @@ Clips are HTML/CSS/JS (GSAP, SVG, canvas) — pure functions of time, rendered f
 Agents follow a core **craft skill** distilled from measured references (HyperFrames films, BBC/Netflix subtitle specs, Material / Carbon / Fluent motion tokens, NN/g): story before frames, audio as the clock, one focal motion at a time, easing by role, read time and type sizes, safe areas for 9:16, seams between scenes, sound levels — and a review loop with contact sheets.
 
 ### Techniques, references and inspiration
-57 built-in **techniques** (each with a guide the agent studies — not templates to paste) and **108 curated real-world motion pieces** from studios, product launches, code demos and social formats, each with a breakdown. Add them to a project as references, bound to scenes.
+57 built-in **techniques** (each with a guide the agent studies — not templates to paste) and a small curated **inspiration** set — the best real-world motion pieces and edits (title sequences, launch films, data stories, ads, creator formats). Every one says in a line what we take from it and shows it: a looping mini-scene of ours that re-creates just that technique, never the piece itself. Add them to a project as references, bound to scenes.
 
 <img src="docs/assets/techniques.jpg" alt="Technique library with live looping previews" width="100%">
 

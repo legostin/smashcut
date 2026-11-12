@@ -357,9 +357,18 @@ export interface ExportJob {
 /** a curated real-world motion piece (link + our breakdown of the technique); see gallery/inspiration.json */
 export interface Inspiration {
   id: string; title: string; by: string; year?: number; url: string; platform: string; license?: string;
+  /** official cover of the original (kept for the record; the gallery shows our mini-scene instead) */
   thumb?: string; category: string; tags?: string[]; techniques?: string[]; breakdown: string; durationHint?: string;
   /** motion graphics (default) or editing (viral / effective cutting) */
   group?: 'motion' | 'edit';
+  /** ONE line: the single thing we borrow from this piece — shown next to the preview (English; UI translates it) */
+  take: string;
+  /**
+   * our own mini-scene re-creating that technique (gallery/inspiration/<id>/): `loop` = seconds of the seamless loop
+   * (omit when what we take is static — layout, palette, type — and a still says it all); `poster` = the time of the
+   * frame that shows the technique best (the still everywhere a video does not play)
+   */
+  demo: { loop?: number; poster: number };
 }
 
 /** a question an agent asks the user — optionally with draft options (text and/or an image to compare) */

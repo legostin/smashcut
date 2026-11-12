@@ -1,0 +1,10 @@
+.half { position: absolute; top: 0; bottom: 0; width: 960px; overflow: hidden; }
+.half.l { left: 0; }
+.half.r { left: 960px; }
+.world { position: absolute; top: 0; width: 1920px; height: 1080px; }
+.l .world { left: 0; }
+.r .world { left: -960px; }
+.ball { position: absolute; left: 680px; top: 260px; width: 560px; height: 560px; border-radius: 50%; }
+.r .ball { background: none !important; border: 46px solid; }
+.bar { position: absolute; left: 410px; top: 502px; width: 1100px; height: 76px; border-radius: 38px; }
+.seam { position: absolute; left: 956px; top: 0; width: 8px; height: 1080px; background: #0f0f13; }

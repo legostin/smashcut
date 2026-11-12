@@ -1,0 +1,8 @@
+.bar { position: absolute; left: 0; width: 1920px; height: 84px; background: var(--mute); }
+.band { position: absolute; left: 0; width: 1920px; height: 180px; overflow: hidden; }
+.slide { position: absolute; left: 0; top: 0; width: 1920px; height: 180px; }
+.word {
+  position: absolute; left: 0; width: 1920px; text-align: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 771px; line-height: 771px; letter-spacing: 0.03em;
+  color: var(--ink); white-space: nowrap;
+}

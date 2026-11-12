@@ -38,6 +38,17 @@ try {
   const st = await api('GET', '/api/state');
   ok('server up, project open', !!st.project, st.dir);
 
+  // inspiration: an entry is listed only with a line saying what we take and its own mini-scene showing it
+  const insp = await api('GET', '/api/inspiration');
+  const inspFile = JSON.parse(fs.readFileSync(path.join(ROOT, 'gallery', 'inspiration.json'), 'utf8'));
+  ok('inspiration: every entry has a take and a mini-scene', insp.length > 0 && insp.length === inspFile.length, `${insp.length} listed of ${inspFile.length} in the file`);
+  for (const x of insp) {
+    const r = await fetch(`${BASE}/api/inspiration/${x.id}/thumb`);
+    // 404 = the mini-scene threw or logged an error; a still of flat shapes on black can be a very small PNG, so only the status and a sane minimum count
+    const bytes = r.status === 200 ? (await r.arrayBuffer()).byteLength : 0;
+    ok(`inspiration ${x.id}: mini-scene renders without errors`, r.status === 200 && bytes > 400, `status ${r.status}, ${bytes} bytes`);
+  }
+
   // gallery
   const gallery = await api('GET', '/api/gallery');
   const clips = gallery.filter((g: any) => g.kind === 'clip' && g.origin === 'builtin');

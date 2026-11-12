@@ -52,7 +52,7 @@ export function ChatRefs() {
   return (
     <div className="chat-refs" ref={box}>
       {refs.slice(-8).map((r) => (
-        <span key={r.id} className="chat-ref" title={`${r.title}${r.sceneIds?.length ? ' · ' + tn(r.sceneIds.length, '{n} scene', '{n} scenes') : ''} — ${t('click to mention in the message')}`}
+        <span key={r.id} className="chat-ref" title={`${r.kind === 'inspiration' && r.note ? t('We take') + ': ' + t(r.note) + ' — ' : ''}${r.title}${r.sceneIds?.length ? ' · ' + tn(r.sceneIds.length, '{n} scene', '{n} scenes') : ''} — ${t('click to mention in the message')}`}
           onClick={() => chip({ key: 'ref:' + r.ref, label: '★ ' + r.title.slice(0, 32), text: `reference ${r.kind === 'media' ? 'media/' + r.ref : r.kind === 'link' ? r.ref : `${r.kind} "${r.ref}"`} ("${r.title}")` })}>
           {thumb(r) ? <img src={thumb(r)!} alt="" /> : <Icon name={r.kind === 'link' ? 'external' : r.kind === 'music-technique' ? 'music' : r.kind === 'media' ? 'image' : 'star'} size={11} />}
           <span className="ellipsis">{r.title}</span>
